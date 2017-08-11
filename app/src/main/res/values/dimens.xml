@@ -1,4 +1,5 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="drawable_text_padding">8dp</dimen>
+    <dimen name="app_bar_large_height">180dp</dimen>
 </resources>
