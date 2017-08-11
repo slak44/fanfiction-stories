@@ -39,7 +39,7 @@
 
         <TextView
             android:id="@+id/resumeButton"
-            style="@style/ListItem"
+            style="@style/ListItem.WithDrawable"
             android:text="@string/nothing_to_resume"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
@@ -49,6 +49,12 @@
             style="@style/ListItem.WithDrawable"
             android:drawableStart="@drawable/ic_view_list_black_24dp"
             android:text="@string/story_list"/>
+
+        <TextView
+            android:id="@+id/storyBrowseButton"
+            style="@style/ListItem.WithDrawable"
+            android:drawableStart="@drawable/ic_library_books_black_24dp"
+            android:text="@string/story_browse"/>
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

@@ -14,6 +14,7 @@ class MainActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
     setSupportActionBar(toolbar)
+    // FIXME: set drawable and text string for resume button if a story is available to be resumed
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
