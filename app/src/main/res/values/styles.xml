@@ -23,6 +23,11 @@
         <item name="android:background">?android:attr/selectableItemBackground</item>
     </style>
 
+    <style name="ListItem.WithDrawable" parent="ListItem">
+        <item name="android:drawablePadding">@dimen/drawable_text_padding</item>
+        <item name="android:drawableTint">@color/listDrawableTint</item>
+    </style>
+
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

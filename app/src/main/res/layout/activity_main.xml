@@ -46,9 +46,8 @@
 
         <TextView
             android:id="@+id/storyListButton"
-            style="@style/ListItem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/ListItem.WithDrawable"
+            android:drawableStart="@drawable/ic_view_list_black_24dp"
             android:text="@string/story_list"/>
     </LinearLayout>
 
