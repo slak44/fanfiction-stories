@@ -2,8 +2,8 @@ package slak.fanfictionstories
 
 import android.content.Context
 import android.os.Bundle
-import android.support.constraint.ConstraintLayout
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.CardView
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +15,7 @@ import org.jetbrains.anko.db.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-class StoryLayout : LinearLayout {
+class StoryCardView : CardView {
   constructor(context: Context) : super(context)
   constructor(context: Context, set: AttributeSet) : super(context, set)
   constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
@@ -25,8 +25,8 @@ class StoryLayout : LinearLayout {
     storyProgress.setOnTouchListener { _, _ -> true }
     storyMainContent.setOnClickListener {
       // FIXME do we want this elevation like this?
-      if (cardWrapper.cardElevation == 7F) cardWrapper.cardElevation = 20F
-      else cardWrapper.cardElevation = 7F
+      if (cardElevation == 7F) cardElevation = 20F
+      else cardElevation = 7F
       // This gets animated automatically
       if (storyDetails.visibility == View.GONE) storyDetails.visibility = View.VISIBLE
       else storyDetails.visibility = View.GONE
@@ -152,8 +152,8 @@ class StoryAdapter(val activity: StoryListActivity) : BaseAdapter() {
 
   override fun getView(idx: Int, recycleView: View?, parent: ViewGroup?): View {
     // FIXME: use the recycle crap
-    val view = activity.layoutInflater.inflate(R.layout.story_component, parent, false) as ConstraintLayout
-    view.storyLayout.loadFromModel(data[idx])
+    val view = activity.layoutInflater.inflate(R.layout.story_component, parent, false) as StoryCardView
+    view.loadFromModel(data[idx])
     return view
   }
 }
