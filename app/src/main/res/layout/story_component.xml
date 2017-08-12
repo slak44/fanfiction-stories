@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <slak.fanfictionstories.StoryLayout
+        android:id="@+id/storyLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/cardWrapper"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="@dimen/story_layout_card_margin">
+
+            <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:animateLayoutChanges="true">
+
+                <android.support.constraint.ConstraintLayout
+                    android:id="@+id/storyMainContent"
+                    style="@style/AppTheme.Touchable"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:id="@+id/titleText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:text="Title, A Very Very Very Long Title"/>
+
+                    <TextView
+                        android:id="@+id/authorText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="0dp"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textStyle="italic"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/titleText"
+                        tools:text="by Slak44"/>
+
+                    <TextView
+                        android:id="@+id/categoryText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textStyle="italic"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/authorText"
+                        tools:text="in Test Category"
+                        />
+
+                    <TextView
+                        android:id="@+id/wordsText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintBottom_toBottomOf="@+id/categoryText"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        tools:text="182,390 words"/>
+
+                    <SeekBar
+                        android:id="@+id/storyProgress"
+                        style="@style/AppTheme.NotTouchable"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginTop="8dp"
+                        android:max="100"
+                        android:paddingEnd="0dp"
+                        android:paddingStart="0dp"
+                        android:thumb="@color/alpha"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/categoryText"
+                        tools:progress="50"/>
+
+                    <TextView
+                        android:id="@+id/isCompletedText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="0dp"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/completed_story"
+                        app:layout_constraintBottom_toTopOf="@+id/wordsText"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        tools:text="Completed"/>
+
+                </android.support.constraint.ConstraintLayout>
+
+                <android.support.constraint.ConstraintLayout
+                    android:id="@+id/storyDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="0dp"
+                    android:layout_marginTop="0dp"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/storyMainContent"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:id="@+id/languageText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:text="English"/>
+
+                    <TextView
+                        android:id="@+id/ratingText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:text="Rated M"/>
+
+                    <TextView
+                        android:id="@+id/summaryText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingStart="8dp"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                        android:visibility="visible"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/languageText"
+                        tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem."/>
+
+                    <TextView
+                        android:id="@+id/chaptersText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/summaryText"
+                        tools:text="15 Chapters"/>
+
+                    <TextView
+                        android:id="@+id/genresText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="0dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/chaptersText"
+                        tools:text="about Blabla/BlehBleh/BloBlo"/>
+
+                    <TextView
+                        android:id="@+id/charactersText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/genresText"
+                        tools:text="with Test A., Test B."/>
+
+                    <TextView
+                        android:id="@+id/updateDateText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/summaryText"
+                        tools:text="Updated on 2017-06-24"/>
+
+                    <TextView
+                        android:id="@+id/publishDateText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/updateDateText"
+                        tools:text="Published on 2017-05-13"/>
+
+                    <TextView
+                        android:id="@+id/reviewsText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/charactersText"
+                        tools:text="50 reviews"/>
+
+                    <TextView
+                        android:id="@+id/favoritesText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/reviewsText"
+                        tools:text="24 favorites"/>
+
+                    <TextView
+                        android:id="@+id/followsText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/favoritesText"
+                        tools:text="14 follows"/>
+
+                    <TextView
+                        android:id="@+id/storyidText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginStart="8dp"
+                        android:focusable="auto"
+                        app:layout_constraintBottom_toBottomOf="@+id/followsText"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/followsText"
+                        tools:text="Story ID: 24518752"/>
+
+                </android.support.constraint.ConstraintLayout>
+
+            </android.support.constraint.ConstraintLayout>
+
+        </android.support.v7.widget.CardView>
+
+    </slak.fanfictionstories.StoryLayout>
+
+</android.support.constraint.ConstraintLayout>

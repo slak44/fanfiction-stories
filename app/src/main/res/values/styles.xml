@@ -4,30 +4,6 @@
     <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
     </style>
 
-    <style name="List">
-        <item name="android:divider">?android:dividerHorizontal</item>
-        <item name="android:showDividers">middle</item>
-        <item name="android:dividerHeight">1dip</item>
-    </style>
-
-    <style name="ListItem">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:gravity">center_vertical</item>
-        <item name="android:minHeight">?android:attr/listPreferredItemHeightSmall</item>
-        <item name="android:paddingEnd">?android:attr/listPreferredItemPaddingEnd</item>
-        <item name="android:paddingStart">?android:attr/listPreferredItemPaddingStart</item>
-        <item name="android:textAppearance">?android:attr/textAppearanceListItem</item>
-        <item name="android:listSelector">?android:attr/listSelector</item>
-        <item name="android:clickable">true</item>
-        <item name="android:background">?android:attr/selectableItemBackground</item>
-    </style>
-
-    <style name="ListItem.WithDrawable" parent="ListItem">
-        <item name="android:drawablePadding">@dimen/drawable_text_padding</item>
-        <item name="android:drawableTint">@color/listDrawableTint</item>
-    </style>
-
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
@@ -36,5 +12,37 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Dark"/>
+
+    <style name="AppTheme.List">
+        <item name="android:divider">?android:dividerHorizontal</item>
+        <item name="android:showDividers">middle</item>
+        <item name="android:dividerHeight">1dip</item>
+    </style>
+
+    <style name="AppTheme.NotTouchable">
+        <item name="android:clickable">false</item>
+        <item name="android:background">@color/alpha</item>
+    </style>
+
+    <style name="AppTheme.Touchable">
+        <item name="android:listSelector">?android:attr/listSelector</item>
+        <item name="android:clickable">true</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
+    <style name="AppTheme.Touchable.ListItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">?android:attr/listPreferredItemHeightSmall</item>
+        <item name="android:paddingEnd">?android:attr/listPreferredItemPaddingEnd</item>
+        <item name="android:paddingStart">?android:attr/listPreferredItemPaddingStart</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceListItem</item>
+    </style>
+
+    <style name="AppTheme.Touchable.ListItem.WithDrawable">
+        <item name="android:drawablePadding">@dimen/drawable_text_padding</item>
+        <item name="android:drawableTint">@color/listDrawableTint</item>
+    </style>
 
 </resources>
