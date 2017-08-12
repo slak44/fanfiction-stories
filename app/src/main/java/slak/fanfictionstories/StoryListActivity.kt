@@ -3,10 +3,8 @@ package slak.fanfictionstories
 import android.content.Context
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
-import android.support.design.widget.CoordinatorLayout
 import android.support.v7.app.AppCompatActivity
 import android.util.AttributeSet
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
@@ -34,21 +32,6 @@ class StoryLayout : LinearLayout {
     }
     return super.onCreateDrawableState(extraSpace)
   }
-
-//  override fun performClick(): Boolean {
-//    return super.performClick()
-//  }
-//
-//  override fun onTouchEvent(event: MotionEvent?): Boolean {
-//    // FIXME do we want this elevation like this?
-//    if (cardWrapper.cardElevation == 7F) cardWrapper.cardElevation = 14F
-//    else cardWrapper.cardElevation = 7F
-//    if (storyDetails.visibility == View.GONE) storyDetails.visibility = View.VISIBLE
-//    else storyDetails.visibility = View.GONE
-//    println(storyDetails.visibility)//FIXME
-//    performClick()
-//    return super.onTouchEvent(event)
-//  }
 
   fun loadFromModel(model: StoryModel) {
     // Unexpanded view
@@ -88,9 +71,6 @@ enum class StoryStatus {
 }
 
 class StoryModel(val src: Map<String, Any?>, val context: Context) {
-  init {
-    println(src)//FIXME
-  }
   val _id: Long = src["_id"] as Long
   val storyidRaw: String = src["storyid"] as String
 
