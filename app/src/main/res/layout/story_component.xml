@@ -45,7 +45,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="8dp"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         tools:text="Title, A Very Very Very Long Title"/>
@@ -56,8 +56,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="0dp"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                        android:textStyle="italic"
+                        android:textAppearance="@android:style/TextAppearance.Material.Small"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/titleText"
                         tools:text="by Slak44"/>
@@ -67,8 +66,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                        android:textStyle="italic"
+                        android:textAppearance="@android:style/TextAppearance.Material.Small"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/authorText"
                         tools:text="in Test Category"

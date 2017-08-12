@@ -25,8 +25,9 @@ class StoryLayout : LinearLayout {
     storyProgress.setOnTouchListener { _, _ -> true }
     storyMainContent.setOnClickListener {
       // FIXME do we want this elevation like this?
-      if (cardWrapper.cardElevation == 7F) cardWrapper.cardElevation = 14F
+      if (cardWrapper.cardElevation == 7F) cardWrapper.cardElevation = 20F
       else cardWrapper.cardElevation = 7F
+      // This gets animated automatically
       if (storyDetails.visibility == View.GONE) storyDetails.visibility = View.VISIBLE
       else storyDetails.visibility = View.GONE
     }
