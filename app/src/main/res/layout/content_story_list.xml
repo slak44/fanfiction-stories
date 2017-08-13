@@ -8,6 +8,7 @@
     android:layout_height="match_parent"
     android:layout_margin="@dimen/story_list_margin"
     android:divider="@color/alpha"
+    android:dividerHeight="@dimen/story_list_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="slak.fanfictionstories.StoryListActivity"
     tools:showIn="@layout/activity_story_list">
