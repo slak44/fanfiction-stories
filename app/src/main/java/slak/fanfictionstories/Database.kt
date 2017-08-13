@@ -49,7 +49,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     super.onOpen(db)
     db!!.dropTable("stories", true) // FIXME test code
     this.onCreate(db)
-    db.insertOrThrow(tableName = "stories", values = *arrayOf( // FIXME test code
+    for (i in 1..10) db.insertOrThrow(tableName = "stories", values = *arrayOf( // FIXME test code
         "title" to "Title",
         "author" to "Slak44",
         "summary" to "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.",
