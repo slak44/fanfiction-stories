@@ -2,9 +2,11 @@ package slak.fanfictionstories
 
 import android.content.Context
 import android.os.Bundle
+import android.support.v4.view.GestureDetectorCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.CardView
 import android.util.AttributeSet
+import android.view.GestureDetector
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
@@ -83,7 +85,7 @@ class StoryModel(val src: Map<String, Any?>, val context: Context) {
   val genresRaw = src["genres"] as String
   val charactersRaw = src["characters"] as String
   val ratingRaw = src["rating"] as String
-  val status = StoryStatus.fromString(src["status"] as String)
+  val status = StoryStatus.fromString(src["status"] as String) // FIXME: ui for this where
   val wordCount: Int = (src["wordCount"] as Long).toInt()
   val scrollProgress: Int = (src["scrollProgress"] as Long).toInt()
   val chapterCount: Int = (src["chapters"] as Long).toInt()
