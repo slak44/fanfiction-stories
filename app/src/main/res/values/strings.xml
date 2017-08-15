@@ -10,9 +10,9 @@
     <string name="updated_on">Updated on %s</string>
     <string name="published_on">Published on %s</string>
     <string name="rated_x">Rated %s</string>
-    <string name="storyid_x">Story ID: %s</string>
+    <string name="storyid_x">Story ID: %d</string>
     <string name="by_author">by %s</string>
-    <string name="in_category">in %s</string>
+    <string name="in_canon">in %s</string>
     <string name="about_genres">about %s</string>
     <string name="with_characters">with %s</string>
     <string name="chapter_progress">Chapter %d of %d</string>
@@ -21,6 +21,8 @@
     <string name="x_reviews">%d reviews</string>
     <string name="x_favorites">%d favorites</string>
     <string name="x_follows">%d follows</string>
+
+    <string name="no_connection">No connection</string>
 
     <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.</string>
 </resources>

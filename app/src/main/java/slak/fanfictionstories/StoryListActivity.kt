@@ -11,6 +11,11 @@ import android.widget.*
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.story_component.view.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.db.*
 
 class StoryCardView : CardView {
@@ -36,7 +41,7 @@ class StoryCardView : CardView {
     // Unexpanded view
     titleText.text = model.title
     authorText.text = model.author
-    categoryText.text = model.category
+    canonText.text = model.canon
     wordsText.text = model.words
     storyProgress.progress = model.progress
     isCompletedText.visibility = if (model.isCompleted) View.VISIBLE else View.INVISIBLE
@@ -99,5 +104,11 @@ class StoryListActivity : AppCompatActivity() {
 
     val adapter = StoryAdapter(this)
     storyListView.adapter = adapter
+
+    launch(CommonPool) {
+      // FIXME test code
+      val s: StoryModel = StoryFetcher(12555864L, this@StoryListActivity.applicationContext).fetchMetadata().await()
+      println(s.toString())
+    }
   }
 }

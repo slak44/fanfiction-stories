@@ -23,8 +23,10 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         _id INTEGER PRIMARY KEY UNIQUE,
         title TEXT NOT NULL,
         author TEXT NOT NULL,
+        authorid INTEGER NOT NULL,
         summary TEXT NOT NULL,
         category TEXT NOT NULL,
+        canon TEXT NOT NULL,
         language TEXT NOT NULL,
         genres TEXT NOT NULL,
         characters TEXT NOT NULL,
@@ -40,7 +42,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         wordCount INTEGER CHECK(chapters > 0) NOT NULL,
         publishDate INTEGER NOT NULL,
         updateDate INTEGER NOT NULL,
-        storyid TEXT NOT NULL
+        storyid INTEGER NOT NULL
       );
     """)
   }
@@ -52,8 +54,10 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     for (i in 1..10) db.insertOrThrow(tableName = "stories", values = *arrayOf( // FIXME test code
         "title" to "Title",
         "author" to "Slak44",
+        "authorid" to "1298274",
         "summary" to "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.",
-        "category" to "Nice category",
+        "canon" to "Nice world",
+        "category" to "test",
         "language" to "English",
         "rating" to "Fiction T",
         "status" to "remote",
@@ -65,7 +69,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         "wordCount" to 1000,
         "publishDate" to 1502444959,
         "updateDate" to 1502444960,
-        "storyid" to "19429924",
+        "storyid" to 19429924,
         "isCompleted" to 1,
         "reviews" to 12,
         "favorites" to 29,
