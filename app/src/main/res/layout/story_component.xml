@@ -41,6 +41,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="0dp"
                 android:textAppearance="@android:style/TextAppearance.Material.Small"
+                android:textStyle="italic"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/titleText"
                 tools:text="by Slak44"/>
@@ -51,6 +52,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:textAppearance="@android:style/TextAppearance.Material.Small"
+                android:textStyle="italic"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/authorText"
                 tools:text="in Test Category"
