@@ -3,17 +3,32 @@ package slak.fanfictionstories
 import android.content.Context
 import android.net.ConnectivityManager
 import android.util.Log
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.*
 import java.net.URL
 import java.util.*
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 class StoryFetcher(val storyid: Long, val ctx: Context) {
-  val chapters: List<String> = ArrayList() // TODO
+  companion object {
+    private val downloadQueue: LinkedBlockingQueue<Pair<
+        Deferred<ArrayList<String>>,
+        (ArrayList<String>) -> Unit
+        >> = LinkedBlockingQueue()
+    init { launch(CommonPool) {
+      while (true) {
+        val thingToDownload = downloadQueue.take()
+        val downloaded = thingToDownload.first.await()
+        thingToDownload.second(downloaded)
+      }
+    } }
+    private fun addToQueue(job: Deferred<ArrayList<String>>, cb: (ArrayList<String>) -> Unit) {
+      downloadQueue.put(Pair(job, cb))
+    }
+  }
+
+  val chaptersText: ArrayList<String> = ArrayList() // TODO
   private var metadata: Optional<Map<String, Any?>> = Optional.empty()
 
   private val regexOpts: Set<RegexOption> = hashSetOf(
@@ -87,6 +102,9 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
         "author" to author.groupValues[2],
         "title" to title.groupValues[1]
     ))
+
+    chaptersText.add(parseChapter(html))
+
     return@async StoryModel(metadata.get(), ctx, fromDb = false)
   }
 
@@ -108,6 +126,7 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     // We have a connection
     try {
       return@async URL("https://www.fanfiction.net/s/$storyid/$chapter/").readText()
+      // FIXME update notification
     } catch (t: Throwable) {
       Log.e("StoryFetcher", "", t)
       // Something happened; retry
@@ -116,4 +135,28 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
       return@async patientlyFetchChapter(chapter).await()
     }
   }
+
+  private fun parseChapter(fromHtml: String): String {
+    val story = Regex("id='storytext'>(.*?)</div>", regexOpts).find(fromHtml) ?:
+        throw IllegalStateException("Cannot find story")
+    return story.groupValues[1]
+  }
+
+  private fun fetchChaptersImpl(from: Int, target: Int) = async(CommonPool, CoroutineStart.LAZY) {
+    for (chapterNr in from..target) {
+      delay(1, TimeUnit.SECONDS)
+      chaptersText.add(parseChapter(patientlyFetchChapter(chapterNr).await()))
+      // FIXME update notification
+    }
+    return@async chaptersText
+  }
+
+  fun fetchChapters(cb: (ArrayList<String>) -> Unit, from: Int = 2, to: Int = -1) {
+    if (!metadata.isPresent && to == -1)
+      throw IllegalArgumentException("Specify 'to' chapter if metadata is missing")
+    val target = if (to == -1) (metadata.get()["chapters"] as Long).toInt() else to
+    val coroutine = fetchChaptersImpl(from, target)
+    addToQueue(coroutine, cb)
+  }
+
  }
