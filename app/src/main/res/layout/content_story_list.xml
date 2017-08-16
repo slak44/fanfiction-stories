@@ -7,6 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="@dimen/story_list_margin"
+    android:animateLayoutChanges="true"
     android:divider="@color/alpha"
     android:dividerHeight="@dimen/story_list_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
