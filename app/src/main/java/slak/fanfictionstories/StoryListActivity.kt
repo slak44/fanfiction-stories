@@ -4,16 +4,21 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.CardView
+import android.support.v7.widget.DefaultItemAnimator
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import org.jetbrains.anko.db.*
+import android.animation.ObjectAnimator
+
+
 
 class StoryCardView : CardView {
   constructor(context: Context) : super(context)
@@ -58,58 +63,50 @@ class StoryCardView : CardView {
   }
 }
 
-class StoryAdapter private constructor (val activity: StoryListActivity) : BaseAdapter() {
+class StoryAdapter private constructor (val context: Context) : RecyclerView.Adapter<StoryAdapter.ViewHolder>() {
+  class ViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
+
   companion object {
-    fun create(activity: StoryListActivity): Deferred<StoryAdapter> = async(CommonPool) {
-      val adapter = StoryAdapter(activity)
-      adapter.data = activity.getStoriesMeta()
+    fun create(context: Context): Deferred<StoryAdapter> = async(CommonPool) {
+      val adapter = StoryAdapter(context)
+      adapter.data = context.database.getStories().await()
       return@async adapter
     }
   }
 
   lateinit var data: List<StoryModel>
 
-  override fun getCount(): Int {
-    return data.size
+  override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    holder.view.loadFromModel(data[position])
   }
 
-  override fun getItem(position: Int): Any {
-    return data[position]
+  private var addedOrder: Long = 0
+
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    val holder = ViewHolder(LayoutInflater.from(parent.context)
+        .inflate(R.layout.story_component, parent, false) as StoryCardView)
+    holder.view.alpha = 0f
+    val fadeIn = ObjectAnimator.ofFloat(holder.view, "alpha", 0.3f, 1f)
+    fadeIn.startDelay = addedOrder * 100
+    fadeIn.start()
+    addedOrder++
+    return holder
   }
 
-  override fun getItemId(position: Int): Long {
-    return data[position]._id.get()
-  }
-
-  override fun getView(idx: Int, recycleView: View?, parent: ViewGroup?): View {
-    // FIXME: use the recycle crap
-    val view = activity.layoutInflater.inflate(R.layout.story_component, parent, false) as StoryCardView
-    view.loadFromModel(data[idx])
-    return view
-  }
+  override fun getItemCount(): Int = data.size
+  override fun getItemId(position: Int): Long = data[position]._id.get()
 }
 
 class StoryListActivity : AppCompatActivity() {
-  fun getStoriesMeta() : List<StoryModel> {
-    return database.use {
-      select(tableName = "stories").exec {
-        parseList(object : MapRowParser<StoryModel> {
-          override fun parseRow(columns: Map<String, Any?>) =
-              StoryModel(columns, this@StoryListActivity, fromDb = true)
-        })
-      }
-    }
-  }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_story_list)
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-
-    val adapter = StoryAdapter.create(this@StoryListActivity)
-    val story = StoryFetcher(12555864L, this@StoryListActivity.applicationContext).fetchMetadata()
+    storyListView.layoutManager = LinearLayoutManager(this)
+    val adapter = StoryAdapter.create(this)
+    val story = StoryFetcher(12555864L, this.applicationContext).fetchMetadata()
     launch(CommonPool) {
       launch(UI) {
         storyListView.adapter = adapter.await()

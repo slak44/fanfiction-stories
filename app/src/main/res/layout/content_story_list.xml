@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ListView
+<android.support.v7.widget.RecyclerView
     android:id="@+id/storyListView"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -7,11 +7,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="@dimen/story_list_margin"
-    android:animateLayoutChanges="true"
     android:divider="@color/alpha"
     android:dividerHeight="@dimen/story_list_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="slak.fanfictionstories.StoryListActivity"
     tools:showIn="@layout/activity_story_list">
 
-</ListView>
+</android.support.v7.widget.RecyclerView>
