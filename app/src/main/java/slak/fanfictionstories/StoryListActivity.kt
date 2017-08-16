@@ -11,11 +11,8 @@ import android.widget.*
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.story_component.view.*
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.db.*
 
 class StoryCardView : CardView {
@@ -61,8 +58,16 @@ class StoryCardView : CardView {
   }
 }
 
-class StoryAdapter(val activity: StoryListActivity) : BaseAdapter() {
-  var data = activity.getStoriesMeta()
+class StoryAdapter private constructor (val activity: StoryListActivity) : BaseAdapter() {
+  companion object {
+    fun create(activity: StoryListActivity): Deferred<StoryAdapter> = async(CommonPool) {
+      val adapter = StoryAdapter(activity)
+      adapter.data = activity.getStoriesMeta()
+      return@async adapter
+    }
+  }
+
+  lateinit var data: List<StoryModel>
 
   override fun getCount(): Int {
     return data.size
@@ -102,12 +107,15 @@ class StoryListActivity : AppCompatActivity() {
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    val adapter = StoryAdapter(this)
-    storyListView.adapter = adapter
 
+    val adapter = StoryAdapter.create(this@StoryListActivity)
+    val story = StoryFetcher(12555864L, this@StoryListActivity.applicationContext).fetchMetadata()
     launch(CommonPool) {
+      launch(UI) {
+        storyListView.adapter = adapter.await()
+      }
       // FIXME test code
-      val s: StoryModel = StoryFetcher(12555864L, this@StoryListActivity.applicationContext).fetchMetadata().await()
+      val s: StoryModel = story.await()
       println(s.toString())
     }
   }

@@ -23,7 +23,7 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
       RegexOption.DOT_MATCHES_ALL
   )
 
-  fun fetchMetadata(): Deferred<StoryModel> = async(UI) {
+  fun fetchMetadata(): Deferred<StoryModel> = async(CommonPool) {
     val html: String = patientlyFetchChapter(1).await()
 
     val author = Regex("<a class='xcontrast_txt' href='/u/([0-9]+)/.*?'>(.*?)</a>", regexOpts)
