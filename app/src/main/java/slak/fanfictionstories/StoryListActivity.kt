@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.CardView
-import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.AttributeSet
@@ -17,8 +16,6 @@ import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import android.animation.ObjectAnimator
-
-
 
 class StoryCardView : CardView {
   constructor(context: Context) : super(context)
@@ -69,7 +66,7 @@ class StoryAdapter private constructor (val context: Context) : RecyclerView.Ada
   companion object {
     fun create(context: Context): Deferred<StoryAdapter> = async(CommonPool) {
       val adapter = StoryAdapter(context)
-      adapter.data = context.database.getStories().await()
+      adapter.data = context.database.getStories(context).await()
       return@async adapter
     }
   }

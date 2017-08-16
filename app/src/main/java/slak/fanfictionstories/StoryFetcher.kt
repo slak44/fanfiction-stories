@@ -5,7 +5,6 @@ import android.net.ConnectivityManager
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
 import java.net.URL
@@ -53,6 +52,7 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     val published = Regex("Published: <span data-xutime='([0-9]+)'>", regexOpts).find(metadataStr)
 
     // Disambiguate genres/characters
+    // FIXME this goes boom if there is only one genre (no / to find)
     val split = ArrayList(metadataStr.split('-'))
     val findGenres = split.filter { it.contains(Regex("[^</]/[^/']")) } // Magic
     var genres: Optional<String> = Optional.empty()

@@ -7,7 +7,7 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import org.jetbrains.anko.db.*
 
-class DatabaseHelper(private val ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 1) {
+class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 1) {
   companion object {
     private var instance: DatabaseHelper? = null
 
@@ -84,11 +84,11 @@ class DatabaseHelper(private val ctx: Context) : ManagedSQLiteOpenHelper(ctx, "F
     // Here you can upgrade tables, as usual
   }
 
-  fun getStories() : Deferred<List<StoryModel>> = async(CommonPool) { ctx.database.use {
+  fun getStories(ctx: Context) : Deferred<List<StoryModel>> = async(CommonPool) { readableDatabase.
     select(tableName = "stories").exec { parseList(object : MapRowParser<StoryModel> {
       override fun parseRow(columns: Map<String, Any?>) = StoryModel(columns, ctx, fromDb = true)
     }) }
-  } }
+  }
 }
 
 // Access property for Context
