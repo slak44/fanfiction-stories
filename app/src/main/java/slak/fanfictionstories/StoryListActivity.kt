@@ -87,7 +87,7 @@ class StoryAdapter private constructor (val context: Context) : RecyclerView.Ada
         .inflate(R.layout.story_component, parent, false) as StoryCardView)
     holder.view.alpha = 0f
     val fadeIn = ObjectAnimator.ofFloat(holder.view, "alpha", 0.3f, 1f)
-    fadeIn.startDelay = addedOrder * 100
+    fadeIn.startDelay = addedOrder * 50
     fadeIn.start()
     addedOrder++
     return holder
