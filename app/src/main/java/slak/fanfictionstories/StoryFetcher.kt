@@ -12,6 +12,10 @@ import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 class StoryFetcher(val storyid: Long, val ctx: Context) {
+  companion object {
+    private val ffnetMutex: Mutex = Mutex()
+  }
+
   private var metadata: Optional<Map<String, Any?>> = Optional.empty()
 
   private val regexOpts: Set<RegexOption> = hashSetOf(
@@ -20,7 +24,7 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
       RegexOption.DOT_MATCHES_ALL
   )
 
-  fun fetchMetadata(): Deferred<StoryModel> = async(CommonPool) {
+  fun fetchMetadata(): Deferred<StoryModel> = async(CommonPool) { return@async ffnetMutex.withLock {
     val html: String = patientlyFetchChapter(1).await()
 
     val author = Regex("<a class='xcontrast_txt' href='/u/([0-9]+)/.*?'>(.*?)</a>", regexOpts)
@@ -86,8 +90,8 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
         "title" to title.groupValues[1]
     ))
 
-    return@async StoryModel(metadata.get(), ctx, fromDb = false)
-  }
+    return@withLock StoryModel(metadata.get(), ctx, fromDb = false)
+  } }
 
   private val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
@@ -123,16 +127,12 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     return story.groupValues[1]
   }
 
-  companion object {
-    private val fetchChaptersMutex: Mutex = Mutex()
-  }
-
   fun fetchChapters(from: Int = 1, to: Int = -1): Deferred<ArrayList<String>> = async(CommonPool) {
     if (!metadata.isPresent && to == -1)
       throw IllegalArgumentException("Specify 'to' chapter if metadata is missing")
     val chaptersText: ArrayList<String> = ArrayList()
     val target = if (to == -1) (metadata.get()["chapters"] as Long).toInt() else to
-    return@async fetchChaptersMutex.withLock {
+    return@async ffnetMutex.withLock {
       for (chapterNr in from..target) {
         delay(1, TimeUnit.SECONDS)
         chaptersText.add(parseChapter(patientlyFetchChapter(chapterNr).await()))
