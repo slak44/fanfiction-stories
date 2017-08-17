@@ -6,7 +6,6 @@ import android.util.Log
 import kotlinx.coroutines.experimental.*
 import java.net.URL
 import java.util.*
-import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
@@ -125,38 +124,16 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     return story.groupValues[1]
   }
 
-  private fun fetchChaptersImpl(from: Int, target: Int) = async(CommonPool, CoroutineStart.LAZY) {
+  fun fetchChapters(from: Int = 2, to: Int = -1): Deferred<ArrayList<String>> = async(CommonPool) {
+    if (!metadata.isPresent && to == -1)
+      throw IllegalArgumentException("Specify 'to' chapter if metadata is missing")
+    val target = if (to == -1) (metadata.get()["chapters"] as Long).toInt() else to
     for (chapterNr in from..target) {
       delay(1, TimeUnit.SECONDS)
       chaptersText.add(parseChapter(patientlyFetchChapter(chapterNr).await()))
       // FIXME update notification
     }
     return@async chaptersText
-  }
-
-  companion object {
-    private val downloadQueue: LinkedBlockingQueue<Pair<
-        Deferred<ArrayList<String>>,
-        (ArrayList<String>) -> Unit
-        >> = LinkedBlockingQueue()
-    init { launch(CommonPool) {
-      while (true) {
-        val thingToDownload = downloadQueue.take()
-        val downloaded = thingToDownload.first.await()
-        thingToDownload.second(downloaded)
-      }
-    } }
-    private fun addToQueue(job: Deferred<ArrayList<String>>, cb: (ArrayList<String>) -> Unit) {
-      downloadQueue.put(Pair(job, cb))
-    }
-  }
-
-  fun fetchChapters(cb: (ArrayList<String>) -> Unit, from: Int = 2, to: Int = -1) {
-    if (!metadata.isPresent && to == -1)
-      throw IllegalArgumentException("Specify 'to' chapter if metadata is missing")
-    val target = if (to == -1) (metadata.get()["chapters"] as Long).toInt() else to
-    val coroutine = fetchChaptersImpl(from, target)
-    addToQueue(coroutine, cb)
   }
 
  }

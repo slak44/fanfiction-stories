@@ -110,7 +110,7 @@ class StoryListActivity : AppCompatActivity() {
       }
       // FIXME test code
       println(story.fetchMetadata().await().toString())
-      story.fetchChapters({ println(it.size) })
+      println(story.fetchChapters().await().toString())
     }
   }
 }
