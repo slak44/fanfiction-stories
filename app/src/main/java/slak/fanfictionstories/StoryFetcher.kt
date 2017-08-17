@@ -11,23 +11,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 class StoryFetcher(val storyid: Long, val ctx: Context) {
-  companion object {
-    private val downloadQueue: LinkedBlockingQueue<Pair<
-        Deferred<ArrayList<String>>,
-        (ArrayList<String>) -> Unit
-        >> = LinkedBlockingQueue()
-    init { launch(CommonPool) {
-      while (true) {
-        val thingToDownload = downloadQueue.take()
-        val downloaded = thingToDownload.first.await()
-        thingToDownload.second(downloaded)
-      }
-    } }
-    private fun addToQueue(job: Deferred<ArrayList<String>>, cb: (ArrayList<String>) -> Unit) {
-      downloadQueue.put(Pair(job, cb))
-    }
-  }
-
   val chaptersText: ArrayList<String> = ArrayList() // TODO
   private var metadata: Optional<Map<String, Any?>> = Optional.empty()
 
@@ -149,6 +132,23 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
       // FIXME update notification
     }
     return@async chaptersText
+  }
+
+  companion object {
+    private val downloadQueue: LinkedBlockingQueue<Pair<
+        Deferred<ArrayList<String>>,
+        (ArrayList<String>) -> Unit
+        >> = LinkedBlockingQueue()
+    init { launch(CommonPool) {
+      while (true) {
+        val thingToDownload = downloadQueue.take()
+        val downloaded = thingToDownload.first.await()
+        thingToDownload.second(downloaded)
+      }
+    } }
+    private fun addToQueue(job: Deferred<ArrayList<String>>, cb: (ArrayList<String>) -> Unit) {
+      downloadQueue.put(Pair(job, cb))
+    }
   }
 
   fun fetchChapters(cb: (ArrayList<String>) -> Unit, from: Int = 2, to: Int = -1) {
