@@ -3,9 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_marginBottom="@dimen/story_list_margin"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/story_list_margin"
     android:focusable="true">
 
     <android.support.constraint.ConstraintLayout
@@ -230,11 +230,25 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:focusable="auto"
-                app:layout_constraintBottom_toBottomOf="@+id/followsText"
+                app:layout_constraintBottom_toBottomOf="@+id/addBtn"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/followsText"
+                app:layout_constraintTop_toTopOf="@+id/addBtn"
                 tools:text="Story ID: 24518752"/>
+
+            <Button
+                android:id="@+id/addBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_marginStart="8dp"
+                android:text="@string/add"
+                android:visibility="invisible"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/storyidText"
+                tools:text="Add"
+                tools:visibility="visible"/>
 
         </android.support.constraint.ConstraintLayout>
 

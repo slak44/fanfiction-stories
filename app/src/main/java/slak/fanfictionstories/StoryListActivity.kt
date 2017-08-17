@@ -16,11 +16,14 @@ import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import android.animation.ObjectAnimator
+import java.util.*
 
 class StoryCardView : CardView {
   constructor(context: Context) : super(context)
   constructor(context: Context, set: AttributeSet) : super(context, set)
   constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
+
+  var storyid: Optional<Long> = Optional.empty()
 
   override fun onCreateDrawableState(extraSpace: Int): IntArray {
     // Disable touching on the progress seek bar
@@ -32,6 +35,14 @@ class StoryCardView : CardView {
       // This gets animated automatically
       if (storyDetails.visibility == View.GONE) storyDetails.visibility = View.VISIBLE
       else storyDetails.visibility = View.GONE
+    }
+    addBtn.setOnClickListener {
+      addBtn.isEnabled = false
+      addBtn.text = context.resources.getString(R.string.adding___)
+      // FIXME update downloading notification here
+      if (!storyid.isPresent)
+        throw IllegalStateException("StoryCardView clicked, but data not filled by model")
+      StoryFetcher(storyid.get(), context)
     }
     return super.onCreateDrawableState(extraSpace)
   }
@@ -57,6 +68,9 @@ class StoryCardView : CardView {
     favoritesText.text = model.favorites
     followsText.text = model.follows
     storyidText.text = model.storyid
+
+    storyid = Optional.of(model.storyidRaw)
+    if (model.status != StoryStatus.LOCAL) addBtn.visibility = View.VISIBLE
   }
 }
 
@@ -107,6 +121,7 @@ class StoryListActivity : AppCompatActivity() {
       val adapter = StoryAdapter.create(this@StoryListActivity).await()
       launch(UI) {
         storyListView.adapter = adapter
+        if (adapter.itemCount == 0) nothingHere.visibility = View.VISIBLE
       }
       // FIXME test code
       println(story.fetchMetadata().await().toString())

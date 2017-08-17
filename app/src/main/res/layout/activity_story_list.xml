@@ -34,6 +34,14 @@
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>
 
+    <TextView
+        android:id="@+id/nothingHere"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/nothing_here"
+        android:visibility="invisible"
+        tools:visibility="visible"/>
+
     <include layout="@layout/content_story_list"/>
 
 </android.support.design.widget.CoordinatorLayout>

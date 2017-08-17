@@ -21,6 +21,9 @@
     <string name="x_reviews">%d reviews</string>
     <string name="x_favorites">%d favorites</string>
     <string name="x_follows">%d follows</string>
+    <string name="add">Add</string>
+    <string name="adding...">Adding…</string>
+    <string name="nothing_here">There\'s nothing here. Browse and add some stories</string>
 
     <string name="no_connection">No connection</string>
 
