@@ -52,32 +52,6 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
 
   override fun onOpen(db: SQLiteDatabase?) {
     super.onOpen(db)
-    db!!.dropTable("stories", true) // FIXME test code
-    this.onCreate(db)
-    for (i in 1..10) db.insertOrThrow(tableName = "stories", values = *arrayOf( // FIXME test code
-        "title" to "Title",
-        "author" to "Slak44",
-        "authorid" to 1298274,
-        "summary" to "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.",
-        "canon" to "Nice world",
-        "category" to "test",
-        "language" to "English",
-        "rating" to "Fiction T",
-        "status" to "remote",
-        "genres" to "Blabla/BlehBleh/BloBlo",
-        "characters" to "Test A., Test B.",
-        "chapters" to 15,
-        "currentChapter" to 1,
-        "scrollProgress" to 50,
-        "wordCount" to 1000,
-        "publishDate" to 1502444959,
-        "updateDate" to 1502444960,
-        "storyid" to 19429924,
-        "isCompleted" to 1,
-        "reviews" to 12,
-        "favorites" to 29,
-        "follows" to 56
-    ))
   }
 
   override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
