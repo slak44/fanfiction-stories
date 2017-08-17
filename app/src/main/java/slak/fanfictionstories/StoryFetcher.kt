@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.util.Log
 import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.sync.Mutex
+import kotlinx.coroutines.experimental.sync.withLock
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -121,17 +123,23 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     return story.groupValues[1]
   }
 
+  companion object {
+    private val fetchChaptersMutex: Mutex = Mutex()
+  }
+
   fun fetchChapters(from: Int = 1, to: Int = -1): Deferred<ArrayList<String>> = async(CommonPool) {
     if (!metadata.isPresent && to == -1)
       throw IllegalArgumentException("Specify 'to' chapter if metadata is missing")
     val chaptersText: ArrayList<String> = ArrayList()
     val target = if (to == -1) (metadata.get()["chapters"] as Long).toInt() else to
-    for (chapterNr in from..target) {
-      delay(1, TimeUnit.SECONDS)
-      chaptersText.add(parseChapter(patientlyFetchChapter(chapterNr).await()))
-      // FIXME update notification
+    return@async fetchChaptersMutex.withLock {
+      for (chapterNr in from..target) {
+        delay(1, TimeUnit.SECONDS)
+        chaptersText.add(parseChapter(patientlyFetchChapter(chapterNr).await()))
+        // FIXME update notification
+      }
+      return@withLock chaptersText
     }
-    return@async chaptersText
   }
 
 }
