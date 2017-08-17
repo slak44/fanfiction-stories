@@ -2,12 +2,14 @@ package slak.fanfictionstories
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 
 import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.db.dropTable
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,6 +21,15 @@ class MainActivity : AppCompatActivity() {
     storyListButton.setOnClickListener {
       val intent = Intent(this, StoryListActivity::class.java)
       startActivity(intent)
+    }
+    if (BuildConfig.DEBUG) {
+      regenTableBtn.visibility = View.VISIBLE
+      regenTableBtn.setOnClickListener {
+        database.use { dropTable("stories", true) }
+        Log.w("MainActivity", "DROPPED STORIES TABLE")
+        database.onCreate(database.writableDatabase)
+        Log.w("MainActivity", "REINITED STORIES TABLE")
+      }
     }
   }
 

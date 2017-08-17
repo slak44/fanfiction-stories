@@ -33,5 +33,7 @@
     <string name="storyid_already_exists">Story Directory Already Exists</string>
     <string name="storyid_already_exists_tip">The story database is out of sync with the downloaded stories</string>
 
+    <!-- These are development strings -->
+    <string name="regen_stories_table">Regen stories table</string>
     <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.</string>
 </resources>

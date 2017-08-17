@@ -55,6 +55,13 @@
             style="@style/AppTheme.Touchable.ListItem.WithDrawable"
             android:drawableStart="@drawable/ic_library_books_black_24dp"
             android:text="@string/story_browse"/>
+
+        <Button
+            android:id="@+id/regenTableBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/regen_stories_table"
+            android:visibility="gone"/>
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
