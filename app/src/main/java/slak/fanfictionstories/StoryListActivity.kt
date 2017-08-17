@@ -125,7 +125,9 @@ class StoryListActivity : AppCompatActivity() {
       }
       // FIXME test code
       println(story.fetchMetadata().await().toString())
-      println(story.fetchChapters().await().toString())
+      for (chapter in story.fetchChapters()) {
+        println(chapter)
+      }
     }
   }
 }

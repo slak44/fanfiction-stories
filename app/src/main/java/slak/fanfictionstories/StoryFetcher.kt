@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.util.Log
 import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
 import java.net.URL
@@ -127,19 +128,21 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     return story.groupValues[1]
   }
 
-  fun fetchChapters(from: Int = 1, to: Int = -1): Deferred<ArrayList<String>> = async(CommonPool) {
+  fun fetchChapters(from: Int = 1, to: Int = -1): Channel<String>  {
     if (!metadata.isPresent && to == -1)
       throw IllegalArgumentException("Specify 'to' chapter if metadata is missing")
-    val chaptersText: ArrayList<String> = ArrayList()
     val target = if (to == -1) (metadata.get()["chapters"] as Long).toInt() else to
-    return@async ffnetMutex.withLock {
+    // The buffer size is completely arbitrary
+    val channel = Channel<String>(10)
+    launch(CommonPool) { ffnetMutex.withLock {
       for (chapterNr in from..target) {
         delay(1, TimeUnit.SECONDS)
-        chaptersText.add(parseChapter(patientlyFetchChapter(chapterNr).await()))
+        channel.send(parseChapter(patientlyFetchChapter(chapterNr).await()))
         // FIXME update notification
       }
-      return@withLock chaptersText
-    }
+      channel.close()
+    } }
+    return channel
   }
 
 }
