@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 class StoryFetcher(val storyid: Long, val ctx: Context) {
-  val chaptersText: ArrayList<String> = ArrayList() // TODO
   private var metadata: Optional<Map<String, Any?>> = Optional.empty()
 
   private val regexOpts: Set<RegexOption> = hashSetOf(
@@ -85,8 +84,6 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
         "title" to title.groupValues[1]
     ))
 
-    chaptersText.add(parseChapter(html))
-
     return@async StoryModel(metadata.get(), ctx, fromDb = false)
   }
 
@@ -124,9 +121,10 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     return story.groupValues[1]
   }
 
-  fun fetchChapters(from: Int = 2, to: Int = -1): Deferred<ArrayList<String>> = async(CommonPool) {
+  fun fetchChapters(from: Int = 1, to: Int = -1): Deferred<ArrayList<String>> = async(CommonPool) {
     if (!metadata.isPresent && to == -1)
       throw IllegalArgumentException("Specify 'to' chapter if metadata is missing")
+    val chaptersText: ArrayList<String> = ArrayList()
     val target = if (to == -1) (metadata.get()["chapters"] as Long).toInt() else to
     for (chapterNr in from..target) {
       delay(1, TimeUnit.SECONDS)
@@ -136,4 +134,4 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     return@async chaptersText
   }
 
- }
+}
