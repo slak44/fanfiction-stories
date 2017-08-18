@@ -60,7 +60,9 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
 
   fun getStories(ctx: Context) : Deferred<List<StoryModel>> = async(CommonPool) { readableDatabase.
     select(tableName = "stories").exec { parseList(object : MapRowParser<StoryModel> {
-      override fun parseRow(columns: Map<String, Any?>) = StoryModel(columns, ctx, fromDb = true)
+      override fun parseRow(columns: Map<String, Any?>) = StoryModel(
+          // We are allowed to do this because nothing in the DB is null
+          columns.entries.map { Pair(it.key, it.value!!) }.toMap().toMutableMap(), ctx, fromDb = true)
     }) }
   }
 

@@ -107,7 +107,7 @@ class StoryCardView : CardView {
     storyidText.text = model.storyid
 
     storyid = Optional.of(model.storyidRaw)
-    if (model.status != StoryStatus.LOCAL) addBtn.visibility = View.VISIBLE
+    if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.INVISIBLE
   }
 }
 

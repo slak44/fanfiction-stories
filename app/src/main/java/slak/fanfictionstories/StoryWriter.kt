@@ -73,5 +73,8 @@ fun getFullStory(ctx: Context, storyid: Long) = launch(CommonPool) {
   val fetcher = StoryFetcher(storyid, ctx)
   val meta = fetcher.fetchMetadata().await()
   val isWriting = writeStory(ctx, storyid, fetcher.fetchChapters())
-  if (isWriting) ctx.database.insertStory(meta)
+  if (isWriting) {
+    meta.status = StoryStatus.LOCAL
+    ctx.database.insertStory(meta)
+  }
 }

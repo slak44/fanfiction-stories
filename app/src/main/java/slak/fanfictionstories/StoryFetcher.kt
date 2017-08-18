@@ -7,7 +7,6 @@ import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
-import org.jetbrains.anko.db.update
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -18,7 +17,8 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     private val ffnetMutex: Mutex = Mutex()
   }
 
-  private var metadata: Optional<Map<String, Any?>> = Optional.empty()
+  var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
+    private set
 
   private val regexOpts: Set<RegexOption> = hashSetOf(
       RegexOption.MULTILINE,
@@ -70,7 +70,7 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
         if (split[2].contains("Words|Chapters|Reviews|Favs|Follows|Published|Updated")) "None"
         else split[2]
 
-    metadata = Optional.of(mapOf(
+    metadata = Optional.of(mutableMapOf(
         "storyid" to storyid,
         "authorid" to author.groupValues[1].toLong(),
         "rating" to ratingLang.groupValues[1],
@@ -145,9 +145,6 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
         // FIXME update notification
       }
       channel.close()
-      ctx.database.use {
-        update("stories", "status" to "local").whereSimple("storyid = ?", storyid.toString())
-      }
     } }
     return channel
   }

@@ -15,11 +15,23 @@ enum class StoryStatus {
       else -> throw IllegalArgumentException("Invalid arg: " + s)
     }
   }
+
+  override fun toString(): String = when(this) {
+    SEEN -> "seen"
+    REMOTE -> "remote"
+    LOCAL -> "local"
+  }
 }
 
-class StoryModel(val src: Map<String, Any?>, val context: Context, fromDb: Boolean) {
+class StoryModel(val src: MutableMap<String, Any>, val context: Context, fromDb: Boolean) {
   // DB primary key. Does not exist if story not from db
-  var _id: Optional<Long> = if (fromDb) Optional.of(src["_id"] as Long) else Optional.empty()
+  val _id: Optional<Long> = if (fromDb) Optional.of(src["_id"] as Long) else Optional.empty()
+
+  var status = StoryStatus.fromString(src["status"] as String) // FIXME: ui for this where
+    set(value) {
+      field = value
+      src["status"] = value.toString()
+    }
 
   val storyidRaw: Long = src["storyid"] as Long
   val title = src["title"] as String
@@ -31,7 +43,6 @@ class StoryModel(val src: Map<String, Any?>, val context: Context, fromDb: Boole
   val genresRaw = src["genres"] as String
   val charactersRaw = src["characters"] as String
   val ratingRaw = src["rating"] as String
-  val status = StoryStatus.fromString(src["status"] as String) // FIXME: ui for this where
   val wordCount: Int = (src["wordCount"] as Long).toInt()
   val scrollProgress: Int = (src["scrollProgress"] as Long).toInt()
   val chapterCount: Int = (src["chapters"] as Long).toInt()
