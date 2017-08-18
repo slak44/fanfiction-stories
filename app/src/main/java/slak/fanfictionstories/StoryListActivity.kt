@@ -63,6 +63,12 @@ class StoryCardView : CardView {
     genresText.text = model.genres
     charactersText.text = model.characters
     updateDateText.text = model.updateDate
+    if (model.updateDateSeconds == 0L) {
+      // Do this instead of View.GONE or View.INVISIBLE because we want
+      // its margins, but not its height
+      updateDateText.height = 0
+      updateDateText.requestLayout()
+    }
     publishDateText.text = model.publishDate
     reviewsText.text = model.reviews
     favoritesText.text = model.favorites
