@@ -115,8 +115,10 @@ class StoryListActivity : AppCompatActivity() {
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+//    getFullStory(this, 12555864L)// FIXME test code
+
     storyListView.layoutManager = LinearLayoutManager(this)
-    val story = StoryFetcher(11257413L, this.applicationContext)
+//    val story = StoryFetcher(11257413L, this.applicationContext) // FIXME test code
     launch(CommonPool) {
       val adapter = StoryAdapter.create(this@StoryListActivity).await()
       launch(UI) {
@@ -124,10 +126,10 @@ class StoryListActivity : AppCompatActivity() {
         if (adapter.itemCount == 0) nothingHere.visibility = View.VISIBLE
       }
       // FIXME test code
-      println(story.fetchMetadata().await().toString())
-      for (chapter in story.fetchChapters()) {
-        println(chapter)
-      }
+//      println(story.fetchMetadata().await().toString())
+//      for (chapter in story.fetchChapters()) {
+//        println(chapter)
+//      }
     }
   }
 }
