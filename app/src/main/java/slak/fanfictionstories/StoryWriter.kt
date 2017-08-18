@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.os.Environment
 import android.support.annotation.StringRes
+import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -17,14 +18,14 @@ fun errorDialog(ctx: Context, @StringRes title: Int, @StringRes msg: Int) {
   errorDialog(ctx, ctx.resources.getString(title), ctx.resources.getString(msg))
 }
 
-fun errorDialog(ctx: Context, title: String, msg: String) {
+fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
   AlertDialog.Builder(ctx)
       .setTitle(title)
       .setMessage(msg)
       .setPositiveButton(R.string.got_it, { dialogInterface, _ ->
         // User acknowledged error
         dialogInterface.dismiss()
-      }).create()
+      }).create().show()
 }
 
 fun haveExternalStorage() = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()
@@ -35,6 +36,7 @@ fun getStorageDir(ctx: Context): Optional<File> =
 fun writeStory(ctx: Context, storyid: Long, chapters: Channel<String>) = async(CommonPool) {
   val storage = getStorageDir(ctx)
   if (!storage.isPresent) {
+    Log.e("StoryWriter", "no ext storage")
     errorDialog(ctx, R.string.ext_store_unavailable, R.string.ext_store_unavailable_tip)
     return@async
   }
@@ -42,16 +44,16 @@ fun writeStory(ctx: Context, storyid: Long, chapters: Channel<String>) = async(C
   val targetDir = File(storiesDir, storyid.toString())
   if (targetDir.exists()) {
     // FIXME maybe ask the user if he wants to overwrite or legitimize this by getting the metadata
+    Log.e("StoryWriter", "targetDir exists")
     errorDialog(ctx, R.string.storyid_already_exists, R.string.storyid_already_exists_tip)
     return@async
   }
   val madeDirs = targetDir.mkdirs()
   if (!madeDirs) {
-    launch(UI) {
-      errorDialog(ctx,
-          ctx.resources.getString(R.string.failed_making_dirs),
-          ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.absolutePath))
-    }
+    Log.e("StoryWriter", "can't make dirs")
+    errorDialog(ctx,
+        ctx.resources.getString(R.string.failed_making_dirs),
+        ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.absolutePath))
     return@async
   }
   var idx: Int = 1
