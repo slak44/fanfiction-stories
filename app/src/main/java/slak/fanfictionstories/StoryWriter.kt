@@ -60,3 +60,9 @@ fun writeStory(ctx: Context, storyid: Long, chapters: Channel<String>) = async(C
     idx++
   }
 }
+
+fun getFullStory(ctx: Context, storyid: Long) = launch(CommonPool) {
+  val fetcher = StoryFetcher(storyid, ctx)
+  ctx.database.insertStory(fetcher.fetchMetadata().await())
+  writeStory(ctx, storyid, fetcher.fetchChapters())
+}

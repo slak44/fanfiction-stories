@@ -1,5 +1,6 @@
 package slak.fanfictionstories
 
+import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import kotlinx.coroutines.experimental.CommonPool
@@ -62,6 +63,35 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     select(tableName = "stories").exec { parseList(object : MapRowParser<StoryModel> {
       override fun parseRow(columns: Map<String, Any?>) = StoryModel(columns, ctx, fromDb = true)
     }) }
+  }
+
+  fun insertStory(model: StoryModel) = async(CommonPool) {
+    // For some retarded-ass reason the map can't be spread by *, and neither can an array of pairs
+    // FIXME ¯\_(ツ)_/¯
+    writableDatabase.insertOrThrow("stories",
+        "title" to model.src["title"],
+        "author" to model.src["author"],
+        "authorid" to model.src["authorid"],
+        "summary" to model.src["summary"],
+        "category" to model.src["category"],
+        "canon" to model.src["canon"],
+        "language" to model.src["language"],
+        "genres" to model.src["genres"],
+        "characters" to model.src["characters"],
+        "rating" to model.src["rating"],
+        "reviews" to model.src["reviews"],
+        "favorites" to model.src["favorites"],
+        "follows" to model.src["follows"],
+        "status" to model.src["status"],
+        "chapters" to model.src["chapters"],
+        "currentChapter" to model.src["currentChapter"],
+        "isCompleted" to model.src["isCompleted"],
+        "scrollProgress" to model.src["scrollProgress"],
+        "wordCount" to model.src["wordCount"],
+        "publishDate" to model.src["publishDate"],
+        "updateDate" to model.src["updateDate"],
+        "storyid" to model.src["storyid"]
+    )
   }
 }
 
