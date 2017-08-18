@@ -56,23 +56,26 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     val published = Regex("Published: <span data-xutime='([0-9]+)'>", regexOpts).find(metadataStr)
 
     // Disambiguate genres/characters
-    // FIXME this goes boom if there is only one genre (no / to find)
     val split = ArrayList(metadataStr.split('-'))
-    val findGenres = split.filter { it.contains(Regex("[^</]/[^/']")) } // Magic
-    var genres: Optional<String> = Optional.empty()
+    val findGenres = split.filter {
+      it.contains(Regex("Adventure|Angst|Drama|Fantasy|Friendship|Humor|Hurt/Comfort|"+
+          "Poetry|Romance|Sci-Fi|Supernatural|Tragedy"))
+    }
+    var genres: String = "None"
     if (findGenres.isNotEmpty()) {
-      genres = Optional.of(findGenres[0].trim())
+      genres = findGenres[0].trim()
       split.removeAll { findGenres.contains(it) }
     }
-
-    val characters = if (split[2].contains("Words|Chapters")) "None" else split[2]
+    val characters =
+        if (split[2].contains("Words|Chapters|Reviews|Favs|Follows|Published|Updated")) "None"
+        else split[2]
 
     metadata = Optional.of(mapOf(
         "storyid" to storyid,
         "authorid" to author.groupValues[1].toLong(),
         "rating" to ratingLang.groupValues[1],
         "language" to ratingLang.groupValues[2],
-        "genres" to if (genres.isPresent) genres.get() else "None",
+        "genres" to genres,
         "characters" to characters.trim(),
         "chapters" to if (chapters != null) chapters.groupValues[1].toLong() else 1L,
         "wordCount" to words.groupValues[1].replace(",", "").toLong(),
