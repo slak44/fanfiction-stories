@@ -44,7 +44,7 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     val metadataInnerHtml = Regex("<span class='xgray xcontrast_txt'>(.*?)</span>.*?</span>", regexOpts).find(html) ?:
         throw IllegalStateException("Can't match metadata for FF.net chapter 1")
     val metadataStr = metadataInnerHtml.groupValues[1]
-    val ratingLang = Regex("Rated: <a .*?>(.*?)</a> - (.*?) -", regexOpts).find(metadataStr) ?:
+    val ratingLang = Regex("Rated: <a .*?>Fiction[ ]{2}(.*?)</a> - (.*?) -", regexOpts).find(metadataStr) ?:
         throw IllegalStateException("Can't match rating/language")
     val words = Regex("Words: ([0-9,]+)", regexOpts).find(metadataStr) ?:
         throw IllegalStateException("Can't match word count")
