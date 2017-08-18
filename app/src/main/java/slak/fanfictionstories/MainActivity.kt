@@ -13,6 +13,9 @@ import org.jetbrains.anko.db.dropTable
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
+  companion object {
+    private const val TAG = "MainActivity"
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -27,15 +30,18 @@ class MainActivity : AppCompatActivity() {
       debugButtons.visibility = View.VISIBLE
       regenTableBtn.setOnClickListener {
         database.use { dropTable("stories", true) }
-        Log.w("MainActivity", "DROPPED STORIES TABLE")
+        Log.w(TAG, "DROPPED STORIES TABLE")
         database.onCreate(database.writableDatabase)
-        Log.w("MainActivity", "REINITED STORIES TABLE")
+        Log.w(TAG, "REINITED STORIES TABLE")
       }
       addStoryBtn.setOnClickListener {
+        getFullStory(this, 12555864L)
         getFullStory(this, 11953822L)
       }
       wipeDiskDataBtn.setOnClickListener {
-        File(getStorageDir(this@MainActivity).get(), "storiesData").deleteRecursively()
+        val deleted = File(getStorageDir(this@MainActivity).get(), "storiesData").deleteRecursively()
+        if (deleted) Log.w(TAG, "SUCCESSFULLY DELETED")
+        else Log.e(TAG, "DELETE FAILED")
       }
     }
   }
