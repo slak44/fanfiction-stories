@@ -19,11 +19,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    kotlin {
-        experimental {
-            coroutines 'enable'
-        }
-    }
 }
 def anko_version = "0.10.1"
 def kotlin_coroutines_version = "0.16"
@@ -42,4 +37,9 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.0'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.0'
+}
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
 }
