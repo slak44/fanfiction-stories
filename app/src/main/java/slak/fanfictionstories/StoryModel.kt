@@ -65,7 +65,11 @@ class StoryModel(val src: Map<String, Any?>, val context: Context, fromDb: Boole
   }
   val chapters: String get() {
     // If we didn't start reading the thing, show total chapter count
-    if (currentChapter == 0) return context.resources.getString(R.string.x_chapters, chapterCount)
+    if (currentChapter == 0) {
+      // Special-case one chapter
+      if (chapterCount == 1) return context.resources.getString(R.string.one_chapter)
+      else return context.resources.getString(R.string.x_chapters, chapterCount)
+    }
     // Otherwise, list current chapter out of total
     else return context.resources.getString(R.string.chapter_progress, currentChapter, chapterCount)
   }

@@ -16,6 +16,7 @@
     <string name="about_genres">about %s</string>
     <string name="with_characters">with %s</string>
     <string name="chapter_progress">Chapter %d of %d</string>
+    <string name="one_chapter">1 Chapter</string>
     <string name="x_chapters">%d Chapters</string>
     <string name="x_words">%d words</string>
     <string name="x_reviews">%d reviews</string>
