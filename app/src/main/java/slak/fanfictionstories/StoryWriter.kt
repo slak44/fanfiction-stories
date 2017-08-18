@@ -6,6 +6,7 @@ import android.os.Environment
 import android.support.annotation.StringRes
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.channels.Channel
@@ -33,12 +34,16 @@ fun haveExternalStorage() = Environment.MEDIA_MOUNTED == Environment.getExternal
 fun getStorageDir(ctx: Context): Optional<File> =
     if (haveExternalStorage()) Optional.of(ctx.getExternalFilesDir(null)) else Optional.empty()
 
-fun writeStory(ctx: Context, storyid: Long, chapters: Channel<String>) = async(CommonPool) {
+/**
+ * Writes received story data to disk
+ * @returns true if we started writing data to disk, false otherwise
+ */
+fun writeStory(ctx: Context, storyid: Long, chapters: Channel<String>): Boolean {
   val storage = getStorageDir(ctx)
   if (!storage.isPresent) {
     Log.e("StoryWriter", "no ext storage")
     errorDialog(ctx, R.string.ext_store_unavailable, R.string.ext_store_unavailable_tip)
-    return@async
+    return false
   }
   val storiesDir = File(storage.get(), "storiesData")
   val targetDir = File(storiesDir, storyid.toString())
@@ -46,7 +51,7 @@ fun writeStory(ctx: Context, storyid: Long, chapters: Channel<String>) = async(C
     // FIXME maybe ask the user if he wants to overwrite or legitimize this by getting the metadata
     Log.e("StoryWriter", "targetDir exists")
     errorDialog(ctx, R.string.storyid_already_exists, R.string.storyid_already_exists_tip)
-    return@async
+    return false
   }
   val madeDirs = targetDir.mkdirs()
   if (!madeDirs) {
@@ -54,17 +59,21 @@ fun writeStory(ctx: Context, storyid: Long, chapters: Channel<String>) = async(C
     errorDialog(ctx,
         ctx.resources.getString(R.string.failed_making_dirs),
         ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.absolutePath))
-    return@async
+    return false
   }
-  var idx: Int = 1
-  chapters.consumeEach { chapterText: String ->
-    File(targetDir, "$idx.html").printWriter().use { it.print(chapterText) }
-    idx++
+  launch(CommonPool) {
+    var idx: Int = 1
+    chapters.consumeEach { chapterText: String ->
+      File(targetDir, "$idx.html").printWriter().use { it.print(chapterText) }
+      idx++
+    }
   }
+  return true
 }
 
 fun getFullStory(ctx: Context, storyid: Long) = launch(CommonPool) {
   val fetcher = StoryFetcher(storyid, ctx)
-  ctx.database.insertStory(fetcher.fetchMetadata().await())
-  writeStory(ctx, storyid, fetcher.fetchChapters())
+  val meta = fetcher.fetchMetadata().await()
+  val isWriting = writeStory(ctx, storyid, fetcher.fetchChapters())
+  if (isWriting) ctx.database.insertStory(meta)
 }
