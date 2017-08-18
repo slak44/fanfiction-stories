@@ -29,23 +29,27 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
   fun fetchMetadata(): Deferred<StoryModel> = async(CommonPool) { return@async ffnetMutex.withLock {
     val html: String = patientlyFetchChapter(1).await()
 
-    val author = Regex("<a class='xcontrast_txt' href='/u/([0-9]+)/.*?'>(.*?)</a>", regexOpts)
+    val author =
+        Regex("<a class='xcontrast_txt' href='/u/([0-9]+)/.*?'>(.*?)</a>", regexOpts)
         .find(html) ?: throw IllegalStateException("Can't match author")
 
     val title = Regex("<b class='xcontrast_txt'>(.*?)</b>", regexOpts).find(html) ?:
         throw IllegalStateException("Can't match title")
 
-    val summary = Regex("<div style='margin-top:2px' class='xcontrast_txt'>(.*?)</div>", regexOpts)
+    val summary =
+        Regex("<div style='margin-top:2px' class='xcontrast_txt'>(.*?)</div>", regexOpts)
         .find(html) ?: throw IllegalStateException("Can't match summary")
 
-    val categories = Regex("id=pre_story_links>.*?<a .*?>(.*?)</a>.*?<a .*?>(.*?)</a>", regexOpts)
+    val categories =
+        Regex("id=pre_story_links>.*?<a .*?>(.*?)</a>.*?<a .*?>(.*?)</a>", regexOpts)
         .find(html) ?: throw IllegalStateException("Can't match categories")
 
-    val metadataInnerHtml = Regex("<span class='xgray xcontrast_txt'>(.*?)</span>.*?</span>", regexOpts).find(html) ?:
-        throw IllegalStateException("Can't match metadata for FF.net chapter 1")
+    val metadataInnerHtml =
+        Regex("<span class='xgray xcontrast_txt'>(.*?)</span>.*?</span>", regexOpts)
+            .find(html) ?: throw IllegalStateException("Can't match metadata for FF.net chapter 1")
     val metadataStr = metadataInnerHtml.groupValues[1]
-    val ratingLang = Regex("Rated: <a .*?>Fiction[ ]{2}(.*?)</a> - (.*?) -", regexOpts).find(metadataStr) ?:
-        throw IllegalStateException("Can't match rating/language")
+    val ratingLang = Regex("Rated: <a .*?>Fiction[ ]{2}(.*?)</a> - (.*?) -", regexOpts)
+        .find(metadataStr) ?: throw IllegalStateException("Can't match rating/language")
     val words = Regex("Words: ([0-9,]+)", regexOpts).find(metadataStr) ?:
         throw IllegalStateException("Can't match word count")
     val chapters = Regex("Chapters: ([0-9]+)", regexOpts).find(metadataStr)
