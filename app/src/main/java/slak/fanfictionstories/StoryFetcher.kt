@@ -52,8 +52,8 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     val favs = Regex("Favs: ([0-9]+)", regexOpts).find(metadataStr)
     val follows = Regex("Follows: ([0-9]+)", regexOpts).find(metadataStr)
     val reviews = Regex("Reviews: <a.*?>([0-9]+)</a>", regexOpts).find(metadataStr)
-    val updated = Regex("Updated: <span data-xutime='([0-9]+)'>", regexOpts).find(metadataStr)
-    val published = Regex("Published: <span data-xutime='([0-9]+)'>", regexOpts).find(metadataStr)
+    val published = Regex("Published: <span data-xutime='([0-9]+)'>", regexOpts).find(html)
+    val updated = Regex("Updated: <span data-xutime='([0-9]+)'>", regexOpts).find(html)
 
     // Disambiguate genres/characters
     val split = ArrayList(metadataStr.split('-'))
