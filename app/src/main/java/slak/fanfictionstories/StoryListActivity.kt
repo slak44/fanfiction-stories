@@ -25,6 +25,35 @@ class StoryCardView : CardView {
   constructor(context: Context, set: AttributeSet) : super(context, set)
   constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
 
+  companion object {
+    fun createRightSwipeHelper(recyclerView: RecyclerView): ItemTouchHelper {
+      var swipeStory: ItemTouchHelper? = null
+      swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
+        override fun getMovementFlags(recycler: RecyclerView?,
+                                      viewHolder: RecyclerView.ViewHolder?): Int {
+          return makeMovementFlags(0, ItemTouchHelper.RIGHT)
+        }
+
+        override fun onMove(recycler: RecyclerView?, viewHolder: RecyclerView.ViewHolder?,
+                            target: RecyclerView.ViewHolder?): Boolean {
+          return false
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+          Log.d("StoryListActivity", "swiped thing right")
+          // FIXME open story reader here
+          // After the reader was opened, reset the translation by reattaching
+          // We do this because we might go back from the reader to this activity and
+          // it has to look properly
+          swipeStory!!.attachToRecyclerView(null)
+          swipeStory!!.attachToRecyclerView(recyclerView)
+        }
+      })
+      swipeStory.attachToRecyclerView(recyclerView)
+      return swipeStory
+    }
+  }
+
   var storyid: Optional<Long> = Optional.empty()
 
   override fun onCreateDrawableState(extraSpace: Int): IntArray {
@@ -123,20 +152,8 @@ class StoryListActivity : AppCompatActivity() {
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    val swipeStory = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
-      override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?,
-                          target: RecyclerView.ViewHolder?): Boolean {
-        return false
-      }
-
-      override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-        Log.d("StoryListActivity", "swiped thing right")
-        // FIXME open story reader here
-      }
-
-    })
     storyListView.layoutManager = LinearLayoutManager(this)
-    swipeStory.attachToRecyclerView(storyListView)
+    StoryCardView.createRightSwipeHelper(storyListView)
     launch(CommonPool) {
       val adapter = StoryAdapter.create(this@StoryListActivity).await()
       launch(UI) {

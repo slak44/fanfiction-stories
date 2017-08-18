@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         Log.w("MainActivity", "REINITED STORIES TABLE")
       }
       addStoryBtn.setOnClickListener {
-        getFullStory(this, 12555864L)
+        getFullStory(this, 11953822L)
       }
       wipeDiskDataBtn.setOnClickListener {
         File(getStorageDir(this@MainActivity).get(), "storiesData").deleteRecursively()
