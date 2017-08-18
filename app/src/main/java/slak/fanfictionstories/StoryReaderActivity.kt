@@ -3,7 +3,16 @@ package slak.fanfictionstories
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
+import android.text.Html
 import kotlinx.android.synthetic.main.activity_story_reader.*
+import kotlinx.android.synthetic.main.content_story_reader.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
+import org.jetbrains.anko.db.update
+import java.io.File
 
 class StoryReaderActivity : AppCompatActivity() {
 
@@ -24,5 +33,34 @@ class StoryReaderActivity : AppCompatActivity() {
     val model = intent.getParcelableExtra<StoryModel>(INTENT_STORY_MODEL)
 
     title = model.title
+
+    val chapterToRead = if (model.currentChapter == 0) 1 else model.currentChapter
+    launch(CommonPool) {
+      val text = readChapter(model.storyidRaw, chapterToRead).await()
+      launch(UI) {
+        chapterText.text = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
+        // FIXME reinstate scroll
+      }
+      database.use {
+        update("stories", "currentChapter" to chapterToRead)
+            .whereSimple("storyid = ?", model.storyidRaw.toString())
+      }
+    }
   }
+
+  private fun readChapter(storyid: Long, chapter: Int): Deferred<String> = async(CommonPool) {
+    val storyDir = storyDir(this@StoryReaderActivity, storyid)
+    if (!storyDir.isPresent) throw IllegalStateException("Cannot read $storyid dir")
+    if (!storyDir.get().exists()) {
+      // FIXME download it
+      return@async ""
+    }
+    val chapterHtml = File(storyDir.get(), "$chapter.html")
+    if (!chapterHtml.exists()) {
+      throw NoSuchFileException(chapterHtml, null, "Cannot read $storyid/$chapter.html")
+    }
+    return@async chapterHtml.readText()
+  }
+
+  // FIXME add scroll listener to record scroll state in db
 }
