@@ -32,19 +32,21 @@ fun haveExternalStorage() = Environment.MEDIA_MOUNTED == Environment.getExternal
 fun getStorageDir(ctx: Context): Optional<File> =
     if (haveExternalStorage()) Optional.of(ctx.getExternalFilesDir(null)) else Optional.empty()
 
+fun getStoriesDir(ctx: Context): Optional<File> = if (haveExternalStorage())
+  Optional.of(File(getStorageDir(ctx).get(), "storiesData")) else Optional.empty()
+
 /**
  * Writes received story data to disk
  * @returns true if we started writing data to disk, false otherwise
  */
 fun writeStory(ctx: Context, storyid: Long, chapters: Channel<String>): Boolean {
-  val storage = getStorageDir(ctx)
-  if (!storage.isPresent) {
+  val storiesDir = getStoriesDir(ctx)
+  if (!storiesDir.isPresent) {
     Log.e("StoryWriter", "no ext storage")
     errorDialog(ctx, R.string.ext_store_unavailable, R.string.ext_store_unavailable_tip)
     return false
   }
-  val storiesDir = File(storage.get(), "storiesData")
-  val targetDir = File(storiesDir, storyid.toString())
+  val targetDir = File(storiesDir.get(), storyid.toString())
   if (targetDir.exists()) {
     // FIXME maybe ask the user if he wants to overwrite or legitimize this by getting the metadata
     Log.e("StoryWriter", "targetDir exists")
