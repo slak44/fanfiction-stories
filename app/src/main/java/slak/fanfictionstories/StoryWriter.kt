@@ -6,9 +6,7 @@ import android.os.Environment
 import android.support.annotation.StringRes
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.consumeEach
 import kotlinx.coroutines.experimental.launch
