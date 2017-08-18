@@ -33,6 +33,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="slak.fanfictionstories.MainActivity"/>
         </activity>
+        <activity
+            android:name=".StoryReaderActivity"
+            android:label="@string/title_activity_story_reader"
+            android:parentActivityName=".StoryListActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="slak.fanfictionstories.StoryListActivity"/>
+        </activity>
     </application>
 
 </manifest>

@@ -95,7 +95,7 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
         "title" to title.groupValues[1]
     ))
 
-    return@withLock StoryModel(metadata.get(), ctx, fromDb = false)
+    return@withLock StoryModel(metadata.get(), fromDb = false)
   } }
 
   private val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

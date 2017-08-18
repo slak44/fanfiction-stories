@@ -1,8 +1,13 @@
 package slak.fanfictionstories
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.HashMap
 
 enum class StoryStatus {
   SEEN, REMOTE, LOCAL;
@@ -23,7 +28,7 @@ enum class StoryStatus {
   }
 }
 
-class StoryModel(val src: MutableMap<String, Any>, val context: Context, fromDb: Boolean) {
+class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable {
   // DB primary key. Does not exist if story not from db
   val _id: Optional<Long> = if (fromDb) Optional.of(src["_id"] as Long) else Optional.empty()
 
@@ -52,17 +57,17 @@ class StoryModel(val src: MutableMap<String, Any>, val context: Context, fromDb:
   val followsCount: Int = (src["follows"] as Long).toInt()
 
   // Processed data
-  val storyid: String get() = context.resources.getString(R.string.storyid_x, storyidRaw)
+  val storyid: String get() = MainActivity.res.getString(R.string.storyid_x, storyidRaw)
   val isCompleted: Boolean get() = src["isCompleted"] as Long == 1L
-  val author: String get() = context.resources.getString(R.string.by_author, authorRaw)
-  val canon: String get() = context.resources.getString(R.string.in_canon, canonRaw)
-  val words: String get() = context.resources.getString(R.string.x_words, wordCount)
-  val rating: String get() = context.resources.getString(R.string.rated_x, ratingRaw)
-  val genres: String get() = context.resources.getString(R.string.about_genres, genresRaw)
-  val characters: String get() = context.resources.getString(R.string.with_characters, charactersRaw)
-  val reviews: String get() = context.resources.getString(R.string.x_reviews, reviewsCount)
-  val favorites: String get() = context.resources.getString(R.string.x_favorites, favoritesCount)
-  val follows: String get() = context.resources.getString(R.string.x_follows, followsCount)
+  val author: String get() = MainActivity.res.getString(R.string.by_author, authorRaw)
+  val canon: String get() = MainActivity.res.getString(R.string.in_canon, canonRaw)
+  val words: String get() = MainActivity.res.getString(R.string.x_words, wordCount)
+  val rating: String get() = MainActivity.res.getString(R.string.rated_x, ratingRaw)
+  val genres: String get() = MainActivity.res.getString(R.string.about_genres, genresRaw)
+  val characters: String get() = MainActivity.res.getString(R.string.with_characters, charactersRaw)
+  val reviews: String get() = MainActivity.res.getString(R.string.x_reviews, reviewsCount)
+  val favorites: String get() = MainActivity.res.getString(R.string.x_favorites, favoritesCount)
+  val follows: String get() = MainActivity.res.getString(R.string.x_follows, followsCount)
   val progress: Int get() {
     if (chapterCount == 1) return scrollProgress
     // If this is too inaccurate, we might have to store each chapter's word count, then compute
@@ -78,11 +83,11 @@ class StoryModel(val src: MutableMap<String, Any>, val context: Context, fromDb:
     // If we didn't start reading the thing, show total chapter count
     if (currentChapter == 0) {
       // Special-case one chapter
-      if (chapterCount == 1) return context.resources.getString(R.string.one_chapter)
-      else return context.resources.getString(R.string.x_chapters, chapterCount)
+      if (chapterCount == 1) return MainActivity.res.getString(R.string.one_chapter)
+      else return MainActivity.res.getString(R.string.x_chapters, chapterCount)
     }
     // Otherwise, list current chapter out of total
-    else return context.resources.getString(R.string.chapter_progress, currentChapter, chapterCount)
+    else return MainActivity.res.getString(R.string.chapter_progress, currentChapter, chapterCount)
   }
 
   // Dates
@@ -93,7 +98,33 @@ class StoryModel(val src: MutableMap<String, Any>, val context: Context, fromDb:
   val updateDateFormatted: String
     get() = SimpleDateFormat.getDateInstance().format(Date(updateDateSeconds * 1000))
   val publishDate: String
-    get() = context.resources.getString(R.string.published_on, publishDateFormatted)
+    get() = MainActivity.res.getString(R.string.published_on, publishDateFormatted)
   val updateDate: String
-    get() = context.resources.getString(R.string.updated_on, updateDateFormatted)
+    get() = MainActivity.res.getString(R.string.updated_on, updateDateFormatted)
+
+  override fun writeToParcel(parcel: Parcel, flags: Int) {
+    val bundle = Bundle()
+    bundle.putSerializable("map", HashMap(src))
+    parcel.writeBundle(bundle)
+    parcel.writeInt(if (_id.isPresent) 1 else 0)
+  }
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  companion object CREATOR : Parcelable.Creator<StoryModel> {
+    @SuppressLint("ParcelClassLoader")
+    override fun createFromParcel(parcel: Parcel): StoryModel {
+      val bundle = parcel.readBundle()
+      @Suppress("UNCHECKED_CAST")
+      val map = bundle.getSerializable("map") as HashMap<String, Any>
+      val fromDb = parcel.readInt() == 1
+      return StoryModel(map, fromDb)
+    }
+
+    override fun newArray(size: Int): Array<StoryModel?> {
+      return arrayOfNulls(size)
+    }
+  }
 }

@@ -1,6 +1,7 @@
 package slak.fanfictionstories
 
 import android.content.Intent
+import android.content.res.Resources
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -15,6 +16,9 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
   companion object {
     private const val TAG = "MainActivity"
+
+    lateinit var res: Resources
+      private set
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,6 +30,7 @@ class MainActivity : AppCompatActivity() {
       val intent = Intent(this, StoryListActivity::class.java)
       startActivity(intent)
     }
+    res = resources
     if (BuildConfig.DEBUG) {
       debugButtons.visibility = View.VISIBLE
       regenTableBtn.setOnClickListener {

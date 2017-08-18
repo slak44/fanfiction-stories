@@ -16,6 +16,7 @@ import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import android.animation.ObjectAnimator
+import android.content.Intent
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
 import java.util.*
@@ -24,6 +25,8 @@ class StoryCardView : CardView {
   constructor(context: Context) : super(context)
   constructor(context: Context, set: AttributeSet) : super(context, set)
   constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
+
+  var currentModel: StoryModel? = null
 
   companion object {
     fun createRightSwipeHelper(recyclerView: RecyclerView): ItemTouchHelper {
@@ -40,13 +43,18 @@ class StoryCardView : CardView {
         }
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-          Log.d("StoryListActivity", "swiped thing right")
-          // FIXME open story reader here
+          val intent = Intent(recyclerView.context, StoryReaderActivity::class.java)
+          val cardView = viewHolder.itemView as StoryCardView
+          intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, cardView.currentModel!!)
+          recyclerView.context.startActivity(intent)
           // After the reader was opened, reset the translation by reattaching
           // We do this because we might go back from the reader to this activity and
           // it has to look properly
-          swipeStory!!.attachToRecyclerView(null)
-          swipeStory!!.attachToRecyclerView(recyclerView)
+          launch(UI) {
+            delay(2500)
+            swipeStory!!.attachToRecyclerView(null)
+            swipeStory!!.attachToRecyclerView(recyclerView)
+          }
         }
       })
       swipeStory.attachToRecyclerView(recyclerView)
@@ -79,6 +87,7 @@ class StoryCardView : CardView {
   }
 
   fun loadFromModel(model: StoryModel) {
+    currentModel = model
     // Unexpanded view
     titleText.text = model.title
     authorText.text = model.author
