@@ -53,6 +53,8 @@ class StoryReaderActivity : AppCompatActivity() {
     }
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+    // FIXME set resume to this
+
     val model = intent.getParcelableExtra<StoryModel>(INTENT_STORY_MODEL)
 
     title = model.title
@@ -68,7 +70,7 @@ class StoryReaderActivity : AppCompatActivity() {
       }
       database.use {
         update("stories", "currentChapter" to chapterToRead)
-            .whereSimple("storyid = ?", model.storyidRaw.toString())
+            .whereSimple("storyid = ?", model.storyidRaw.toString()).exec()
       }
     }
   }
