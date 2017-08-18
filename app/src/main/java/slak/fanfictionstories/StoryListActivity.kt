@@ -16,6 +16,8 @@ import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import android.animation.ObjectAnimator
+import android.support.v7.widget.helper.ItemTouchHelper
+import android.util.Log
 import java.util.*
 
 class StoryCardView : CardView {
@@ -121,7 +123,20 @@ class StoryListActivity : AppCompatActivity() {
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+    val swipeStory = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+      override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?,
+                          target: RecyclerView.ViewHolder?): Boolean {
+        return false
+      }
+
+      override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
+        Log.d("StoryListActivity", "swiped thing right")
+        // FIXME open story reader here
+      }
+
+    })
     storyListView.layoutManager = LinearLayoutManager(this)
+    swipeStory.attachToRecyclerView(storyListView)
     launch(CommonPool) {
       val adapter = StoryAdapter.create(this@StoryListActivity).await()
       launch(UI) {
