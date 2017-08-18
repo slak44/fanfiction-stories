@@ -7,6 +7,7 @@ import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
+import org.jetbrains.anko.db.update
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -141,6 +142,9 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
         // FIXME update notification
       }
       channel.close()
+      ctx.database.use {
+        update("stories", "status" to "local").whereSimple("storyid = ?", storyid.toString())
+      }
     } }
     return channel
   }
