@@ -10,6 +10,7 @@ import android.view.View
 
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.db.dropTable
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,6 +33,9 @@ class MainActivity : AppCompatActivity() {
       }
       addStoryBtn.setOnClickListener {
         getFullStory(this, 12555864L)
+      }
+      wipeDiskDataBtn.setOnClickListener {
+        File(getStorageDir(this@MainActivity).get(), "storiesData").deleteRecursively()
       }
     }
   }

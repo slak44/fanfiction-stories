@@ -38,5 +38,6 @@
     <string name="debug_title">!!! DEBUG !!!</string>
     <string name="regen_stories_table">Regen stories table</string>
     <string name="add_story">Add story</string>
+    <string name="wipe_disk_data">Wipe disk data</string>
     <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.</string>
 </resources>

@@ -80,6 +80,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/add_story"/>
+
+            <Button
+                android:id="@+id/wipeDiskDataBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/wipe_disk_data"/>
         </LinearLayout>
 
     </LinearLayout>
