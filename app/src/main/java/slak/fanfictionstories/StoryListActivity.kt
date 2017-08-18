@@ -18,7 +18,6 @@ import kotlinx.coroutines.experimental.android.UI
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.support.v7.widget.helper.ItemTouchHelper
-import android.util.Log
 import java.util.*
 
 class StoryCardView : CardView {
