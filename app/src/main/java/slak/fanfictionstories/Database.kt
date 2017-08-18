@@ -66,7 +66,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     }) }
   }
 
-  fun insertStory(model: StoryModel) = async(CommonPool) {
+  fun insertStory(model: StoryModel): Deferred<Long> = async(CommonPool) {
     val kvPairs = model.src.entries.map { Pair(it.key, it.value) }.toTypedArray()
     writableDatabase.insert("stories", *kvPairs)
   }
