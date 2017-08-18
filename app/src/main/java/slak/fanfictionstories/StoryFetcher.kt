@@ -66,9 +66,9 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
       genres = findGenres[0].trim()
       split.removeAll { findGenres.contains(it) }
     }
-    val characters =
-        if (split[2].contains("Words|Chapters|Reviews|Favs|Follows|Published|Updated")) "None"
-        else split[2]
+    val thingsAfterCharacters =
+        Regex("Words|Chapters|Reviews|Favs|Follows|Published|Updated", regexOpts)
+    val characters = if (split[2].contains(thingsAfterCharacters)) "None" else split[2]
 
     metadata = Optional.of(mutableMapOf(
         "storyid" to storyid,
