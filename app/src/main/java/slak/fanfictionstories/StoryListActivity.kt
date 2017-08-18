@@ -28,7 +28,7 @@ class StoryCardView : CardView {
   var currentModel: StoryModel? = null
 
   companion object {
-    fun createRightSwipeHelper(recyclerView: RecyclerView): ItemTouchHelper {
+    fun createRightSwipeHelper(recyclerView: RecyclerView, a: StoryListActivity): ItemTouchHelper {
       var swipeStory: ItemTouchHelper? = null
       swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
         override fun getMovementFlags(recycler: RecyclerView?,
@@ -45,7 +45,7 @@ class StoryCardView : CardView {
           val intent = Intent(recyclerView.context, StoryReaderActivity::class.java)
           val cardView = viewHolder.itemView as StoryCardView
           intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, cardView.currentModel!!)
-          recyclerView.context.startActivity(intent)
+          a.openStoryReader(intent)
           // After the reader was opened, reset the translation by reattaching
           // We do this because we might go back from the reader to this activity and
           // it has to look properly
@@ -125,12 +125,21 @@ class StoryAdapter private constructor (val context: Context) : RecyclerView.Ada
   companion object {
     fun create(context: Context): Deferred<StoryAdapter> = async(CommonPool) {
       val adapter = StoryAdapter(context)
-      adapter.data = context.database.getStories(context).await()
+      adapter.reinitData().await()
       return@async adapter
     }
   }
 
   lateinit var data: List<StoryModel>
+
+  fun reinitData(): Deferred<Unit> = async(CommonPool) {
+    data = this@StoryAdapter.context.database.getStories(this@StoryAdapter.context).await()
+    launch(UI) {
+      notifyDataSetChanged()
+      notifyItemRangeChanged(0, itemCount)
+    }
+    return@async
+  }
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
     holder.view.loadFromModel(data[position])
@@ -154,6 +163,7 @@ class StoryAdapter private constructor (val context: Context) : RecyclerView.Ada
 }
 
 class StoryListActivity : AppCompatActivity() {
+  private var adapter: StoryAdapter? = null
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_story_list)
@@ -161,13 +171,26 @@ class StoryListActivity : AppCompatActivity() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     storyListView.layoutManager = LinearLayoutManager(this)
-    StoryCardView.createRightSwipeHelper(storyListView)
+    StoryCardView.createRightSwipeHelper(storyListView, this)
     launch(CommonPool) {
-      val adapter = StoryAdapter.create(this@StoryListActivity).await()
+      adapter = StoryAdapter.create(this@StoryListActivity).await()
       launch(UI) {
         storyListView.adapter = adapter
-        if (adapter.itemCount == 0) nothingHere.visibility = View.VISIBLE
+        if (adapter!!.itemCount == 0) nothingHere.visibility = View.VISIBLE
       }
+    }
+  }
+
+  fun openStoryReader(intent: Intent) {
+    // FIXME store scroll state & clicked stories
+    startActivity(intent)
+  }
+
+  override fun onResume() {
+    super.onResume()
+    launch(CommonPool) {
+      adapter?.reinitData()?.await()
+      // FIXME resume scroll state & clicked stories
     }
   }
 }
