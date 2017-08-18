@@ -23,12 +23,15 @@ class MainActivity : AppCompatActivity() {
       startActivity(intent)
     }
     if (BuildConfig.DEBUG) {
-      regenTableBtn.visibility = View.VISIBLE
+      debugButtons.visibility = View.VISIBLE
       regenTableBtn.setOnClickListener {
         database.use { dropTable("stories", true) }
         Log.w("MainActivity", "DROPPED STORIES TABLE")
         database.onCreate(database.writableDatabase)
         Log.w("MainActivity", "REINITED STORIES TABLE")
+      }
+      addStoryBtn.setOnClickListener {
+        getFullStory(this, 12555864L)
       }
     }
   }

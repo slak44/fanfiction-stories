@@ -56,12 +56,32 @@
             android:drawableStart="@drawable/ic_library_books_black_24dp"
             android:text="@string/story_browse"/>
 
-        <Button
-            android:id="@+id/regenTableBtn"
+        <LinearLayout
+            android:id="@+id/debugButtons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/regen_stories_table"
-            android:visibility="gone"/>
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/debug_title"
+                android:textColor="@android:color/holo_red_light"/>
+
+            <Button
+                android:id="@+id/regenTableBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/regen_stories_table"/>
+
+            <Button
+                android:id="@+id/addStoryBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/add_story"/>
+        </LinearLayout>
+
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
