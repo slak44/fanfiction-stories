@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
       addStoryBtn.setOnClickListener {
         getFullStory(this, 12555864L)
         getFullStory(this, 11953822L)
+        getFullStory(this, 12295826L)
       }
       wipeDiskDataBtn.setOnClickListener {
         val deleted = File(getStorageDir(this@MainActivity).get(), "storiesData").deleteRecursively()
