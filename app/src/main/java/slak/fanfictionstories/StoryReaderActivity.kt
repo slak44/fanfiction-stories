@@ -62,14 +62,15 @@ class StoryReaderActivity : AppCompatActivity() {
 
     title = model.title
 
-    val chapterToRead = if (model.currentChapter == 0) 1 else model.currentChapter
-    launch(CommonPool) {
-      val text = readChapter(model.storyIdRaw, chapterToRead).await()
-      updateUiAfterFetchingText(text)
-      database.use {
-        update("stories", "currentChapter" to chapterToRead)
-            .whereSimple("storyId = ?", model.storyIdRaw.toString()).exec()
-      }
+    initText(if (model.currentChapter == 0) 1 else model.currentChapter)
+  }
+
+  private fun initText(chapterToRead: Int) = launch(CommonPool) {
+    val text = readChapter(model.storyIdRaw, chapterToRead).await()
+    updateUiAfterFetchingText(text)
+    database.use {
+      update("stories", "currentChapter" to chapterToRead)
+          .whereSimple("storyId = ?", model.storyIdRaw.toString()).exec()
     }
   }
 
