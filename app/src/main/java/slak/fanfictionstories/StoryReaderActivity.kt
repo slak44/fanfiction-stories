@@ -83,8 +83,6 @@ class StoryReaderActivity : AppCompatActivity() {
     chapterText.text = Html.fromHtml(
         text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
 
-    // FIXME reinstate scroll if resuming
-
     // This measurement is not really guaranteed to happen: because this function gets called
     // from onCreate, the height might not be calculated, so there is technically a race
     // condition between this coroutine and whoever calculates the height, but since fetching and
@@ -160,6 +158,4 @@ class StoryReaderActivity : AppCompatActivity() {
     }
     return@async chapterHtml.readText()
   }
-
-  // FIXME add scroll listener to record scroll state in db
 }
