@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
+import org.jetbrains.anko.db.MapRowParser
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.HashMap
@@ -111,19 +112,27 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   override fun describeContents(): Int {
     return 0
   }
+  companion object {
+    @JvmField @Suppress("unused")
+    val CREATOR = object : Parcelable.Creator<StoryModel> {
+      @SuppressLint("ParcelClassLoader")
+      override fun createFromParcel(parcel: Parcel): StoryModel {
+        val bundle = parcel.readBundle()
+        @Suppress("UNCHECKED_CAST")
+        val map = bundle.getSerializable("map") as HashMap<String, Any>
+        val fromDb = parcel.readInt() == 1
+        return StoryModel(map, fromDb)
+      }
 
-  companion object CREATOR : Parcelable.Creator<StoryModel> {
-    @SuppressLint("ParcelClassLoader")
-    override fun createFromParcel(parcel: Parcel): StoryModel {
-      val bundle = parcel.readBundle()
-      @Suppress("UNCHECKED_CAST")
-      val map = bundle.getSerializable("map") as HashMap<String, Any>
-      val fromDb = parcel.readInt() == 1
-      return StoryModel(map, fromDb)
+      override fun newArray(size: Int): Array<StoryModel?> {
+        return arrayOfNulls(size)
+      }
     }
 
-    override fun newArray(size: Int): Array<StoryModel?> {
-      return arrayOfNulls(size)
+    val dbParser = object : MapRowParser<StoryModel> {
+      override fun parseRow(columns: Map<String, Any?>) = StoryModel(
+          // We are allowed to do this because nothing in the DB is null
+          columns.entries.map { Pair(it.key, it.value!!) }.toMap().toMutableMap(), fromDb = true)
     }
   }
 }

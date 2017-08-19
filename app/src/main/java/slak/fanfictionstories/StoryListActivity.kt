@@ -133,7 +133,7 @@ class StoryAdapter private constructor(val context: Context) : RecyclerView.Adap
   lateinit var data: List<StoryModel>
 
   fun initData(): Deferred<Unit> = async(CommonPool) {
-    data = this@StoryAdapter.context.database.getStories(this@StoryAdapter.context).await()
+    data = this@StoryAdapter.context.database.getStories().await()
     launch(UI) {
       notifyDataSetChanged()
       notifyItemRangeChanged(0, itemCount)
