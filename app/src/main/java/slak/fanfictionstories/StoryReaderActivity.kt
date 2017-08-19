@@ -49,6 +49,7 @@ class StoryReaderActivity : AppCompatActivity() {
   }
 
   private lateinit var model: StoryModel
+  private var currentChapter: Int = 0
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -61,13 +62,26 @@ class StoryReaderActivity : AppCompatActivity() {
     model = intent.getParcelableExtra(INTENT_STORY_MODEL)
 
     title = model.title
+    currentChapter = if (model.currentChapter == 0) 1 else model.currentChapter
+    initText(currentChapter)
 
-    initText(if (model.currentChapter == 0) 1 else model.currentChapter)
+    prevChapterBtn.setOnClickListener {
+      currentChapter--
+      initText(currentChapter)
+    }
+    nextChapterBtn.setOnClickListener {
+      currentChapter++
+      initText(currentChapter)
+    }
   }
 
   private fun initText(chapterToRead: Int) = launch(CommonPool) {
+    launch(UI) {
+      prevChapterBtn.isEnabled = chapterToRead != 1
+      nextChapterBtn.isEnabled = chapterToRead != model.chapterCount
+    }
     // FIXME maybe throw a spinny loader here until the text shows up
-    val text = readChapter(model.storyIdRaw, chapterToRead).await()
+    val text: String = readChapter(model.storyIdRaw, chapterToRead).await()
     updateUiAfterFetchingText(text)
     database.use {
       update("stories", "currentChapter" to chapterToRead)
