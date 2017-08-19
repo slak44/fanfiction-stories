@@ -82,7 +82,7 @@ class StoryCardView : CardView {
       // FIXME update downloading notification here
       if (!storyId.isPresent)
         throw IllegalStateException("StoryCardView clicked, but data not filled by model")
-      StoryFetcher(storyId.get(), context)
+      getFullStory(context, storyId.get())
     }
     return super.onCreateDrawableState(extraSpace)
   }
