@@ -18,6 +18,8 @@ import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
+import org.jetbrains.anko.db.parseSingle
+import org.jetbrains.anko.db.select
 import java.util.*
 
 class StoryCardView : CardView {
@@ -130,10 +132,10 @@ class StoryAdapter private constructor(val context: Context) : RecyclerView.Adap
     }
   }
 
-  lateinit var data: List<StoryModel>
+  lateinit var data: MutableList<StoryModel>
 
   fun initData(): Deferred<Unit> = async(CommonPool) {
-    data = this@StoryAdapter.context.database.getStories().await()
+    data = this@StoryAdapter.context.database.getStories().await().toMutableList()
     launch(UI) {
       notifyDataSetChanged()
       notifyItemRangeChanged(0, itemCount)
@@ -185,15 +187,22 @@ class StoryListActivity : AppCompatActivity() {
 
   fun openStoryReader(intent: Intent, storyId: Long) {
     lastStoryId = Optional.of(storyId)
-    // FIXME store scroll state & clicked stories
     startActivity(intent)
   }
 
   override fun onResume() {
     super.onResume()
     launch(CommonPool) {
-      // FIXME update adapter data at lastStoryId
-      // FIXME resume scroll state & clicked stories
+      if (lastStoryId.isPresent && adapter != null) database.use {
+        val newModel = select("stories").whereSimple("storyId = ?", lastStoryId.get().toString())
+            .exec { parseSingle(StoryModel.dbParser) }
+        val idx = adapter!!.data.indexOfFirst { it.storyIdRaw == lastStoryId.get() }
+        adapter!!.data[idx] = newModel
+        launch(UI) {
+          adapter!!.notifyDataSetChanged()
+          adapter!!.notifyItemChanged(idx)
+        }
+      }
     }
   }
 }
