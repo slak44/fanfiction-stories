@@ -38,6 +38,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         favorites INTEGER CHECK(favorites >= 0) NOT NULL,
         follows INTEGER CHECK(follows >= 0) NOT NULL,
         status TEXT CHECK(status IN ('seen', 'remote', 'local')) NOT NULL,
+        chapterTitles TEXT NOT NULL,
         chapters INTEGER CHECK(chapters > 0) NOT NULL,
         currentChapter INTEGER CHECK(currentChapter >= 0 AND currentChapter <= chapters) NOT NULL,
         isCompleted INTEGER CHECK(isCompleted IN (0, 1)) NOT NULL,

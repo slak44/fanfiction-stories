@@ -15,6 +15,7 @@ import kotlin.collections.ArrayList
 class StoryFetcher(private val storyId: Long, ctx: Context) {
   companion object {
     private val ffnetMutex: Mutex = Mutex()
+    const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
   }
 
   private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
@@ -27,6 +28,14 @@ class StoryFetcher(private val storyId: Long, ctx: Context) {
 
   fun fetchMetadata(): Deferred<StoryModel> = async(CommonPool) { return@async ffnetMutex.withLock {
     val html: String = patientlyFetchChapter(1).await()
+
+    // The regex are shit, because so is what we're trying to parse
+    // I mean really, using ' for attributes?
+    // Sometimes not using any quotes at all?
+    // Mixing lower case and upper case for tags?
+    // Inline css/js?
+    // Tag soup?
+    // Not closing tags that should be?
 
     val author =
         Regex("<a class='xcontrast_txt' href='/u/([0-9]+)/.*?'>(.*?)</a>", regexOpts)
@@ -73,6 +82,18 @@ class StoryFetcher(private val storyId: Long, ctx: Context) {
         Regex("Words|Chapters|Reviews|Favs|Follows|Published|Updated", regexOpts)
     val characters = if (split[2].contains(thingsAfterCharacters)) "None" else split[2]
 
+    var chapterTitles: Optional<String> = Optional.empty()
+    // Parsing chapter titles only if there are any chapters to name
+    if (chapters != null) {
+      val chapterTitlesRaw = Regex("id=chap_select.*?>(.*?)</select>", regexOpts).find(html)
+          ?: throw IllegalStateException("Cannot find chapter titles")
+      chapterTitles = Optional.of(chapterTitlesRaw.groupValues[1].replace(
+          // The space at the end of this regex is intentional
+          Regex("<option.*?>\\d+\\. ", regexOpts), CHAPTER_TITLE_SEPARATOR)
+          // There is one at the beginning that we don't care about (because it's not a separator)
+          .removePrefix(CHAPTER_TITLE_SEPARATOR))
+    }
+
     metadata = Optional.of(mutableMapOf(
         "storyId" to storyId,
         "authorid" to author.groupValues[1].toLong(),
@@ -96,7 +117,8 @@ class StoryFetcher(private val storyId: Long, ctx: Context) {
         "category" to categories.groupValues[1],
         "summary" to summary.groupValues[1],
         "author" to author.groupValues[2],
-        "title" to title.groupValues[1]
+        "title" to title.groupValues[1],
+        "chapterTitles" to if (chapterTitles.isPresent) chapterTitles.get() else ""
     ))
 
     return@withLock StoryModel(metadata.get(), fromDb = false)
