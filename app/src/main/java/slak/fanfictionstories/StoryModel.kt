@@ -38,26 +38,26 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
       src["status"] = value.toString()
     }
 
+  // Raw data
   val storyIdRaw: Long = src["storyId"] as Long
+  private val authorRaw = src["author"] as String
+  private val canonRaw = src["canon"] as String
+  private val genresRaw = src["genres"] as String
+  private val charactersRaw = src["characters"] as String
+  private val ratingRaw = src["rating"] as String
+  private val wordCount: Int = (src["wordCount"] as Long).toInt()
+  private val scrollProgress: Double = src["scrollProgress"] as Double
+  private val chapterCount: Int = (src["chapters"] as Long).toInt()
+  private val reviewsCount: Int = (src["reviews"] as Long).toInt()
+  private val favoritesCount: Int = (src["favorites"] as Long).toInt()
+  private val followsCount: Int = (src["follows"] as Long).toInt()
+
+  // UI data
   val title = src["title"] as String
-  val authorRaw = src["author"] as String
   val summary = src["summary"] as String
   val category = src["category"] as String // FIXME: ui for this where
-  val canonRaw = src["canon"] as String
   val language = src["language"] as String
-  val genresRaw = src["genres"] as String
-  val charactersRaw = src["characters"] as String
-  val ratingRaw = src["rating"] as String
-  val wordCount: Int = (src["wordCount"] as Long).toInt()
-  val scrollProgress: Double = src["scrollProgress"] as Double
-  val scrollAbsolute: Long = src["scrollAbsolute"] as Long
-  val chapterCount: Int = (src["chapters"] as Long).toInt()
   val currentChapter: Int = (src["currentChapter"] as Long).toInt()
-  val reviewsCount: Int = (src["reviews"] as Long).toInt()
-  val favoritesCount: Int = (src["favorites"] as Long).toInt()
-  val followsCount: Int = (src["follows"] as Long).toInt()
-
-  // Processed data
   val storyId: String get() = MainActivity.res.getString(R.string.storyid_x, storyIdRaw)
   val isCompleted: Boolean get() = src["isCompleted"] as Long == 1L
   val author: String get() = MainActivity.res.getString(R.string.by_author, authorRaw)
@@ -92,12 +92,15 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
     else return MainActivity.res.getString(R.string.chapter_progress, currentChapter, chapterCount)
   }
 
+
   // Dates
+  @Suppress("MemberVisibilityCanPrivate")
   val publishDateSeconds: Long = src["publishDate"] as Long
+  @Suppress("MemberVisibilityCanPrivate")
   val updateDateSeconds: Long = src["updateDate"] as Long
-  val publishDateFormatted: String
+  private val publishDateFormatted: String
     get() = SimpleDateFormat.getDateInstance().format(Date(publishDateSeconds * 1000))
-  val updateDateFormatted: String
+  private val updateDateFormatted: String
     get() = SimpleDateFormat.getDateInstance().format(Date(updateDateSeconds * 1000))
   val publishDate: String
     get() = MainActivity.res.getString(R.string.published_on, publishDateFormatted)

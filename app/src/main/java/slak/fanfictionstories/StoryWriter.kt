@@ -71,7 +71,7 @@ fun writeStory(ctx: Context, storyId: Long, chapters: Channel<String>): Boolean 
     return false
   }
   launch(CommonPool) {
-    var idx: Int = 1
+    var idx = 1
     chapters.consumeEach { chapterText: String ->
       File(targetDir.get(), "$idx.html").printWriter().use { it.print(chapterText) }
       idx++

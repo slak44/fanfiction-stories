@@ -12,13 +12,12 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
-class StoryFetcher(val storyId: Long, val ctx: Context) {
+class StoryFetcher(private val storyId: Long, ctx: Context) {
   companion object {
     private val ffnetMutex: Mutex = Mutex()
   }
 
-  var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
-    private set
+  private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
 
   private val regexOpts: Set<RegexOption> = hashSetOf(
       RegexOption.MULTILINE,
@@ -65,7 +64,7 @@ class StoryFetcher(val storyId: Long, val ctx: Context) {
       it.contains(Regex("Adventure|Angst|Drama|Fantasy|Friendship|Humor|Hurt/Comfort|"+
           "Poetry|Romance|Sci-Fi|Supernatural|Tragedy"))
     }
-    var genres: String = "None"
+    var genres = "None"
     if (findGenres.isNotEmpty()) {
       genres = findGenres[0].trim()
       split.removeAll { findGenres.contains(it) }

@@ -22,7 +22,7 @@ import org.jetbrains.anko.db.select
 import org.jetbrains.anko.db.update
 import java.io.File
 
-class HrSpan(val heightPx: Int, val width: Int) : ReplacementSpan() {
+class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpan() {
   override fun getSize(p0: Paint?, p1: CharSequence?, p2: Int, p3: Int,
                        p4: Paint.FontMetricsInt?): Int {
     return 0

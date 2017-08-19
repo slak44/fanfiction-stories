@@ -70,8 +70,7 @@ class StoryCardView : CardView {
     storyProgress.setOnTouchListener { _, _ -> true }
     storyMainContent.setOnClickListener {
       // FIXME do we want this elevation like this?
-      if (cardElevation == 7F) cardElevation = 20F
-      else cardElevation = 7F
+      cardElevation = if (cardElevation == 7F) 20F else 7F
       // This gets animated automatically
       if (storyDetails.visibility == View.GONE) storyDetails.visibility = View.VISIBLE
       else storyDetails.visibility = View.GONE
