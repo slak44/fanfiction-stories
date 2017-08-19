@@ -3,14 +3,11 @@ package slak.fanfictionstories
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.style.ReplacementSpan
-import android.util.DisplayMetrics
 import android.view.*
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.content_story_reader.*
@@ -19,7 +16,6 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
-import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.update
 import java.io.File
 
@@ -49,6 +45,8 @@ class StoryReaderActivity : AppCompatActivity() {
     } }
   }
 
+  private lateinit var model: StoryModel
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_story_reader)
@@ -60,25 +58,48 @@ class StoryReaderActivity : AppCompatActivity() {
     }
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    // FIXME set resume to this
+    // FIXME set app to resume to this
 
-    val model = intent.getParcelableExtra<StoryModel>(INTENT_STORY_MODEL)
+    model = intent.getParcelableExtra(INTENT_STORY_MODEL)
 
     title = model.title
 
     val chapterToRead = if (model.currentChapter == 0) 1 else model.currentChapter
     launch(CommonPool) {
       val text = readChapter(model.storyIdRaw, chapterToRead).await()
-      launch(UI) {
-        // Legacy mode puts more space between <p>, makes it easier to read
-        chapterText.text =
-            Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
-        // FIXME reinstate scroll if resuming
-      }
+      updateUiAfterFetchingText(text)
       database.use {
         update("stories", "currentChapter" to chapterToRead)
             .whereSimple("storyId = ?", model.storyIdRaw.toString()).exec()
       }
+    }
+  }
+
+  private fun updateUiAfterFetchingText(text: String) = launch(UI) {
+    // Legacy mode puts more space between <p>, makes it easier to read
+    chapterText.text = Html.fromHtml(
+        text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
+
+    // FIXME reinstate scroll if resuming
+
+    // This measurement is not really guaranteed to happen: because this function gets called
+    // from onCreate, the height might not be calculated, so there is technically a race
+    // condition between this coroutine and whoever calculates the height, but since fetching and
+    // parsing the chapter takes more time than that, we're not going to have issues
+    val heightMeasureSpec =
+        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+    val widthMeasureSpec =
+        View.MeasureSpec.makeMeasureSpec(nestedScroller.width, View.MeasureSpec.AT_MOST)
+    scrollingLayout.measure(widthMeasureSpec, heightMeasureSpec)
+
+    nestedScroller.setOnScrollChangeListener { scroller, _, scrollY: Int, _, _ ->
+      val rawPercentage = scrollY * 100.0 / (scrollingLayout.measuredHeight - scroller.bottom)
+      // Make sure that values >100 get clamped to 100
+      val percentageScrolled: Long = Math.round(Math.min(rawPercentage, 100.0))
+      launch(CommonPool) { database.use {
+        update("stories", "scrollProgress" to percentageScrolled)
+            .whereSimple("storyid = ?", model.storyIdRaw.toString()).exec()
+      } }
     }
   }
 
