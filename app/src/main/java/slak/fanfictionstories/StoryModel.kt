@@ -37,7 +37,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
       src["status"] = value.toString()
     }
 
-  val storyidRaw: Long = src["storyid"] as Long
+  val storyIdRaw: Long = src["storyId"] as Long
   val title = src["title"] as String
   val authorRaw = src["author"] as String
   val summary = src["summary"] as String
@@ -56,7 +56,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   val followsCount: Int = (src["follows"] as Long).toInt()
 
   // Processed data
-  val storyid: String get() = MainActivity.res.getString(R.string.storyid_x, storyidRaw)
+  val storyId: String get() = MainActivity.res.getString(R.string.storyid_x, storyIdRaw)
   val isCompleted: Boolean get() = src["isCompleted"] as Long == 1L
   val author: String get() = MainActivity.res.getString(R.string.by_author, authorRaw)
   val canon: String get() = MainActivity.res.getString(R.string.in_canon, canonRaw)

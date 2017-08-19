@@ -1,11 +1,14 @@
 package slak.fanfictionstories
 
+import android.animation.ObjectAnimator
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -15,9 +18,6 @@ import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import android.animation.ObjectAnimator
-import android.content.Intent
-import android.support.v7.widget.helper.ItemTouchHelper
 import java.util.*
 
 class StoryCardView : CardView {
@@ -45,7 +45,7 @@ class StoryCardView : CardView {
           val intent = Intent(recyclerView.context, StoryReaderActivity::class.java)
           val cardView = viewHolder.itemView as StoryCardView
           intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, cardView.currentModel!!)
-          a.openStoryReader(intent)
+          a.openStoryReader(intent, cardView.storyId.get())
           // After the reader was opened, reset the translation by reattaching
           // We do this because we might go back from the reader to this activity and
           // it has to look properly
@@ -61,7 +61,7 @@ class StoryCardView : CardView {
     }
   }
 
-  var storyid: Optional<Long> = Optional.empty()
+  var storyId: Optional<Long> = Optional.empty()
 
   override fun onCreateDrawableState(extraSpace: Int): IntArray {
     // Disable touching on the progress seek bar
@@ -78,9 +78,9 @@ class StoryCardView : CardView {
       addBtn.isEnabled = false
       addBtn.text = context.resources.getString(R.string.adding___)
       // FIXME update downloading notification here
-      if (!storyid.isPresent)
+      if (!storyId.isPresent)
         throw IllegalStateException("StoryCardView clicked, but data not filled by model")
-      StoryFetcher(storyid.get(), context)
+      StoryFetcher(storyId.get(), context)
     }
     return super.onCreateDrawableState(extraSpace)
   }
@@ -112,27 +112,27 @@ class StoryCardView : CardView {
     reviewsText.text = model.reviews
     favoritesText.text = model.favorites
     followsText.text = model.follows
-    storyidText.text = model.storyid
+    storyIdText.text = model.storyId
 
-    storyid = Optional.of(model.storyidRaw)
+    storyId = Optional.of(model.storyIdRaw)
     if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.INVISIBLE
   }
 }
 
-class StoryAdapter private constructor (val context: Context) : RecyclerView.Adapter<StoryAdapter.ViewHolder>() {
+class StoryAdapter private constructor(val context: Context) : RecyclerView.Adapter<StoryAdapter.ViewHolder>() {
   class ViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
 
   companion object {
     fun create(context: Context): Deferred<StoryAdapter> = async(CommonPool) {
       val adapter = StoryAdapter(context)
-      adapter.reinitData().await()
+      adapter.initData().await()
       return@async adapter
     }
   }
 
   lateinit var data: List<StoryModel>
 
-  fun reinitData(): Deferred<Unit> = async(CommonPool) {
+  fun initData(): Deferred<Unit> = async(CommonPool) {
     data = this@StoryAdapter.context.database.getStories(this@StoryAdapter.context).await()
     launch(UI) {
       notifyDataSetChanged()
@@ -181,7 +181,10 @@ class StoryListActivity : AppCompatActivity() {
     }
   }
 
-  fun openStoryReader(intent: Intent) {
+  private var lastStoryId: Optional<Long> = Optional.empty()
+
+  fun openStoryReader(intent: Intent, storyId: Long) {
+    lastStoryId = Optional.of(storyId)
     // FIXME store scroll state & clicked stories
     startActivity(intent)
   }
@@ -189,7 +192,7 @@ class StoryListActivity : AppCompatActivity() {
   override fun onResume() {
     super.onResume()
     launch(CommonPool) {
-      adapter?.reinitData()?.await()
+      // FIXME update adapter data at lastStoryId
       // FIXME resume scroll state & clicked stories
     }
   }

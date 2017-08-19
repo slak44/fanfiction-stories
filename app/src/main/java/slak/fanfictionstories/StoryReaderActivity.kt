@@ -61,7 +61,7 @@ class StoryReaderActivity : AppCompatActivity() {
 
     val chapterToRead = if (model.currentChapter == 0) 1 else model.currentChapter
     launch(CommonPool) {
-      val text = readChapter(model.storyidRaw, chapterToRead).await()
+      val text = readChapter(model.storyIdRaw, chapterToRead).await()
       launch(UI) {
         // Legacy mode puts more space between <p>, makes it easier to read
         chapterText.text =
@@ -70,21 +70,21 @@ class StoryReaderActivity : AppCompatActivity() {
       }
       database.use {
         update("stories", "currentChapter" to chapterToRead)
-            .whereSimple("storyid = ?", model.storyidRaw.toString()).exec()
+            .whereSimple("storyId = ?", model.storyIdRaw.toString()).exec()
       }
     }
   }
 
-  private fun readChapter(storyid: Long, chapter: Int): Deferred<String> = async(CommonPool) {
-    val storyDir = storyDir(this@StoryReaderActivity, storyid)
-    if (!storyDir.isPresent) throw IllegalStateException("Cannot read $storyid dir")
+  private fun readChapter(storyId: Long, chapter: Int): Deferred<String> = async(CommonPool) {
+    val storyDir = storyDir(this@StoryReaderActivity, storyId)
+    if (!storyDir.isPresent) throw IllegalStateException("Cannot read $storyId dir")
     if (!storyDir.get().exists()) {
       // FIXME download it
       return@async ""
     }
     val chapterHtml = File(storyDir.get(), "$chapter.html")
     if (!chapterHtml.exists()) {
-      throw NoSuchFileException(chapterHtml, null, "Cannot read $storyid/$chapter.html")
+      throw NoSuchFileException(chapterHtml, null, "Cannot read $storyId/$chapter.html")
     }
     return@async chapterHtml.readText()
   }

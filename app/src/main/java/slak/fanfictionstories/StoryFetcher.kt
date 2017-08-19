@@ -12,7 +12,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
-class StoryFetcher(val storyid: Long, val ctx: Context) {
+class StoryFetcher(val storyId: Long, val ctx: Context) {
   companion object {
     private val ffnetMutex: Mutex = Mutex()
   }
@@ -75,7 +75,7 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     val characters = if (split[2].contains(thingsAfterCharacters)) "None" else split[2]
 
     metadata = Optional.of(mutableMapOf(
-        "storyid" to storyid,
+        "storyId" to storyId,
         "authorid" to author.groupValues[1].toLong(),
         "rating" to ratingLang.groupValues[1],
         "language" to ratingLang.groupValues[2],
@@ -119,7 +119,7 @@ class StoryFetcher(val storyid: Long, val ctx: Context) {
     }
     // We have a connection
     try {
-      return@async URL("https://www.fanfiction.net/s/$storyid/$chapter/").readText()
+      return@async URL("https://www.fanfiction.net/s/$storyId/$chapter/").readText()
       // FIXME update notification
     } catch (t: Throwable) {
       Log.e("StoryFetcher", "", t)

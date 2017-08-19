@@ -45,7 +45,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         wordCount INTEGER CHECK(chapters > 0) NOT NULL,
         publishDate INTEGER NOT NULL,
         updateDate INTEGER NOT NULL,
-        storyid INTEGER NOT NULL
+        storyId INTEGER NOT NULL
       );
     """)
   }

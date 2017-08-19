@@ -38,7 +38,7 @@ fun getStorageDir(ctx: Context): Optional<File> =
 /**
  * @returns a File representing the stories dir, or Optional.empty() if it's unavailable
  */
-fun storyDir(ctx: Context, storyid: Long): Optional<File> {
+fun storyDir(ctx: Context, storyId: Long): Optional<File> {
   val storage = getStorageDir(ctx)
   if (!storage.isPresent) {
     Log.e("StoryWriter#storyDir", "no ext storage")
@@ -46,15 +46,15 @@ fun storyDir(ctx: Context, storyid: Long): Optional<File> {
     return Optional.empty()
   }
   val storiesDir = File(storage.get(), "storiesData")
-  return Optional.of(File(storiesDir, storyid.toString()))
+  return Optional.of(File(storiesDir, storyId.toString()))
 }
 
 /**
  * Writes received story data to disk
  * @returns true if we started writing data to disk, false otherwise
  */
-fun writeStory(ctx: Context, storyid: Long, chapters: Channel<String>): Boolean {
-  val targetDir = storyDir(ctx, storyid)
+fun writeStory(ctx: Context, storyId: Long, chapters: Channel<String>): Boolean {
+  val targetDir = storyDir(ctx, storyId)
   if (!targetDir.isPresent) return false
   if (targetDir.get().exists()) {
     // FIXME maybe ask the user if he wants to overwrite or legitimize this by getting the metadata
@@ -80,10 +80,10 @@ fun writeStory(ctx: Context, storyid: Long, chapters: Channel<String>): Boolean 
   return true
 }
 
-fun getFullStory(ctx: Context, storyid: Long) = launch(CommonPool) {
-  val fetcher = StoryFetcher(storyid, ctx)
+fun getFullStory(ctx: Context, storyId: Long) = launch(CommonPool) {
+  val fetcher = StoryFetcher(storyId, ctx)
   val meta = fetcher.fetchMetadata().await()
-  val isWriting = writeStory(ctx, storyid, fetcher.fetchChapters())
+  val isWriting = writeStory(ctx, storyId, fetcher.fetchChapters())
   if (isWriting) {
     meta.status = StoryStatus.LOCAL
     ctx.database.insertStory(meta)
