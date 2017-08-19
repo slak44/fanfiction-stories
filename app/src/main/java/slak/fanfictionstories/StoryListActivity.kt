@@ -94,7 +94,7 @@ class StoryCardView : CardView {
     authorText.text = model.author
     canonText.text = model.canon
     wordsText.text = model.words
-    storyProgress.progress = model.progress
+    storyProgress.progress = Math.round(model.progress).toInt()
     isCompletedText.visibility = if (model.isCompleted) View.VISIBLE else View.INVISIBLE
     // Detail view
     languageText.text = model.language
@@ -194,7 +194,8 @@ class StoryListActivity : AppCompatActivity() {
     super.onResume()
     launch(CommonPool) {
       if (lastStoryId.isPresent && adapter != null) database.use {
-        val newModel = select("stories").whereSimple("storyId = ?", lastStoryId.get().toString())
+        val newModel = select("stories")
+            .whereSimple("storyId = ?", lastStoryId.get().toString())
             .exec { parseSingle(StoryModel.dbParser) }
         val idx = adapter!!.data.indexOfFirst { it.storyIdRaw == lastStoryId.get() }
         adapter!!.data[idx] = newModel

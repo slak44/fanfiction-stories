@@ -49,7 +49,8 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   val charactersRaw = src["characters"] as String
   val ratingRaw = src["rating"] as String
   val wordCount: Int = (src["wordCount"] as Long).toInt()
-  val scrollProgress: Int = (src["scrollProgress"] as Long).toInt()
+  val scrollProgress: Double = src["scrollProgress"] as Double
+  val scrollAbsolute: Long = src["scrollAbsolute"] as Long
   val chapterCount: Int = (src["chapters"] as Long).toInt()
   val currentChapter: Int = (src["currentChapter"] as Long).toInt()
   val reviewsCount: Int = (src["reviews"] as Long).toInt()
@@ -68,17 +69,18 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   val reviews: String get() = MainActivity.res.getString(R.string.x_reviews, reviewsCount)
   val favorites: String get() = MainActivity.res.getString(R.string.x_favorites, favoritesCount)
   val follows: String get() = MainActivity.res.getString(R.string.x_follows, followsCount)
-  val progress: Int get() {
+  val progress: Double get() {
     if (chapterCount == 1) return scrollProgress
     // If this is too inaccurate, we might have to store each chapter's word count, then compute
     // how far along we are
     val avgWordCount: Float = wordCount.toFloat() / chapterCount
     // amount of words before current chapter + amount of words scrolled through in current chapter
-    val wordsPassedEstimate: Float =
-        (currentChapter - 1) * avgWordCount + scrollProgress.toFloat() / 100 * avgWordCount
-    val percentPassed: Float = wordsPassedEstimate * 100 / wordCount
-    return Math.round(percentPassed)
+    val wordsPassedEstimate: Double =
+        (currentChapter - 1) * avgWordCount + scrollProgress / 100 * avgWordCount
+    // Return percentage
+    return wordsPassedEstimate * 100 / wordCount
   }
+  @Suppress("LiftReturnOrAssignment")
   val chapters: String get() {
     // If we didn't start reading the thing, show total chapter count
     if (currentChapter == 0) {

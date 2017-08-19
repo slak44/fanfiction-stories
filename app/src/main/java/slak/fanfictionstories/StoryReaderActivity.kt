@@ -16,6 +16,9 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import org.jetbrains.anko.db.LongParser
+import org.jetbrains.anko.db.parseSingle
+import org.jetbrains.anko.db.select
 import org.jetbrains.anko.db.update
 import java.io.File
 
@@ -95,11 +98,23 @@ class StoryReaderActivity : AppCompatActivity() {
     nestedScroller.setOnScrollChangeListener { scroller, _, scrollY: Int, _, _ ->
       val rawPercentage = scrollY * 100.0 / (scrollingLayout.measuredHeight - scroller.bottom)
       // Make sure that values >100 get clamped to 100
-      val percentageScrolled: Long = Math.round(Math.min(rawPercentage, 100.0))
+      val percentageScrolled = Math.min(rawPercentage, 100.0)
       launch(CommonPool) { database.use {
-        update("stories", "scrollProgress" to percentageScrolled)
+        update("stories",
+            "scrollProgress" to percentageScrolled, "scrollAbsolute" to scrollY)
             .whereSimple("storyid = ?", model.storyIdRaw.toString()).exec()
       } }
+    }
+
+    database.use {
+      val absoluteScroll = select("stories", "scrollAbsolute")
+          .whereSimple("storyId = ?", model.storyIdRaw.toString())
+          .exec { parseSingle(LongParser) }
+      launch(UI) {
+        if (absoluteScroll > resources.getDimensionPixelSize(R.dimen.app_bar_height))
+          appBar.setExpanded(false)
+        nestedScroller.scrollTo(0, absoluteScroll.toInt())
+      }
     }
   }
 

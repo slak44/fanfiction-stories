@@ -21,8 +21,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/text_margin"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
             android:paddingTop="16dp"
             app:layout_constraintBottom_toTopOf="@id/navButtons"
             app:layout_constraintEnd_toEndOf="parent"
@@ -38,6 +36,7 @@
             android:layout_marginBottom="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
+            android:layout_marginTop="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -46,7 +45,7 @@
             <Button
                 android:id="@+id/prevChapterBtn"
                 style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="48dp"
+                android:layout_width="@dimen/reader_nav_button_height"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
@@ -58,7 +57,7 @@
             <Button
                 android:id="@+id/selectChapterBtn"
                 style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="48dp"
+                android:layout_width="@dimen/reader_nav_button_height"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
@@ -70,7 +69,7 @@
             <Button
                 android:id="@+id/nextChapterBtn"
                 style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="48dp"
+                android:layout_width="@dimen/reader_nav_button_height"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:layout_marginEnd="8dp"

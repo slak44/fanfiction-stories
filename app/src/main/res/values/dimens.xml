@@ -3,6 +3,7 @@
     <dimen name="drawable_text_padding">8dp</dimen>
     <dimen name="app_bar_large_height">180dp</dimen>
     <dimen name="story_list_margin">8dp</dimen>
+    <dimen name="reader_nav_button_height">48dp</dimen>
     <dimen name="app_bar_height">180dp</dimen>
     <dimen name="text_margin">16dp</dimen>
 </resources>
