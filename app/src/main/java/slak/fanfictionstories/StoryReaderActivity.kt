@@ -4,7 +4,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.os.Bundle
-import android.support.design.widget.Snackbar
+import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.style.ReplacementSpan
@@ -133,9 +133,14 @@ class StoryReaderActivity : AppCompatActivity() {
     // automatically handle clicks on the Home/Up button, so long
     // as you specify a parent activity in AndroidManifest.xml.
     return when (item.itemId) {
-      R.id.action_settings -> true
-      R.id.goToTop -> true
-      R.id.goToBottom -> true
+      R.id.goToTop -> {
+        nestedScroller.scrollTo(0, 0)
+        return false
+      }
+      R.id.goToBottom -> {
+        nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
+        return false
+      }
       else -> super.onOptionsItemSelected(item)
     }
   }
