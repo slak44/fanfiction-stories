@@ -76,10 +76,6 @@ class StoryReaderActivity : AppCompatActivity() {
   }
 
   private fun initText(chapterToRead: Int) = launch(CommonPool) {
-    launch(UI) {
-      prevChapterBtn.isEnabled = chapterToRead != 1
-      nextChapterBtn.isEnabled = chapterToRead != model.chapterCount
-    }
     // FIXME maybe throw a spinny loader here until the text shows up
     val text: String = readChapter(model.storyIdRaw, chapterToRead).await()
     updateUiAfterFetchingText(text, chapterToRead)
@@ -90,6 +86,10 @@ class StoryReaderActivity : AppCompatActivity() {
   }
 
   private fun updateUiAfterFetchingText(text: String, chapterToRead: Int) = launch(UI) {
+    // Disable buttons if there is nowhere for them to go
+    prevChapterBtn.isEnabled = chapterToRead != 1
+    nextChapterBtn.isEnabled = chapterToRead != model.chapterCount
+
     // Legacy mode puts more space between <p>, makes it easier to read
     chapterText.text = Html.fromHtml(
         text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
