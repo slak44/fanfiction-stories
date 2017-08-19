@@ -94,6 +94,9 @@ class StoryReaderActivity : AppCompatActivity() {
     chapterText.text = Html.fromHtml(
         text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
 
+    // Start at the top, regardless of where we were when we ran this function
+    nestedScroller.scrollTo(0, 0)
+
     // This measurement is not really guaranteed to happen: because this function gets called
     // from onCreate, the height might not be calculated, so there is technically a race
     // condition between this coroutine and whoever calculates the height, but since fetching and
