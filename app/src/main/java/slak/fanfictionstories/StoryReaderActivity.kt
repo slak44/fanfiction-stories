@@ -2,11 +2,16 @@ package slak.fanfictionstories
 
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.style.ReplacementSpan
+import android.util.DisplayMetrics
+import android.view.*
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.content_story_reader.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -14,6 +19,7 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.update
 import java.io.File
 
@@ -47,6 +53,7 @@ class StoryReaderActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_story_reader)
     setSupportActionBar(toolbar)
+    // FIXME
     fab.setOnClickListener { view ->
       Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
           .setAction("Action", null).show()
@@ -66,12 +73,41 @@ class StoryReaderActivity : AppCompatActivity() {
         // Legacy mode puts more space between <p>, makes it easier to read
         chapterText.text =
             Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
-        // FIXME reinstate scroll
+        // FIXME reinstate scroll if resuming
       }
       database.use {
         update("stories", "currentChapter" to chapterToRead)
             .whereSimple("storyId = ?", model.storyIdRaw.toString()).exec()
       }
+    }
+  }
+
+  override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+    val white = resources.getColor(android.R.color.white, theme)
+    val top = resources.getDrawable(R.drawable.ic_arrow_upward_black_24dp, theme)
+    top.setColorFilter(white, PorterDuff.Mode.SRC_IN)
+    val bot = resources.getDrawable(R.drawable.ic_arrow_downward_black_24dp, theme)
+    bot.setColorFilter(white, PorterDuff.Mode.SRC_IN)
+    menu.findItem(R.id.goToTop).icon = top
+    menu.findItem(R.id.goToBottom).icon = bot
+    return super.onPrepareOptionsMenu(menu)
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    // Inflate the menu; this adds items to the action bar if it is present.
+    menuInflater.inflate(R.menu.menu_story_reader, menu)
+    return true
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    // Handle action bar item clicks here. The action bar will
+    // automatically handle clicks on the Home/Up button, so long
+    // as you specify a parent activity in AndroidManifest.xml.
+    return when (item.itemId) {
+      R.id.action_settings -> true
+      R.id.goToTop -> true
+      R.id.goToBottom -> true
+      else -> super.onOptionsItemSelected(item)
     }
   }
 

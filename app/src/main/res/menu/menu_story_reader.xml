@@ -3,8 +3,15 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="slak.fanfictionstories.StoryReaderActivity">
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never"/>
+        android:id="@+id/goToTop"
+        android:icon="@drawable/ic_arrow_upward_black_24dp"
+        android:title="@string/go_to_top"
+        android:visible="true"
+        app:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/goToBottom"
+        android:icon="@drawable/ic_arrow_downward_black_24dp"
+        android:title="@string/go_to_bottom"
+        android:visible="true"
+        app:showAsAction="ifRoom"/>
 </menu>
