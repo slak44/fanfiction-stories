@@ -66,6 +66,7 @@ class StoryReaderActivity : AppCompatActivity() {
   }
 
   private fun initText(chapterToRead: Int) = launch(CommonPool) {
+    // FIXME maybe throw a spinny loader here until the text shows up
     val text = readChapter(model.storyIdRaw, chapterToRead).await()
     updateUiAfterFetchingText(text)
     database.use {
