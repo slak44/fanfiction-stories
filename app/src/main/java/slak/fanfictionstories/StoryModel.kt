@@ -50,8 +50,10 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   private val reviewsCount: Int = (src["reviews"] as Long).toInt()
   private val favoritesCount: Int = (src["favorites"] as Long).toInt()
   private val followsCount: Int = (src["follows"] as Long).toInt()
+  private val chapterTitlesRaw: String = src["chapterTitles"] as String
 
   // UI data
+  val chapterTitles = chapterTitlesRaw.split(StoryFetcher.CHAPTER_TITLE_SEPARATOR)
   val chapterCount: Int = (src["chapters"] as Long).toInt()
   val title = src["title"] as String
   val summary = src["summary"] as String

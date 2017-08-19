@@ -82,17 +82,23 @@ class StoryReaderActivity : AppCompatActivity() {
     }
     // FIXME maybe throw a spinny loader here until the text shows up
     val text: String = readChapter(model.storyIdRaw, chapterToRead).await()
-    updateUiAfterFetchingText(text)
+    updateUiAfterFetchingText(text, chapterToRead)
     database.use {
       update("stories", "currentChapter" to chapterToRead)
           .whereSimple("storyId = ?", model.storyIdRaw.toString()).exec()
     }
   }
 
-  private fun updateUiAfterFetchingText(text: String) = launch(UI) {
+  private fun updateUiAfterFetchingText(text: String, chapterToRead: Int) = launch(UI) {
     // Legacy mode puts more space between <p>, makes it easier to read
     chapterText.text = Html.fromHtml(
         text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
+
+    // Set chapter's title (chapters are 1-indexed)
+    chapterTitleText.text = model.chapterTitles[chapterToRead - 1]
+    // Don't show it if there is no title
+    chapterTitleText.visibility =
+        if (model.chapterTitles[chapterToRead - 1] == "") View.GONE else View.VISIBLE
 
     // Start at the top, regardless of where we were when we ran this function
     nestedScroller.scrollTo(0, 0)
@@ -107,6 +113,7 @@ class StoryReaderActivity : AppCompatActivity() {
         View.MeasureSpec.makeMeasureSpec(nestedScroller.width, View.MeasureSpec.AT_MOST)
     scrollingLayout.measure(widthMeasureSpec, heightMeasureSpec)
 
+    // Record scroll status
     nestedScroller.setOnScrollChangeListener { scroller, _, scrollY: Int, _, _ ->
       val rawPercentage = scrollY * 100.0 / (scrollingLayout.measuredHeight - scroller.bottom)
       // Make sure that values >100 get clamped to 100
@@ -118,6 +125,7 @@ class StoryReaderActivity : AppCompatActivity() {
       } }
     }
 
+    // Restore scroll status
     database.use {
       val absoluteScroll = select("stories", "scrollAbsolute")
           .whereSimple("storyId = ?", model.storyIdRaw.toString())
