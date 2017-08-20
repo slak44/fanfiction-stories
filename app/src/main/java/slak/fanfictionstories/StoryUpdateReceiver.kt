@@ -18,6 +18,7 @@ fun initAlarm(context: Context) {
   val pendingIntent = PendingIntent.getBroadcast(context,
       0, alarmIntent, PendingIntent.FLAG_CANCEL_CURRENT)
   val calendar = Calendar.getInstance()
+  // FIXME use TimePickerDialog for setting update time in db, and just fetch it here
   calendar.timeInMillis = System.currentTimeMillis()
   val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
   alarm.cancel(pendingIntent)

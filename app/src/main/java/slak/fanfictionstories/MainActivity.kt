@@ -31,9 +31,6 @@ fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
       }).create().show()
 }
 
-// FIXME store settings in database
-// FIXME use TimePickerDialog for setting time
-
 class MainActivity : AppCompatActivity() {
   companion object {
     private const val TAG = "MainActivity"

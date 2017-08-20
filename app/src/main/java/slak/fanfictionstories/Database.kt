@@ -20,6 +20,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     }
   }
 
+  // FIXME store settings in database (new table settings)
   override fun onCreate(db: SQLiteDatabase) {
     db.execSQL("""
       CREATE TABLE IF NOT EXISTS stories (
