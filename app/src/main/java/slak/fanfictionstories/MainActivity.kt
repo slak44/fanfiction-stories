@@ -50,13 +50,15 @@ class MainActivity : AppCompatActivity() {
       startActivity(intent)
     }
     res = resources
+    val serviceIntent = Intent(this, StoryUpdateService::class.java)
+    startService(serviceIntent)
     if (BuildConfig.DEBUG) {
       debugButtons.visibility = View.VISIBLE
       regenTableBtn.setOnClickListener {
         database.use { dropTable("stories", true) }
-        Log.w(TAG, "DROPPED STORIES TABLE")
+        Log.i(TAG, "DROPPED STORIES TABLE")
         database.onCreate(database.writableDatabase)
-        Log.w(TAG, "REINITED STORIES TABLE")
+        Log.i(TAG, "REINITED STORIES TABLE")
       }
       addStoryBtn.setOnClickListener {
         getFullStory(this, 12555864L)
@@ -65,8 +67,14 @@ class MainActivity : AppCompatActivity() {
       }
       wipeDiskDataBtn.setOnClickListener {
         val deleted = File(getStorageDir(this@MainActivity).get(), "storiesData").deleteRecursively()
-        if (deleted) Log.w(TAG, "SUCCESSFULLY DELETED")
+        if (deleted) Log.i(TAG, "SUCCESSFULLY DELETED")
         else Log.e(TAG, "DELETE FAILED")
+      }
+      restartServiceBtn.setOnClickListener {
+        stopService(serviceIntent)
+        Log.i(TAG, "MURDERED SERVICE")
+        startService(serviceIntent)
+        Log.i(TAG, "RESTARTED SERVICE")
       }
     }
   }
