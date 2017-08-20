@@ -67,8 +67,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/debug_title"
-                android:textSize="18sp"
-                android:textColor="@android:color/holo_red_light"/>
+                android:textColor="@android:color/holo_red_light"
+                android:textSize="18sp"/>
 
             <Button
                 android:id="@+id/regenTableBtn"
@@ -87,12 +87,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/wipe_disk_data"/>
-
-            <Button
-                android:id="@+id/restartServiceBtn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/restart_update_service"/>
         </LinearLayout>
 
     </LinearLayout>
