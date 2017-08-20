@@ -1,10 +1,13 @@
 package slak.fanfictionstories
 
+import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.os.Bundle
+import android.support.annotation.ColorRes
 import android.support.v4.widget.NestedScrollView
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.style.ReplacementSpan
@@ -32,6 +35,13 @@ class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpa
                     y: Int, bottom: Int, paint: Paint) {
     canvas.drawRect(x, top.toFloat(), (y + width).toFloat(), (top + heightPx).toFloat(), paint)
   }
+}
+
+fun MenuItem.iconTint(@ColorRes colorRes: Int, theme: Resources.Theme) {
+  val color = MainActivity.res.getColor(colorRes, theme)
+  val drawable = this.icon
+  drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+  this.icon = drawable
 }
 
 class StoryReaderActivity : AppCompatActivity() {
@@ -73,6 +83,19 @@ class StoryReaderActivity : AppCompatActivity() {
       currentChapter++
       initText(currentChapter)
     }
+    selectChapterBtn.setOnClickListener { showChapterSelectDialog() }
+  }
+
+  private fun showChapterSelectDialog() {
+    AlertDialog.Builder(this@StoryReaderActivity)
+        .setTitle(R.string.select_chapter)
+        .setItems(model.chapterTitles.toTypedArray(), { dialog, which: Int ->
+          dialog.dismiss()
+          // This means 'go to same chapter', so do nothing
+          if (currentChapter == which + 1) return@setItems
+          currentChapter = which + 1
+          initText(currentChapter)
+        }).show()
   }
 
   private fun initText(chapterToRead: Int) = launch(CommonPool) {
@@ -139,13 +162,12 @@ class StoryReaderActivity : AppCompatActivity() {
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-    val white = resources.getColor(android.R.color.white, theme)
-    val top = resources.getDrawable(R.drawable.ic_arrow_upward_black_24dp, theme)
-    top.setColorFilter(white, PorterDuff.Mode.SRC_IN)
-    val bot = resources.getDrawable(R.drawable.ic_arrow_downward_black_24dp, theme)
-    bot.setColorFilter(white, PorterDuff.Mode.SRC_IN)
-    menu.findItem(R.id.goToTop).icon = top
-    menu.findItem(R.id.goToBottom).icon = bot
+    val toTint = arrayOf(
+        menu.findItem(R.id.goToTop),
+        menu.findItem(R.id.goToBottom),
+        menu.findItem(R.id.selectChapter)
+    )
+    for (item in toTint) item.iconTint(android.R.color.white, theme)
     return super.onPrepareOptionsMenu(menu)
   }
 
@@ -162,11 +184,15 @@ class StoryReaderActivity : AppCompatActivity() {
     return when (item.itemId) {
       R.id.goToTop -> {
         nestedScroller.scrollTo(0, 0)
-        return false
+        return true
       }
       R.id.goToBottom -> {
         nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
-        return false
+        return true
+      }
+      R.id.selectChapter -> {
+        showChapterSelectDialog()
+        return true
       }
       else -> super.onOptionsItemSelected(item)
     }

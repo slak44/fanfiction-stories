@@ -35,6 +35,7 @@
     <string name="storyid_already_exists_tip">The story database is out of sync with the downloaded stories</string>
     <string name="go_to_top">Go to Top</string>
     <string name="go_to_bottom">Go to Bottom</string>
+    <string name="select_chapter">Select Chapter</string>
 
     <!-- These are development strings -->
     <string name="debug_title">!!! DEBUG !!!</string>
