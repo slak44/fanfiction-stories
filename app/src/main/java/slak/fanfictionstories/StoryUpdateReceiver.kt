@@ -14,7 +14,7 @@ import kotlinx.coroutines.experimental.launch
 import java.util.concurrent.TimeUnit
 
 fun initAlarm(context: Context) {
-  val alarmIntent = Intent(context, AlarmReceiver::class.java)
+  val alarmIntent = Intent(context, StoryUpdateReceiver::class.java)
   val pendingIntent = PendingIntent.getBroadcast(context,
       0, alarmIntent, PendingIntent.FLAG_CANCEL_CURRENT)
   val calendar = Calendar.getInstance()
@@ -35,7 +35,7 @@ class BootBroadcastReceiver : BroadcastReceiver() {
   }
 }
 
-class AlarmReceiver : BroadcastReceiver() {
+class StoryUpdateReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     // FIXME show updating notification
     val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
