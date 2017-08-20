@@ -142,6 +142,12 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     return@withLock StoryModel(metadata.get(), fromDb = false)
   } }
 
+  fun update(oldModel: StoryModel) {
+    if (!metadata.isPresent) throw IllegalStateException("Cannot update before fetching metadata")
+    // FIXME actually do diffs between models and figure out the update
+    println("update")
+  }
+
   private val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
   private fun patientlyFetchChapter(chapter: Int): Deferred<String> = async(CommonPool) {

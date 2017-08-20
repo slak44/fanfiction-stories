@@ -7,6 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.icu.util.Calendar
 import android.net.ConnectivityManager
+import android.util.Log
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.launch
 
 fun initAlarm(context: Context) {
   val alarmIntent = Intent(context, StoryUpdateReceiver::class.java)
@@ -35,14 +38,21 @@ class StoryUpdateReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     // FIXME show updating notification
     val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    checkNetworkState(context, cm, { _: Context ->
-      update()
+    checkNetworkState(context, cm, { ctx: Context ->
+      update(ctx)
     })
   }
 
-  private fun update() {
-    // FIXME actually do the updatings
-    println("done updates")
+  private fun update(context: Context) = launch(CommonPool) {
+    Log.i("StoryUpdateReceiver", "Updating")
+    val storyModels = context.database.getStories().await()
+    // We can launch all of them at once since there can only be one holding the download lock,
+    // so we won't assblast their site with requests
+    storyModels.forEach { model -> launch(CommonPool) {
+      val fetcher = StoryFetcher(model.storyIdRaw, context)
+      fetcher.fetchMetadata().await()
+      fetcher.update(model)
+    } }
   }
 
 }
