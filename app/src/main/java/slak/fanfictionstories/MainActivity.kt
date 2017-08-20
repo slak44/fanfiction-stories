@@ -1,8 +1,11 @@
 package slak.fanfictionstories
 
+import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.os.Bundle
+import android.support.annotation.StringRes
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
@@ -10,8 +13,24 @@ import android.view.MenuItem
 import android.view.View
 
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.dropTable
 import java.io.File
+
+fun errorDialog(ctx: Context, @StringRes title: Int, @StringRes msg: Int) {
+  errorDialog(ctx, ctx.resources.getString(title), ctx.resources.getString(msg))
+}
+
+fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
+  AlertDialog.Builder(ctx)
+      .setTitle(title)
+      .setMessage(msg)
+      .setPositiveButton(R.string.got_it, { dialogInterface, _ ->
+        // User acknowledged error
+        dialogInterface.dismiss()
+      }).create().show()
+}
 
 class MainActivity : AppCompatActivity() {
   companion object {

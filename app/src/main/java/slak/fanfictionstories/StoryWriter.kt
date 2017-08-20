@@ -1,31 +1,14 @@
 package slak.fanfictionstories
 
-import android.app.AlertDialog
 import android.content.Context
 import android.os.Environment
-import android.support.annotation.StringRes
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.consumeEach
 import kotlinx.coroutines.experimental.launch
 import java.io.File
 import java.util.*
-
-fun errorDialog(ctx: Context, @StringRes title: Int, @StringRes msg: Int) {
-  errorDialog(ctx, ctx.resources.getString(title), ctx.resources.getString(msg))
-}
-
-fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
-  AlertDialog.Builder(ctx)
-      .setTitle(title)
-      .setMessage(msg)
-      .setPositiveButton(R.string.got_it, { dialogInterface, _ ->
-        // User acknowledged error
-        dialogInterface.dismiss()
-      }).create().show()
-}
 
 fun haveExternalStorage() = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()
 
@@ -78,14 +61,4 @@ fun writeStory(ctx: Context, storyId: Long, chapters: Channel<String>): Boolean 
     }
   }
   return true
-}
-
-fun getFullStory(ctx: Context, storyId: Long) = launch(CommonPool) {
-  val fetcher = StoryFetcher(storyId, ctx)
-  val meta = fetcher.fetchMetadata().await()
-  val isWriting = writeStory(ctx, storyId, fetcher.fetchChapters())
-  if (isWriting) {
-    meta.status = StoryStatus.LOCAL
-    ctx.database.insertStory(meta)
-  }
 }
