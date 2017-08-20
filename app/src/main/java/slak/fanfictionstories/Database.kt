@@ -47,7 +47,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         wordCount INTEGER CHECK(chapters > 0) NOT NULL,
         publishDate INTEGER NOT NULL,
         updateDate INTEGER NOT NULL,
-        storyId INTEGER NOT NULL
+        storyId INTEGER UNIQUE NOT NULL
       );
     """)
   }
@@ -66,7 +66,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
 
   fun insertStory(model: StoryModel): Deferred<Long> = async(CommonPool) {
     val kvPairs = model.src.entries.map { Pair(it.key, it.value) }.toTypedArray()
-    writableDatabase.insert("stories", *kvPairs)
+    writableDatabase.insertOrThrow("stories", *kvPairs)
   }
 }
 

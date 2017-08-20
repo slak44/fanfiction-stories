@@ -1,6 +1,7 @@
 package slak.fanfictionstories
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import android.net.ConnectivityManager
 import android.util.Log
 import kotlinx.coroutines.experimental.*
@@ -11,6 +12,21 @@ import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
+
+fun getFullStory(ctx: Context, storyId: Long) = launch(CommonPool) {
+  val fetcher = StoryFetcher(storyId, ctx)
+  val meta = fetcher.fetchMetadata().await()
+  val isWriting = writeStory(ctx, storyId, fetcher.fetchChapters())
+  if (isWriting) {
+    meta.status = StoryStatus.LOCAL
+    try {
+      ctx.database.insertStory(meta).await()
+    } catch (ex: SQLiteConstraintException) {
+      Log.e("getFullStory", "", ex)
+      errorDialog(ctx, R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
+    }
+  }
+}
 
 class StoryFetcher(private val storyId: Long, ctx: Context) {
   companion object {
