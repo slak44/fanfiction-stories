@@ -119,7 +119,7 @@ class StoryReaderActivity : AppCompatActivity() {
 
     // Set chapter's title (chapters are 1-indexed)
     chapterTitleText.text = model.chapterTitles[chapterToRead - 1]
-    // Don't show it if there is no title
+    // Don't show it if there is no title (otherwise there are leftover margins/padding)
     chapterTitleText.visibility =
         if (model.chapterTitles[chapterToRead - 1] == "") View.GONE else View.VISIBLE
 
