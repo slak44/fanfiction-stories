@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.support.annotation.StringRes
 import android.support.v7.app.AppCompatActivity
@@ -16,6 +17,7 @@ import kotlinx.coroutines.experimental.android.UI
 import org.jetbrains.anko.db.dropTable
 import java.io.File
 import kotlinx.coroutines.experimental.*
+import java.util.concurrent.TimeUnit
 
 fun errorDialog(ctx: Context, @StringRes title: Int, @StringRes msg: Int) {
   errorDialog(ctx, ctx.resources.getString(title), ctx.resources.getString(msg))
@@ -29,6 +31,28 @@ fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
         // User acknowledged error
         dialogInterface.dismiss()
       }).create().show()
+}
+
+fun <T> checkNetworkState(
+    context: Context,
+    cm: ConnectivityManager,
+    onNetConnected: suspend (context: Context) -> T
+): Deferred<T> = async(CommonPool) {
+  val activeNetwork = cm.activeNetworkInfo
+  if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
+    // No connection; wait
+    println("no connection") // FIXME set notification to 'no connection'
+    delay(5, TimeUnit.SECONDS)
+    return@async checkNetworkState(context, cm, onNetConnected).await()
+  } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
+    // We're connecting; wait
+    delay(3, TimeUnit.SECONDS)
+    println("connecting") // FIXME update notification
+    return@async checkNetworkState(context, cm, onNetConnected).await()
+  } else {
+    // We have connection
+    return@async onNetConnected(context)
+  }
 }
 
 class MainActivity : AppCompatActivity() {

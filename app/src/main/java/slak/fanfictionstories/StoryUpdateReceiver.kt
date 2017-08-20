@@ -7,11 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.icu.util.Calendar
 import android.net.ConnectivityManager
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import java.util.concurrent.TimeUnit
 
 fun initAlarm(context: Context) {
   val alarmIntent = Intent(context, StoryUpdateReceiver::class.java)
@@ -40,27 +35,9 @@ class StoryUpdateReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     // FIXME show updating notification
     val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    checkNetworkState(cm)
-  }
-
-  private fun checkNetworkState(cm: ConnectivityManager): Job = launch(CommonPool) {
-    val activeNetwork = cm.activeNetworkInfo
-    if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
-      // No connection; wait
-      println("no connection") // FIXME set notification to 'no connection'
-      delay(5, TimeUnit.SECONDS)
-      checkNetworkState(cm)
-      return@launch
-    } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
-      // We're connecting; wait
-      delay(3, TimeUnit.SECONDS)
-      println("connecting") // FIXME update notification
-      checkNetworkState(cm)
-      return@launch
-    } else {
-      // We have connection
+    checkNetworkState(context, cm, { _: Context ->
       update()
-    }
+    })
   }
 
   private fun update() {

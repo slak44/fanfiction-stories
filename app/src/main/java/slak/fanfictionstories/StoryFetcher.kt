@@ -28,7 +28,7 @@ fun getFullStory(ctx: Context, storyId: Long) = launch(CommonPool) {
   }
 }
 
-class StoryFetcher(private val storyId: Long, ctx: Context) {
+class StoryFetcher(private val storyId: Long, val ctx: Context) {
   companion object {
     private val ffnetMutex: Mutex = Mutex()
     const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
@@ -143,19 +143,13 @@ class StoryFetcher(private val storyId: Long, ctx: Context) {
   private val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
   private fun patientlyFetchChapter(chapter: Int): Deferred<String> = async(CommonPool) {
-    val activeNetwork = cm.activeNetworkInfo
-    if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
-      // No connection; wait
-      delay(5, TimeUnit.SECONDS)
-      println("no connection") // FIXME update notification
-      return@async patientlyFetchChapter(chapter).await()
-    } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
-      // If we're connecting; wait
-      delay(3, TimeUnit.SECONDS)
-      println("connecting") // FIXME update notification
-      return@async patientlyFetchChapter(chapter).await()
-    }
-    // We have a connection
+    return@async checkNetworkState(ctx, cm, { _ ->
+      return@checkNetworkState fetchChapter(chapter).await()
+    }).await()
+  }
+
+  @Suppress("LiftReturnOrAssignment")
+  private fun fetchChapter(chapter: Int): Deferred<String> = async(CommonPool) {
     try {
       return@async URL("https://www.fanfiction.net/s/$storyId/$chapter/").readText()
       // FIXME update notification
@@ -164,7 +158,7 @@ class StoryFetcher(private val storyId: Long, ctx: Context) {
       // Something happened; retry
       // FIXME update notification
       delay(1, TimeUnit.SECONDS)
-      return@async patientlyFetchChapter(chapter).await()
+      return@async fetchChapter(chapter).await()
     }
   }
 
