@@ -31,6 +31,7 @@ fun getFullStory(ctx: Context, storyId: Long) = launch(CommonPool) {
 class StoryFetcher(private val storyId: Long, val ctx: Context) {
   companion object {
     private val ffnetMutex: Mutex = Mutex()
+    private val rateLimitSeconds = 1L
     const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
   }
 
@@ -43,6 +44,7 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
   )
 
   fun fetchMetadata(): Deferred<StoryModel> = async(CommonPool) { return@async ffnetMutex.withLock {
+    delay(rateLimitSeconds, TimeUnit.SECONDS)
     val html: String = patientlyFetchChapter(1).await()
 
     // The regex are shit, because so is what we're trying to parse
@@ -176,7 +178,7 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     val channel = Channel<String>(10)
     launch(CommonPool) { ffnetMutex.withLock {
       for (chapterNr in from..target) {
-        delay(1, TimeUnit.SECONDS)
+        delay(rateLimitSeconds, TimeUnit.SECONDS)
         channel.send(parseChapter(patientlyFetchChapter(chapterNr).await()))
         // FIXME update notification
       }
