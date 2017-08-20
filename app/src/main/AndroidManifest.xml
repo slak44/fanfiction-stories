@@ -26,7 +26,7 @@
         </activity>
         <activity
             android:name=".StoryListActivity"
-            android:label="@string/title_activity_story_list"
+            android:label="@string/story_list"
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme">
             <meta-data
