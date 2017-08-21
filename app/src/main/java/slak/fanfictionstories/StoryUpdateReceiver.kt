@@ -20,8 +20,8 @@ fun initAlarm(context: Context) {
   calendar.timeInMillis = System.currentTimeMillis()
   val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
   alarm.cancel(pendingIntent)
-  // 10 seconds when debugging
-  val interval = if (BuildConfig.DEBUG) 1000L * 10 else AlarmManager.INTERVAL_DAY
+  // 60 seconds when debugging
+  val interval = if (BuildConfig.DEBUG) 1000L * 60 else AlarmManager.INTERVAL_DAY
   alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP,
       calendar.timeInMillis, interval, pendingIntent)
 
