@@ -94,7 +94,6 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
     else return MainActivity.res.getString(R.string.chapter_progress, currentChapter, chapterCount)
   }
 
-
   // Dates
   @Suppress("MemberVisibilityCanPrivate")
   val publishDateSeconds: Long = src["publishDate"] as Long
@@ -108,6 +107,10 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
     get() = MainActivity.res.getString(R.string.published_on, publishDateFormatted)
   val updateDate: String
     get() = MainActivity.res.getString(R.string.updated_on, updateDateFormatted)
+
+  fun toKvPairs(): Array<Pair<String, Any>> {
+    return src.entries.map { Pair(it.key, it.value) }.toTypedArray()
+  }
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     val bundle = Bundle()
