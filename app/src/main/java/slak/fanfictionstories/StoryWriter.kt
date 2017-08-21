@@ -33,7 +33,7 @@ fun storyDir(ctx: Context, storyId: Long): Optional<File> {
 }
 
 /**
- * Writes received story data to disk
+ * Writes received story data to disk (in a coroutine)
  * @returns true if we started writing data to disk, false otherwise
  */
 fun writeStory(ctx: Context, storyId: Long, chapters: Channel<String>): Boolean {
