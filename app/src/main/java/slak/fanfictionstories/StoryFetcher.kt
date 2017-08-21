@@ -10,6 +10,7 @@ import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
+import org.jetbrains.anko.db.update
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -152,7 +153,19 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
 
   suspend fun update(oldModel: StoryModel) {
     if (!metadata.isPresent) throw IllegalStateException("Cannot update before fetching metadata")
-    val newModel = StoryModel(metadata.get(), fromDb = false)
+    val metaWithInitedValues = metadata.get()
+    val newChapterCount = metadata.get()["chapters"] as Long
+    if (oldModel.currentChapter > newChapterCount) {
+      metaWithInitedValues["currentChapter"] = newChapterCount
+      metaWithInitedValues["scrollProgress"] = 0.0
+      metaWithInitedValues["scrollAbsolute"] = 0L
+    } else {
+      metaWithInitedValues["currentChapter"] = oldModel.currentChapter.toLong()
+      metaWithInitedValues["scrollProgress"] = oldModel.src["scrollProgress"] as Double
+      metaWithInitedValues["scrollAbsolute"] = oldModel.src["scrollAbsolute"] as Long
+    }
+    metaWithInitedValues["status"] = oldModel.status.toString()
+    val newModel = StoryModel(metaWithInitedValues, fromDb = false)
     ctx.database.use {
       replaceOrThrow("stories", *newModel.toKvPairs())
     }
@@ -201,7 +214,7 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     }
     dir.get().deleteRecursively()
     val isWriting = writeStory(ctx, storyId, fetchChapters())
-    if (!isWriting) revertUpdate()
+    if (!isWriting) return revertUpdate()
     return
   }
 
