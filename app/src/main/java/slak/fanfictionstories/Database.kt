@@ -43,7 +43,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         isCompleted INTEGER CHECK(isCompleted IN (0, 1)) NOT NULL,
         scrollProgress REAL CHECK(scrollProgress >= 0 AND scrollProgress <= 100) NOT NULL,
         scrollAbsolute INTEGER NOT NULL,
-        wordCount INTEGER CHECK(chapters > 0) NOT NULL,
+        wordCount INTEGER CHECK(wordCount > 0) NOT NULL,
         publishDate INTEGER NOT NULL,
         updateDate INTEGER NOT NULL,
         storyId INTEGER UNIQUE NOT NULL
