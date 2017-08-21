@@ -2,9 +2,7 @@ package slak.fanfictionstories
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.*
 import org.jetbrains.anko.db.*
 
 class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 1) {
@@ -61,13 +59,8 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     // Here you can upgrade tables, as usual
   }
 
-  fun getStories() : Deferred<List<StoryModel>> = async(CommonPool) { readableDatabase.
-    select(tableName = "stories").exec { parseList(StoryModel.dbParser) }
-  }
-
-  fun insertStory(model: StoryModel): Deferred<Long> = async(CommonPool) {
-    val kvPairs = model.src.entries.map { Pair(it.key, it.value) }.toTypedArray()
-    writableDatabase.insertOrThrow("stories", *kvPairs)
+  fun getStories() : Deferred<List<StoryModel>> = async(CommonPool) {
+    readableDatabase.select(tableName = "stories").exec { parseList(StoryModel.dbParser) }
   }
 }
 

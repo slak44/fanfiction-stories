@@ -8,6 +8,8 @@ import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
+import org.jetbrains.anko.db.insertOrThrow
+import org.jetbrains.anko.db.replaceOrThrow
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -15,12 +17,14 @@ import kotlin.collections.ArrayList
 
 fun getFullStory(ctx: Context, storyId: Long) = launch(CommonPool) {
   val fetcher = StoryFetcher(storyId, ctx)
-  val meta = fetcher.fetchMetadata().await()
+  val model = fetcher.fetchMetadata().await()
   val isWriting = writeStory(ctx, storyId, fetcher.fetchChapters())
   if (isWriting) {
-    meta.status = StoryStatus.LOCAL
+    model.status = StoryStatus.LOCAL
     try {
-      ctx.database.insertStory(meta).await()
+      ctx.database.use {
+        insertOrThrow("stories", *model.toKvPairs())
+      }
     } catch (ex: SQLiteConstraintException) {
       Log.e("getFullStory", "", ex)
       errorDialog(ctx, R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
@@ -33,9 +37,11 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     private val ffnetMutex: Mutex = Mutex()
     private val rateLimitSeconds = 1L
     const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
+    private val TAG = "StoryFetcher"
   }
 
   private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
+  private var metadataChapter: Optional<String> = Optional.empty()
 
   private val regexOpts: Set<RegexOption> = hashSetOf(
       RegexOption.MULTILINE,
@@ -139,13 +145,64 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
         "chapterTitles" to if (chapterTitles.isPresent) chapterTitles.get() else ""
     ))
 
+    metadataChapter = Optional.of(parseChapter(html))
+
     return@withLock StoryModel(metadata.get(), fromDb = false)
   } }
 
-  fun update(oldModel: StoryModel) {
+  suspend fun update(oldModel: StoryModel) {
     if (!metadata.isPresent) throw IllegalStateException("Cannot update before fetching metadata")
-    // FIXME actually do diffs between models and figure out the update
-    println("update")
+    val newModel = StoryModel(metadata.get(), fromDb = false)
+    ctx.database.use {
+      replaceOrThrow("stories", *newModel.toKvPairs())
+    }
+    // Skip non-locals from global updates
+    if (oldModel.status != StoryStatus.LOCAL) return
+    // Stories can't get un-updated
+    if (oldModel.updateDateSeconds != 0L && newModel.updateDateSeconds == 0L)
+      throw IllegalStateException("The old model had updates; the new one doesn't")
+    // Story has never received an update, our job here is done
+    if (newModel.updateDateSeconds == 0L) return
+    // Update time is identical, nothing to do again
+    if (oldModel.updateDateSeconds == newModel.updateDateSeconds) return
+
+    val revertUpdate: () -> Unit = {
+      // Revert model to old values
+      ctx.database.use { replaceOrThrow("stories", *oldModel.toKvPairs()) }
+      Log.e(TAG, "Had to revert update to $storyId")
+    }
+
+    // If there is only one chapter, we already got it
+    if (newModel.chapterCount == 1) {
+      val c = Channel<String>(1)
+      c.send(metadataChapter.get())
+      c.close()
+      val isWriting = writeStory(ctx, storyId, c)
+      if (!isWriting) revertUpdate()
+      return
+    }
+    // Chapters have been added
+    if (newModel.chapterCount > oldModel.chapterCount) {
+      val chapters = fetchChapters(oldModel.chapterCount + 1, newModel.chapterCount)
+      val isWriting = writeStory(ctx, storyId, chapters)
+      if (!isWriting) revertUpdate()
+      return
+    }
+    // At least one chapter has been changed/removed, redownload everything
+    var dir = storyDir(ctx, storyId)
+    // Keep trying if we can't get the story directory right now
+    var i = 0
+    while (!dir.isPresent) {
+      // Give up after 5 minutes
+      if (i == 60) return revertUpdate()
+      delay(5, TimeUnit.SECONDS)
+      dir = storyDir(ctx, storyId)
+      i++
+    }
+    dir.get().deleteRecursively()
+    val isWriting = writeStory(ctx, storyId, fetchChapters())
+    if (!isWriting) revertUpdate()
+    return
   }
 
   private val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -162,7 +219,7 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
       return@async URL("https://www.fanfiction.net/s/$storyId/$chapter/").readText()
       // FIXME update notification
     } catch (t: Throwable) {
-      Log.e("StoryFetcher", "", t)
+      Log.e(TAG, "", t)
       // Something happened; retry
       // FIXME update notification
       delay(1, TimeUnit.SECONDS)
