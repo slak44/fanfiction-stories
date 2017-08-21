@@ -44,6 +44,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   private val canonRaw = src["canon"] as String
   private val genresRaw = src["genres"] as String
   private val charactersRaw = src["characters"] as String
+  private val categoryRaw = src["category"] as String
   private val ratingRaw = src["rating"] as String
   private val wordCount: Int = (src["wordCount"] as Long).toInt()
   private val scrollProgress: Double = src["scrollProgress"] as Double
@@ -57,7 +58,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   val chapterCount: Int = (src["chapters"] as Long).toInt()
   val title = src["title"] as String
   val summary = src["summary"] as String
-  val category = src["category"] as String // FIXME: ui for this where
+  val category: String = MainActivity.res.getString(R.string.in_category, categoryRaw)
   val language = src["language"] as String
   val currentChapter: Int = (src["currentChapter"] as Long).toInt()
   val storyId: String get() = MainActivity.res.getString(R.string.storyid_x, storyIdRaw)

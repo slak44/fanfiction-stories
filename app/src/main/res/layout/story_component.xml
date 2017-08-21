@@ -177,6 +177,15 @@
                 tools:text="with Test A., Test B."/>
 
             <TextView
+                android:id="@+id/categoryText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/charactersText"
+                tools:text="in Games"/>
+
+            <TextView
                 android:id="@+id/updateDateText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -201,7 +210,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/charactersText"
+                app:layout_constraintTop_toBottomOf="@+id/categoryText"
                 tools:text="50 reviews"/>
 
             <TextView
