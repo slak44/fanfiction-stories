@@ -92,7 +92,7 @@ class MainActivity : AppCompatActivity() {
         Log.i(TAG, "REINITED STORIES TABLE")
       }
       addStoryBtn.setOnClickListener {
-        getFullStory(this, 12555864L)
+        getFullStory(this, 12129863L)
         getFullStory(this, 11953822L)
         getFullStory(this, 12295826L)
       }
