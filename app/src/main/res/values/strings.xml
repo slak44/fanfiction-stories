@@ -15,6 +15,12 @@
     <string name="fetching_chapter">Fetching chapter %d for story %s</string>
     <string name="done_story">Done fetching story %s</string>
     <string name="update_failed">Update failed for story %s</string>
+    <string name="updated_stories">Updated Stories</string>
+    <string name="updated_story">Updated story</string>
+    <string name="downloaded_stories">Downloaded Stories</string>
+    <string name="downloaded_story">Downloaded story</string>
+    <string name="x_stories_downloaded">%d stories downloaded</string>
+    <string name="x_stories_updated">%d stories updated</string>
 
     <!-- Story list -->
     <string name="story_list">Story List</string>

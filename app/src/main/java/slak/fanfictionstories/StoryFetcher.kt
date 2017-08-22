@@ -24,6 +24,7 @@ fun getFullStory(ctx: Context, storyId: Long, n: Notifications) = async(CommonPo
     try {
       ctx.database.use {
         insertOrThrow("stories", *model.toKvPairs())
+        Notifications.downloadedStory(ctx, model.title)
       }
     } catch (ex: SQLiteConstraintException) {
       Log.e("getFullStory", "", ex)
@@ -151,7 +152,10 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     return@withLock StoryModel(metadata.get(), fromDb = false)
   } }
 
-  fun update(oldModel: StoryModel, n: Notifications) = async(CommonPool) {
+  /**
+   * @returns whether or not the update was done
+   */
+  fun update(oldModel: StoryModel, n: Notifications): Deferred<Boolean> = async(CommonPool) {
     if (!metadata.isPresent) throw IllegalStateException("Cannot update before fetching metadata")
     n.show(ctx.resources.getString(R.string.checking_story, oldModel.title))
     val metaWithInitedValues = metadata.get()
@@ -171,20 +175,21 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
       replaceOrThrow("stories", *newModel.toKvPairs())
     }
     // Skip non-locals from global updates
-    if (oldModel.status != StoryStatus.LOCAL) return@async
+    if (oldModel.status != StoryStatus.LOCAL) return@async false
     // Stories can't get un-updated
     if (oldModel.updateDateSeconds != 0L && newModel.updateDateSeconds == 0L)
       throw IllegalStateException("The old model had updates; the new one doesn't")
     // Story has never received an update, our job here is done
-    if (newModel.updateDateSeconds == 0L) return@async
+    if (newModel.updateDateSeconds == 0L) return@async false
     // Update time is identical, nothing to do again
-    if (oldModel.updateDateSeconds == newModel.updateDateSeconds) return@async
+    if (oldModel.updateDateSeconds == newModel.updateDateSeconds) return@async false
 
-    val revertUpdate: () -> Unit = {
+    val revertUpdate: () -> Boolean = {
       // Revert model to old values
       ctx.database.use { replaceOrThrow("stories", *oldModel.toKvPairs()) }
       Log.e(TAG, "Had to revert update to $storyId")
       n.show(ctx.resources.getString(R.string.update_failed, oldModel.title))
+      false
     }
 
     // If there is only one chapter, we already got it
@@ -194,15 +199,15 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
       c.close()
       n.show(ctx.resources.getString(R.string.fetching_chapter, 1, newModel.title))
       val isWriting = writeStory(ctx, storyId, c).await()
-      if (!isWriting) revertUpdate()
-      return@async
+      if (!isWriting) return@async revertUpdate()
+      return@async true
     }
     // Chapters have been added
     if (newModel.chapterCount > oldModel.chapterCount) {
       val chapters = fetchChapters(n, oldModel.chapterCount + 1, newModel.chapterCount)
       val isWriting = writeStory(ctx, storyId, chapters).await()
-      if (!isWriting) revertUpdate()
-      return@async
+      if (!isWriting) return@async revertUpdate()
+      return@async true
     }
     // At least one chapter has been changed/removed, redownload everything
     var dir = storyDir(ctx, storyId)
@@ -218,7 +223,7 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     dir.get().deleteRecursively()
     val isWriting = writeStory(ctx, storyId, fetchChapters(n)).await()
     if (!isWriting) return@async revertUpdate()
-    return@async
+    return@async true
   }
 
   private val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -257,8 +262,8 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     val channel = Channel<String>(10)
     launch(CommonPool) { ffnetMutex.withLock {
       for (chapterNr in from..target) {
-        delay(rateLimitSeconds, TimeUnit.SECONDS)
         n.show(ctx.resources.getString(R.string.fetching_chapter, chapterNr, storyName))
+        delay(rateLimitSeconds, TimeUnit.SECONDS)
         channel.send(parseChapter(patientlyFetchChapter(chapterNr, n).await()))
       }
       channel.close()
