@@ -14,7 +14,7 @@ import kotlinx.coroutines.experimental.launch
 fun initAlarm(context: Context) {
   val alarmIntent = Intent(context, StoryUpdateReceiver::class.java)
   val pendingIntent = PendingIntent.getBroadcast(context,
-      0, alarmIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+      0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT)
   val calendar = Calendar.getInstance()
   // FIXME use TimePickerDialog for setting update time in db, and just fetch it here
   calendar.timeInMillis = System.currentTimeMillis()
@@ -26,7 +26,6 @@ fun initAlarm(context: Context) {
   val interval = AlarmManager.INTERVAL_DAY
   alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP,
       calendar.timeInMillis, interval, pendingIntent)
-
 }
 
 class BootBroadcastReceiver : BroadcastReceiver() {
