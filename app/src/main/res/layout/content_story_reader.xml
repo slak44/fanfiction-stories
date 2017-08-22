@@ -55,12 +55,13 @@
             <Button
                 android:id="@+id/prevChapterBtn"
                 style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="@dimen/reader_nav_button_height"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
                 android:drawableStart="@drawable/ic_keyboard_arrow_left_black_24dp"
                 android:drawableTint="@android:color/white"
+                android:text="@string/prev"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"/>
 
@@ -79,13 +80,14 @@
             <Button
                 android:id="@+id/nextChapterBtn"
                 style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="@dimen/reader_nav_button_height"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
-                android:drawableStart="@drawable/ic_keyboard_arrow_right_black_24dp"
+                android:drawableEnd="@drawable/ic_keyboard_arrow_right_black_24dp"
                 android:drawableTint="@android:color/white"
+                android:text="@string/next"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/selectChapterBtn"/>
 

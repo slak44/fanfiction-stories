@@ -35,6 +35,8 @@
     <string name="go_to_top">Go to Top</string>
     <string name="go_to_bottom">Go to Bottom</string>
     <string name="select_chapter">Select Chapter</string>
+    <string name="next">Next</string>
+    <string name="prev">prev</string>
 
     <!-- Error dialogs -->
     <string name="got_it">Got it</string>
