@@ -99,7 +99,7 @@ class StoryReaderActivity : AppCompatActivity() {
   }
 
   private fun initText(chapterToRead: Int) = launch(CommonPool) {
-    // FIXME maybe throw a spinny loader here until the text shows up
+    // FIXME definitely throw a spinny loader here until the text shows up, larger chapters have unacceptable load times
     val text: String = readChapter(model.storyIdRaw, chapterToRead).await()
     updateUiAfterFetchingText(text, chapterToRead)
     database.use {
