@@ -124,6 +124,7 @@ class StoryReaderActivity : AppCompatActivity() {
     // Handle the next/prev button states in the appbar
     invalidateOptionsMenu()
 
+    // FIXME change the text view to a recyclerview<textview> of paragraphs(spanned.toString().split('\n')) that then need to get styled by all the spanned.getSpans()
     logger.addSplit("text begin")
     chapterText.text = spanned
     logger.addSplit("text end")
