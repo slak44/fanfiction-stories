@@ -113,6 +113,9 @@ class StoryReaderActivity : AppCompatActivity() {
     prevChapterBtn.isEnabled = chapterToRead != 1
     nextChapterBtn.isEnabled = chapterToRead != model.chapterCount
 
+    // Handle the next/prev button states in the appbar
+    invalidateOptionsMenu()
+
     // Legacy mode puts more space between <p>, makes it easier to read
     chapterText.text = Html.fromHtml(
         text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
@@ -168,6 +171,8 @@ class StoryReaderActivity : AppCompatActivity() {
         menu.findItem(R.id.selectChapter)
     )
     for (item in toTint) item.iconTint(android.R.color.white, theme)
+    menu.findItem(R.id.nextChapter).isEnabled = nextChapterBtn.isEnabled
+    menu.findItem(R.id.prevChapter).isEnabled = prevChapterBtn.isEnabled
     return super.onPrepareOptionsMenu(menu)
   }
 
@@ -192,6 +197,14 @@ class StoryReaderActivity : AppCompatActivity() {
       }
       R.id.selectChapter -> {
         showChapterSelectDialog()
+        return true
+      }
+      R.id.nextChapter -> {
+        nextChapterBtn.callOnClick()
+        return true
+      }
+      R.id.prevChapter -> {
+        prevChapterBtn.callOnClick()
         return true
       }
       else -> super.onOptionsItemSelected(item)

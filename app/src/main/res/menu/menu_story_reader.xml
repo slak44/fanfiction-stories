@@ -13,11 +13,23 @@
         android:icon="@drawable/ic_arrow_upward_black_24dp"
         android:title="@string/go_to_top"
         android:visible="true"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="always"/>
     <item
         android:id="@+id/goToBottom"
         android:icon="@drawable/ic_arrow_downward_black_24dp"
         android:title="@string/go_to_bottom"
         android:visible="true"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/nextChapter"
+        android:title="@string/next_chapter"
+        android:visible="true"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/prevChapter"
+        android:title="@string/prev_chapter"
+        android:visible="true"
+        app:showAsAction="never"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 </menu>
