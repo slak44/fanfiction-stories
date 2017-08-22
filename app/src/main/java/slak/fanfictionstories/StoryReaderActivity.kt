@@ -10,15 +10,14 @@ import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
+import android.text.Spanned
 import android.text.style.ReplacementSpan
+import android.util.TimingLogger
 import android.view.*
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.content_story_reader.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.LongParser
 import org.jetbrains.anko.db.parseSingle
 import org.jetbrains.anko.db.select
@@ -61,7 +60,12 @@ class StoryReaderActivity : AppCompatActivity() {
   private lateinit var model: StoryModel
   private var currentChapter: Int = 0
 
+  private val logger = TimingLogger("TIME", "UI thread")
+
   override fun onCreate(savedInstanceState: Bundle?) {
+    logger.reset()
+    launch(CommonPool) { delay(5000); logger.dumpToLog()}
+    logger.addSplit("start")
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_story_reader)
     setSupportActionBar(toolbar)
@@ -101,14 +105,18 @@ class StoryReaderActivity : AppCompatActivity() {
   private fun initText(chapterToRead: Int) = launch(CommonPool) {
     // FIXME definitely throw a spinny loader here until the text shows up, larger chapters have unacceptable load times
     val text: String = readChapter(model.storyIdRaw, chapterToRead).await()
-    updateUiAfterFetchingText(text, chapterToRead)
+    // Legacy mode puts more space between <p>, makes it easier to read
+    val html = Html.fromHtml(
+        text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
+    updateUiAfterFetchingText(html, chapterToRead)
     database.use {
       update("stories", "currentChapter" to chapterToRead)
           .whereSimple("storyId = ?", model.storyIdRaw.toString()).exec()
     }
   }
 
-  private fun updateUiAfterFetchingText(text: String, chapterToRead: Int) = launch(UI) {
+  private fun updateUiAfterFetchingText(spanned: Spanned, chapterToRead: Int) = launch(UI) {
+    logger.addSplit("updateUiAfterFetchingText begin")
     // Disable buttons if there is nowhere for them to go
     prevChapterBtn.isEnabled = chapterToRead != 1
     nextChapterBtn.isEnabled = chapterToRead != model.chapterCount
@@ -116,9 +124,9 @@ class StoryReaderActivity : AppCompatActivity() {
     // Handle the next/prev button states in the appbar
     invalidateOptionsMenu()
 
-    // Legacy mode puts more space between <p>, makes it easier to read
-    chapterText.text = Html.fromHtml(
-        text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
+    logger.addSplit("text begin")
+    chapterText.text = spanned
+    logger.addSplit("text end")
 
     // Set chapter's title (chapters are 1-indexed)
     chapterTitleText.text = model.chapterTitles[chapterToRead - 1]
@@ -128,16 +136,6 @@ class StoryReaderActivity : AppCompatActivity() {
 
     // Start at the top, regardless of where we were when we ran this function
     nestedScroller.scrollTo(0, 0)
-
-    // This measurement is not really guaranteed to happen: because this function gets called
-    // from onCreate, the height might not be calculated, so there is technically a race
-    // condition between this coroutine and whoever calculates the height, but since fetching and
-    // parsing the chapter takes more time than that, we're not going to have issues
-    val heightMeasureSpec =
-        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-    val widthMeasureSpec =
-        View.MeasureSpec.makeMeasureSpec(nestedScroller.width, View.MeasureSpec.AT_MOST)
-    scrollingLayout.measure(widthMeasureSpec, heightMeasureSpec)
 
     // Record scroll status
     nestedScroller.setOnScrollChangeListener { scroller, _, scrollY: Int, _, _ ->
