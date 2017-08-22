@@ -11,10 +11,12 @@ import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
 
+const val UPDATE_ALARM_PENDING_INTENT_REQ_CODE = 0xA1A12
+
 fun initAlarm(context: Context) {
   val alarmIntent = Intent(context, StoryUpdateReceiver::class.java)
   val pendingIntent = PendingIntent.getBroadcast(context,
-      0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+      UPDATE_ALARM_PENDING_INTENT_REQ_CODE, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT)
   val calendar = Calendar.getInstance()
   // FIXME use TimePickerDialog for setting update time in db, and just fetch it here
   calendar.timeInMillis = System.currentTimeMillis()
