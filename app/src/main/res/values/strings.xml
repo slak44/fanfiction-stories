@@ -4,7 +4,17 @@
     <string name="resume_story">Resume: <b>%s</b>%nby<i>%s</i> — Chapter %d/%d</string>
     <string name="nothing_to_resume">No story to resume</string>
     <string name="story_browse">Browse Stories</string>
-    <string name="no_connection">No connection</string>
+
+    <!-- Notifications -->
+    <string name="download_notification_channel">Download Notifications</string>
+    <string name="downloading_story">Downloading Story</string>
+    <string name="updating_story">Updating Story</string>
+    <string name="waiting_for_connection">Waiting for connection…</string>
+    <string name="error_fetching_something">Couldn\'t fetch data for story %s; Retrying…</string>
+    <string name="checking_story">Checking %s for updates</string>
+    <string name="fetching_chapter">Fetching chapter %d for story %s</string>
+    <string name="done_story">Done fetching story %s</string>
+    <string name="update_failed">Update failed for story %s</string>
 
     <!-- Story list -->
     <string name="story_list">Story List</string>
@@ -56,6 +66,7 @@
     <string name="regen_stories_table">Regen stories table</string>
     <string name="add_story">Add story</string>
     <string name="wipe_disk_data">Wipe disk data</string>
+    <string name="test_notif">Test notification</string>
     <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.</string>
     <string name="title_activity_story_reader">StoryReaderActivity</string>
 </resources>

@@ -1,12 +1,18 @@
 package slak.fanfictionstories
 
 import android.app.AlertDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.net.ConnectivityManager
+import android.os.Build
 import android.os.Bundle
 import android.support.annotation.StringRes
+import android.support.v4.app.NotificationCompat
+import android.support.v4.app.TaskStackBuilder
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
@@ -33,22 +39,73 @@ fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
       }).create().show()
 }
 
+class Notifications(val context: Context, val kind: Kind) {
+  companion object {
+    const val DOWNLOAD_CHANNEL = "download_channel"
+    const val NOTIF_PENDING_INTENT_REQ_CODE = 0xD00D
+    const val DOWNLOAD_NOTIFICATION_ID = 0xDA010AD
+    const val UPDATE_NOTIFICATION_ID = 0x04DA7E
+  }
+
+  val notificationManager =
+      context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+  init {
+    if (Build.VERSION.SDK_INT >= 26) {
+      val title = context.resources.getString(R.string.download_notification_channel)
+      val channel =
+          NotificationChannel(DOWNLOAD_CHANNEL, title, NotificationManager.IMPORTANCE_DEFAULT)
+      notificationManager.createNotificationChannel(channel)
+    }
+  }
+
+  enum class Kind(@StringRes val titleStringId: Int, val reqId: Int) {
+    DOWNLOADING(R.string.downloading_story, DOWNLOAD_NOTIFICATION_ID),
+    UPDATING(R.string.updating_story, UPDATE_NOTIFICATION_ID)
+  }
+
+  fun show(content: String) {
+    val builder = NotificationCompat.Builder(context, Notifications.DOWNLOAD_CHANNEL)
+        .setSmallIcon(R.drawable.ic_file_download_black_24dp)
+        .setContentTitle(context.resources.getString(kind.titleStringId))
+        .setContentText(content)
+        .setOngoing(true)
+        .setChannelId(DOWNLOAD_CHANNEL)
+    val intent = Intent(context, StoryListActivity::class.java)
+    val stack = TaskStackBuilder.create(context)
+    stack.addParentStack(MainActivity::class.java)
+    stack.addNextIntent(intent)
+    val pendingIntent = stack.getPendingIntent(
+        NOTIF_PENDING_INTENT_REQ_CODE, PendingIntent.FLAG_UPDATE_CURRENT)
+    builder.setContentIntent(pendingIntent)
+    notificationManager.notify(kind.reqId, builder.build())
+  }
+
+  fun cancel() {
+    Log.i("Notifications", "killed $kind")
+    notificationManager.cancel(kind.reqId)
+  }
+}
+
 fun <T> checkNetworkState(
     context: Context,
     cm: ConnectivityManager,
+    n: Notifications,
     onNetConnected: suspend (context: Context) -> T
 ): Deferred<T> = async(CommonPool) {
   val activeNetwork = cm.activeNetworkInfo
   if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
     // No connection; wait
-    println("no connection") // FIXME set notification to 'no connection'
+    n.show(context.resources.getString(R.string.waiting_for_connection))
+    Log.e("checkNetworkState", "No connection")
     delay(5, TimeUnit.SECONDS)
-    return@async checkNetworkState(context, cm, onNetConnected).await()
+    return@async checkNetworkState(context, cm, n, onNetConnected).await()
   } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
     // We're connecting; wait
+    n.show(context.resources.getString(R.string.waiting_for_connection))
+    Log.e("checkNetworkState", "Connecting...")
     delay(3, TimeUnit.SECONDS)
-    println("connecting") // FIXME update notification
-    return@async checkNetworkState(context, cm, onNetConnected).await()
+    return@async checkNetworkState(context, cm, n, onNetConnected).await()
   } else {
     // We have connection
     return@async onNetConnected(context)
@@ -92,14 +149,24 @@ class MainActivity : AppCompatActivity() {
         Log.i(TAG, "REINITED STORIES TABLE")
       }
       addStoryBtn.setOnClickListener {
-        getFullStory(this, 12129863L)
-        getFullStory(this, 11953822L)
-        getFullStory(this, 12295826L)
+        val notifs = Notifications(this, Notifications.Kind.DOWNLOADING)
+        getFullStory(this, 12129863L, notifs)
+        getFullStory(this, 11953822L, notifs)
+        getFullStory(this, 12295826L, notifs)
       }
       wipeDiskDataBtn.setOnClickListener {
-        val deleted = File(getStorageDir(this@MainActivity).get(), "storiesData").deleteRecursively()
+        val deleted = File(getStorageDir(this@MainActivity).get(), "storiesData")
+            .deleteRecursively()
         if (deleted) Log.i(TAG, "SUCCESSFULLY DELETED")
         else Log.e(TAG, "DELETE FAILED")
+      }
+      downloadNotifBtn.setOnClickListener {
+        val notifs = Notifications(this, Notifications.Kind.DOWNLOADING)
+        notifs.show(res.getString(R.string.waiting_for_connection))
+        launch(UI) {
+          delay(2500)
+          notifs.cancel()
+        }
       }
     }
   }

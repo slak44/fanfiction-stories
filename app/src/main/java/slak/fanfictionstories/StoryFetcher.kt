@@ -10,16 +10,15 @@ import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
-import org.jetbrains.anko.db.update
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
-fun getFullStory(ctx: Context, storyId: Long) = launch(CommonPool) {
+fun getFullStory(ctx: Context, storyId: Long, n: Notifications) = async(CommonPool) {
   val fetcher = StoryFetcher(storyId, ctx)
-  val model = fetcher.fetchMetadata().await()
-  val isWriting = writeStory(ctx, storyId, fetcher.fetchChapters())
+  val model = fetcher.fetchMetadata(n).await()
+  val isWriting: Boolean = writeStory(ctx, storyId, fetcher.fetchChapters(n)).await()
   if (isWriting) {
     model.status = StoryStatus.LOCAL
     try {
@@ -50,9 +49,10 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
       RegexOption.DOT_MATCHES_ALL
   )
 
-  fun fetchMetadata(): Deferred<StoryModel> = async(CommonPool) { return@async ffnetMutex.withLock {
+  fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async(CommonPool) {
+    return@async ffnetMutex.withLock {
     delay(rateLimitSeconds, TimeUnit.SECONDS)
-    val html: String = patientlyFetchChapter(1).await()
+    val html: String = patientlyFetchChapter(1, n).await()
 
     // The regex are shit, because so is what we're trying to parse
     // I mean really, using ' for attributes?
@@ -151,8 +151,9 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     return@withLock StoryModel(metadata.get(), fromDb = false)
   } }
 
-  suspend fun update(oldModel: StoryModel) {
+  fun update(oldModel: StoryModel, n: Notifications) = async(CommonPool) {
     if (!metadata.isPresent) throw IllegalStateException("Cannot update before fetching metadata")
+    n.show(ctx.resources.getString(R.string.checking_story, oldModel.title))
     val metaWithInitedValues = metadata.get()
     val newChapterCount = metadata.get()["chapters"] as Long
     if (oldModel.currentChapter > newChapterCount) {
@@ -170,19 +171,20 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
       replaceOrThrow("stories", *newModel.toKvPairs())
     }
     // Skip non-locals from global updates
-    if (oldModel.status != StoryStatus.LOCAL) return
+    if (oldModel.status != StoryStatus.LOCAL) return@async
     // Stories can't get un-updated
     if (oldModel.updateDateSeconds != 0L && newModel.updateDateSeconds == 0L)
       throw IllegalStateException("The old model had updates; the new one doesn't")
     // Story has never received an update, our job here is done
-    if (newModel.updateDateSeconds == 0L) return
+    if (newModel.updateDateSeconds == 0L) return@async
     // Update time is identical, nothing to do again
-    if (oldModel.updateDateSeconds == newModel.updateDateSeconds) return
+    if (oldModel.updateDateSeconds == newModel.updateDateSeconds) return@async
 
     val revertUpdate: () -> Unit = {
       // Revert model to old values
       ctx.database.use { replaceOrThrow("stories", *oldModel.toKvPairs()) }
       Log.e(TAG, "Had to revert update to $storyId")
+      n.show(ctx.resources.getString(R.string.update_failed, oldModel.title))
     }
 
     // If there is only one chapter, we already got it
@@ -190,16 +192,17 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
       val c = Channel<String>(1)
       c.send(metadataChapter.get())
       c.close()
-      val isWriting = writeStory(ctx, storyId, c)
+      n.show(ctx.resources.getString(R.string.fetching_chapter, 1, newModel.title))
+      val isWriting = writeStory(ctx, storyId, c).await()
       if (!isWriting) revertUpdate()
-      return
+      return@async
     }
     // Chapters have been added
     if (newModel.chapterCount > oldModel.chapterCount) {
-      val chapters = fetchChapters(oldModel.chapterCount + 1, newModel.chapterCount)
-      val isWriting = writeStory(ctx, storyId, chapters)
+      val chapters = fetchChapters(n, oldModel.chapterCount + 1, newModel.chapterCount)
+      val isWriting = writeStory(ctx, storyId, chapters).await()
       if (!isWriting) revertUpdate()
-      return
+      return@async
     }
     // At least one chapter has been changed/removed, redownload everything
     var dir = storyDir(ctx, storyId)
@@ -207,36 +210,35 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     var i = 0
     while (!dir.isPresent) {
       // Give up after 5 minutes
-      if (i == 60) return revertUpdate()
+      if (i == 60) return@async revertUpdate()
       delay(5, TimeUnit.SECONDS)
       dir = storyDir(ctx, storyId)
       i++
     }
     dir.get().deleteRecursively()
-    val isWriting = writeStory(ctx, storyId, fetchChapters())
-    if (!isWriting) return revertUpdate()
-    return
+    val isWriting = writeStory(ctx, storyId, fetchChapters(n)).await()
+    if (!isWriting) return@async revertUpdate()
+    return@async
   }
 
   private val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-  private fun patientlyFetchChapter(chapter: Int): Deferred<String> = async(CommonPool) {
-    return@async checkNetworkState(ctx, cm, { _ ->
-      return@checkNetworkState fetchChapter(chapter).await()
+  private fun patientlyFetchChapter(chapter: Int, n: Notifications): Deferred<String> = async(CommonPool) {
+    return@async checkNetworkState(ctx, cm, n, { _ ->
+      return@checkNetworkState fetchChapter(chapter, n).await()
     }).await()
   }
 
   @Suppress("LiftReturnOrAssignment")
-  private fun fetchChapter(chapter: Int): Deferred<String> = async(CommonPool) {
+  private fun fetchChapter(chapter: Int, n: Notifications): Deferred<String> = async(CommonPool) {
     try {
       return@async URL("https://www.fanfiction.net/s/$storyId/$chapter/").readText()
-      // FIXME update notification
     } catch (t: Throwable) {
-      Log.e(TAG, "", t)
       // Something happened; retry
-      // FIXME update notification
+      n.show(ctx.resources.getString(R.string.error_fetching_something, storyId.toString()))
+      Log.e(TAG, "fetchChapter", t)
       delay(1, TimeUnit.SECONDS)
-      return@async fetchChapter(chapter).await()
+      return@async fetchChapter(chapter, n).await()
     }
   }
 
@@ -246,19 +248,21 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     return story.groupValues[1]
   }
 
-  fun fetchChapters(from: Int = 1, to: Int = -1): Channel<String>  {
+  fun fetchChapters(n: Notifications, from: Int = 1, to: Int = -1): Channel<String>  {
     if (!metadata.isPresent && to == -1)
       throw IllegalArgumentException("Specify 'to' chapter if metadata is missing")
     val target = if (to == -1) (metadata.get()["chapters"] as Long).toInt() else to
+    val storyName = if (metadata.isPresent) metadata.get()["title"] else ""
     // The buffer size is completely arbitrary
     val channel = Channel<String>(10)
     launch(CommonPool) { ffnetMutex.withLock {
       for (chapterNr in from..target) {
         delay(rateLimitSeconds, TimeUnit.SECONDS)
-        channel.send(parseChapter(patientlyFetchChapter(chapterNr).await()))
-        // FIXME update notification
+        n.show(ctx.resources.getString(R.string.fetching_chapter, chapterNr, storyName))
+        channel.send(parseChapter(patientlyFetchChapter(chapterNr, n).await()))
       }
       channel.close()
+      n.show(ctx.resources.getString(R.string.done_story, storyName))
     } }
     return channel
   }

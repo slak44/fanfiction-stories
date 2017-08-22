@@ -78,10 +78,13 @@ class StoryCardView : CardView {
     addBtn.setOnClickListener {
       addBtn.isEnabled = false
       addBtn.text = context.resources.getString(R.string.adding___)
-      // FIXME update downloading notification here
       if (!storyId.isPresent)
         throw IllegalStateException("StoryCardView clicked, but data not filled by model")
-      getFullStory(context, storyId.get())
+      val n = Notifications(this@StoryCardView.context, Notifications.Kind.DOWNLOADING)
+      launch(CommonPool) {
+        getFullStory(this@StoryCardView.context, storyId.get(), n).await()
+        n.cancel()
+      }
     }
     return super.onCreateDrawableState(extraSpace)
   }
