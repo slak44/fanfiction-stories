@@ -73,7 +73,7 @@ class Notifications(val context: Context, val kind: Kind) {
         .setChannelId(DOWNLOAD_CHANNEL)
     val intent = Intent(context, StoryListActivity::class.java)
     val stack = TaskStackBuilder.create(context)
-    stack.addParentStack(MainActivity::class.java)
+    stack.addParentStack(StoryListActivity::class.java)
     stack.addNextIntent(intent)
     val pendingIntent = stack.getPendingIntent(
         NOTIF_PENDING_INTENT_REQ_CODE, PendingIntent.FLAG_UPDATE_CURRENT)
