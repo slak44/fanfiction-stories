@@ -10,6 +10,7 @@ import android.widget.ArrayAdapter
 import kotlinx.android.synthetic.main.activity_browse_category.*
 import kotlinx.android.synthetic.main.activity_select_category.*
 import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlin.properties.Delegates
 
@@ -47,7 +48,10 @@ class BrowseCategoryActivity : AppCompatActivity() {
     title = CATEGORIES[categoryIdx]
     launch(CommonPool) {
       val canons = getCanonsForCategory(this@BrowseCategoryActivity, categoryIdx).await()
-      // FIXME shove these into a list somewhere
+      val adapter = ArrayAdapter<String>(
+          this@BrowseCategoryActivity, android.R.layout.simple_list_item_1)
+      adapter.addAll(canons.map { "${it.title} - ${it.stories}" })
+      launch(UI) { inCategoryList.adapter = adapter }
     }
     inCategoryList.setOnItemClickListener { _, _, idx, _ ->
       // FIXME enter

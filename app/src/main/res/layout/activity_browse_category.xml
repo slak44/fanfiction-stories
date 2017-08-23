@@ -9,14 +9,14 @@
     tools:context="slak.fanfictionstories.BrowseCategoryActivity">
 
     <android.support.design.widget.AppBarLayout
-        android:id="@+id/app_bar"
+        android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/app_bar_height"
         android:fitsSystemWindows="true"
         android:theme="@style/AppTheme.AppBarOverlay">
 
         <android.support.design.widget.CollapsingToolbarLayout
-            android:id="@+id/toolbar_layout"
+            android:id="@+id/toolbarLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fitsSystemWindows="true"
@@ -38,9 +38,8 @@
         android:id="@+id/inCategoryList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:context="slak.fanfictionstories.BrowseCategoryActivity">
-
-    </ListView>
+        tools:context="slak.fanfictionstories.BrowseCategoryActivity"/>
 
 </android.support.design.widget.CoordinatorLayout>
