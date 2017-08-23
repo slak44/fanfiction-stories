@@ -17,6 +17,7 @@ class Notifications(val context: Context, val kind: Kind) {
     const val DOWNLOAD_CHANNEL = "download_channel"
     const val NOTIF_PENDING_INTENT_REQ_CODE = 0xD00D
 
+    const val OTHER_NOTIFICATION_ID = 0xFF0000
     const val DOWNLOAD_NOTIFICATION_ID = 0xDA010AD
     const val UPDATE_NOTIFICATION_ID = 0x04DA7E
     const val DONE_UPDATING_NOTIFICATION_ID = 0x77704DA
@@ -81,7 +82,9 @@ class Notifications(val context: Context, val kind: Kind) {
     DONE_UPDATING(Duration.TRANSIENT, R.string.updated_stories,
         R.drawable.ic_done_all_black_24dp, DONE_UPDATING_NOTIFICATION_ID, "D"),
     DONE_DOWNLOADING(Duration.TRANSIENT, R.string.downloaded_stories,
-        R.drawable.ic_done_all_black_24dp, DONE_DOWNLOADING_NOTIFICATION_ID, "C")
+        R.drawable.ic_done_all_black_24dp, DONE_DOWNLOADING_NOTIFICATION_ID, "C"),
+    OTHER(Duration.ONGOING, R.string.accessing_data,
+        R.drawable.ic_cloud_download_black_24dp, OTHER_NOTIFICATION_ID, "E")
   }
 
   fun create(content: String): NotificationCompat.Builder {

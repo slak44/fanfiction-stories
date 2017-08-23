@@ -6,9 +6,12 @@ import android.support.v7.app.AppCompatActivity
 import android.widget.ArrayAdapter
 import kotlinx.android.synthetic.main.activity_browse_category.*
 import kotlinx.android.synthetic.main.activity_select_category.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.launch
 
-private val CATEGORIES = MainActivity.res.getStringArray(R.array.categories)
-private val URL_COMPONENTS = MainActivity.res.getStringArray(R.array.categories_url_components)
+val CATEGORIES: Array<String> = MainActivity.res.getStringArray(R.array.categories)
+val URL_COMPONENTS: Array<String> =
+    MainActivity.res.getStringArray(R.array.categories_url_components)
 
 private val CATEGORIES_IDX_EXTRA_ID = "category_idx"
 
@@ -37,7 +40,10 @@ class BrowseCategoryActivity : AppCompatActivity() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     val categoryIdx = intent.extras.getInt(CATEGORIES_IDX_EXTRA_ID)
     title = CATEGORIES[categoryIdx]
-    // FIXME get data lol
+    launch(CommonPool) {
+      val canons = getCanonsForCategory(this@BrowseCategoryActivity, categoryIdx).await()
+      // FIXME shove these into a list somewhere
+    }
     inCategoryList.setOnItemClickListener { _, _, idx, _ ->
       // FIXME enter
     }

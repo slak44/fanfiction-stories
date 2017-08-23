@@ -42,7 +42,51 @@ fun getFullStory(ctx: Context, storyId: Long,
   return@async Optional.of(model)
 }
 
-class StoryFetcher(private val storyId: Long, val ctx: Context) {
+private val DOWNLOAD_MUTEX = Mutex()
+private val TAG = "StoryFetcher"
+private val regexOpts: Set<RegexOption> = hashSetOf(
+    RegexOption.MULTILINE,
+    RegexOption.UNIX_LINES,
+    RegexOption.DOT_MATCHES_ALL
+)
+
+data class Canon(val title: String, val url: String, val stories: String)
+private fun fetchCategory(categoryIdx: Int,
+                          n: Notifications): Deferred<String> = async(CommonPool) {
+  delay(StoryFetcher.RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
+  try {
+    return@async URL("https://www.fanfiction.net/${URL_COMPONENTS[categoryIdx]}").readText()
+  } catch (t: Throwable) {
+    // Something happened; retry
+    n.show(MainActivity.res.getString(R.string.error_with_categories, CATEGORIES[categoryIdx]))
+    Log.e(TAG, "getCanonsForCategory${CATEGORIES[categoryIdx]}", t)
+    delay(StoryFetcher.RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
+    return@async fetchCategory(categoryIdx, n).await()
+  }
+}
+// FIXME we can cache this call for a while
+fun getCanonsForCategory(context: Context,
+                         categoryIdx: Int): Deferred<List<Canon>> = async(CommonPool) {
+  val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+  val n = Notifications(context, Notifications.Kind.OTHER)
+  return@async checkNetworkState(context, cm, n, { _ ->
+    val html = fetchCategory(categoryIdx, n).await()
+    val table =
+        Regex("id='list_output'><TABLE WIDTH='100%'><TR>(.*?)</TR></TABLE>", regexOpts)
+        .find(html) ?: throw IllegalStateException("Can't get category table")
+    // Get rid of the td's so we're left with (regular) divs
+    val divString =
+        table.groupValues[1].replace(Regex("</?TD.*?>", regexOpts), "")
+    val results = Regex(
+        "<div><a href=\"(.*?)\" title=\"(.*?)\">.*?CLASS='gray'>\\((.*?)\\)</SPAN></div>",
+        regexOpts).findAll(divString)
+    return@checkNetworkState results.map {
+      Canon(it.groupValues[2], it.groupValues[1], it.groupValues[3])
+    }.toList()
+  }).await()
+}
+
+class StoryFetcher(private val storyId: Long, private val ctx: Context) {
   companion object {
     // Regen DB if you change this separator
     const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
@@ -50,21 +94,13 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     const val CONNECTION_WAIT_DELAY_SECONDS = 3L
     const val CONNECTION_MISSING_DELAY_SECONDS = 5L
     const val STORAGE_WAIT_DELAY_SECONDS = 5L
-
-    private val ffnetMutex: Mutex = Mutex()
-    private val regexOpts: Set<RegexOption> = hashSetOf(
-        RegexOption.MULTILINE,
-        RegexOption.UNIX_LINES,
-        RegexOption.DOT_MATCHES_ALL
-    )
-    private val TAG = "StoryFetcher"
   }
 
   private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
   private var metadataChapter: Optional<String> = Optional.empty()
 
   fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async(CommonPool) {
-    return@async ffnetMutex.withLock {
+    return@async DOWNLOAD_MUTEX.withLock {
     delay(RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
     val html: String = patientlyFetchChapter(1, n).await()
 
@@ -273,7 +309,7 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     val storyName = if (metadata.isPresent) metadata.get()["title"] else ""
     // The buffer size is completely arbitrary
     val channel = Channel<String>(10)
-    launch(CommonPool) { ffnetMutex.withLock {
+    launch(CommonPool) { DOWNLOAD_MUTEX.withLock {
       for (chapterNr in from..target) {
         n.show(ctx.resources.getString(R.string.fetching_chapter, chapterNr, storyName))
         delay(RATE_LIMIT_SECONDS, TimeUnit.SECONDS)

@@ -68,6 +68,8 @@
     <string name="downloaded_story">Downloaded story</string>
     <string name="x_stories_downloaded">%d stories downloaded</string>
     <string name="x_stories_updated">%d stories updated</string>
+    <string name="accessing_data">Accessing Data</string>
+    <string name="error_with_categories">Can\'t access %s data; Retrying…</string>
 
     <!-- Story list -->
     <string name="story_list">Story List</string>
