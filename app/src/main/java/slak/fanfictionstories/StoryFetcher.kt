@@ -43,17 +43,16 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     const val STORAGE_WAIT_DELAY_SECONDS = 5L
 
     private val ffnetMutex: Mutex = Mutex()
+    private val regexOpts: Set<RegexOption> = hashSetOf(
+        RegexOption.MULTILINE,
+        RegexOption.UNIX_LINES,
+        RegexOption.DOT_MATCHES_ALL
+    )
     private val TAG = "StoryFetcher"
   }
 
   private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
   private var metadataChapter: Optional<String> = Optional.empty()
-
-  private val regexOpts: Set<RegexOption> = hashSetOf(
-      RegexOption.MULTILINE,
-      RegexOption.UNIX_LINES,
-      RegexOption.DOT_MATCHES_ALL
-  )
 
   fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async(CommonPool) {
     return@async ffnetMutex.withLock {
