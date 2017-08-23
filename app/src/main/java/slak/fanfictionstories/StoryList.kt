@@ -232,7 +232,8 @@ private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.Vi
   companion object {
     fun create(context: Context, s: GroupStrategy): Deferred<StoryAdapter> = async(CommonPool) {
       val adapter = StoryAdapter(context)
-      adapter.initData(s).await()
+      adapter.groupStrategy = s
+      adapter.initData().await()
       return@async adapter
     }
   }
@@ -242,11 +243,13 @@ private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.Vi
 
   lateinit var stories: MutableList<StoryModel>
 
-  fun initData(s: GroupStrategy = GroupStrategy.NONE): Deferred<Unit> = async(CommonPool) {
+  var groupStrategy: GroupStrategy = GroupStrategy.NONE
+
+  fun initData(): Deferred<Unit> = async(CommonPool) {
     data.clear()
     stories = this@StoryAdapter.context.database.getStories().await().toMutableList()
     val toData = stories.filter { true } // FIXME filter
-    groupStories(toData.toMutableList(), s).forEach {
+    groupStories(toData.toMutableList(), groupStrategy).forEach {
       val ordered = it.value // FIXME order group stories
       data.add(Right(it.key))
       data.addAll(ordered.map { Left(it) })

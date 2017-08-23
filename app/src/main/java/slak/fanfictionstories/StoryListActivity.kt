@@ -80,7 +80,8 @@ class StoryListActivity : AppCompatActivity() {
         .setItems(GroupStrategy.values().map { it.toUIString() }.toTypedArray(), { dialog, which ->
           dialog.dismiss()
           // FIXME store the chosen group strategy somewhere
-          adapter!!.initData(GroupStrategy.values()[which])
+          adapter!!.groupStrategy = GroupStrategy.values()[which]
+          adapter!!.initData()
         }).show()
   }
 
