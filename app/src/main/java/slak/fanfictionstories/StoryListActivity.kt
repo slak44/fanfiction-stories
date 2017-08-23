@@ -135,7 +135,8 @@ class StoryCardView : CardView {
   }
 }
 
-class StoryAdapter private constructor(val context: Context) : RecyclerView.Adapter<StoryAdapter.ViewHolder>() {
+class StoryAdapter
+  private constructor(val context: Context) : RecyclerView.Adapter<StoryAdapter.ViewHolder>() {
   class ViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
 
   companion object {
