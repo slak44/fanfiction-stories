@@ -258,7 +258,19 @@ enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
   // Date orderings
   PUBLISH_DATE(publish), UPDATE_DATE(update),
   // Other
-  TITLE_ALPHABETIC(titleAlphabetic)
+  TITLE_ALPHABETIC(titleAlphabetic);
+
+  fun toUIString(): String = MainActivity.res.getString(when (this) {
+    WORD_COUNT -> R.string.order_word_count
+    PROGRESS -> R.string.order_progress
+    REVIEW_COUNT -> R.string.order_reviews
+    FOLLOWS -> R.string.order_follows
+    FAVORITES -> R.string.order_favorites
+    CHAPTER_COUNT -> R.string.order_chapter_count
+    PUBLISH_DATE -> R.string.order_publish_date
+    UPDATE_DATE -> R.string.order_update_date
+    TITLE_ALPHABETIC -> R.string.order_title_alphabetic
+  })
 }
 
 fun orderStories(stories: MutableList<StoryModel>,

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.SwitchCompat
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -86,6 +87,18 @@ class StoryListActivity : AppCompatActivity() {
         }).show()
   }
 
+  private fun orderByDialog() {
+    AlertDialog.Builder(this)
+        .setTitle(R.string.group_by)
+        .setItems(OrderStrategy.values().map { it.toUIString() }.toTypedArray(), { dialog, which ->
+          dialog.dismiss()
+          // FIXME store the chosen order strategy somewhere
+          adapter!!.orderStrategy = OrderStrategy.values()[which]
+          adapter!!.initData()
+        })
+        .show()
+  }
+
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     val toTint = arrayOf(
         menu.findItem(R.id.filter),
@@ -113,6 +126,10 @@ class StoryListActivity : AppCompatActivity() {
       }
       R.id.group -> {
         groupByDialog()
+        return true
+      }
+      R.id.sort -> {
+        orderByDialog()
         return true
       }
       else -> super.onOptionsItemSelected(item)
