@@ -233,7 +233,8 @@ class StoryAdapter
       LayoutInflater.from(parent.context)
           .inflate(R.layout.story_component, parent, false) as StoryCardView
     }
-    val fadeIn = ObjectAnimator.ofFloat(view, "alpha", 0.3f, 1f)
+    view.alpha = 0F
+    val fadeIn = ObjectAnimator.ofFloat(view, "alpha", 0.3F, 1F)
     fadeIn.startDelay = Math.min(addedStory * 50, 250)
     fadeIn.start()
     return if (viewType == 1) TitleViewHolder(view as StoryGroupTitle)
@@ -265,15 +266,13 @@ class StoryListActivity : AppCompatActivity() {
     })
     launch(CommonPool) {
       adapter = StoryAdapter.create(this@StoryListActivity).await()
-      launch(UI) {
-        storyListView.adapter = adapter
-        if (adapter!!.itemCount == 0) nothingHere.visibility = View.VISIBLE
-      }
+      launch(UI) { storyListView.adapter = adapter }
     }
   }
 
   override fun onResume() {
     super.onResume()
+    if (adapter != null && adapter!!.itemCount == 0) nothingHere.visibility = View.VISIBLE
     launch(CommonPool) {
       if (lastStoryId.isPresent && adapter != null) database.use {
         val newModel = select("stories")
