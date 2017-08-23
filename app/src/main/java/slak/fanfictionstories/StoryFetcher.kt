@@ -69,22 +69,23 @@ private fun fetchCategory(categoryIdx: Int,
 
 // Unix timestamp + canon list
 private typealias CategoryCanons = Pair<Long, List<Canon>>
-private object CanonCache {
+object CanonCache {
   // Cache categoryIdx's result
-  private val cacheMap = HashMap<Int, CategoryCanons>()
+  private var cacheMap = HashMap<Int, CategoryCanons>()
   private val cacheMapFile = File(MainActivity.cacheDirectory, "categoryCanons.hashmap")
   private val TAG = "CacheCanon"
 
-  fun deserialize(): HashMap<Int, CategoryCanons> {
+  fun deserialize() {
     if (!cacheMapFile.exists()) {
-      return HashMap()
+      cacheMap = HashMap()
+      return
     }
     val objIn = ObjectInputStream(FileInputStream(cacheMapFile))
     // I serialize it however I like, I deserialize it however I like
     @Suppress("Unchecked_Cast")
     val map = objIn.readObject() as HashMap<Int, CategoryCanons>
+    cacheMap = map
     objIn.close()
-    return map
   }
 
   fun serialize() = launch(CommonPool) {
@@ -154,10 +155,6 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     const val CONNECTION_WAIT_DELAY_SECONDS = 3L
     const val CONNECTION_MISSING_DELAY_SECONDS = 5L
     const val STORAGE_WAIT_DELAY_SECONDS = 5L
-  }
-
-  init {
-    CanonCache.deserialize()
   }
 
   private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()

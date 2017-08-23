@@ -8,6 +8,10 @@
     <!-- Select category activity -->
     <string name="title_activity_select_category">Select Category</string>
 
+    <!-- Browse category activity -->
+    <string name="clear_cache">Clear Canon Cache</string>
+    <string name="cleared_from_cache">%s cleared from cache</string>
+
     <!-- Statistics -->
     <string name="statistics">Statistics</string>
     <string name="statistics_template">

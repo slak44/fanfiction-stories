@@ -81,6 +81,9 @@ class MainActivity : AppCompatActivity() {
     res = resources
     cacheDirectory = cacheDir
 
+    // Init this cache
+    CanonCache.deserialize()
+
     // FIXME: set drawable and text string for resume button if a story is available to be resumed
     // FIXME: do the above in onResume as well
 
