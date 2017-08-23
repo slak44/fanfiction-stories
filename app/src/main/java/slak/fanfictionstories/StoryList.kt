@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import java.util.*
+import kotlin.Comparator
 
 class StoryCardView : CardView {
   constructor(context: Context) : super(context)
@@ -224,15 +225,38 @@ fun groupStories(stories: MutableList<StoryModel>,
   return map
 }
 
+private val titleAlpabetic = Comparator<StoryModel> { m1, m2 ->
+  if (m1.title < m2.title) 1 else 0
+}
+
+enum class OrderDirection { ASC, DESC }
+
+enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
+  // Numeric orderings
+//TODO  WORD_COUNT, PROGRESS, REVIEW_COUNT, FOLLOWS, FAVORITES, CHAPTER_COUNT,
+  // Date orderings
+//TODO  LATEST_ACTIVITY, PUBLISH_DATE, UPDATE_DATE,
+  // Other
+  TITLE_ALPHABETIC(titleAlpabetic)
+}
+
+fun orderStories(stories: MutableList<StoryModel>,
+                 s: OrderStrategy, d: OrderDirection): MutableList<StoryModel> {
+  stories.sortWith(if (d == OrderDirection.DESC) s.comparator.reversed() else s.comparator)
+  return stories
+}
+
 class StoryAdapter
-private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+  private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
 
   companion object {
-    fun create(context: Context, s: GroupStrategy): Deferred<StoryAdapter> = async(CommonPool) {
+    fun create(context: Context,
+               s: GroupStrategy, o: OrderStrategy): Deferred<StoryAdapter> = async(CommonPool) {
       val adapter = StoryAdapter(context)
       adapter.groupStrategy = s
+      adapter.orderStrategy = o
       adapter.initData().await()
       return@async adapter
     }
@@ -244,13 +268,15 @@ private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.Vi
   lateinit var stories: MutableList<StoryModel>
 
   var groupStrategy: GroupStrategy = GroupStrategy.NONE
+  var orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC
+  var orderDirection: OrderDirection = OrderDirection.ASC
 
   fun initData(): Deferred<Unit> = async(CommonPool) {
     data.clear()
     stories = this@StoryAdapter.context.database.getStories().await().toMutableList()
     val toData = stories.filter { true } // FIXME filter
     groupStories(toData.toMutableList(), groupStrategy).forEach {
-      val ordered = it.value // FIXME order group stories
+      val ordered = orderStories(it.value, orderStrategy, orderDirection)
       data.add(Right(it.key))
       data.addAll(ordered.map { Left(it) })
     }

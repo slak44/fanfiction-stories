@@ -34,7 +34,8 @@ class StoryListActivity : AppCompatActivity() {
     })
     launch(CommonPool) {
       // FIXME read the stored strategy from somewhere
-      adapter = StoryAdapter.create(this@StoryListActivity, GroupStrategy.NONE).await()
+      adapter = StoryAdapter.create(this@StoryListActivity,
+          GroupStrategy.NONE, OrderStrategy.TITLE_ALPHABETIC).await()
       launch(UI) { storyListView.adapter = adapter }
     }
   }
