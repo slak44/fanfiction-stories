@@ -33,7 +33,8 @@ class StoryListActivity : AppCompatActivity() {
       startActivity(intent)
     })
     launch(CommonPool) {
-      adapter = StoryAdapter.create(this@StoryListActivity).await()
+      // FIXME read the stored strategy from somewhere
+      adapter = StoryAdapter.create(this@StoryListActivity, GroupStrategy.NONE).await()
       launch(UI) { storyListView.adapter = adapter }
     }
   }
@@ -73,6 +74,16 @@ class StoryListActivity : AppCompatActivity() {
         .show()
   }
 
+  private fun groupByDialog() {
+    AlertDialog.Builder(this)
+        .setTitle(R.string.group_by)
+        .setItems(GroupStrategy.values().map { it.toUIString() }.toTypedArray(), { dialog, which ->
+          dialog.dismiss()
+          // FIXME store the chosen group strategy somewhere
+          adapter!!.initData(GroupStrategy.values()[which])
+        }).show()
+  }
+
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     val toTint = arrayOf(
         menu.findItem(R.id.filter),
@@ -96,6 +107,10 @@ class StoryListActivity : AppCompatActivity() {
     return when (item.itemId) {
       R.id.addById -> {
         addByIdDialog()
+        return true
+      }
+      R.id.group -> {
+        groupByDialog()
         return true
       }
       else -> super.onOptionsItemSelected(item)

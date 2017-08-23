@@ -8,6 +8,13 @@
     <string name="remote">Remote Stories</string>
     <string name="seen">Stories Encountered</string>
 
+    <!-- Group strategies -->
+    <string name="group_none">No Groups</string>
+    <string name="group_canon">Canon</string>
+    <string name="group_status">Download Status</string>
+    <string name="group_author">Author</string>
+    <string name="group_category">Category</string>
+
     <!-- Main activity -->
     <string name="action_settings">Settings</string>
     <string name="resume_story">Resume: <b>%s</b>%nby<i>%s</i> — Chapter %d/%d</string>

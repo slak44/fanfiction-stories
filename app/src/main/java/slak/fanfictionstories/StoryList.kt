@@ -174,17 +174,25 @@ class StoryGroupTitle : TextView {
   }
 }
 
-private enum class GroupStrategy {
+enum class GroupStrategy {
   // Group by property
   CANON, AUTHOR, CATEGORY, STATUS,
   // Don't do grouping
-  NONE
+  NONE;
+
+  fun toUIString(): String = MainActivity.res.getString(when (this) {
+    CANON -> R.string.group_canon
+    AUTHOR -> R.string.group_author
+    CATEGORY -> R.string.group_category
+    STATUS -> R.string.group_status
+    NONE -> R.string.group_none
+  })
 }
 
 /**
  * @returns a map that maps titles to grouped stories, according to the given GroupStrategy
  */
-private fun groupStories(stories: MutableList<StoryModel>,
+fun groupStories(stories: MutableList<StoryModel>,
                          strategy: GroupStrategy): Map<String, MutableList<StoryModel>> {
   if (strategy == GroupStrategy.NONE)
     return mapOf(MainActivity.res.getString(R.string.all_stories) to stories)
@@ -213,9 +221,9 @@ private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.Vi
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
 
   companion object {
-    fun create(context: Context): Deferred<StoryAdapter> = async(CommonPool) {
+    fun create(context: Context, s: GroupStrategy): Deferred<StoryAdapter> = async(CommonPool) {
       val adapter = StoryAdapter(context)
-      adapter.initData().await()
+      adapter.initData(s).await()
       return@async adapter
     }
   }
@@ -225,12 +233,11 @@ private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.Vi
 
   lateinit var stories: MutableList<StoryModel>
 
-  fun initData(): Deferred<Unit> = async(CommonPool) {
+  fun initData(s: GroupStrategy = GroupStrategy.NONE): Deferred<Unit> = async(CommonPool) {
     data.clear()
     stories = this@StoryAdapter.context.database.getStories().await().toMutableList()
     val toData = stories.filter { true } // FIXME filter
-    // FIXME get the grouping strategy from the user
-    groupStories(toData.toMutableList(), GroupStrategy.CANON).forEach {
+    groupStories(toData.toMutableList(), s).forEach {
       val ordered = it.value // FIXME order group stories
       data.add(Right(it.key))
       data.addAll(ordered.map { Left(it) })
