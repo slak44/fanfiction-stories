@@ -35,9 +35,14 @@ fun getFullStory(ctx: Context, storyId: Long, n: Notifications) = async(CommonPo
 
 class StoryFetcher(private val storyId: Long, val ctx: Context) {
   companion object {
-    private val ffnetMutex: Mutex = Mutex()
-    private val rateLimitSeconds = 1L
+    // Regen DB if you change this separator
     const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
+    const val RATE_LIMIT_SECONDS = 1L
+    const val CONNECTION_WAIT_DELAY_SECONDS = 3L
+    const val CONNECTION_MISSING_DELAY_SECONDS = 5L
+    const val STORAGE_WAIT_DELAY_SECONDS = 5L
+
+    private val ffnetMutex: Mutex = Mutex()
     private val TAG = "StoryFetcher"
   }
 
@@ -52,7 +57,7 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
 
   fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async(CommonPool) {
     return@async ffnetMutex.withLock {
-    delay(rateLimitSeconds, TimeUnit.SECONDS)
+    delay(RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
     val html: String = patientlyFetchChapter(1, n).await()
 
     // The regex are shit, because so is what we're trying to parse
@@ -216,7 +221,7 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     while (!dir.isPresent) {
       // Give up after 5 minutes
       if (i == 60) return@async revertUpdate()
-      delay(5, TimeUnit.SECONDS)
+      delay(STORAGE_WAIT_DELAY_SECONDS, TimeUnit.SECONDS)
       dir = storyDir(ctx, storyId)
       i++
     }
@@ -242,7 +247,7 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
       // Something happened; retry
       n.show(ctx.resources.getString(R.string.error_fetching_something, storyId.toString()))
       Log.e(TAG, "fetchChapter", t)
-      delay(1, TimeUnit.SECONDS)
+      delay(RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
       return@async fetchChapter(chapter, n).await()
     }
   }
@@ -263,7 +268,7 @@ class StoryFetcher(private val storyId: Long, val ctx: Context) {
     launch(CommonPool) { ffnetMutex.withLock {
       for (chapterNr in from..target) {
         n.show(ctx.resources.getString(R.string.fetching_chapter, chapterNr, storyName))
-        delay(rateLimitSeconds, TimeUnit.SECONDS)
+        delay(RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
         channel.send(parseChapter(patientlyFetchChapter(chapterNr, n).await()))
       }
       channel.close()
