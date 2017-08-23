@@ -15,7 +15,8 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
-fun getFullStory(ctx: Context, storyId: Long, n: Notifications) = async(CommonPool) {
+fun getFullStory(ctx: Context, storyId: Long,
+                 n: Notifications): Deferred<Optional<StoryModel>> = async(CommonPool) {
   val fetcher = StoryFetcher(storyId, ctx)
   val model = fetcher.fetchMetadata(n).await()
   try {
@@ -25,13 +26,14 @@ fun getFullStory(ctx: Context, storyId: Long, n: Notifications) = async(CommonPo
   } catch (ex: SQLiteConstraintException) {
     Log.e("getFullStory", "", ex)
     errorDialog(ctx, R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
-    return@async
+    return@async Optional.empty<StoryModel>()
   }
   val isWriting: Boolean = writeStory(ctx, storyId, fetcher.fetchChapters(n)).await()
   if (isWriting) {
     model.status = StoryStatus.LOCAL
     Notifications.downloadedStory(ctx, model.title)
   }
+  return@async Optional.of(model)
 }
 
 class StoryFetcher(private val storyId: Long, val ctx: Context) {
