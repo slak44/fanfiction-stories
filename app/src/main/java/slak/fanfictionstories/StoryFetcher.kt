@@ -10,6 +10,7 @@ import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
+import org.jetbrains.anko.db.update
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -19,6 +20,7 @@ fun getFullStory(ctx: Context, storyId: Long,
                  n: Notifications): Deferred<Optional<StoryModel>> = async(CommonPool) {
   val fetcher = StoryFetcher(storyId, ctx)
   val model = fetcher.fetchMetadata(n).await()
+  model.status = StoryStatus.LOCAL
   try {
     ctx.database.use {
       insertOrThrow("stories", *model.toKvPairs())
@@ -30,8 +32,12 @@ fun getFullStory(ctx: Context, storyId: Long,
   }
   val isWriting: Boolean = writeStory(ctx, storyId, fetcher.fetchChapters(n)).await()
   if (isWriting) {
-    model.status = StoryStatus.LOCAL
     Notifications.downloadedStory(ctx, model.title)
+  } else {
+    ctx.database.use {
+      update("stories", "status" to "remote")
+          .whereSimple("storyId = ?", storyId.toString()).exec()
+    }
   }
   return@async Optional.of(model)
 }
