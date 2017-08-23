@@ -30,7 +30,10 @@ class StoryCardView : CardView {
   var currentModel: StoryModel? = null
 
   companion object {
-    fun createRightSwipeHelper(recyclerView: RecyclerView, a: StoryListActivity): ItemTouchHelper {
+    fun createRightSwipeHelper(
+        recyclerView: RecyclerView,
+        openStoryReader: (intent: Intent, id: Long) -> Unit
+    ): ItemTouchHelper {
       var swipeStory: ItemTouchHelper? = null
       swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
         override fun getMovementFlags(recycler: RecyclerView?,
@@ -47,7 +50,7 @@ class StoryCardView : CardView {
           val intent = Intent(recyclerView.context, StoryReaderActivity::class.java)
           val cardView = viewHolder.itemView as StoryCardView
           intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, cardView.currentModel!!)
-          a.openStoryReader(intent, cardView.storyId.get())
+          openStoryReader(intent, cardView.storyId.get())
           // After the reader was opened, reset the translation by reattaching
           // We do this because we might go back from the reader to this activity and
           // it has to look properly
@@ -179,6 +182,8 @@ class StoryAdapter
 
 class StoryListActivity : AppCompatActivity() {
   private var adapter: StoryAdapter? = null
+  private var lastStoryId: Optional<Long> = Optional.empty()
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_story_list)
@@ -186,7 +191,10 @@ class StoryListActivity : AppCompatActivity() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     storyListView.layoutManager = LinearLayoutManager(this)
-    StoryCardView.createRightSwipeHelper(storyListView, this)
+    StoryCardView.createRightSwipeHelper(storyListView, { intent, storyId ->
+      lastStoryId = Optional.of(storyId)
+      startActivity(intent)
+    })
     launch(CommonPool) {
       adapter = StoryAdapter.create(this@StoryListActivity).await()
       launch(UI) {
@@ -194,13 +202,6 @@ class StoryListActivity : AppCompatActivity() {
         if (adapter!!.itemCount == 0) nothingHere.visibility = View.VISIBLE
       }
     }
-  }
-
-  private var lastStoryId: Optional<Long> = Optional.empty()
-
-  fun openStoryReader(intent: Intent, storyId: Long) {
-    lastStoryId = Optional.of(storyId)
-    startActivity(intent)
   }
 
   override fun onResume() {
