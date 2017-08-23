@@ -10,10 +10,8 @@ import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
-import android.text.InputType
 import android.util.AttributeSet
 import android.view.*
-import android.widget.EditText
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.dialog_add_story_view.*
