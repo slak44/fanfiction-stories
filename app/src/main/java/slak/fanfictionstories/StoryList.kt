@@ -302,7 +302,7 @@ class StoryAdapter
 
   var groupStrategy: GroupStrategy = GroupStrategy.NONE
   var orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC
-  var orderDirection: OrderDirection = OrderDirection.ASC
+  var orderDirection: OrderDirection = OrderDirection.DESC
 
   fun initData(): Deferred<Unit> = async(CommonPool) {
     data.clear()
