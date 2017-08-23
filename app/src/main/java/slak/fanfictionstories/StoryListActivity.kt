@@ -4,13 +4,16 @@ import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
+import android.text.InputType
 import android.util.AttributeSet
 import android.view.*
+import android.widget.EditText
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.story_component.view.*
@@ -80,7 +83,16 @@ class StoryCardView : CardView {
         throw IllegalStateException("StoryCardView clicked, but data not filled by model")
       val n = Notifications(this@StoryCardView.context, Notifications.Kind.DOWNLOADING)
       launch(CommonPool) {
-        getFullStory(this@StoryCardView.context, storyId.get(), n).await()
+        val model = getFullStory(this@StoryCardView.context, storyId.get(), n).await()
+        launch(UI) {
+          if (model.isPresent) {
+            addBtn.visibility = View.INVISIBLE
+
+          } else {
+            addBtn.isEnabled = true
+            addBtn.text = resources.getString(R.string.add)
+          }
+        }
         n.cancel()
       }
     }
@@ -208,6 +220,28 @@ class StoryListActivity : AppCompatActivity() {
     }
   }
 
+  private fun addByIdDialog() {
+    val e = EditText(this)
+    e.inputType = InputType.TYPE_CLASS_NUMBER
+    AlertDialog.Builder(this)
+        .setTitle(R.string.story_by_id_title)
+        .setView(e)
+        .setPositiveButton(R.string.add, { dialog, _ ->
+          dialog.dismiss()
+          val id = e.text.toString().toLong()
+          val n = Notifications(this@StoryListActivity, Notifications.Kind.DOWNLOADING)
+          launch(CommonPool) {
+            val model = getFullStory(this@StoryListActivity, id, n).await()
+            n.cancel()
+            if (model.isPresent) launch(UI) {
+              adapter!!.data.add(model.get())
+              adapter!!.notifyDataSetChanged()
+            }
+          }
+        })
+        .show()
+  }
+
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     val toTint = arrayOf(
         menu.findItem(R.id.filter),
@@ -229,6 +263,10 @@ class StoryListActivity : AppCompatActivity() {
     // automatically handle clicks on the Home/Up button, so long
     // as you specify a parent activity in AndroidManifest.xml.
     return when (item.itemId) {
+      R.id.addById -> {
+        addByIdDialog()
+        return true
+      }
       else -> super.onOptionsItemSelected(item)
     }
   }
