@@ -176,38 +176,32 @@ class StoryReaderActivity : AppCompatActivity() {
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
-    // Inflate the menu; this adds items to the action bar if it is present.
     menuInflater.inflate(R.menu.menu_story_reader, menu)
     return true
   }
 
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    // Handle action bar item clicks here. The action bar will
-    // automatically handle clicks on the Home/Up button, so long
-    // as you specify a parent activity in AndroidManifest.xml.
-    return when (item.itemId) {
-      R.id.goToTop -> {
-        nestedScroller.scrollTo(0, 0)
-        return true
-      }
-      R.id.goToBottom -> {
-        nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
-        return true
-      }
-      R.id.selectChapter -> {
-        showChapterSelectDialog()
-        return true
-      }
-      R.id.nextChapter -> {
-        nextChapterBtn.callOnClick()
-        return true
-      }
-      R.id.prevChapter -> {
-        prevChapterBtn.callOnClick()
-        return true
-      }
-      else -> super.onOptionsItemSelected(item)
+  override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+    R.id.goToTop -> {
+      nestedScroller.scrollTo(0, 0)
+      true
     }
+    R.id.goToBottom -> {
+      nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
+      true
+    }
+    R.id.selectChapter -> {
+      showChapterSelectDialog()
+      true
+    }
+    R.id.nextChapter -> {
+      nextChapterBtn.callOnClick()
+      true
+    }
+    R.id.prevChapter -> {
+      prevChapterBtn.callOnClick()
+      true
+    }
+    else -> super.onOptionsItemSelected(item)
   }
 
   private fun readChapter(storyId: Long, chapter: Int): Deferred<String> = async(CommonPool) {

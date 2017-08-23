@@ -36,9 +36,9 @@ class StoryListActivity : AppCompatActivity() {
       startActivity(intent)
     })
     launch(CommonPool) {
-      // FIXME read the stored strategy from somewhere
-      adapter = StoryAdapter.create(this@StoryListActivity,
-          GroupStrategy.NONE, OrderStrategy.TITLE_ALPHABETIC).await()
+      // FIXME read the stored strategy from somewhere and set it
+      adapter = StoryAdapter(this@StoryListActivity)
+      adapter!!.initDataFromDb().await()
       launch(UI) { storyListView.adapter = adapter }
     }
   }
@@ -53,7 +53,7 @@ class StoryListActivity : AppCompatActivity() {
             .exec { parseSingle(StoryModel.dbParser) }
         val idx = adapter!!.stories.indexOfFirst { it.storyIdRaw == lastStoryId.get() }
         adapter!!.stories[idx] = newModel
-        adapter!!.initData()
+        adapter!!.initDataFromDb()
       }
     }
   }
@@ -71,7 +71,7 @@ class StoryListActivity : AppCompatActivity() {
             n.cancel()
             if (model.isPresent) {
               adapter!!.stories.add(model.get())
-              adapter!!.initData()
+              adapter!!.initDataFromDb()
             }
           }
         })
@@ -86,7 +86,7 @@ class StoryListActivity : AppCompatActivity() {
           dialog.dismiss()
           // FIXME store the chosen group strategy somewhere
           adapter!!.groupStrategy = GroupStrategy.values()[which]
-          adapter!!.initData()
+          adapter!!.initDataFromDb()
         }).show()
   }
 
@@ -105,7 +105,7 @@ class StoryListActivity : AppCompatActivity() {
           adapter!!.orderStrategy = OrderStrategy.values()[which]
           adapter!!.orderDirection =
               if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC
-          adapter!!.initData()
+          adapter!!.initDataFromDb()
         })
         .show()
   }
@@ -150,33 +150,27 @@ class StoryListActivity : AppCompatActivity() {
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
-    // Inflate the menu; this adds items to the action bar if it is present.
     menuInflater.inflate(R.menu.menu_story_list, menu)
     return true
   }
 
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    // Handle action bar item clicks here. The action bar will
-    // automatically handle clicks on the Home/Up button, so long
-    // as you specify a parent activity in AndroidManifest.xml.
-    return when (item.itemId) {
-      R.id.addById -> {
-        addByIdDialog()
-        return true
-      }
-      R.id.group -> {
-        groupByDialog()
-        return true
-      }
-      R.id.sort -> {
-        orderByDialog()
-        return true
-      }
-      R.id.statistics -> {
-        statisticsDialog()
-        return true
-      }
-      else -> super.onOptionsItemSelected(item)
+  override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+    R.id.addById -> {
+      addByIdDialog()
+      true
     }
+    R.id.group -> {
+      groupByDialog()
+      true
+    }
+    R.id.sort -> {
+      orderByDialog()
+      true
+    }
+    R.id.statistics -> {
+      statisticsDialog()
+      true
+    }
+    else -> super.onOptionsItemSelected(item)
   }
 }

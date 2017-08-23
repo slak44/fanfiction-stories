@@ -279,21 +279,9 @@ fun orderStories(stories: MutableList<StoryModel>,
   return stories
 }
 
-class StoryAdapter
-  private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
-
-  companion object {
-    fun create(context: Context,
-               s: GroupStrategy, o: OrderStrategy): Deferred<StoryAdapter> = async(CommonPool) {
-      val adapter = StoryAdapter(context)
-      adapter.groupStrategy = s
-      adapter.orderStrategy = o
-      adapter.initData().await()
-      return@async adapter
-    }
-  }
 
   // Story or group title
   private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
@@ -304,7 +292,18 @@ class StoryAdapter
   var orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC
   var orderDirection: OrderDirection = OrderDirection.DESC
 
-  fun initData(): Deferred<Unit> = async(CommonPool) {
+  fun initData(stories: MutableList<StoryModel>): Deferred<Unit> = async(CommonPool) {
+    data.clear()
+    this@StoryAdapter.stories = stories
+    data.addAll(stories.map { Left(it) })
+    launch(UI) {
+      notifyDataSetChanged()
+      notifyItemRangeChanged(0, itemCount)
+    }
+    return@async
+  }
+
+  fun initDataFromDb(): Deferred<Unit> = async(CommonPool) {
     data.clear()
     stories = this@StoryAdapter.context.database.getStories().await().toMutableList()
     val toData = stories.filter { true } // FIXME filter

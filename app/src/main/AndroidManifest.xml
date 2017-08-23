@@ -69,6 +69,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="slak.fanfictionstories.SelectCategoryActivity"/>
         </activity>
+        <activity
+            android:name=".CanonStoryListActivity"
+            android:label="@string/title_activity_canon_story_list"
+            android:parentActivityName=".BrowseCategoryActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="slak.fanfictionstories.BrowseCategoryActivity"/>
+        </activity>
     </application>
 
 </manifest>
