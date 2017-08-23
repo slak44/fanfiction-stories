@@ -11,10 +11,12 @@ import kotlinx.coroutines.experimental.sync.withLock
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
 import org.jetbrains.anko.db.update
+import java.io.*
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 fun getFullStory(ctx: Context, storyId: Long,
                  n: Notifications): Deferred<Optional<StoryModel>> = async(CommonPool) {
@@ -50,7 +52,7 @@ private val regexOpts: Set<RegexOption> = hashSetOf(
     RegexOption.DOT_MATCHES_ALL
 )
 
-data class Canon(val title: String, val url: String, val stories: String)
+data class Canon(val title: String, val url: String, val stories: String) : Serializable
 private fun fetchCategory(categoryIdx: Int,
                           n: Notifications): Deferred<String> = async(CommonPool) {
   delay(StoryFetcher.RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
@@ -64,9 +66,65 @@ private fun fetchCategory(categoryIdx: Int,
     return@async fetchCategory(categoryIdx, n).await()
   }
 }
-// FIXME we can cache this call for a while
+
+// Unix timestamp + canon list
+private typealias CategoryCanons = Pair<Long, List<Canon>>
+private object CanonCache {
+  // Cache categoryIdx's result
+  private val cacheMap = HashMap<Int, CategoryCanons>()
+  private val cacheMapFile = File(MainActivity.cacheDirectory, "categoryCanons.hashmap")
+  private val TAG = "CacheCanon"
+
+  fun deserialize(): HashMap<Int, CategoryCanons> {
+    if (!cacheMapFile.exists()) {
+      return HashMap()
+    }
+    val objIn = ObjectInputStream(FileInputStream(cacheMapFile))
+    // I serialize it however I like, I deserialize it however I like
+    @Suppress("Unchecked_Cast")
+    val map = objIn.readObject() as HashMap<Int, CategoryCanons>
+    objIn.close()
+    return map
+  }
+
+  fun serialize() = launch(CommonPool) {
+    val objOut = ObjectOutputStream(FileOutputStream(cacheMapFile))
+    objOut.writeObject(cacheMap)
+    objOut.close()
+  }
+
+  fun update(categoryIdx: Int, canons: List<Canon>) {
+    cacheMap[categoryIdx] = Pair(System.currentTimeMillis(), canons)
+    serialize()
+  }
+
+  fun hit(categoryIdx: Int): Optional<List<Canon>> {
+    if (cacheMap[categoryIdx] == null) {
+      Log.d(TAG, "Cache miss: $categoryIdx")
+      return Optional.empty()
+    }
+    // 7 days
+    if (System.currentTimeMillis() - cacheMap[categoryIdx]!!.first > 1000 * 60 * 60 * 24 * 7) {
+      // Cache expired; remove and return nothing
+      Log.d(TAG, "Cache expired: $categoryIdx")
+      cacheMap.remove(categoryIdx)
+      serialize()
+      return Optional.empty()
+    }
+    Log.d(TAG, "Cache hit: $categoryIdx")
+    return Optional.of(cacheMap[categoryIdx]!!.second)
+  }
+
+  fun clear(categoryIdx: Int) {
+    cacheMap.remove(categoryIdx)
+    serialize()
+  }
+}
+
 fun getCanonsForCategory(context: Context,
                          categoryIdx: Int): Deferred<List<Canon>> = async(CommonPool) {
+  val cachedValue = CanonCache.hit(categoryIdx)
+  if (cachedValue.isPresent) return@async cachedValue.get()
   val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
   val n = Notifications(context, Notifications.Kind.OTHER)
   return@async checkNetworkState(context, cm, n, { _ ->
@@ -80,9 +138,11 @@ fun getCanonsForCategory(context: Context,
     val results = Regex(
         "<div><a href=\"(.*?)\" title=\"(.*?)\">.*?CLASS='gray'>\\((.*?)\\)</SPAN></div>",
         regexOpts).findAll(divString)
-    return@checkNetworkState results.map {
+    val canons = results.map {
       Canon(it.groupValues[2], it.groupValues[1], it.groupValues[3])
     }.toList()
+    CanonCache.update(categoryIdx, canons)
+    return@checkNetworkState canons
   }).await()
 }
 
@@ -94,6 +154,10 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     const val CONNECTION_WAIT_DELAY_SECONDS = 3L
     const val CONNECTION_MISSING_DELAY_SECONDS = 5L
     const val STORAGE_WAIT_DELAY_SECONDS = 5L
+  }
+
+  init {
+    CanonCache.deserialize()
   }
 
   private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
