@@ -25,6 +25,7 @@ def kotlin_coroutines_version = "0.16"
 def android_appcompat_version = "26.0.1"
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "com.github.adelnizamutdinov:kotlin-either:2.0.1"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation "org.jetbrains.anko:anko-sqlite:$anko_version"
     implementation "org.jetbrains.anko:anko-coroutines:$anko_version"

@@ -3,6 +3,8 @@ package slak.fanfictionstories
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.Intent
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -12,6 +14,11 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.AttributeSet
 import android.view.*
+import android.widget.TextView
+import either.Either
+import either.Left
+import either.Right
+import either.fold
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.dialog_add_story_view.*
@@ -136,9 +143,48 @@ class StoryCardView : CardView {
   }
 }
 
+class StoryGroupTitle : TextView {
+  constructor(context: Context) : super(context)
+  constructor(context: Context, set: AttributeSet) : super(context, set)
+  constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
+
+  companion object {
+    private val borderHeight =
+        MainActivity.res.getDimensionPixelSize(R.dimen.story_list_title_divider_height)
+    private val bottomMargin = MainActivity.res.getDimensionPixelSize(R.dimen.story_list_margin)
+  }
+
+  init {
+    setPadding(0, 0, 0,
+        resources.getDimensionPixelSize(R.dimen.story_list_title_underline_margin))
+  }
+
+  private val border: Paint by lazy {
+    val border = Paint()
+    border.style = Paint.Style.STROKE
+    border.color =
+        MainActivity.res.getColor(android.R.color.secondary_text_dark, this.context.theme)
+    border.strokeWidth = borderHeight.toFloat()
+    border
+  }
+
+  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    (layoutParams as ViewGroup.MarginLayoutParams).setMargins(0, 0, 0, bottomMargin)
+    requestLayout()
+  }
+
+  override fun onDraw(canvas: Canvas) {
+    super.onDraw(canvas)
+    val width = (parent as RecyclerView).measuredWidth.toFloat()
+    canvas.drawLine(0F, measuredHeight.toFloat(), width, measuredHeight.toFloat(), border)
+  }
+}
+
 class StoryAdapter
-  private constructor(val context: Context) : RecyclerView.Adapter<StoryAdapter.ViewHolder>() {
-  class ViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
+  private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+  class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
+  class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
 
   companion object {
     fun create(context: Context): Deferred<StoryAdapter> = async(CommonPool) {
@@ -148,10 +194,20 @@ class StoryAdapter
     }
   }
 
-  lateinit var data: MutableList<StoryModel>
+  // Story or group title
+  private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
+
+  lateinit var stories: MutableList<StoryModel>
 
   fun initData(): Deferred<Unit> = async(CommonPool) {
-    data = this@StoryAdapter.context.database.getStories().await().toMutableList()
+    data.clear()
+    stories = this@StoryAdapter.context.database.getStories().await().toMutableList()
+    // FIXME filter, group, order
+    stories.forEach {
+      data.add(Right("TEST TITLE")) // FIXME
+      data.add(Left(it))
+    }
+
     launch(UI) {
       notifyDataSetChanged()
       notifyItemRangeChanged(0, itemCount)
@@ -159,25 +215,37 @@ class StoryAdapter
     return@async
   }
 
-  override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-    holder.view.loadFromModel(data[position])
+  override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    data[position].fold(
+        { model -> (holder as StoryViewHolder).view.loadFromModel(model) },
+        { title -> (holder as TitleViewHolder).view.text = title }
+    )
   }
 
-  private var addedOrder: Long = 0
+  private var addedStory: Long = 0
 
-  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-    val holder = ViewHolder(LayoutInflater.from(parent.context)
-        .inflate(R.layout.story_component, parent, false) as StoryCardView)
-    holder.view.alpha = 0f
-    val fadeIn = ObjectAnimator.ofFloat(holder.view, "alpha", 0.3f, 1f)
-    fadeIn.startDelay = Math.min(addedOrder * 50, 250)
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    val view: View = if (viewType == 1) {
+      StoryGroupTitle(context)
+    } else {
+      // Only increase animation duration from stories
+      addedStory++
+      LayoutInflater.from(parent.context)
+          .inflate(R.layout.story_component, parent, false) as StoryCardView
+    }
+    val fadeIn = ObjectAnimator.ofFloat(view, "alpha", 0.3f, 1f)
+    fadeIn.startDelay = Math.min(addedStory * 50, 250)
     fadeIn.start()
-    addedOrder++
-    return holder
+    return if (viewType == 1) TitleViewHolder(view as StoryGroupTitle)
+      else StoryViewHolder(view as StoryCardView)
   }
 
   override fun getItemCount(): Int = data.size
-  override fun getItemId(position: Int): Long = data[position]._id.get()
+  override fun getItemId(position: Int): Long = data[position].fold(
+      { model -> model._id.get() },
+      { title -> title.hashCode().toLong() }
+  )
+  override fun getItemViewType(position: Int): Int = data[position].fold({ return 0 }, { return 1 })
 }
 
 class StoryListActivity : AppCompatActivity() {
@@ -211,12 +279,9 @@ class StoryListActivity : AppCompatActivity() {
         val newModel = select("stories")
             .whereSimple("storyId = ?", lastStoryId.get().toString())
             .exec { parseSingle(StoryModel.dbParser) }
-        val idx = adapter!!.data.indexOfFirst { it.storyIdRaw == lastStoryId.get() }
-        adapter!!.data[idx] = newModel
-        launch(UI) {
-          adapter!!.notifyDataSetChanged()
-          adapter!!.notifyItemChanged(idx)
-        }
+        val idx = adapter!!.stories.indexOfFirst { it.storyIdRaw == lastStoryId.get() }
+        adapter!!.stories[idx] = newModel
+        adapter!!.initData()
       }
     }
   }
@@ -232,9 +297,9 @@ class StoryListActivity : AppCompatActivity() {
           launch(CommonPool) {
             val model = getFullStory(this@StoryListActivity, id, n).await()
             n.cancel()
-            if (model.isPresent) launch(UI) {
-              adapter!!.data.add(model.get())
-              adapter!!.notifyDataSetChanged()
+            if (model.isPresent) {
+              adapter!!.stories.add(model.get())
+              adapter!!.initData()
             }
           }
         })
