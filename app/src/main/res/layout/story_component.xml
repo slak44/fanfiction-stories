@@ -91,7 +91,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="0dp"
                 android:layout_marginEnd="8dp"
-                android:text="@string/completed_story"
+                android:text="@string/completed"
                 app:layout_constraintBottom_toTopOf="@+id/wordsText"
                 app:layout_constraintEnd_toEndOf="parent"
                 tools:text="Completed"/>

@@ -2,6 +2,8 @@
     <!-- Multiple uses -->
     <string name="app_name">Fanfiction Stories</string>
     <string name="add">Add</string>
+    <string name="completed">Completed</string>
+    <string name="in_progress">In-progress</string>
 
     <!-- Story status -->
     <string name="local">Local Stories</string>
@@ -14,6 +16,9 @@
     <string name="group_status">Download Status</string>
     <string name="group_author">Author</string>
     <string name="group_category">Category</string>
+    <string name="group_rating">Rating</string>
+    <string name="group_language">Language</string>
+    <string name="group_completion">Completion Status</string>
 
     <!-- Main activity -->
     <string name="action_settings">Settings</string>
@@ -50,7 +55,6 @@
     <string name="all_stories">All</string>
 
     <!-- Story component -->
-    <string name="completed_story">Completed</string>
     <string name="updated_on">Updated on %s</string>
     <string name="published_on">Published on %s</string>
     <string name="rated_x">Rated %s</string>

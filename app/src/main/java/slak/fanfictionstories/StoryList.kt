@@ -176,7 +176,7 @@ class StoryGroupTitle : TextView {
 
 enum class GroupStrategy {
   // Group by property
-  CANON, AUTHOR, CATEGORY, STATUS,
+  CANON, AUTHOR, CATEGORY, STATUS, RATING, LANGUAGE, COMPLETION,
   // Don't do grouping
   NONE;
 
@@ -185,6 +185,9 @@ enum class GroupStrategy {
     AUTHOR -> R.string.group_author
     CATEGORY -> R.string.group_category
     STATUS -> R.string.group_status
+    RATING -> R.string.group_rating
+    LANGUAGE -> R.string.group_language
+    COMPLETION -> R.string.group_completion
     NONE -> R.string.group_none
   })
 }
@@ -201,14 +204,20 @@ fun groupStories(stories: MutableList<StoryModel>,
     GroupStrategy.AUTHOR -> "author"
     GroupStrategy.CATEGORY -> "category"
     GroupStrategy.STATUS -> "status"
+    GroupStrategy.RATING -> "rating"
+    GroupStrategy.LANGUAGE -> "language"
+    GroupStrategy.COMPLETION -> "isCompleted"
     GroupStrategy.NONE -> throw IllegalStateException("Unreachable code, fast-pathed above")
   }
   val map = hashMapOf<String, MutableList<StoryModel>>()
   stories.forEach {
-    val keyData = it.src[srcKey] as String
-    val value =
-        if (strategy == GroupStrategy.STATUS) StoryStatus.fromString(keyData).toUIString()
-        else keyData
+    val value: String = when (strategy) {
+      GroupStrategy.STATUS -> StoryStatus.fromString(it.src[srcKey] as String).toUIString()
+      GroupStrategy.COMPLETION ->
+        if (it.src[srcKey] as Long == 1L) MainActivity.res.getString(R.string.completed)
+        else MainActivity.res.getString(R.string.in_progress)
+      else -> it.src[srcKey] as String
+    }
     if (map[value] == null) map[value] = mutableListOf()
     map[value]!!.add(it)
   }
