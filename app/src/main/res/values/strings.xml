@@ -5,6 +5,17 @@
     <string name="completed">Completed</string>
     <string name="in_progress">In-progress</string>
 
+    <!-- Statistics -->
+    <string name="statistics">Statistics</string>
+    <string name="statistics_template">
+        Total Word Count: %d\n
+        Words Read: approx. %d\n
+        Story Count: %d\n
+        Stories Read: %d\n
+        Stories Still Reading: %d\n
+        Untouched Stories: %d\n
+    </string>
+
     <!-- Story status -->
     <string name="local">Local Stories</string>
     <string name="remote">Remote Stories</string>
@@ -58,7 +69,6 @@
     <!-- Story list -->
     <string name="story_list">Story List</string>
     <string name="nothing_here">There\'s nothing here. Browse and add some stories!</string>
-    <string name="statistics">Statistics</string>
     <string name="filter_by">Filter by…</string>
     <string name="sort_by">Order by…</string>
     <string name="group_by">Group by…</string>

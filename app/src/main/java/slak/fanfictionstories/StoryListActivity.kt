@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.SwitchCompat
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -14,7 +13,6 @@ import android.widget.Switch
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.dialog_add_story_view.*
-import kotlinx.android.synthetic.main.dialog_group_by_switch.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
@@ -112,6 +110,35 @@ class StoryListActivity : AppCompatActivity() {
         .show()
   }
 
+  private fun statisticsDialog() {
+    var totalWords = 0
+    var passedApprox = 0
+    val totalStories = adapter!!.stories.size
+    var storiesRead = 0
+    var storiesNotStarted = 0
+    adapter!!.stories.forEach {
+      totalWords += it.wordCount
+      println(it.wordsProgressedApprox)
+      passedApprox += it.wordsProgressedApprox
+      when {
+        it.progress > 98.0 -> storiesRead++
+        it.progress < 2.0 -> storiesNotStarted++
+      }
+    }
+    AlertDialog.Builder(this)
+        .setTitle(R.string.statistics)
+        .setMessage(resources.getString(
+            R.string.statistics_template,
+            totalWords,
+            passedApprox,
+            totalStories,
+            storiesRead,
+            totalStories - storiesRead - storiesNotStarted,
+            storiesNotStarted
+        ))
+        .show()
+  }
+
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     val toTint = arrayOf(
         menu.findItem(R.id.filter),
@@ -143,6 +170,10 @@ class StoryListActivity : AppCompatActivity() {
       }
       R.id.sort -> {
         orderByDialog()
+        return true
+      }
+      R.id.statistics -> {
+        statisticsDialog()
         return true
       }
       else -> super.onOptionsItemSelected(item)

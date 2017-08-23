@@ -78,16 +78,20 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   val reviews: String get() = MainActivity.res.getString(R.string.x_reviews, reviewsCount)
   val favorites: String get() = MainActivity.res.getString(R.string.x_favorites, favoritesCount)
   val follows: String get() = MainActivity.res.getString(R.string.x_follows, followsCount)
-  val progress: Double get() {
-    if (chapterCount == 1) return scrollProgress
+  val wordsProgressedApprox: Int get() {
+    if (currentChapter == 0) return 0
     // If this is too inaccurate, we might have to store each chapter's word count, then compute
     // how far along we are
     val avgWordCount: Float = wordCount.toFloat() / chapterCount
     // amount of words before current chapter + amount of words scrolled through in current chapter
     val wordsPassedEstimate: Double =
         (currentChapter - 1) * avgWordCount + scrollProgress / 100 * avgWordCount
+    return wordsPassedEstimate.toInt()
+  }
+  val progress: Double get() {
+    if (chapterCount == 1) return scrollProgress
     // Return percentage
-    return wordsPassedEstimate * 100 / wordCount
+    return wordsProgressedApprox * 100.0 / wordCount
   }
   @Suppress("LiftReturnOrAssignment")
   val chapters: String get() {
