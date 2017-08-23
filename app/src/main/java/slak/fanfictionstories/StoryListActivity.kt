@@ -10,9 +10,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.AttributeSet
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.story_component.view.*
@@ -207,6 +205,31 @@ class StoryListActivity : AppCompatActivity() {
           adapter!!.notifyItemChanged(idx)
         }
       }
+    }
+  }
+
+  override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+    val toTint = arrayOf(
+        menu.findItem(R.id.filter),
+        menu.findItem(R.id.sort),
+        menu.findItem(R.id.group)
+    )
+    for (item in toTint) item.iconTint(android.R.color.white, theme)
+    return super.onPrepareOptionsMenu(menu)
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    // Inflate the menu; this adds items to the action bar if it is present.
+    menuInflater.inflate(R.menu.menu_story_list, menu)
+    return true
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    // Handle action bar item clicks here. The action bar will
+    // automatically handle clicks on the Home/Up button, so long
+    // as you specify a parent activity in AndroidManifest.xml.
+    return when (item.itemId) {
+      else -> super.onOptionsItemSelected(item)
     }
   }
 }

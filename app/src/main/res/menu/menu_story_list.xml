@@ -2,9 +2,32 @@
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="slak.fanfictionstories.StoryListActivity">
+
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
+        android:id="@+id/filter"
+        android:icon="@drawable/ic_filter_list_black_24dp"
+        android:title="@string/filter_by"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/sort"
+        android:icon="@drawable/ic_sort_black_24dp"
+        android:title="@string/sort_by"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/group"
+        android:icon="@drawable/ic_group_work_black_24dp"
+        android:title="@string/group_by"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/statistics"
+        android:title="@string/statistics"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/addById"
+        android:title="@string/add_by_ffid"
         app:showAsAction="never"/>
 </menu>

@@ -25,6 +25,11 @@
     <!-- Story list -->
     <string name="story_list">Story List</string>
     <string name="nothing_here">There\'s nothing here. Browse and add some stories!</string>
+    <string name="statistics">Statistics</string>
+    <string name="filter_by">Filter by…</string>
+    <string name="sort_by">Order by…</string>
+    <string name="group_by">Group by…</string>
+    <string name="add_by_ffid">Add by FF.net ID</string>
 
     <!-- Story component -->
     <string name="completed_story">Completed</string>
