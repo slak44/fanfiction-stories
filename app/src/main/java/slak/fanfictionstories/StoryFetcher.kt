@@ -18,18 +18,19 @@ import kotlin.collections.ArrayList
 fun getFullStory(ctx: Context, storyId: Long, n: Notifications) = async(CommonPool) {
   val fetcher = StoryFetcher(storyId, ctx)
   val model = fetcher.fetchMetadata(n).await()
+  try {
+    ctx.database.use {
+      insertOrThrow("stories", *model.toKvPairs())
+    }
+  } catch (ex: SQLiteConstraintException) {
+    Log.e("getFullStory", "", ex)
+    errorDialog(ctx, R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
+    return@async
+  }
   val isWriting: Boolean = writeStory(ctx, storyId, fetcher.fetchChapters(n)).await()
   if (isWriting) {
     model.status = StoryStatus.LOCAL
-    try {
-      ctx.database.use {
-        insertOrThrow("stories", *model.toKvPairs())
-        Notifications.downloadedStory(ctx, model.title)
-      }
-    } catch (ex: SQLiteConstraintException) {
-      Log.e("getFullStory", "", ex)
-      errorDialog(ctx, R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
-    }
+    Notifications.downloadedStory(ctx, model.title)
   }
 }
 
