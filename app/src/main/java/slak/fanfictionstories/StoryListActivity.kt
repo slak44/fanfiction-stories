@@ -16,6 +16,7 @@ import android.view.*
 import android.widget.EditText
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.content_story_list.*
+import kotlinx.android.synthetic.main.dialog_add_story_view.*
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
@@ -221,14 +222,12 @@ class StoryListActivity : AppCompatActivity() {
   }
 
   private fun addByIdDialog() {
-    val e = EditText(this)
-    e.inputType = InputType.TYPE_CLASS_NUMBER
     AlertDialog.Builder(this)
         .setTitle(R.string.story_by_id_title)
-        .setView(e)
+        .setView(R.layout.dialog_add_story_view)
         .setPositiveButton(R.string.add, { dialog, _ ->
           dialog.dismiss()
-          val id = e.text.toString().toLong()
+          val id = dialogStoryId.text.toString().toLong()
           val n = Notifications(this@StoryListActivity, Notifications.Kind.DOWNLOADING)
           launch(CommonPool) {
             val model = getFullStory(this@StoryListActivity, id, n).await()
