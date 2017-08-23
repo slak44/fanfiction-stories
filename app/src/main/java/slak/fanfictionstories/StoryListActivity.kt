@@ -1,16 +1,20 @@
 package slak.fanfictionstories
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.SwitchCompat
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Switch
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.content_story_list.*
 import kotlinx.android.synthetic.main.dialog_add_story_view.*
+import kotlinx.android.synthetic.main.dialog_group_by_switch.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
@@ -77,6 +81,7 @@ class StoryListActivity : AppCompatActivity() {
   }
 
   private fun groupByDialog() {
+    // FIXME get current strategy and put a tick next to the respective item
     AlertDialog.Builder(this)
         .setTitle(R.string.group_by)
         .setItems(GroupStrategy.values().map { it.toUIString() }.toTypedArray(), { dialog, which ->
@@ -87,13 +92,21 @@ class StoryListActivity : AppCompatActivity() {
         }).show()
   }
 
+  @SuppressLint("InflateParams")
   private fun orderByDialog() {
+    // FIXME get current strategy + direction and put a tick next to the respective item
+    val layout = LayoutInflater.from(this)
+        .inflate(R.layout.dialog_group_by_switch, null, false)
+    val switch = layout.findViewById<Switch>(R.id.reverseOrderSw) as Switch
     AlertDialog.Builder(this)
         .setTitle(R.string.group_by)
+        .setView(layout)
         .setItems(OrderStrategy.values().map { it.toUIString() }.toTypedArray(), { dialog, which ->
           dialog.dismiss()
           // FIXME store the chosen order strategy somewhere
           adapter!!.orderStrategy = OrderStrategy.values()[which]
+          adapter!!.orderDirection =
+              if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC
           adapter!!.initData()
         })
         .show()

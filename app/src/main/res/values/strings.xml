@@ -30,6 +30,7 @@
     <string name="order_publish_date">Most Recently Published</string>
     <string name="order_update_date">Most Recently Updated</string>
     <string name="order_title_alphabetic">Alphabetic (Title)</string>
+    <string name="reverse_order">Reverse</string>
 
     <!-- Main activity -->
     <string name="action_settings">Settings</string>

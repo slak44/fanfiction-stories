@@ -6,7 +6,7 @@
     <dimen name="app_bar_height">180dp</dimen>
     <dimen name="text_margin">16dp</dimen>
 
-    <dimen name="dialog_view_margin">8dp</dimen>
+    <dimen name="dialog_view_margin">16dp</dimen>
 
     <dimen name="story_list_title_underline_margin">2dip</dimen>
     <dimen name="story_list_title_divider_height">1dip</dimen>
