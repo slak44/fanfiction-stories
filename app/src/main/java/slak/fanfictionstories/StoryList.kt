@@ -225,19 +225,40 @@ fun groupStories(stories: MutableList<StoryModel>,
   return map
 }
 
-private val titleAlpabetic = Comparator<StoryModel> { m1, m2 ->
-  if (m1.title < m2.title) 1 else 0
+private val progress = Comparator<StoryModel>
+  { m1, m2 -> Math.signum(m1.progress - m2.progress).toInt() }
+private val wordCount = Comparator<StoryModel> { m1, m2 -> m1.wordCount - m2.wordCount }
+private val reviewCount = Comparator<StoryModel> { m1, m2 -> m1.reviewsCount - m2.reviewsCount }
+private val followCount = Comparator<StoryModel> { m1, m2 -> m1.followsCount - m2.followsCount }
+private val favsCount = Comparator<StoryModel> { m1, m2 -> m1.favoritesCount - m2.favoritesCount }
+private val chapterCount = Comparator<StoryModel> { m1, m2 -> m1.chapterCount - m2.chapterCount }
+
+// These give most recent of the dates
+private val publish = Comparator<StoryModel> { m1, m2 ->
+  if (m1.publishDateSeconds == m2.publishDateSeconds ) return@Comparator 0
+  return@Comparator if (m1.publishDateSeconds - m2.publishDateSeconds > 0) 1 else -1
+}
+private val update = Comparator<StoryModel> { m1, m2 ->
+  if (m1.updateDateSeconds == m2.updateDateSeconds ) return@Comparator 0
+  return@Comparator if (m1.updateDateSeconds - m2.updateDateSeconds > 0) 1 else -1
+}
+
+// Lexicographic comparison of titles
+private val titleAlphabetic = Comparator<StoryModel> { m1, m2 ->
+  if (m1.title == m2.title) return@Comparator 0
+  return@Comparator if (m1.title < m2.title) 1 else -1
 }
 
 enum class OrderDirection { ASC, DESC }
 
 enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
   // Numeric orderings
-//TODO  WORD_COUNT, PROGRESS, REVIEW_COUNT, FOLLOWS, FAVORITES, CHAPTER_COUNT,
+  WORD_COUNT(wordCount), PROGRESS(progress), REVIEW_COUNT(reviewCount),
+  FOLLOWS(followCount), FAVORITES(favsCount), CHAPTER_COUNT(chapterCount),
   // Date orderings
-//TODO  LATEST_ACTIVITY, PUBLISH_DATE, UPDATE_DATE,
+  PUBLISH_DATE(publish), UPDATE_DATE(update),
   // Other
-  TITLE_ALPHABETIC(titleAlpabetic)
+  TITLE_ALPHABETIC(titleAlphabetic)
 }
 
 fun orderStories(stories: MutableList<StoryModel>,
