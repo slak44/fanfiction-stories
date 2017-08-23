@@ -3,6 +3,11 @@
     <string name="app_name">Fanfiction Stories</string>
     <string name="add">Add</string>
 
+    <!-- Story status -->
+    <string name="local">Local Stories</string>
+    <string name="remote">Remote Stories</string>
+    <string name="seen">Stories Encountered</string>
+
     <!-- Main activity -->
     <string name="action_settings">Settings</string>
     <string name="resume_story">Resume: <b>%s</b>%nby<i>%s</i> — Chapter %d/%d</string>
@@ -35,6 +40,7 @@
     <string name="group_by">Group by…</string>
     <string name="add_by_ffid">Add by FF.net ID</string>
     <string name="story_by_id_title">Add Story by ID</string>
+    <string name="all_stories">All</string>
 
     <!-- Story component -->
     <string name="completed_story">Completed</string>

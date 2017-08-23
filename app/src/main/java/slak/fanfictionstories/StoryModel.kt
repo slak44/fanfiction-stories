@@ -21,10 +21,16 @@ enum class StoryStatus {
     }
   }
 
-  override fun toString(): String = when(this) {
+  override fun toString(): String = when (this) {
     SEEN -> "seen"
     REMOTE -> "remote"
     LOCAL -> "local"
+  }
+
+  fun toUIString(): String = when (this) {
+    SEEN -> MainActivity.res.getString(R.string.seen)
+    REMOTE -> MainActivity.res.getString(R.string.remote)
+    LOCAL -> MainActivity.res.getString(R.string.local)
   }
 }
 

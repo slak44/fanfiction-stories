@@ -174,6 +174,39 @@ class StoryGroupTitle : TextView {
   }
 }
 
+private enum class GroupStrategy {
+  // Group by property
+  CANON, AUTHOR, CATEGORY, STATUS,
+  // Don't do grouping
+  NONE
+}
+
+/**
+ * @returns a map that maps titles to grouped stories, according to the given GroupStrategy
+ */
+private fun groupStories(stories: MutableList<StoryModel>,
+                         strategy: GroupStrategy): Map<String, MutableList<StoryModel>> {
+  if (strategy == GroupStrategy.NONE)
+    return mapOf(MainActivity.res.getString(R.string.all_stories) to stories)
+  val srcKey = when (strategy) {
+    GroupStrategy.CANON -> "canon"
+    GroupStrategy.AUTHOR -> "author"
+    GroupStrategy.CATEGORY -> "category"
+    GroupStrategy.STATUS -> "status"
+    GroupStrategy.NONE -> throw IllegalStateException("Unreachable code, fast-pathed above")
+  }
+  val map = hashMapOf<String, MutableList<StoryModel>>()
+  stories.forEach {
+    val keyData = it.src[srcKey] as String
+    val value =
+        if (strategy == GroupStrategy.STATUS) StoryStatus.fromString(keyData).toUIString()
+        else keyData
+    if (map[value] == null) map[value] = mutableListOf()
+    map[value]!!.add(it)
+  }
+  return map
+}
+
 class StoryAdapter
 private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
@@ -195,10 +228,12 @@ private constructor(val context: Context) : RecyclerView.Adapter<RecyclerView.Vi
   fun initData(): Deferred<Unit> = async(CommonPool) {
     data.clear()
     stories = this@StoryAdapter.context.database.getStories().await().toMutableList()
-    // FIXME filter, group, order
-    stories.forEach {
-      data.add(Right("TEST TITLE")) // FIXME
-      data.add(Left(it))
+    val toData = stories.filter { true } // FIXME filter
+    // FIXME get the grouping strategy from the user
+    groupStories(toData.toMutableList(), GroupStrategy.CANON).forEach {
+      val ordered = it.value // FIXME order group stories
+      data.add(Right(it.key))
+      data.addAll(ordered.map { Left(it) })
     }
 
     launch(UI) {
