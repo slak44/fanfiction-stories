@@ -85,6 +85,11 @@ class MainActivity : AppCompatActivity() {
       startActivity(intent)
     }
 
+    storyBrowseButton.setOnClickListener {
+      val intent = Intent(this, SelectCategoryActivity::class.java)
+      startActivity(intent)
+    }
+
     // Debug menu
     if (BuildConfig.DEBUG) {
       debugButtons.visibility = View.VISIBLE

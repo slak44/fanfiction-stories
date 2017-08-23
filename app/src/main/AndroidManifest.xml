@@ -44,13 +44,31 @@
                 android:value="slak.fanfictionstories.StoryListActivity"/>
         </activity>
 
-        <receiver android:name="slak.fanfictionstories.StoryUpdateReceiver"/>
-
-        <receiver android:name="slak.fanfictionstories.BootBroadcastReceiver">
+        <receiver android:name=".StoryUpdateReceiver"/>
+        <receiver android:name=".BootBroadcastReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
+
+        <activity
+            android:name=".SelectCategoryActivity"
+            android:label="@string/title_activity_select_category"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="slak.fanfictionstories.MainActivity"/>
+        </activity>
+        <activity
+            android:name=".BrowseCategoryActivity"
+            android:label="@string/title_activity_browse_category"
+            android:parentActivityName=".SelectCategoryActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="slak.fanfictionstories.SelectCategoryActivity"/>
+        </activity>
     </application>
 
 </manifest>

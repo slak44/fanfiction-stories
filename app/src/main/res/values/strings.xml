@@ -5,6 +5,9 @@
     <string name="completed">Completed</string>
     <string name="in_progress">In-progress</string>
 
+    <!-- Select category activity -->
+    <string name="title_activity_select_category">Select Category</string>
+
     <!-- Statistics -->
     <string name="statistics">Statistics</string>
     <string name="statistics_template">
@@ -115,6 +118,30 @@
     <string name="unique_constraint_violated">Story Already Downloaded</string>
     <string name="unique_constraint_violated_tip">Search the story list to find it</string>
 
+    <!-- Categories + their urls -->
+    <string-array name="categories">
+        <item>Anime/Manga</item>
+        <item>Books</item>
+        <item>Cartoons</item>
+        <item>Comics</item>
+        <item>Games</item>
+        <item>Misc</item>
+        <item>Movies</item>
+        <item>Plays/Musicals</item>
+        <item>TV Shows</item>
+    </string-array>
+    <string-array name="categories_url_components" translatable="false">
+        <item>anime</item>
+        <item>book</item>
+        <item>cartoon</item>
+        <item>comic</item>
+        <item>game</item>
+        <item>misc</item>
+        <item>movie</item>
+        <item>play</item>
+        <item>tv</item>
+    </string-array>
+
     <!-- These are development strings -->
     <string name="debug_title">!!! DEBUG !!!</string>
     <string name="regen_stories_table">Regen stories table</string>
@@ -123,4 +150,5 @@
     <string name="test_notif">Test notification</string>
     <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.</string>
     <string name="title_activity_story_reader">StoryReaderActivity</string>
+    <string name="title_activity_browse_category">BrowseCategoryActivity</string>
 </resources>
