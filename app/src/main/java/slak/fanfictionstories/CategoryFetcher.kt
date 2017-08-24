@@ -3,7 +3,6 @@ package slak.fanfictionstories
 import android.content.Context
 import android.net.ConnectivityManager
 import android.util.Log
-import android.util.SparseArray
 import kotlinx.coroutines.experimental.*
 import java.io.*
 import java.net.URL
@@ -18,20 +17,19 @@ private typealias CategoryCanons = Pair<Long, List<Canon>>
 class CategoryFetcher(private val ctx: Context) : Fetcher() {
   object Cache {
     // Cache categoryIdx's result
-    private var cache = SparseArray<CategoryCanons>()
-    private val cacheMapFile = File(MainActivity.cacheDirectory, "categoryCanons.sparseArray")
+    private var cache = Array<CategoryCanons?>(CATEGORIES.size, { null })
+    private val cacheMapFile = File(MainActivity.cacheDirectory, "category_canons.array")
     private val TAG = "CategoryCache"
 
     fun deserialize() {
       if (!cacheMapFile.exists()) {
-        cache = SparseArray()
         return
       }
       val objIn = ObjectInputStream(FileInputStream(cacheMapFile))
       // I serialize it however I like, I deserialize it however I like, so stfu
       @Suppress("Unchecked_Cast")
-      val sparseArray = objIn.readObject() as SparseArray<CategoryCanons>
-      cache = sparseArray
+      val array = objIn.readObject() as Array<CategoryCanons?>
+      cache = array
       objIn.close()
     }
 
@@ -42,7 +40,7 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
     }
 
     fun update(categoryIdx: Int, canons: List<Canon>) {
-      cache.setValueAt(categoryIdx, Pair(System.currentTimeMillis(), canons))
+      cache[categoryIdx] = Pair(System.currentTimeMillis(), canons)
       serialize()
     }
 
@@ -55,7 +53,7 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
       if (System.currentTimeMillis() - cache[categoryIdx]!!.first > 1000 * 60 * 60 * 24 * 7) {
         // Cache expired; remove and return nothing
         Log.d(TAG, "Cache expired: $categoryIdx")
-        cache.remove(categoryIdx)
+        cache[categoryIdx] = null
         serialize()
         return Optional.empty()
       }
@@ -64,7 +62,7 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
     }
 
     fun clear(categoryIdx: Int) {
-      cache.remove(categoryIdx)
+      cache[categoryIdx] = null
       serialize()
     }
   }
