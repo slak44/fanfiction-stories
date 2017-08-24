@@ -55,6 +55,7 @@ open class Fetcher {
         RegexOption.DOT_MATCHES_ALL
     )
   }
+  // TODO: consider a general cache for all fetchers (with different cache times obv)
 }
 
 class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetcher() {
