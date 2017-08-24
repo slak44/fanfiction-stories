@@ -53,7 +53,7 @@ class BrowseCategoryActivity : AppCompatActivity() {
     categoryIdx = intent.extras.getInt(CATEGORIES_IDX_EXTRA_ID)
     title = CATEGORIES[categoryIdx]
     launch(CommonPool) {
-      canons = getCanonsForCategory(this@BrowseCategoryActivity, categoryIdx).await()
+      canons = CategoryFetcher(this@BrowseCategoryActivity).get(categoryIdx).await()
       val adapter = ArrayAdapter<String>(
           this@BrowseCategoryActivity, android.R.layout.simple_list_item_1)
       adapter.addAll(canons.map { "${it.title} - ${it.stories}" })
@@ -74,7 +74,7 @@ class BrowseCategoryActivity : AppCompatActivity() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
     R.id.clearCache -> {
-      CategoryCache.clear(categoryIdx)
+      CategoryFetcher.Cache.clear(categoryIdx)
       Snackbar.make(
           findViewById(android.R.id.content)!!,
           resources.getString(R.string.cleared_from_cache, CATEGORIES[categoryIdx]),
