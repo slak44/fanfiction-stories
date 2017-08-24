@@ -74,7 +74,7 @@ class BrowseCategoryActivity : AppCompatActivity() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
     R.id.clearCache -> {
-      CanonCache.clear(categoryIdx)
+      CategoryCache.clear(categoryIdx)
       Snackbar.make(
           findViewById(android.R.id.content)!!,
           resources.getString(R.string.cleared_from_cache, CATEGORIES[categoryIdx]),

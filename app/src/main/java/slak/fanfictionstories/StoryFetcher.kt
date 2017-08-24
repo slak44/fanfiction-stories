@@ -69,7 +69,7 @@ private fun fetchCategory(categoryIdx: Int,
 
 // Unix timestamp + canon list
 private typealias CategoryCanons = Pair<Long, List<Canon>>
-object CanonCache {
+object CategoryCache {
   // Cache categoryIdx's result
   private var cacheMap = HashMap<Int, CategoryCanons>()
   private val cacheMapFile = File(MainActivity.cacheDirectory, "categoryCanons.hashmap")
@@ -124,7 +124,7 @@ object CanonCache {
 
 fun getCanonsForCategory(context: Context,
                          categoryIdx: Int): Deferred<List<Canon>> = async(CommonPool) {
-  val cachedValue = CanonCache.hit(categoryIdx)
+  val cachedValue = CategoryCache.hit(categoryIdx)
   if (cachedValue.isPresent) return@async cachedValue.get()
   val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
   val n = Notifications(context, Notifications.Kind.OTHER)
@@ -142,10 +142,12 @@ fun getCanonsForCategory(context: Context,
     val canons = results.map {
       Canon(it.groupValues[2], it.groupValues[1], it.groupValues[3])
     }.toList()
-    CanonCache.update(categoryIdx, canons)
+    CategoryCache.update(categoryIdx, canons)
     return@checkNetworkState canons
   }).await()
 }
+
+
 
 class StoryFetcher(private val storyId: Long, private val ctx: Context) {
   companion object {
