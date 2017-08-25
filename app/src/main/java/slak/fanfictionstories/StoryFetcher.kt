@@ -116,7 +116,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
     val updated = Regex("Updated: <span data-xutime='([0-9]+)'>", regexOpts).find(html)
 
     // Disambiguate genres/characters
-    val split = ArrayList(metadataStr.split('-'))
+    val split = ArrayList(metadataStr.split(" - "))
     val findGenres = split.filter {
       it.contains(Regex("Adventure|Angst|Drama|Fantasy|Friendship|Humor|Hurt/Comfort|"+
           "Poetry|Romance|Sci-Fi|Supernatural|Tragedy"))
