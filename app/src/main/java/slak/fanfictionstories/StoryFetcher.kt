@@ -72,9 +72,10 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
   private var metadataChapter: Optional<String> = Optional.empty()
 
   fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async(CommonPool) {
-    return@async DOWNLOAD_MUTEX.withLock {
+    DOWNLOAD_MUTEX.lock()
     delay(RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
     val html: String = patientlyFetchChapter(1, n).await()
+    DOWNLOAD_MUTEX.unlock()
 
     // The regex are shit, because so is what we're trying to parse
     // I mean really, using ' for attributes?
@@ -170,8 +171,8 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
 
     metadataChapter = Optional.of(parseChapter(html))
 
-    return@withLock StoryModel(metadata.get(), fromDb = false)
-  } }
+    return@async StoryModel(metadata.get(), fromDb = false)
+  }
 
   /**
    * @returns whether or not the update was done
