@@ -8,11 +8,15 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
+import either.Either
+import either.Left
+import either.Right
 import kotlinx.android.synthetic.main.activity_browse_category.*
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.activity_select_category.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import kotlin.properties.Delegates
 
@@ -86,9 +90,9 @@ class BrowseCategoryActivity : AppCompatActivity() {
   }
 }
 
-// FIXME make this a tabbed activity, each tab being a page
 class CanonStoryListActivity : AppCompatActivity() {
   private lateinit var adapter: StoryAdapter
+  private lateinit var fetcher: CanonFetcher
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -96,7 +100,12 @@ class CanonStoryListActivity : AppCompatActivity() {
     setSupportActionBar(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    title = intent.extras.getString(CANON_TITLE_EXTRA_ID)
+    val title = intent.extras.getString(CANON_TITLE_EXTRA_ID)
+    val urlComp = intent.extras.getString(CANON_URL_EXTRA_ID)
+
+    fetcher = CanonFetcher(this@CanonStoryListActivity, urlComp, title)
+
+    this.title = intent.extras.getString(CANON_TITLE_EXTRA_ID)
 
     canonStoryListView.layoutManager = LinearLayoutManager(this)
     StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ ->
@@ -104,10 +113,17 @@ class CanonStoryListActivity : AppCompatActivity() {
     })
     launch(CommonPool) {
       adapter = StoryAdapter(this@CanonStoryListActivity)
-      // FIXME get stories and init the data
-      // adapter.initData(???)
+      addPage(1)
       launch(UI) { canonStoryListView.adapter = adapter }
     }
+  }
+
+  private fun addPage(page: Int) = async(CommonPool) {
+    val pageStories: MutableList<Either<StoryModel, String>> =
+        fetcher.get(page).await().map { Left(it) }.toMutableList()
+    // Add page title
+    pageStories.add(0, Right(resources.getString(R.string.page_x, page)))
+    adapter.addData(pageStories)
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {

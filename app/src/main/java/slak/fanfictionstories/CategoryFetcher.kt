@@ -86,6 +86,7 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
     if (cachedValue.isPresent) return@async cachedValue.get()
     val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val n = Notifications(ctx, Notifications.Kind.OTHER)
+    // FIXME be nice and show some spinny loady crap if we miss the cache
     return@async checkNetworkState(ctx, cm, n, { _ ->
       val html = fetchCategory(categoryIdx, n).await()
       val table =

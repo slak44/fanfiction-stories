@@ -286,21 +286,27 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   // Story or group title
   private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
 
-  lateinit var stories: MutableList<StoryModel>
+  var stories: MutableList<StoryModel> = mutableListOf()
 
   var groupStrategy: GroupStrategy = GroupStrategy.NONE
   var orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC
   var orderDirection: OrderDirection = OrderDirection.DESC
 
-  fun initData(stories: MutableList<StoryModel>): Deferred<Unit> = async(CommonPool) {
+  fun clear() {
     data.clear()
-    this@StoryAdapter.stories = stories
-    data.addAll(stories.map { Left(it) })
+    notifyDataSetChanged()
+    notifyItemRangeChanged(0, itemCount)
+  }
+
+  fun addData(storyList: List<Either<StoryModel, String>>) {
+    data.addAll(storyList)
+    storyList.forEach {
+      it.fold( { stories.add(it) }, { false })
+    }
     launch(UI) {
       notifyDataSetChanged()
       notifyItemRangeChanged(0, itemCount)
     }
-    return@async
   }
 
   fun initDataFromDb(): Deferred<Unit> = async(CommonPool) {
