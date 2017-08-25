@@ -302,12 +302,10 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   }
 
   fun addData(story: Either<StoryModel, String>) {
-    val dataSize = data.size
     data.add(story)
     story.fold( { stories.add(it) }, { false })
     launch(UI) {
-      notifyDataSetChanged()
-      notifyItemRangeChanged(dataSize, 1)
+      notifyItemInserted(data.size - 1)
     }
   }
 
