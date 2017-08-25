@@ -23,17 +23,18 @@
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/canonStoryListView"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/story_list_margin"
+        android:paddingBottom="?attr/actionBarSize"
         android:divider="@color/alpha"
         android:dividerHeight="@dimen/story_list_margin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appBar"
         tools:context="slak.fanfictionstories.CanonStoryListActivity"
-        tools:showIn="@layout/activity_canon_story_list"
-        app:layout_constraintTop_toBottomOf="@+id/appBar"
-        app:layout_constraintStart_toStartOf="parent">
+        tools:listitem="@layout/story_component"
+        tools:showIn="@layout/activity_canon_story_list">
 
     </android.support.v7.widget.RecyclerView>
 
