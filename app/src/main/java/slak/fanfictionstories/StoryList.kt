@@ -1,10 +1,12 @@
 package slak.fanfictionstories
 
+import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -12,6 +14,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.TextView
 import either.Either
 import either.Left
@@ -304,7 +307,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     story.fold( { stories.add(it) }, { false })
     launch(UI) {
       notifyDataSetChanged()
-      notifyItemRangeChanged(dataSize, data.size - dataSize)
+      notifyItemRangeChanged(dataSize, 1)
     }
   }
 
@@ -344,6 +347,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   }
 
   private var addedStory: Long = 0
+  private val dm = context.resources.displayMetrics
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
     val view: View = if (viewType == 1) {
@@ -355,6 +359,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
           .inflate(R.layout.story_component, parent, false) as StoryCardView
     }
     view.alpha = 0F
+    view.isDrawingCacheEnabled = true
     val fadeIn = ObjectAnimator.ofFloat(view, "alpha", 0.3F, 1F)
     fadeIn.startDelay = Math.min(addedStory * 50, 250)
     fadeIn.start()
