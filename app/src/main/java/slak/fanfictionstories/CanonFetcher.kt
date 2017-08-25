@@ -9,20 +9,19 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.sync.withLock
 import java.net.URL
-import java.util.concurrent.TimeUnit
 
 class CanonFetcher(private val ctx: Context, private val canonUrlComponent: String,
                    private val canonTitle: String) : Fetcher() {
   private fun fetchPage(page: Int, n: Notifications): Deferred<String> = async(CommonPool) {
     return@async DOWNLOAD_MUTEX.withLock {
-      delay(StoryFetcher.RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
+      delay(Fetcher.RATE_LIMIT_MILLISECONDS)
       try {
         return@withLock URL("https://www.fanfiction.net/$canonUrlComponent").readText()
       } catch (t: Throwable) {
         // Something happened; retry
         n.show(MainActivity.res.getString(R.string.error_with_canon_stories, canonTitle))
         Log.e(TAG, "CanonFetcher: retry", t)
-        delay(StoryFetcher.RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
+        delay(Fetcher.RATE_LIMIT_MILLISECONDS)
         return@withLock fetchPage(page, n).await()
       }
     }

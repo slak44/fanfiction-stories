@@ -44,6 +44,10 @@ fun getFullStory(ctx: Context, storyId: Long,
 
 open class Fetcher {
   companion object {
+    const val RATE_LIMIT_MILLISECONDS = 300L
+    const val CONNECTION_WAIT_DELAY_SECONDS = 3L
+    const val CONNECTION_MISSING_DELAY_SECONDS = 5L
+    const val STORAGE_WAIT_DELAY_SECONDS = 5L
     @JvmStatic
     protected val DOWNLOAD_MUTEX = Mutex()
     @JvmStatic
@@ -62,10 +66,6 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
   companion object {
     // Regen DB if you change this separator
     const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
-    const val RATE_LIMIT_SECONDS = 1L
-    const val CONNECTION_WAIT_DELAY_SECONDS = 3L
-    const val CONNECTION_MISSING_DELAY_SECONDS = 5L
-    const val STORAGE_WAIT_DELAY_SECONDS = 5L
   }
 
   private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
@@ -73,7 +73,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
 
   fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async(CommonPool) {
     DOWNLOAD_MUTEX.lock()
-    delay(RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
+    delay(RATE_LIMIT_MILLISECONDS)
     val html: String = patientlyFetchChapter(1, n).await()
     DOWNLOAD_MUTEX.unlock()
 
@@ -264,7 +264,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
       // Something happened; retry
       n.show(ctx.resources.getString(R.string.error_fetching_something, storyId.toString()))
       Log.e(TAG, "fetchChapter", t)
-      delay(RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
+      delay(RATE_LIMIT_MILLISECONDS)
       return@async fetchChapter(chapter, n).await()
     }
   }
@@ -285,7 +285,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
     launch(CommonPool) { DOWNLOAD_MUTEX.withLock {
       for (chapterNr in from..target) {
         n.show(ctx.resources.getString(R.string.fetching_chapter, chapterNr, storyName))
-        delay(RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
+        delay(RATE_LIMIT_MILLISECONDS)
         channel.send(parseChapter(patientlyFetchChapter(chapterNr, n).await()))
       }
       channel.close()

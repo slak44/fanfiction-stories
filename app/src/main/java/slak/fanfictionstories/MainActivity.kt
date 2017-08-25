@@ -44,13 +44,13 @@ fun <T> checkNetworkState(
     // No connection; wait
     n.show(context.resources.getString(R.string.waiting_for_connection))
     Log.e("checkNetworkState", "No connection")
-    delay(StoryFetcher.CONNECTION_MISSING_DELAY_SECONDS, TimeUnit.SECONDS)
+    delay(Fetcher.CONNECTION_MISSING_DELAY_SECONDS, TimeUnit.SECONDS)
     return@async checkNetworkState(context, cm, n, onNetConnected).await()
   } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
     // We're connecting; wait
     n.show(context.resources.getString(R.string.waiting_for_connection))
     Log.e("checkNetworkState", "Connecting...")
-    delay(StoryFetcher.CONNECTION_WAIT_DELAY_SECONDS, TimeUnit.SECONDS)
+    delay(Fetcher.CONNECTION_WAIT_DELAY_SECONDS, TimeUnit.SECONDS)
     return@async checkNetworkState(context, cm, n, onNetConnected).await()
   } else {
     // We have connection

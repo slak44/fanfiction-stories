@@ -7,7 +7,6 @@ import kotlinx.coroutines.experimental.*
 import java.io.*
 import java.net.URL
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 data class Canon(val title: String, val url: String, val stories: String) : Serializable
 
@@ -69,14 +68,14 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
 
   private fun fetchCategory(categoryIdx: Int,
                             n: Notifications): Deferred<String> = async(CommonPool) {
-    delay(StoryFetcher.RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
+    delay(Fetcher.RATE_LIMIT_MILLISECONDS)
     try {
       return@async URL("https://www.fanfiction.net/${URL_COMPONENTS[categoryIdx]}").readText()
     } catch (t: Throwable) {
       // Something happened; retry
       n.show(MainActivity.res.getString(R.string.error_with_categories, CATEGORIES[categoryIdx]))
       Log.e(TAG, "getCanonsForCategory${CATEGORIES[categoryIdx]}", t)
-      delay(StoryFetcher.RATE_LIMIT_SECONDS, TimeUnit.SECONDS)
+      delay(Fetcher.RATE_LIMIT_MILLISECONDS)
       return@async fetchCategory(categoryIdx, n).await()
     }
   }
