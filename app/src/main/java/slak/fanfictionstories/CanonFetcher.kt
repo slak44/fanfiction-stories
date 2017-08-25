@@ -39,7 +39,8 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
     val n = Notifications(ctx, Notifications.Kind.OTHER)
     return@async checkNetworkState(ctx, cm, n, { _ ->
       val html = fetchPage(page, n).await()
-      return@checkNetworkState parseHtml(html).map { StoryFetcher(it, ctx).fetchMetadata(n).await() }
+      val deferredStories = parseHtml(html).map { StoryFetcher(it, ctx).fetchMetadata(n) }
+      return@checkNetworkState deferredStories.map { it.await() }
     }).await()
   }
 }
