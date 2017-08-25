@@ -298,6 +298,16 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     notifyItemRangeChanged(0, itemCount)
   }
 
+  fun addData(story: Either<StoryModel, String>) {
+    val dataSize = data.size
+    data.add(story)
+    story.fold( { stories.add(it) }, { false })
+    launch(UI) {
+      notifyDataSetChanged()
+      notifyItemRangeChanged(dataSize, data.size - dataSize)
+    }
+  }
+
   fun addData(storyList: List<Either<StoryModel, String>>) {
     data.addAll(storyList)
     storyList.forEach {

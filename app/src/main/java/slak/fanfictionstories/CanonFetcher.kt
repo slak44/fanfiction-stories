@@ -3,10 +3,8 @@ package slak.fanfictionstories
 import android.content.Context
 import android.net.ConnectivityManager
 import android.util.Log
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.sync.withLock
 import java.net.URL
 
@@ -33,13 +31,16 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
     return ids.map { it.groupValues[1].toLong() }.toList()
   }
 
-  fun get(page: Int): Deferred<List<StoryModel>> = async(CommonPool) {
+  fun get(page: Int): Channel<StoryModel> {
     val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val n = Notifications(ctx, Notifications.Kind.OTHER)
-    return@async checkNetworkState(ctx, cm, n, { _ ->
+    val channel = Channel<StoryModel>(25)
+    checkNetworkState(ctx, cm, n, { _ ->
       val html = fetchPage(page, n).await()
       val deferredStories = parseHtml(html).map { StoryFetcher(it, ctx).fetchMetadata(n) }
-      return@checkNetworkState deferredStories.map { it.await() }
-    }).await()
+      deferredStories.map { channel.send(it.await()) }
+      channel.close()
+    })
+    return channel
   }
 }

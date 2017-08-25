@@ -17,6 +17,7 @@ import kotlinx.android.synthetic.main.activity_select_category.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.channels.consumeEach
 import kotlinx.coroutines.experimental.launch
 import kotlin.properties.Delegates
 
@@ -119,11 +120,11 @@ class CanonStoryListActivity : AppCompatActivity() {
   }
 
   private fun addPage(page: Int) = async(CommonPool) {
-    val pageStories: MutableList<Either<StoryModel, String>> =
-        fetcher.get(page).await().map { Left(it) }.toMutableList()
     // Add page title
-    pageStories.add(0, Right(resources.getString(R.string.page_x, page)))
-    adapter.addData(pageStories)
+    adapter.addData(Right(resources.getString(R.string.page_x, page)))
+    fetcher.get(page).consumeEach {
+      adapter.addData(Left(it))
+    }
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
