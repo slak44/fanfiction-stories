@@ -83,7 +83,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
     // Mixing lower case and upper case for tags?
     // Inline css/js?
     // Tag soup?
-    // Not closing tags that should be?
+    // Not closing tags that should have been?
 
     val author =
         Regex("<a class='xcontrast_txt' href='/u/([0-9]+)/.*?'>(.*?)</a>", regexOpts)
