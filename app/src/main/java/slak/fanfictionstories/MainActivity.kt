@@ -127,6 +127,12 @@ class MainActivity : AppCompatActivity() {
           notifs.cancel()
         }
       }
+      updateStoriesBtn.setOnClickListener { launch(CommonPool) {
+        delay(3, TimeUnit.SECONDS)
+        val intent = Intent()
+        intent.action = "slak.fanfictionstories.StoryUpdateReceiver"
+        sendBroadcast(intent)
+      } }
     }
   }
 
