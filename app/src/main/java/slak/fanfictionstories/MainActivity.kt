@@ -40,6 +40,7 @@ fun <T> checkNetworkState(
     onNetConnected: suspend (context: Context) -> T
 ): Deferred<T> = async(CommonPool) {
   val activeNetwork = cm.activeNetworkInfo
+  // FIXME figure out network status even when app is not focused
   if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
     // No connection; wait
     n.show(context.resources.getString(R.string.waiting_for_connection))
