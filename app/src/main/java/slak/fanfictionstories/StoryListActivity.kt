@@ -45,7 +45,7 @@ class StoryListActivity : AppCompatActivity() {
 
   override fun onResume() {
     super.onResume()
-    if (adapter != null && adapter!!.itemCount == 0) nothingHere.visibility = View.VISIBLE
+    if (adapter != null && adapter!!.stories.size == 0) nothingHere.visibility = View.VISIBLE
     launch(CommonPool) {
       if (lastStoryId.isPresent && adapter != null) database.use {
         val newModel = select("stories")
