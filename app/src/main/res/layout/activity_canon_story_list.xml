@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="slak.fanfictionstories.CanonStoryListActivity">
+    tools:context="slak.fanfictionstories.activities.CanonStoryListActivity">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appBar"
@@ -32,7 +32,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appBar"
-        tools:context="slak.fanfictionstories.CanonStoryListActivity"
+        tools:context="slak.fanfictionstories.activities.CanonStoryListActivity"
         tools:listitem="@layout/story_component"
         tools:showIn="@layout/activity_canon_story_list">
 

@@ -1,4 +1,4 @@
-package slak.fanfictionstories
+package slak.fanfictionstories.utility
 
 import android.app.AlertDialog
 import android.content.Context
@@ -6,6 +6,9 @@ import android.support.annotation.StringRes
 import android.util.Log
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
+import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.R
+import slak.fanfictionstories.fetchers.Fetcher
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.experimental.CoroutineContext
 

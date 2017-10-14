@@ -10,7 +10,7 @@
     android:divider="@color/alpha"
     android:dividerHeight="@dimen/story_list_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="slak.fanfictionstories.StoryListActivity"
+    tools:context="slak.fanfictionstories.activities.StoryListActivity"
     tools:showIn="@layout/activity_story_list">
 
 </android.support.v7.widget.RecyclerView>

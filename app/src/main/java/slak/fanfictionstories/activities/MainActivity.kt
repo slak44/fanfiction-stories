@@ -1,4 +1,4 @@
-package slak.fanfictionstories
+package slak.fanfictionstories.activities
 
 import android.content.Context
 import android.content.Intent
@@ -15,6 +15,11 @@ import kotlinx.coroutines.experimental.android.UI
 import org.jetbrains.anko.db.dropTable
 import java.io.File
 import kotlinx.coroutines.experimental.*
+import slak.fanfictionstories.*
+import slak.fanfictionstories.fetchers.CategoryFetcher
+import slak.fanfictionstories.fetchers.getFullStory
+import slak.fanfictionstories.utility.Notifications
+import slak.fanfictionstories.utility.database
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {

@@ -1,4 +1,4 @@
-package slak.fanfictionstories
+package slak.fanfictionstories.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -16,6 +16,13 @@ import kotlinx.android.synthetic.main.activity_select_category.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import slak.fanfictionstories.R
+import slak.fanfictionstories.StoryAdapter
+import slak.fanfictionstories.StoryCardView
+import slak.fanfictionstories.fetchers.Canon
+import slak.fanfictionstories.fetchers.CanonFetcher
+import slak.fanfictionstories.fetchers.CategoryFetcher
+import slak.fanfictionstories.utility.async2
 import kotlin.properties.Delegates
 
 val CATEGORIES = MainActivity.res.getStringArray(R.array.categories)

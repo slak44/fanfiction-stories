@@ -1,4 +1,4 @@
-package slak.fanfictionstories
+package slak.fanfictionstories.activities
 
 import android.content.res.Resources
 import android.graphics.Canvas
@@ -22,6 +22,11 @@ import org.jetbrains.anko.db.LongParser
 import org.jetbrains.anko.db.parseSingle
 import org.jetbrains.anko.db.select
 import org.jetbrains.anko.db.update
+import slak.fanfictionstories.R
+import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.storyDir
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.database
 import java.io.File
 
 class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpan() {

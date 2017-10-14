@@ -7,6 +7,8 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.consumeEach
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.errorDialog
 import java.io.File
 import java.util.*
 
@@ -55,7 +57,7 @@ fun writeStory(ctx: Context, storyId: Long,
         ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.get().absolutePath))
     return@async2 false
   }
-  innerAsync@async2(CommonPool) {
+  innerAsync@ async2(CommonPool) {
     var idx = 1
     chapters.consumeEach { chapterText: String ->
       File(targetDir.get(), "$idx.html").printWriter().use { it.print(chapterText) }

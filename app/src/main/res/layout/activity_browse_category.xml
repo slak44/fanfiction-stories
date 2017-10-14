@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="slak.fanfictionstories.BrowseCategoryActivity">
+    tools:context="slak.fanfictionstories.activities.BrowseCategoryActivity">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appBar"
@@ -40,6 +40,6 @@
         android:layout_height="wrap_content"
         android:nestedScrollingEnabled="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:context="slak.fanfictionstories.BrowseCategoryActivity"/>
+        tools:context="slak.fanfictionstories.activities.BrowseCategoryActivity"/>
 
 </android.support.design.widget.CoordinatorLayout>

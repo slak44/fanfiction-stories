@@ -16,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -26,22 +26,22 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".StoryListActivity"
+            android:name=".activities.StoryListActivity"
             android:label="@string/story_list"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".activities.MainActivity"
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.MainActivity"/>
+                android:value="slak.fanfictionstories.activities.MainActivity"/>
         </activity>
         <activity
-            android:name=".StoryReaderActivity"
+            android:name=".activities.StoryReaderActivity"
             android:label="@string/title_activity_story_reader"
-            android:parentActivityName=".StoryListActivity"
+            android:parentActivityName=".activities.StoryListActivity"
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.StoryListActivity"/>
+                android:value="slak.fanfictionstories.activities.StoryListActivity"/>
         </activity>
 
         <receiver android:name=".StoryUpdateReceiver"/>
@@ -52,31 +52,31 @@
         </receiver>
 
         <activity
-            android:name=".SelectCategoryActivity"
+            android:name=".activities.SelectCategoryActivity"
             android:label="@string/title_activity_select_category"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".activities.MainActivity"
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.MainActivity"/>
+                android:value="slak.fanfictionstories.activities.MainActivity"/>
         </activity>
         <activity
-            android:name=".BrowseCategoryActivity"
+            android:name=".activities.BrowseCategoryActivity"
             android:label="@string/title_activity_browse_category"
-            android:parentActivityName=".SelectCategoryActivity"
+            android:parentActivityName=".activities.SelectCategoryActivity"
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.SelectCategoryActivity"/>
+                android:value="slak.fanfictionstories.activities.SelectCategoryActivity"/>
         </activity>
         <activity
-            android:name=".CanonStoryListActivity"
+            android:name=".activities.CanonStoryListActivity"
             android:label="@string/title_activity_canon_story_list"
-            android:parentActivityName=".BrowseCategoryActivity"
+            android:parentActivityName=".activities.BrowseCategoryActivity"
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.BrowseCategoryActivity"/>
+                android:value="slak.fanfictionstories.activities.BrowseCategoryActivity"/>
         </activity>
     </application>
 

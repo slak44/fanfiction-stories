@@ -1,9 +1,10 @@
-package slak.fanfictionstories
+package slak.fanfictionstories.utility
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import kotlinx.coroutines.experimental.*
 import org.jetbrains.anko.db.*
+import slak.fanfictionstories.StoryModel
 
 class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 1) {
   companion object {

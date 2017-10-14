@@ -1,12 +1,10 @@
 package slak.fanfictionstories
 
-import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.Rect
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -14,7 +12,6 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.TextView
 import either.Either
 import either.Left
@@ -23,6 +20,12 @@ import either.fold
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
+import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.activities.StoryReaderActivity
+import slak.fanfictionstories.fetchers.getFullStory
+import slak.fanfictionstories.utility.Notifications
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.database
 import java.util.*
 import kotlin.Comparator
 

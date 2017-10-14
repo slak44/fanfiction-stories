@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import org.jetbrains.anko.db.MapRowParser
+import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.fetchers.StoryFetcher
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.HashMap

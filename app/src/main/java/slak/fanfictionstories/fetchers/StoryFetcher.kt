@@ -1,4 +1,4 @@
-package slak.fanfictionstories
+package slak.fanfictionstories.fetchers
 
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
@@ -10,6 +10,8 @@ import kotlinx.coroutines.experimental.sync.withLock
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
 import org.jetbrains.anko.db.update
+import slak.fanfictionstories.*
+import slak.fanfictionstories.utility.*
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -145,18 +147,18 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
 
     val author =
         Regex("<a class='xcontrast_txt' href='/u/([0-9]+)/.*?'>(.*?)</a>", regexOpts)
-        .find(html) ?: throw IllegalStateException("Can't match author")
+            .find(html) ?: throw IllegalStateException("Can't match author")
 
     val title = Regex("<b class='xcontrast_txt'>(.*?)</b>", regexOpts).find(html) ?:
         throw IllegalStateException("Can't match title")
 
     val summary =
         Regex("<div style='margin-top:2px' class='xcontrast_txt'>(.*?)</div>", regexOpts)
-        .find(html) ?: throw IllegalStateException("Can't match summary")
+            .find(html) ?: throw IllegalStateException("Can't match summary")
 
     val categories =
         Regex("id=pre_story_links>.*?<a .*?>(.*?)</a>.*?<a .*?>(.*?)</a>", regexOpts)
-        .find(html) ?: throw IllegalStateException("Can't match categories")
+            .find(html) ?: throw IllegalStateException("Can't match categories")
 
     val metadataInnerHtml =
         Regex("<span class='xgray xcontrast_txt'>(.*?)</span>.*?</span>", regexOpts)

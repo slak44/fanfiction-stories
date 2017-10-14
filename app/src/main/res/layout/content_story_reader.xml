@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:scrollbars="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="slak.fanfictionstories.StoryReaderActivity"
+    tools:context="slak.fanfictionstories.activities.StoryReaderActivity"
     tools:showIn="@layout/activity_story_reader">
 
     <android.support.constraint.ConstraintLayout

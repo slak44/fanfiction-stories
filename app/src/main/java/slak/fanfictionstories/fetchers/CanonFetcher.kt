@@ -1,17 +1,22 @@
-package slak.fanfictionstories
+package slak.fanfictionstories.fetchers
 
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.sync.withLock
 import org.jsoup.Jsoup
+import slak.fanfictionstories.*
+import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.utility.Notifications
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.waitForNetwork
 import java.net.URL
 
 class CanonFetcher(private val ctx: Context, private val canonUrlComponent: String,
                    private val canonTitle: String, private val srcCategory: String) : Fetcher() {
   private fun fetchPage(page: Int, n: Notifications): Deferred<String> = async2(CommonPool) {
     return@async2 DOWNLOAD_MUTEX.withLock {
-      delay(Fetcher.RATE_LIMIT_MILLISECONDS)
+      delay(RATE_LIMIT_MILLISECONDS)
       waitForNetwork(n).await()
       try {
         return@withLock URL("https://www.fanfiction.net/$canonUrlComponent").readText()
@@ -19,7 +24,7 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
         // Something happened; retry
         n.show(MainActivity.res.getString(R.string.error_with_canon_stories, canonTitle))
         Log.e(TAG, "CanonFetcher: retry", t)
-        delay(Fetcher.RATE_LIMIT_MILLISECONDS)
+        delay(RATE_LIMIT_MILLISECONDS)
         return@withLock fetchPage(page, n).await()
       }
     }

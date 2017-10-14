@@ -1,8 +1,15 @@
-package slak.fanfictionstories
+package slak.fanfictionstories.fetchers
 
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.experimental.*
+import slak.fanfictionstories.*
+import slak.fanfictionstories.activities.CATEGORIES
+import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.activities.URL_COMPONENTS
+import slak.fanfictionstories.utility.Notifications
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.waitForNetwork
 import java.io.*
 import java.net.URL
 import java.util.*
@@ -67,7 +74,7 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
 
   private fun fetchCategory(categoryIdx: Int,
                             n: Notifications): Deferred<String> = async2(CommonPool) {
-    delay(Fetcher.RATE_LIMIT_MILLISECONDS)
+    delay(RATE_LIMIT_MILLISECONDS)
     waitForNetwork(n).await()
     try {
       return@async2 URL("https://www.fanfiction.net/${URL_COMPONENTS[categoryIdx]}").readText()
@@ -75,7 +82,7 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
       // Something happened; retry
       n.show(MainActivity.res.getString(R.string.error_with_categories, CATEGORIES[categoryIdx]))
       Log.e(TAG, "getCanonsForCategory${CATEGORIES[categoryIdx]}", t)
-      delay(Fetcher.RATE_LIMIT_MILLISECONDS)
+      delay(RATE_LIMIT_MILLISECONDS)
       return@async2 fetchCategory(categoryIdx, n).await()
     }
   }

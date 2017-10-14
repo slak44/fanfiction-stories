@@ -1,4 +1,4 @@
-package slak.fanfictionstories
+package slak.fanfictionstories.utility
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -11,6 +11,8 @@ import android.support.annotation.StringRes
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.TaskStackBuilder
 import android.util.Log
+import slak.fanfictionstories.R
+import slak.fanfictionstories.activities.StoryListActivity
 
 class Notifications(val context: Context, val kind: Kind) {
   companion object {
@@ -30,7 +32,7 @@ class Notifications(val context: Context, val kind: Kind) {
 
     private var downloadedIds = DOWNLOADED_STORIES_ID_BEGIN
     fun downloadedStory(context: Context, titleOfStory: String) {
-      val n = Notifications(context, Notifications.Kind.DONE_DOWNLOADING)
+      val n = Notifications(context, Kind.DONE_DOWNLOADING)
       n.show(n.create("").setGroupSummary(true)
           .setGroup(NOTIFICATIONS_DOWNLOADED_STORIES_GROUP))
       val notif = n.create(titleOfStory)
@@ -42,7 +44,7 @@ class Notifications(val context: Context, val kind: Kind) {
 
     private var updatedIds = UPDATED_STORIES_REQ_ID_BEGIN
     fun updatedStories(context: Context, titles: List<String>) {
-      val n = Notifications(context, Notifications.Kind.DONE_UPDATING)
+      val n = Notifications(context, Kind.DONE_UPDATING)
       n.show(n.create(context.resources.getString(R.string.x_stories_updated, titles.size))
           .setGroupSummary(true)
           .setGroup(NOTIFICATIONS_UPDATED_STORIES_GROUP))
@@ -88,7 +90,7 @@ class Notifications(val context: Context, val kind: Kind) {
   }
 
   fun create(content: String): NotificationCompat.Builder {
-    val builder = NotificationCompat.Builder(context, Notifications.DOWNLOAD_CHANNEL)
+    val builder = NotificationCompat.Builder(context, DOWNLOAD_CHANNEL)
         .setSmallIcon(kind.icon)
         .setContentTitle(context.resources.getString(kind.titleStringId))
         .setContentText(content)

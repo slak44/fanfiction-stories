@@ -9,6 +9,11 @@ import android.icu.util.Calendar
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
+import slak.fanfictionstories.fetchers.StoryFetcher
+import slak.fanfictionstories.utility.Notifications
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.database
+import slak.fanfictionstories.utility.waitForNetwork
 
 const val UPDATE_ALARM_PENDING_INTENT_REQ_CODE = 0xA1A12
 
@@ -55,13 +60,15 @@ class StoryUpdateReceiver : BroadcastReceiver() {
     val storyModels = context.database.getStories().await()
     // We can launch all of them at once since there can only be one holding the download lock,
     // so we won't assblast their site with requests
-    val jobs = storyModels.map { model -> async2(CommonPool) {
-      val fetcher = StoryFetcher(model.storyIdRaw, context)
-      waitForNetwork(n).await()
-      fetcher.fetchMetadata(n).await()
-      val updated = fetcher.update(model, n).await()
-      if (updated) updatedStories.add(model)
-    } }
+    val jobs = storyModels.map { model ->
+      async2(CommonPool) {
+        val fetcher = StoryFetcher(model.storyIdRaw, context)
+        waitForNetwork(n).await()
+        fetcher.fetchMetadata(n).await()
+        val updated = fetcher.update(model, n).await()
+        if (updated) updatedStories.add(model)
+      }
+    }
     jobs.forEach { it.await() }
   }
 
