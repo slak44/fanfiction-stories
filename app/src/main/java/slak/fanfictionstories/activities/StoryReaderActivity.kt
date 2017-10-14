@@ -30,7 +30,7 @@ class StoryReaderActivity : AppCompatActivity() {
   companion object {
     const val INTENT_STORY_MODEL = "bundle"
     private val PLACEHOLDER = "######HRPLACEHOLDERHRPLACEHOLDERHRPLACEHOLDER######"
-    private val getTagHandler = { widthPx: Int -> Html.TagHandler { opening, tag, output, _ ->
+    private val tagHandlerFactory = { widthPx: Int -> Html.TagHandler { opening, tag, output, _ ->
       if (tag == "hr") {
         if (opening) output.insert(output.length, PLACEHOLDER)
         else output.setSpan(HrSpan(1, widthPx),
@@ -89,7 +89,7 @@ class StoryReaderActivity : AppCompatActivity() {
     val text: String = readChapter(model.storyIdRaw, chapterToRead).await()
     // Legacy mode puts more space between <p>, makes it easier to read
     val html = Html.fromHtml(
-        text, Html.FROM_HTML_MODE_LEGACY, null, getTagHandler(chapterText.width))
+        text, Html.FROM_HTML_MODE_LEGACY, null, tagHandlerFactory(chapterText.width))
     updateUiAfterFetchingText(html, chapterToRead)
     database.use {
       update("stories", "currentChapter" to chapterToRead)
