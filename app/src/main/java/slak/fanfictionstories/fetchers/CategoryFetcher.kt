@@ -3,7 +3,8 @@ package slak.fanfictionstories.fetchers
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.experimental.*
-import slak.fanfictionstories.*
+import slak.fanfictionstories.Canon
+import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.CATEGORIES
 import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.activities.URL_COMPONENTS
@@ -13,8 +14,6 @@ import slak.fanfictionstories.utility.waitForNetwork
 import java.io.*
 import java.net.URL
 import java.util.*
-
-data class Canon(val title: String, val url: String, val stories: String) : Serializable
 
 // Unix timestamp + canon list
 private typealias CategoryCanons = Pair<Long, List<Canon>>

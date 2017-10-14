@@ -19,7 +19,7 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryAdapter
 import slak.fanfictionstories.StoryCardView
-import slak.fanfictionstories.fetchers.Canon
+import slak.fanfictionstories.Canon
 import slak.fanfictionstories.fetchers.CanonFetcher
 import slak.fanfictionstories.fetchers.CategoryFetcher
 import slak.fanfictionstories.utility.async2

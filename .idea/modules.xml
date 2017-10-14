@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/FanfictionStories.iml" filepath="$PROJECT_DIR$/FanfictionStories.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/FanfictionStories.iml" filepath="$PROJECT_DIR$/.idea/FanfictionStories.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
