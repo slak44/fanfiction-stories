@@ -1,12 +1,10 @@
 package slak.fanfictionstories
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.os.Bundle
-import android.support.annotation.StringRes
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
@@ -18,40 +16,6 @@ import org.jetbrains.anko.db.dropTable
 import java.io.File
 import kotlinx.coroutines.experimental.*
 import java.util.concurrent.TimeUnit
-
-fun errorDialog(ctx: Context, @StringRes title: Int, @StringRes msg: Int) {
-  errorDialog(ctx, ctx.resources.getString(title), ctx.resources.getString(msg))
-}
-
-fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
-  AlertDialog.Builder(ctx)
-      .setTitle(title)
-      .setMessage(msg)
-      .setPositiveButton(R.string.got_it, { dialogInterface, _ ->
-        // User acknowledged error
-        dialogInterface.dismiss()
-      }).create().show()
-}
-
-fun waitForNetwork(n: Notifications) = async2(CommonPool) {
-  while (true) {
-    val activeNetwork = MainActivity.cm.activeNetworkInfo
-    // FIXME figure out network status even when app is not focused
-    if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
-      // No connection; wait
-      n.show(MainActivity.res.getString(R.string.waiting_for_connection))
-      Log.e("waitForNetwork", "No connection")
-      delay(Fetcher.CONNECTION_MISSING_DELAY_SECONDS, TimeUnit.SECONDS)
-    } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
-      // We're connecting; wait
-      n.show(MainActivity.res.getString(R.string.waiting_for_connection))
-      Log.e("waitForNetwork", "Connecting...")
-      delay(Fetcher.CONNECTION_WAIT_DELAY_SECONDS, TimeUnit.SECONDS)
-    } else {
-      break
-    }
-  }
-}
 
 class MainActivity : AppCompatActivity() {
   companion object {

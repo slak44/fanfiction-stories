@@ -1,7 +1,6 @@
 package slak.fanfictionstories
 
 import android.content.Context
-import android.net.ConnectivityManager
 import android.util.Log
 import kotlinx.coroutines.experimental.*
 import java.io.*
