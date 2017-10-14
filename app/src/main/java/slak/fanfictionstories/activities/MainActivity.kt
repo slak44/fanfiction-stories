@@ -44,7 +44,9 @@ class MainActivity : AppCompatActivity() {
     // Update alarm
     initAlarm(this)
 
-    // Set static resources instance
+    // Set static instances
+    // In case this application is ever opened without going through this MainActivity, some code
+    // will be required to init those from whatever other activity we enter from
     res = resources
     cacheDirectory = cacheDir
     cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
