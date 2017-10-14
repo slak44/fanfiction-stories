@@ -2,8 +2,15 @@ package slak.fanfictionstories.utility
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.res.Resources
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.support.annotation.ColorRes
 import android.support.annotation.StringRes
+import android.text.style.ReplacementSpan
 import android.util.Log
+import android.view.MenuItem
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import slak.fanfictionstories.activities.MainActivity
@@ -61,5 +68,27 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
     } else {
       break
     }
+  }
+}
+
+/**
+ * Emulates android:iconTint. Must be called in onPrepareOptionsMenu for each icon.
+ */
+fun MenuItem.iconTint(@ColorRes colorRes: Int, theme: Resources.Theme) {
+  val color = MainActivity.res.getColor(colorRes, theme)
+  val drawable = this.icon
+  drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+  this.icon = drawable
+}
+
+class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpan() {
+  override fun getSize(p0: Paint?, p1: CharSequence?, p2: Int, p3: Int,
+                       p4: Paint.FontMetricsInt?): Int {
+    return 0
+  }
+
+  override fun draw(canvas: Canvas, text: CharSequence, start: Int, end: Int, x: Float, top: Int,
+                    y: Int, bottom: Int, paint: Paint) {
+    canvas.drawRect(x, top.toFloat(), (y + width).toFloat(), (top + heightPx).toFloat(), paint)
   }
 }

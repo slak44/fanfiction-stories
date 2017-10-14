@@ -22,6 +22,7 @@ import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.database
+import slak.fanfictionstories.utility.iconTint
 import java.util.*
 
 class StoryListActivity : AppCompatActivity() {

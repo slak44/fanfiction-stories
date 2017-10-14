@@ -1,17 +1,11 @@
 package slak.fanfictionstories.activities
 
-import android.content.res.Resources
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PorterDuff
 import android.os.Bundle
-import android.support.annotation.ColorRes
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.Spanned
-import android.text.style.ReplacementSpan
 import android.util.TimingLogger
 import android.view.*
 import kotlinx.android.synthetic.main.activity_story_reader.*
@@ -25,28 +19,11 @@ import org.jetbrains.anko.db.update
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.storyDir
+import slak.fanfictionstories.utility.HrSpan
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.database
+import slak.fanfictionstories.utility.iconTint
 import java.io.File
-
-class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpan() {
-  override fun getSize(p0: Paint?, p1: CharSequence?, p2: Int, p3: Int,
-                       p4: Paint.FontMetricsInt?): Int {
-    return 0
-  }
-
-  override fun draw(canvas: Canvas, text: CharSequence, start: Int, end: Int, x: Float, top: Int,
-                    y: Int, bottom: Int, paint: Paint) {
-    canvas.drawRect(x, top.toFloat(), (y + width).toFloat(), (top + heightPx).toFloat(), paint)
-  }
-}
-
-fun MenuItem.iconTint(@ColorRes colorRes: Int, theme: Resources.Theme) {
-  val color = MainActivity.res.getColor(colorRes, theme)
-  val drawable = this.icon
-  drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
-  this.icon = drawable
-}
 
 class StoryReaderActivity : AppCompatActivity() {
 
