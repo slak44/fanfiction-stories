@@ -8,7 +8,6 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
-import either.Either
 import either.Left
 import either.Right
 import kotlinx.android.synthetic.main.activity_browse_category.*
@@ -16,14 +15,11 @@ import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.activity_select_category.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.channels.consumeEach
 import kotlinx.coroutines.experimental.launch
 import kotlin.properties.Delegates
 
-val CATEGORIES: Array<String> = MainActivity.res.getStringArray(R.array.categories)
-val URL_COMPONENTS: Array<String> =
-    MainActivity.res.getStringArray(R.array.categories_url_components)
+val CATEGORIES = MainActivity.res.getStringArray(R.array.categories)
+val URL_COMPONENTS = MainActivity.res.getStringArray(R.array.categories_url_components)
 
 private val CATEGORIES_IDX_EXTRA_ID = "category_idx"
 
@@ -45,6 +41,7 @@ class SelectCategoryActivity : AppCompatActivity() {
 }
 
 private val CANON_TITLE_EXTRA_ID = "canon_title"
+private val SRC_CATEGORY_EXTRA_ID = "category_title"
 private val CANON_URL_EXTRA_ID = "canon_url"
 
 class BrowseCategoryActivity : AppCompatActivity() {
@@ -69,6 +66,7 @@ class BrowseCategoryActivity : AppCompatActivity() {
       val intent = Intent(this, CanonStoryListActivity::class.java)
       intent.putExtra(CANON_URL_EXTRA_ID, canons[idx].url)
       intent.putExtra(CANON_TITLE_EXTRA_ID, canons[idx].title)
+      intent.putExtra(SRC_CATEGORY_EXTRA_ID, CATEGORIES[categoryIdx])
       startActivity(intent)
     }
   }
@@ -104,10 +102,11 @@ class CanonStoryListActivity : AppCompatActivity() {
 
     val title = intent.extras.getString(CANON_TITLE_EXTRA_ID)
     val urlComp = intent.extras.getString(CANON_URL_EXTRA_ID)
+    val srcCategory = intent.extras.getString(SRC_CATEGORY_EXTRA_ID)
 
-    fetcher = CanonFetcher(this@CanonStoryListActivity, urlComp, title)
+    fetcher = CanonFetcher(this@CanonStoryListActivity, urlComp, title, srcCategory)
 
-    this.title = intent.extras.getString(CANON_TITLE_EXTRA_ID)
+    this.title = title
 
     canonStoryListView.layoutManager = LinearLayoutManager(this)
     StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ ->
@@ -120,10 +119,10 @@ class CanonStoryListActivity : AppCompatActivity() {
     }
   }
 
-  private fun addPage(page: Int) = async(CommonPool) {
+  private fun addPage(page: Int) = async2(CommonPool) {
     // Add page title
     adapter.addData(Right(resources.getString(R.string.page_x, page)))
-    fetcher.get(page).consumeEach {
+    fetcher.get(page).await().forEach {
       adapter.addData(Left(it))
     }
   }

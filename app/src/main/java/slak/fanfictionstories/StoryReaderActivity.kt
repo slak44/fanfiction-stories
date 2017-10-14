@@ -204,17 +204,17 @@ class StoryReaderActivity : AppCompatActivity() {
     else -> super.onOptionsItemSelected(item)
   }
 
-  private fun readChapter(storyId: Long, chapter: Int): Deferred<String> = async(CommonPool) {
+  private fun readChapter(storyId: Long, chapter: Int): Deferred<String> = async2(CommonPool) {
     val storyDir = storyDir(this@StoryReaderActivity, storyId)
     if (!storyDir.isPresent) throw IllegalStateException("Cannot read $storyId dir")
     if (!storyDir.get().exists()) {
       // FIXME download it
-      return@async ""
+      return@async2 ""
     }
     val chapterHtml = File(storyDir.get(), "$chapter.html")
     if (!chapterHtml.exists()) {
       throw NoSuchFileException(chapterHtml, null, "Cannot read $storyId/$chapter.html")
     }
-    return@async chapterHtml.readText()
+    return@async2 chapterHtml.readText()
   }
 }

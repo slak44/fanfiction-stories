@@ -33,29 +33,23 @@ fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
       }).create().show()
 }
 
-fun <T> checkNetworkState(
-    context: Context,
-    cm: ConnectivityManager,
-    n: Notifications,
-    onNetConnected: suspend (context: Context) -> T
-): Deferred<T> = async(CommonPool) {
-  val activeNetwork = cm.activeNetworkInfo
-  // FIXME figure out network status even when app is not focused
-  if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
-    // No connection; wait
-    n.show(context.resources.getString(R.string.waiting_for_connection))
-    Log.e("checkNetworkState", "No connection")
-    delay(Fetcher.CONNECTION_MISSING_DELAY_SECONDS, TimeUnit.SECONDS)
-    return@async checkNetworkState(context, cm, n, onNetConnected).await()
-  } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
-    // We're connecting; wait
-    n.show(context.resources.getString(R.string.waiting_for_connection))
-    Log.e("checkNetworkState", "Connecting...")
-    delay(Fetcher.CONNECTION_WAIT_DELAY_SECONDS, TimeUnit.SECONDS)
-    return@async checkNetworkState(context, cm, n, onNetConnected).await()
-  } else {
-    // We have connection
-    return@async onNetConnected(context)
+fun waitForNetwork(n: Notifications) = async2(CommonPool) {
+  while (true) {
+    val activeNetwork = MainActivity.cm.activeNetworkInfo
+    // FIXME figure out network status even when app is not focused
+    if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
+      // No connection; wait
+      n.show(MainActivity.res.getString(R.string.waiting_for_connection))
+      Log.e("waitForNetwork", "No connection")
+      delay(Fetcher.CONNECTION_MISSING_DELAY_SECONDS, TimeUnit.SECONDS)
+    } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
+      // We're connecting; wait
+      n.show(MainActivity.res.getString(R.string.waiting_for_connection))
+      Log.e("waitForNetwork", "Connecting...")
+      delay(Fetcher.CONNECTION_WAIT_DELAY_SECONDS, TimeUnit.SECONDS)
+    } else {
+      break
+    }
   }
 }
 
@@ -64,6 +58,9 @@ class MainActivity : AppCompatActivity() {
     private const val TAG = "MainActivity"
 
     lateinit var res: Resources
+      private set
+
+    lateinit var cm: ConnectivityManager
       private set
 
     lateinit var cacheDirectory: File
@@ -81,6 +78,7 @@ class MainActivity : AppCompatActivity() {
     // Set static resources instance
     res = resources
     cacheDirectory = cacheDir
+    cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     // Init this cache
     CategoryFetcher.Cache.deserialize()

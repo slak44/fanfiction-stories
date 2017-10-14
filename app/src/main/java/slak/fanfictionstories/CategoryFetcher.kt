@@ -67,41 +67,39 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
   }
 
   private fun fetchCategory(categoryIdx: Int,
-                            n: Notifications): Deferred<String> = async(CommonPool) {
+                            n: Notifications): Deferred<String> = async2(CommonPool) {
     delay(Fetcher.RATE_LIMIT_MILLISECONDS)
+    waitForNetwork(n).await()
     try {
-      return@async URL("https://www.fanfiction.net/${URL_COMPONENTS[categoryIdx]}").readText()
+      return@async2 URL("https://www.fanfiction.net/${URL_COMPONENTS[categoryIdx]}").readText()
     } catch (t: Throwable) {
       // Something happened; retry
       n.show(MainActivity.res.getString(R.string.error_with_categories, CATEGORIES[categoryIdx]))
       Log.e(TAG, "getCanonsForCategory${CATEGORIES[categoryIdx]}", t)
       delay(Fetcher.RATE_LIMIT_MILLISECONDS)
-      return@async fetchCategory(categoryIdx, n).await()
+      return@async2 fetchCategory(categoryIdx, n).await()
     }
   }
 
-  fun get(categoryIdx: Int): Deferred<List<Canon>> = async(CommonPool) {
+  fun get(categoryIdx: Int): Deferred<List<Canon>> = async2(CommonPool) {
     val cachedValue = Cache.hit(categoryIdx)
-    if (cachedValue.isPresent) return@async cachedValue.get()
-    val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    if (cachedValue.isPresent) return@async2 cachedValue.get()
     val n = Notifications(ctx, Notifications.Kind.OTHER)
     // FIXME be nice and show some spinny loady crap if we miss the cache
-    return@async checkNetworkState(ctx, cm, n, { _ ->
-      val html = fetchCategory(categoryIdx, n).await()
-      val table =
-          Regex("id='list_output'><TABLE WIDTH='100%'><TR>(.*?)</TR></TABLE>", regexOpts)
-              .find(html) ?: throw IllegalStateException("Can't get category table")
-      // Get rid of the td's so we're left with (regular) divs
-      val divString =
-          table.groupValues[1].replace(Regex("</?TD.*?>", regexOpts), "")
-      val results = Regex(
-          "<div><a href=\"(.*?)\" title=\"(.*?)\">.*?CLASS='gray'>\\((.*?)\\)</SPAN></div>",
-          regexOpts).findAll(divString)
-      val canons = results.map {
-        Canon(it.groupValues[2], it.groupValues[1], it.groupValues[3])
-      }.toList()
-      Cache.update(categoryIdx, canons)
-      return@checkNetworkState canons
-    }).await()
+    val html = fetchCategory(categoryIdx, n).await()
+    val table =
+        Regex("id='list_output'><TABLE WIDTH='100%'><TR>(.*?)</TR></TABLE>", regexOpts)
+            .find(html) ?: throw IllegalStateException("Can't get category table")
+    // Get rid of the td's so we're left with (regular) divs
+    val divString =
+        table.groupValues[1].replace(Regex("</?TD.*?>", regexOpts), "")
+    val results = Regex(
+        "<div><a href=\"(.*?)\" title=\"(.*?)\">.*?CLASS='gray'>\\((.*?)\\)</SPAN></div>",
+        regexOpts).findAll(divString)
+    val canons = results.map {
+      Canon(it.groupValues[2], it.groupValues[1], it.groupValues[3])
+    }.toList()
+    Cache.update(categoryIdx, canons)
+    return@async2 canons
   }
 }

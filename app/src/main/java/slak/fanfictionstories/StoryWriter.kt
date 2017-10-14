@@ -5,10 +5,8 @@ import android.os.Environment
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.consumeEach
-import kotlinx.coroutines.experimental.launch
 import java.io.File
 import java.util.*
 
@@ -40,14 +38,14 @@ fun storyDir(ctx: Context, storyId: Long): Optional<File> {
  * @returns true if we started writing data to disk, false otherwise
  */
 fun writeStory(ctx: Context, storyId: Long,
-               chapters: Channel<String>): Deferred<Boolean> = async(CommonPool) {
+               chapters: Channel<String>): Deferred<Boolean> = async2(CommonPool) {
   val targetDir = storyDir(ctx, storyId)
-  if (!targetDir.isPresent) return@async false
+  if (!targetDir.isPresent) return@async2 false
   if (targetDir.get().exists()) {
     // FIXME maybe ask the user if he wants to overwrite or legitimize this by getting the metadata
     Log.e("StoryWriter", "targetDir exists")
     errorDialog(ctx, R.string.storyid_already_exists, R.string.storyid_already_exists_tip)
-    return@async false
+    return@async2 false
   }
   val madeDirs = targetDir.get().mkdirs()
   if (!madeDirs) {
@@ -55,9 +53,9 @@ fun writeStory(ctx: Context, storyId: Long,
     errorDialog(ctx,
         ctx.resources.getString(R.string.failed_making_dirs),
         ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.get().absolutePath))
-    return@async false
+    return@async2 false
   }
-  innerAsync@async(CommonPool) {
+  innerAsync@async2(CommonPool) {
     var idx = 1
     chapters.consumeEach { chapterText: String ->
       File(targetDir.get(), "$idx.html").printWriter().use { it.print(chapterText) }

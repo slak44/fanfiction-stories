@@ -59,7 +59,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     // Here you can upgrade tables, as usual
   }
 
-  fun getStories() : Deferred<List<StoryModel>> = async(CommonPool) {
+  fun getStories() : Deferred<List<StoryModel>> = async2(CommonPool) {
     readableDatabase.select(tableName = "stories").exec { parseList(StoryModel.dbParser) }
   }
 }

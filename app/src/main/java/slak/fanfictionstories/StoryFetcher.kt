@@ -2,7 +2,6 @@ package slak.fanfictionstories
 
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
-import android.net.ConnectivityManager
 import android.util.Log
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.Channel
@@ -17,7 +16,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 fun getFullStory(ctx: Context, storyId: Long,
-                 n: Notifications): Deferred<Optional<StoryModel>> = async(CommonPool) {
+                 n: Notifications): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val fetcher = StoryFetcher(storyId, ctx)
   val model = fetcher.fetchMetadata(n).await()
   model.status = StoryStatus.LOCAL
@@ -28,7 +27,7 @@ fun getFullStory(ctx: Context, storyId: Long,
   } catch (ex: SQLiteConstraintException) {
     Log.e("getFullStory", "", ex)
     errorDialog(ctx, R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
-    return@async Optional.empty<StoryModel>()
+    return@async2 Optional.empty<StoryModel>()
   }
   val isWriting: Boolean = writeStory(ctx, storyId, fetcher.fetchChapters(n)).await()
   if (isWriting) {
@@ -39,7 +38,7 @@ fun getFullStory(ctx: Context, storyId: Long,
           .whereSimple("storyId = ?", storyId.toString()).exec()
     }
   }
-  return@async Optional.of(model)
+  return@async2 Optional.of(model)
 }
 
 open class Fetcher {
@@ -59,6 +58,63 @@ open class Fetcher {
         RegexOption.DOT_MATCHES_ALL
     )
   }
+
+  fun parseStoryMetadata(metadata: String): Map<String, String?> {
+    val ratingLang = Regex("Rated: (?:<a .*?>Fiction[ ]{2})?(.*?)(?:</a>)? - (.*?) -", regexOpts)
+        .find(metadata) ?: {
+      val ex = IllegalStateException("Can't match rating/language")
+      Log.e("parseStoryMetadata", "", ex)
+      throw ex
+    }()
+
+    val words = Regex("Words: ([0-9,]+)", regexOpts).find(metadata) ?: {
+      val ex = IllegalStateException("Can't match word count")
+      Log.e("parseStoryMetadata", "", ex)
+      throw ex
+    }()
+
+    val chapters = Regex("Chapters: ([0-9]+)", regexOpts).find(metadata)
+    val favs = Regex("Favs: ([0-9]+)", regexOpts).find(metadata)
+    val follows = Regex("Follows: ([0-9]+)", regexOpts).find(metadata)
+    val reviews = Regex("Reviews: <a.*?>([0-9]+)</a>", regexOpts).find(metadata)
+
+    // Disambiguate genres/characters
+    val split = ArrayList(metadata.split(" - "))
+    val findGenres = split.filter {
+      it.contains(Regex("Adventure|Angst|Drama|Fantasy|Friendship|Humor|Hurt/Comfort|"+
+          "Poetry|Romance|Sci-Fi|Supernatural|Tragedy"))
+    }
+    var genres = "None"
+    if (findGenres.isNotEmpty()) {
+      genres = findGenres[0].trim()
+      split.removeAll { findGenres.contains(it) }
+    }
+    val thingsAfterCharacters =
+        Regex("Words|Chapters|Reviews|Favs|Follows|Published|Updated", regexOpts)
+    val characters = if (split[2].contains(thingsAfterCharacters)) "None" else split[2]
+    return mapOf(
+        "rating" to ratingLang.groupValues[1],
+        "language" to ratingLang.groupValues[2],
+        "words" to words.groupValues[1],
+        "chapters" to if (chapters != null) chapters.groupValues[1] else null,
+        "favs" to if (favs != null) favs.groupValues[1] else null,
+        "follows" to if (follows != null) follows.groupValues[1] else null,
+        "reviews" to if (reviews != null) reviews.groupValues[1] else null,
+        "genres" to genres,
+        "characters" to characters.trim()
+    )
+  }
+
+  fun publishedTimeStoryMeta(html: String): String? {
+    val time = Regex("Published: <span data-xutime='([0-9]+)'>", regexOpts).find(html)
+    return if (time == null) null else time.groupValues[1]
+  }
+
+  fun updatedTimeStoryMeta(html: String): String? {
+    val time = Regex("Updated: <span data-xutime='([0-9]+)'>", regexOpts).find(html)
+    return if (time == null) null else time.groupValues[1]
+  }
+
   // TODO: consider a general cache for all fetchers (with different cache times obv)
 }
 
@@ -71,12 +127,13 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
   private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
   private var metadataChapter: Optional<String> = Optional.empty()
 
-  fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async(CommonPool) {
+  fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async2(CommonPool) {
     DOWNLOAD_MUTEX.lock()
     delay(RATE_LIMIT_MILLISECONDS)
-    val html: String = patientlyFetchChapter(1, n).await()
+    val html: String = fetchChapter(1, n).await()
     DOWNLOAD_MUTEX.unlock()
 
+    // FIXME: one day replace some of the regex with the html parser
     // The regex are shit, because so is what we're trying to parse
     // I mean really, using ' for attributes?
     // Sometimes not using any quotes at all?
@@ -84,6 +141,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
     // Inline css/js?
     // Tag soup?
     // Not closing tags that should have been?
+    // Are the standards too permissive, or browser implementations...
 
     val author =
         Regex("<a class='xcontrast_txt' href='/u/([0-9]+)/.*?'>(.*?)</a>", regexOpts)
@@ -104,35 +162,11 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
         Regex("<span class='xgray xcontrast_txt'>(.*?)</span>.*?</span>", regexOpts)
             .find(html) ?: throw IllegalStateException("Can't match metadata for FF.net chapter 1")
     val metadataStr = metadataInnerHtml.groupValues[1]
-    val ratingLang = Regex("Rated: <a .*?>Fiction[ ]{2}(.*?)</a> - (.*?) -", regexOpts)
-        .find(metadataStr) ?: throw IllegalStateException("Can't match rating/language")
-    val words = Regex("Words: ([0-9,]+)", regexOpts).find(metadataStr) ?:
-        throw IllegalStateException("Can't match word count")
-    val chapters = Regex("Chapters: ([0-9]+)", regexOpts).find(metadataStr)
-    val favs = Regex("Favs: ([0-9]+)", regexOpts).find(metadataStr)
-    val follows = Regex("Follows: ([0-9]+)", regexOpts).find(metadataStr)
-    val reviews = Regex("Reviews: <a.*?>([0-9]+)</a>", regexOpts).find(metadataStr)
-    val published = Regex("Published: <span data-xutime='([0-9]+)'>", regexOpts).find(html)
-    val updated = Regex("Updated: <span data-xutime='([0-9]+)'>", regexOpts).find(html)
-
-    // Disambiguate genres/characters
-    val split = ArrayList(metadataStr.split(" - "))
-    val findGenres = split.filter {
-      it.contains(Regex("Adventure|Angst|Drama|Fantasy|Friendship|Humor|Hurt/Comfort|"+
-          "Poetry|Romance|Sci-Fi|Supernatural|Tragedy"))
-    }
-    var genres = "None"
-    if (findGenres.isNotEmpty()) {
-      genres = findGenres[0].trim()
-      split.removeAll { findGenres.contains(it) }
-    }
-    val thingsAfterCharacters =
-        Regex("Words|Chapters|Reviews|Favs|Follows|Published|Updated", regexOpts)
-    val characters = if (split[2].contains(thingsAfterCharacters)) "None" else split[2]
+    val meta = parseStoryMetadata(metadataStr)
 
     var chapterTitles: Optional<String> = Optional.empty()
     // Parsing chapter titles only if there are any chapters to name
-    if (chapters != null) {
+    if (meta["chapters"] != null) {
       val chapterTitlesRaw = Regex("id=chap_select.*?>(.*?)</select>", regexOpts).find(html)
           ?: throw IllegalStateException("Cannot find chapter titles")
       chapterTitles = Optional.of(chapterTitlesRaw.groupValues[1].replace(
@@ -142,20 +176,23 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
           .removePrefix(CHAPTER_TITLE_SEPARATOR))
     }
 
+    val publishTime = publishedTimeStoryMeta(html)
+    val updateTime = updatedTimeStoryMeta(html)
+
     metadata = Optional.of(mutableMapOf(
         "storyId" to storyId,
         "authorid" to author.groupValues[1].toLong(),
-        "rating" to ratingLang.groupValues[1],
-        "language" to ratingLang.groupValues[2],
-        "genres" to genres,
-        "characters" to characters.trim(),
-        "chapters" to if (chapters != null) chapters.groupValues[1].toLong() else 1L,
-        "wordCount" to words.groupValues[1].replace(",", "").toLong(),
-        "reviews" to if (reviews != null) reviews.groupValues[1].toLong() else 0L,
-        "favorites" to if (favs != null) favs.groupValues[1].toLong() else 0L,
-        "follows" to if (follows != null) follows.groupValues[1].toLong() else 0L,
-        "publishDate" to if (published != null) published.groupValues[1].toLong() else 0L,
-        "updateDate" to if (updated != null) updated.groupValues[1].toLong() else 0L,
+        "rating" to meta["rating"]!!,
+        "language" to meta["language"]!!,
+        "genres" to meta["genres"]!!,
+        "characters" to meta["characters"]!!,
+        "chapters" to if (meta["chapters"] != null) meta["chapters"]!!.toLong() else 1L,
+        "wordCount" to meta["words"]!!.replace(",", "").toLong(),
+        "reviews" to if (meta["reviews"] != null) meta["reviews"]!!.toLong() else 0L,
+        "favorites" to if (meta["favs"] != null) meta["favs"]!!.toLong() else 0L,
+        "follows" to if (meta["follows"] != null) meta["follows"]!!.toLong() else 0L,
+        "publishDate" to (publishTime?.toLong() ?: 0L),
+        "updateDate" to (updateTime?.toLong() ?: 0L),
         "isCompleted" to if (metadataInnerHtml.groupValues[0].indexOf("Complete") > -1) 1L else 0L,
         "scrollProgress" to 0.0,
         "scrollAbsolute" to 0L,
@@ -171,13 +208,13 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
 
     metadataChapter = Optional.of(parseChapter(html))
 
-    return@async StoryModel(metadata.get(), fromDb = false)
+    return@async2 StoryModel(metadata.get(), fromDb = false)
   }
 
   /**
    * @returns whether or not the update was done
    */
-  fun update(oldModel: StoryModel, n: Notifications): Deferred<Boolean> = async(CommonPool) {
+  fun update(oldModel: StoryModel, n: Notifications): Deferred<Boolean> = async2(CommonPool) {
     if (!metadata.isPresent) throw IllegalStateException("Cannot update before fetching metadata")
     n.show(ctx.resources.getString(R.string.checking_story, oldModel.title))
     val metaWithInitedValues = metadata.get()
@@ -197,14 +234,14 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
       replaceOrThrow("stories", *newModel.toKvPairs())
     }
     // Skip non-locals from global updates
-    if (oldModel.status != StoryStatus.LOCAL) return@async false
+    if (oldModel.status != StoryStatus.LOCAL) return@async2 false
     // Stories can't get un-updated
     if (oldModel.updateDateSeconds != 0L && newModel.updateDateSeconds == 0L)
       throw IllegalStateException("The old model had updates; the new one doesn't")
     // Story has never received an update, our job here is done
-    if (newModel.updateDateSeconds == 0L) return@async false
+    if (newModel.updateDateSeconds == 0L) return@async2 false
     // Update time is identical, nothing to do again
-    if (oldModel.updateDateSeconds == newModel.updateDateSeconds) return@async false
+    if (oldModel.updateDateSeconds == newModel.updateDateSeconds) return@async2 false
 
     val revertUpdate: () -> Boolean = {
       // Revert model to old values
@@ -221,15 +258,15 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
       c.close()
       n.show(ctx.resources.getString(R.string.fetching_chapter, 1, newModel.title))
       val isWriting = writeStory(ctx, storyId, c).await()
-      if (!isWriting) return@async revertUpdate()
-      return@async true
+      if (!isWriting) return@async2 revertUpdate()
+      return@async2 true
     }
     // Chapters have been added
     if (newModel.chapterCount > oldModel.chapterCount) {
       val chapters = fetchChapters(n, oldModel.chapterCount + 1, newModel.chapterCount)
       val isWriting = writeStory(ctx, storyId, chapters).await()
-      if (!isWriting) return@async revertUpdate()
-      return@async true
+      if (!isWriting) return@async2 revertUpdate()
+      return@async2 true
     }
     // At least one chapter has been changed/removed, redownload everything
     var dir = storyDir(ctx, storyId)
@@ -237,35 +274,27 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
     var i = 0
     while (!dir.isPresent) {
       // Give up after 5 minutes
-      if (i == 60) return@async revertUpdate()
+      if (i == 60) return@async2 revertUpdate()
       delay(STORAGE_WAIT_DELAY_SECONDS, TimeUnit.SECONDS)
       dir = storyDir(ctx, storyId)
       i++
     }
     dir.get().deleteRecursively()
     val isWriting = writeStory(ctx, storyId, fetchChapters(n)).await()
-    if (!isWriting) return@async revertUpdate()
-    return@async true
+    if (!isWriting) return@async2 revertUpdate()
+    return@async2 true
   }
 
-  private val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-  private fun patientlyFetchChapter(chapter: Int, n: Notifications): Deferred<String> = async(CommonPool) {
-    return@async checkNetworkState(ctx, cm, n, { _ ->
-      return@checkNetworkState fetchChapter(chapter, n).await()
-    }).await()
-  }
-
-  @Suppress("LiftReturnOrAssignment")
-  private fun fetchChapter(chapter: Int, n: Notifications): Deferred<String> = async(CommonPool) {
+  private fun fetchChapter(chapter: Int, n: Notifications): Deferred<String> = async2(CommonPool) {
+    waitForNetwork(n).await()
     try {
-      return@async URL("https://www.fanfiction.net/s/$storyId/$chapter/").readText()
+      return@async2 URL("https://www.fanfiction.net/s/$storyId/$chapter/").readText()
     } catch (t: Throwable) {
       // Something happened; retry
       n.show(ctx.resources.getString(R.string.error_fetching_something, storyId.toString()))
       Log.e(TAG, "fetchChapter", t)
       delay(RATE_LIMIT_MILLISECONDS)
-      return@async fetchChapter(chapter, n).await()
+      return@async2 fetchChapter(chapter, n).await()
     }
   }
 
@@ -286,7 +315,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
       for (chapterNr in from..target) {
         n.show(ctx.resources.getString(R.string.fetching_chapter, chapterNr, storyName))
         delay(RATE_LIMIT_MILLISECONDS)
-        channel.send(parseChapter(patientlyFetchChapter(chapterNr, n).await()))
+        channel.send(parseChapter(fetchChapter(chapterNr, n).await()))
       }
       channel.close()
       n.show(ctx.resources.getString(R.string.done_story, storyName))

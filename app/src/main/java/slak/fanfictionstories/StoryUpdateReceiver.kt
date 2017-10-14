@@ -6,10 +6,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.icu.util.Calendar
-import android.net.ConnectivityManager
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 
 const val UPDATE_ALARM_PENDING_INTENT_REQ_CODE = 0xA1A12
 
@@ -40,23 +39,25 @@ class BootBroadcastReceiver : BroadcastReceiver() {
 class StoryUpdateReceiver : BroadcastReceiver() {
   private var updatedStories: MutableList<StoryModel> = mutableListOf()
   override fun onReceive(context: Context, intent: Intent) {
+    //FIXME temporary hack to get rid of annoying update notifications
+    return
     val n = Notifications(context, Notifications.Kind.UPDATING)
-    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    checkNetworkState(context, cm, n, { ctx: Context ->
-      update(ctx, n).await()
+    launch(CommonPool) {
+      update(context, n).await()
       n.cancel()
-      Notifications.updatedStories(ctx, updatedStories.map { it.title })
-    })
+      Notifications.updatedStories(context, updatedStories.map { it.title })
+    }
   }
 
-  private fun update(context: Context, n: Notifications) = async(CommonPool) {
+  private fun update(context: Context, n: Notifications) = async2(CommonPool) {
     Log.i("StoryUpdateReceiver", "Updating")
     updatedStories = mutableListOf()
     val storyModels = context.database.getStories().await()
     // We can launch all of them at once since there can only be one holding the download lock,
     // so we won't assblast their site with requests
-    val jobs = storyModels.map { model -> async(CommonPool) {
+    val jobs = storyModels.map { model -> async2(CommonPool) {
       val fetcher = StoryFetcher(model.storyIdRaw, context)
+      waitForNetwork(n).await()
       fetcher.fetchMetadata(n).await()
       val updated = fetcher.update(model, n).await()
       if (updated) updatedStories.add(model)

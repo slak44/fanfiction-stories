@@ -320,7 +320,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     }
   }
 
-  fun initDataFromDb(): Deferred<Unit> = async(CommonPool) {
+  fun initDataFromDb(): Deferred<Unit> = async2(CommonPool) {
     data.clear()
     stories = this@StoryAdapter.context.database.getStories().await().toMutableList()
     val toData = stories.filter { true } // FIXME filter
@@ -334,7 +334,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
       notifyDataSetChanged()
       notifyItemRangeChanged(0, itemCount)
     }
-    return@async
+    return@async2
   }
 
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
