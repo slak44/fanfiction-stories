@@ -20,7 +20,7 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
       delay(RATE_LIMIT_MILLISECONDS)
       waitForNetwork(n).await()
       try {
-        return@withLock URL("https://www.fanfiction.net/$canonUrlComponent").readText()
+        return@withLock URL("https://www.fanfiction.net/$canonUrlComponent/?p=$page").readText()
       } catch (t: Throwable) {
         // Something happened; retry
         n.show(MainActivity.res.getString(R.string.error_with_canon_stories, canonTitle))
