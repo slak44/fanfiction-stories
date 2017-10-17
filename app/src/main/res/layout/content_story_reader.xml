@@ -11,10 +11,11 @@
     tools:context="slak.fanfictionstories.activities.StoryReaderActivity"
     tools:showIn="@layout/activity_story_reader">
 
-    <android.support.constraint.ConstraintLayout
+    <LinearLayout
         android:id="@+id/scrollingLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/chapterTitleText"
@@ -27,12 +28,23 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Chapter Title"/>
 
-        <TextView
+        <!--<slak.fanfictionstories.activities.RecyclerView2-->
+            <!--android:id="@+id/chapterText"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_margin="@dimen/text_margin"-->
+            <!--app:layout_constraintBottom_toTopOf="@id/navButtons"-->
+            <!--app:layout_constraintEnd_toEndOf="parent"-->
+            <!--app:layout_constraintStart_toStartOf="parent"-->
+            <!--app:layout_constraintTop_toBottomOf="@+id/chapterTitleText">-->
+
+        <!--</slak.fanfictionstories.activities.RecyclerView2>-->
+
+        <slak.fanfictionstories.activities.NiceTextView
             android:id="@+id/chapterText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/text_margin"
-            android:paddingBottom="32dp"
             app:layout_constraintBottom_toTopOf="@id/navButtons"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -97,6 +109,6 @@
 
         </LinearLayout>
 
-    </android.support.constraint.ConstraintLayout>
+    </LinearLayout>
 
 </android.support.v4.widget.NestedScrollView>
