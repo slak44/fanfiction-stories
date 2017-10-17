@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
@@ -16,6 +17,8 @@ import kotlinx.android.synthetic.main.activity_select_category.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.sync.Mutex
+import kotlinx.coroutines.experimental.sync.withLock
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryAdapter
 import slak.fanfictionstories.StoryCardView
@@ -99,7 +102,10 @@ class BrowseCategoryActivity : AppCompatActivity() {
 
 class CanonStoryListActivity : AppCompatActivity() {
   private lateinit var adapter: StoryAdapter
+  private lateinit var layoutManager: LinearLayoutManager
   private lateinit var fetcher: CanonFetcher
+  var currentPage = 1
+  val addPageLock = Mutex()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -114,15 +120,35 @@ class CanonStoryListActivity : AppCompatActivity() {
     fetcher = CanonFetcher(this@CanonStoryListActivity, urlComp, title, srcCategory)
     adapter = StoryAdapter(this@CanonStoryListActivity)
     canonStoryListView.adapter = adapter
+    layoutManager = LinearLayoutManager(this)
+    canonStoryListView.layoutManager = layoutManager
 
     this.title = title
 
-    canonStoryListView.layoutManager = LinearLayoutManager(this)
     StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ ->
       startActivity(intent)
     })
 
     addPage(1)
+
+    canonStoryListView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+      override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+        // We only want scroll downs
+        if (dy <= 0) return
+        val visibleItemCount = layoutManager.childCount
+        val totalItemCount = layoutManager.itemCount
+        val pastVisiblesItems = layoutManager.findFirstVisibleItemPosition()
+        if ((visibleItemCount + pastVisiblesItems) >= totalItemCount) {
+          // There are lots of scroll events, so use a lock to make sure we don't overdo it
+          if (addPageLock.isLocked) return
+          async2(CommonPool) {
+            addPageLock.lock()
+            addPage(++currentPage).await()
+            addPageLock.unlock()
+          }
+        }
+      }
+    })
   }
 
   private fun addPage(page: Int) = async2(CommonPool) {
