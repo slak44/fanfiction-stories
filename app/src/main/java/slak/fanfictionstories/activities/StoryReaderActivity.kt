@@ -212,6 +212,7 @@ class StoryReaderActivity : AppCompatActivity() {
       true
     }
     R.id.goToBottom -> {
+      // FIXME this scrolls to the bottom of the **text**, not the bottom of the entire nested scroller
       nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
       true
     }
