@@ -11,10 +11,11 @@ import android.support.annotation.StringRes
 import android.text.style.ReplacementSpan
 import android.util.Log
 import android.view.MenuItem
+import android.widget.TextView
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.R
+import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.fetchers.Fetcher
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.experimental.CoroutineContext
@@ -79,6 +80,29 @@ fun MenuItem.iconTint(@ColorRes colorRes: Int, theme: Resources.Theme) {
   val drawable = this.icon
   drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
   this.icon = drawable
+}
+
+enum class Direction {
+  LEFT, TOP, RIGHT, BOTTOM
+}
+
+/**
+ * Tints a drawable. No-op if the specified drawable is null.
+ */
+fun TextView.drawableTint(@ColorRes colorRes: Int, theme: Resources.Theme, which: Direction) {
+  val color = MainActivity.res.getColor(colorRes, theme)
+  val drawable = this.compoundDrawables[which.ordinal] ?: return
+  drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+  when (which) {
+    Direction.LEFT -> this.setCompoundDrawablesWithIntrinsicBounds(drawable,
+        this.compoundDrawables[1], this.compoundDrawables[2], this.compoundDrawables[3])
+    Direction.TOP -> this.setCompoundDrawablesWithIntrinsicBounds(this.compoundDrawables[0],
+        drawable, this.compoundDrawables[2], this.compoundDrawables[3])
+    Direction.RIGHT -> this.setCompoundDrawablesWithIntrinsicBounds(this.compoundDrawables[0],
+        this.compoundDrawables[1], drawable, this.compoundDrawables[3])
+    Direction.BOTTOM -> this.setCompoundDrawablesWithIntrinsicBounds(this.compoundDrawables[0],
+        this.compoundDrawables[1], this.compoundDrawables[2], drawable)
+  }
 }
 
 class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpan() {

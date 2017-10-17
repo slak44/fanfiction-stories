@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Typeface
 import android.os.Bundle
+import android.support.annotation.ColorRes
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
@@ -13,6 +14,7 @@ import android.util.AttributeSet
 import android.util.Log
 import android.util.TypedValue
 import android.view.*
+import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.content_story_reader.*
 import kotlinx.coroutines.experimental.*
@@ -24,10 +26,7 @@ import org.jetbrains.anko.db.update
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.storyDir
-import slak.fanfictionstories.utility.HrSpan
-import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.database
-import slak.fanfictionstories.utility.iconTint
+import slak.fanfictionstories.utility.*
 import java.io.File
 
 private class FastTextView : View {
@@ -147,11 +146,21 @@ class StoryReaderActivity : AppCompatActivity() {
     }
   }
 
+  private fun getColorFor(textView: TextView): Int {
+    return if (textView.isEnabled) android.R.color.white
+    else android.R.color.tertiary_text_light
+  }
+
   private fun updateUiAfterFetchingText(chapterToRead: Int) = launch(UI) {
     // Disable buttons if there is nowhere for them to go
     prevChapterBtn.isEnabled = chapterToRead != 1
     nextChapterBtn.isEnabled = chapterToRead != model.chapterCount
     selectChapterBtn.isEnabled = model.chapterCount > 1
+
+    // Tint button icons dark if the buttons are disabled, white if not
+    prevChapterBtn.drawableTint(getColorFor(prevChapterBtn), theme, Direction.LEFT)
+    nextChapterBtn.drawableTint(getColorFor(nextChapterBtn), theme, Direction.RIGHT)
+    selectChapterBtn.drawableTint(getColorFor(selectChapterBtn), theme, Direction.LEFT)
 
     // Handle the next/prev button states in the appbar
     invalidateOptionsMenu()
