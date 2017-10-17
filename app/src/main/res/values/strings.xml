@@ -19,12 +19,7 @@
     <!-- Statistics -->
     <string name="statistics">Statistics</string>
     <string name="statistics_template">
-        Total Word Count: %d\n
-        Words Read: approx. %d\n
-        Story Count: %d\n
-        Stories Read: %d\n
-        Stories Still Reading: %d\n
-        Untouched Stories: %d\n
+        Total Word Count: %d\nWords Read: approx. %d\nStory Count: %d\nStories Read: %d\nStories Still Reading: %d\nUntouched Stories: %d\n
     </string>
 
     <!-- Story status -->
