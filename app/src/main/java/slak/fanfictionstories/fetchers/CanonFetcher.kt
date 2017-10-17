@@ -63,7 +63,10 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
       var characters = meta["characters"]!!
       val lastNode = summaryMetaDiv.child(0).childNodes().last()
       if (lastNode is TextNode) {
-        characters = lastNode.text().trimStart(' ', '-')
+        val stripStatus = lastNode.text().replace(" - Complete", "")
+        if (stripStatus.isNotBlank()) {
+          characters = stripStatus.trimStart(' ', '-')
+        }
       }
 
       list.add(StoryModel(mutableMapOf(
