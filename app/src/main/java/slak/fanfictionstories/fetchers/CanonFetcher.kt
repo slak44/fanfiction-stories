@@ -13,8 +13,71 @@ import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.waitForNetwork
 import java.net.URL
 
+enum class Sorts(val ffnetValue: String) {
+  UPDATE_DATE("1"), PUBLISH_DATE("2"),
+  REVIEWS("3"), FAVORITES("4"), FOLLOWS("5");
+
+  fun queryParamName(): String = "srt"
+}
+
+enum class TimeRanges(val ffnetValue: String) {
+  ALL("0"),
+  UPD_LAST_DAY("1"), UPD_LAST_WEEK("2"), UPD_LAST_MONTH("3"), UPD_LAST_6_MONTHS("4"),
+  UPD_LAST_YEAR("5"),
+
+  PUB_LAST_DAY("11"), PUB_LAST_WEEK("12"), PUB_LAST_MONTH("13"), PUB_LAST_6_MONTHS("14"),
+  PUB_LAST_YEAR("15");
+
+  fun queryParamName(): String = "t"
+}
+
+enum class Languages(val ffnetValue: String) {
+  ALL(""), ENGLISH("1"), SPANISH("2"), FRENCH("3"), GERMAN("4"), CHINESE("5"), DUTCH("7"),
+  PORTUGUESE("8"), RUSSIAN("10"), ITALIAN("11"), POLISH("13"), HUNGARIAN("14"), FINNISH("20"),
+  CZECH("31"), UKRAINIAN("44");
+
+  fun queryParamName(): String = "lan"
+}
+
+enum class Genres(val ffnetValue: String) {
+  ALL("0"), ADVENTURE("6"), ANGST("10"), CRIME("18"), DRAMA("4"), FAMILY("19"), FANTASY("14"),
+  FRIENDSHIP("21"), GENERAL("1"), HORROR("8"), HUMOR("3"), HURT_COMFORT("20"), MYSTERY("7"),
+  PARODY("9"), POETRY("5"), ROMANCE("2"), SCI_FI("13"), SPIRITUAL("15"), SUPERNATURAL("11"),
+  SUSPENSE("12"), TRAGEDY("16"), WESTERN("17");
+
+  fun queryParamName(which: Int): String = "g$which"
+}
+
+enum class Rating(val ffnetValue: String) {
+  ALL("10"),
+  K_TO_T("103"), K_TO_K_PLUS("102"), K("1"), K_PLUS("2"), T("3"), M("4");
+
+  fun queryParamName(): String = "r"
+}
+
+enum class Statuses(val ffnetValue: String) {
+  ALL("0"), IN_PROGRESS("1"), COMPLETE("2");
+
+  fun queryParamName(): String = "s"
+}
+
+enum class WordCounts(val ffnetValue: String) {
+  ALL("0"),
+  UNDER_1K("11"), UNDER_5K("51"), OVER_1K("1"), OVER_5K("5"), OVER_10K("10"), OVER_20K("20"),
+  OVER_40K("40"), OVER_60K("60"), OVER_100K("100");
+
+  fun queryParamName(): String = "len"
+}
+
 class CanonFetcher(private val ctx: Context, private val canonUrlComponent: String,
                    private val canonTitle: String, private val srcCategory: String) : Fetcher() {
+
+  fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
+    val n = Notifications(ctx, Notifications.Kind.OTHER)
+    val html = fetchPage(page, n).await()
+    return@async2 parseHtml(html)
+  }
+
   private fun fetchPage(page: Int, n: Notifications): Deferred<String> = async2(CommonPool) {
     return@async2 DOWNLOAD_MUTEX.withLock {
       delay(RATE_LIMIT_MILLISECONDS)
@@ -97,11 +160,5 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
       ), false))
     }
     return list
-  }
-
-  fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
-    val n = Notifications(ctx, Notifications.Kind.OTHER)
-    val html = fetchPage(page, n).await()
-    return@async2 parseHtml(html)
   }
 }
