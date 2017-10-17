@@ -151,6 +151,7 @@ class StoryReaderActivity : AppCompatActivity() {
     // Disable buttons if there is nowhere for them to go
     prevChapterBtn.isEnabled = chapterToRead != 1
     nextChapterBtn.isEnabled = chapterToRead != model.chapterCount
+    selectChapterBtn.isEnabled = model.chapterCount > 1
 
     // Handle the next/prev button states in the appbar
     invalidateOptionsMenu()
@@ -198,6 +199,7 @@ class StoryReaderActivity : AppCompatActivity() {
     for (item in toTint) item.iconTint(android.R.color.white, theme)
     menu.findItem(R.id.nextChapter).isEnabled = nextChapterBtn.isEnabled
     menu.findItem(R.id.prevChapter).isEnabled = prevChapterBtn.isEnabled
+    menu.findItem(R.id.selectChapter).isEnabled = selectChapterBtn.isEnabled
     return super.onPrepareOptionsMenu(menu)
   }
 
