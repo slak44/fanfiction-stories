@@ -104,8 +104,8 @@ class CanonStoryListActivity : AppCompatActivity() {
   private lateinit var adapter: StoryAdapter
   private lateinit var layoutManager: LinearLayoutManager
   private lateinit var fetcher: CanonFetcher
-  var currentPage = 1
-  val addPageLock = Mutex()
+  private var currentPage = 1
+  private val addPageLock = Mutex()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
