@@ -102,7 +102,7 @@ class StoryListActivity : AppCompatActivity() {
         .inflate(R.layout.dialog_group_by_switch, null, false)
     val switch = layout.findViewById<Switch>(R.id.reverseOrderSw) as Switch
     AlertDialog.Builder(this)
-        .setTitle(R.string.group_by)
+        .setTitle(R.string.sort_by)
         .setView(layout)
         .setItems(OrderStrategy.values().map { it.toUIString() }.toTypedArray(), { dialog, which ->
           dialog.dismiss()
