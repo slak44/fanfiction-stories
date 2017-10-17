@@ -112,6 +112,8 @@ class CanonStoryListActivity : AppCompatActivity() {
     val srcCategory = intent.extras.getString(SRC_CATEGORY_EXTRA_ID)
 
     fetcher = CanonFetcher(this@CanonStoryListActivity, urlComp, title, srcCategory)
+    adapter = StoryAdapter(this@CanonStoryListActivity)
+    canonStoryListView.adapter = adapter
 
     this.title = title
 
@@ -119,11 +121,8 @@ class CanonStoryListActivity : AppCompatActivity() {
     StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ ->
       startActivity(intent)
     })
-    launch(CommonPool) {
-      adapter = StoryAdapter(this@CanonStoryListActivity)
-      addPage(1)
-      launch(UI) { canonStoryListView.adapter = adapter }
-    }
+
+    addPage(1)
   }
 
   private fun addPage(page: Int) = async2(CommonPool) {
