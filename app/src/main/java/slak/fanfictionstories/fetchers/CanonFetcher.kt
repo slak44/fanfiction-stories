@@ -5,6 +5,7 @@ import android.util.Log
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.sync.withLock
 import org.jsoup.Jsoup
+import org.jsoup.nodes.TextNode
 import slak.fanfictionstories.*
 import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.utility.Notifications
@@ -59,13 +60,19 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
       val publishTime = publishedTimeStoryMeta(html)
       val updateTime = updatedTimeStoryMeta(html)
 
+      var characters = meta["characters"]!!
+      val lastNode = summaryMetaDiv.child(0).childNodes().last()
+      if (lastNode is TextNode) {
+        characters = lastNode.text().trimStart(' ', '-')
+      }
+
       list.add(StoryModel(mutableMapOf(
           "storyId" to storyId,
           "authorid" to authorId,
           "rating" to meta["rating"]!!,
           "language" to meta["language"]!!,
           "genres" to meta["genres"]!!,
-          "characters" to meta["characters"]!!,
+          "characters" to characters,
           "chapters" to if (meta["chapters"] != null) meta["chapters"]!!.toLong() else 1L,
           "wordCount" to meta["words"]!!.replace(",", "").toLong(),
           "reviews" to if (meta["reviews"] != null) meta["reviews"]!!.toLong() else 0L,
