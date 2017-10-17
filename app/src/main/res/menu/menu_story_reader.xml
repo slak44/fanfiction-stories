@@ -3,12 +3,6 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="slak.fanfictionstories.activities.StoryReaderActivity">
     <item
-        android:id="@+id/selectChapter"
-        android:icon="@drawable/ic_arrow_drop_down_black_24dp"
-        android:title="@string/select_chapter"
-        android:visible="true"
-        app:showAsAction="ifRoom"/>
-    <item
         android:id="@+id/goToTop"
         android:icon="@drawable/ic_arrow_upward_black_24dp"
         android:title="@string/go_to_top"
@@ -20,6 +14,11 @@
         android:title="@string/go_to_bottom"
         android:visible="true"
         app:showAsAction="always"/>
+    <item
+        android:id="@+id/selectChapter"
+        android:title="@string/select_chapter"
+        android:visible="true"
+        app:showAsAction="never"/>
     <item
         android:id="@+id/nextChapter"
         android:title="@string/next_chapter"

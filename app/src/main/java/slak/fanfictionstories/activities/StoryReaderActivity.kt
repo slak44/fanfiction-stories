@@ -202,8 +202,7 @@ class StoryReaderActivity : AppCompatActivity() {
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     val toTint = arrayOf(
         menu.findItem(R.id.goToTop),
-        menu.findItem(R.id.goToBottom),
-        menu.findItem(R.id.selectChapter)
+        menu.findItem(R.id.goToBottom)
     )
     for (item in toTint) item.iconTint(android.R.color.white, theme)
     menu.findItem(R.id.nextChapter).isEnabled = nextChapterBtn.isEnabled
