@@ -25,9 +25,9 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
     private val cacheMapFile = File(MainActivity.cacheDirectory, "category_canons.array")
     private val TAG = "CategoryCache"
 
-    fun deserialize() {
+    fun deserialize() = async2(CommonPool) {
       if (!cacheMapFile.exists()) {
-        return
+        return@async2
       }
       val objIn = ObjectInputStream(FileInputStream(cacheMapFile))
       // I serialize it however I like, I deserialize it however I like, so stfu
