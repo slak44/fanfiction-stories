@@ -12,15 +12,16 @@ import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.waitForNetwork
 import java.net.URL
+import java.util.*
 
-enum class Sorts(val ffnetValue: String) {
+enum class Sort(val ffnetValue: String) {
   UPDATE_DATE("1"), PUBLISH_DATE("2"),
   REVIEWS("3"), FAVORITES("4"), FOLLOWS("5");
 
-  fun queryParamName(): String = "srt"
+  fun queryParam(): String = "srt=$ffnetValue"
 }
 
-enum class TimeRanges(val ffnetValue: String) {
+enum class TimeRange(val ffnetValue: String) {
   ALL("0"),
   UPD_LAST_DAY("1"), UPD_LAST_WEEK("2"), UPD_LAST_MONTH("3"), UPD_LAST_6_MONTHS("4"),
   UPD_LAST_YEAR("5"),
@@ -28,49 +29,77 @@ enum class TimeRanges(val ffnetValue: String) {
   PUB_LAST_DAY("11"), PUB_LAST_WEEK("12"), PUB_LAST_MONTH("13"), PUB_LAST_6_MONTHS("14"),
   PUB_LAST_YEAR("15");
 
-  fun queryParamName(): String = "t"
+  fun queryParam(): String = "t=$ffnetValue"
 }
 
-enum class Languages(val ffnetValue: String) {
+enum class Language(val ffnetValue: String) {
   ALL(""), ENGLISH("1"), SPANISH("2"), FRENCH("3"), GERMAN("4"), CHINESE("5"), DUTCH("7"),
   PORTUGUESE("8"), RUSSIAN("10"), ITALIAN("11"), POLISH("13"), HUNGARIAN("14"), FINNISH("20"),
   CZECH("31"), UKRAINIAN("44");
 
-  fun queryParamName(): String = "lan"
+  fun queryParam(): String = "lan=$ffnetValue"
 }
 
-enum class Genres(val ffnetValue: String) {
+enum class Genre(val ffnetValue: String) {
   ALL("0"), ADVENTURE("6"), ANGST("10"), CRIME("18"), DRAMA("4"), FAMILY("19"), FANTASY("14"),
   FRIENDSHIP("21"), GENERAL("1"), HORROR("8"), HUMOR("3"), HURT_COMFORT("20"), MYSTERY("7"),
   PARODY("9"), POETRY("5"), ROMANCE("2"), SCI_FI("13"), SPIRITUAL("15"), SUPERNATURAL("11"),
   SUSPENSE("12"), TRAGEDY("16"), WESTERN("17");
 
-  fun queryParamName(which: Int): String = "g$which"
+  fun queryParam(which: Int): String = "g$which=$ffnetValue"
 }
 
 enum class Rating(val ffnetValue: String) {
   ALL("10"),
   K_TO_T("103"), K_TO_K_PLUS("102"), K("1"), K_PLUS("2"), T("3"), M("4");
 
-  fun queryParamName(): String = "r"
+  fun queryParam(): String = "r=$ffnetValue"
 }
 
-enum class Statuses(val ffnetValue: String) {
+enum class Status(val ffnetValue: String) {
   ALL("0"), IN_PROGRESS("1"), COMPLETE("2");
 
-  fun queryParamName(): String = "s"
+  fun queryParam(): String = "s=$ffnetValue"
 }
 
-enum class WordCounts(val ffnetValue: String) {
+enum class WordCount(val ffnetValue: String) {
   ALL("0"),
   UNDER_1K("11"), UNDER_5K("51"), OVER_1K("1"), OVER_5K("5"), OVER_10K("10"), OVER_20K("20"),
   OVER_40K("40"), OVER_60K("60"), OVER_100K("100");
 
-  fun queryParamName(): String = "len"
+  fun queryParam(): String = "len=$ffnetValue"
 }
 
-class CanonFetcher(private val ctx: Context, private val canonUrlComponent: String,
-                   private val canonTitle: String, private val srcCategory: String) : Fetcher() {
+class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
+  data class Details(
+      val urlComponent: String,
+      val title: String,
+      val category: String,
+      val sort: Sort = Sort.UPDATE_DATE,
+      val timeRange: TimeRange = TimeRange.ALL,
+      val lang: Language = Language.ALL,
+      val genre1: Genre = Genre.ALL,
+      val genre2: Genre = Genre.ALL,
+      val rating: Rating = Rating.ALL,
+      val status: Status = Status.ALL,
+      val wordCount: WordCount = WordCount.ALL,
+      val worldId: String = "0",
+      val char1Id: String = "0",
+      val char2Id: String = "0",
+      val char3Id: String = "0",
+      val char4Id: String = "0",
+
+      val genreWithout: Optional<Genre> = Optional.empty(),
+      val worldWithout: Optional<String> = Optional.empty(),
+      val char1Without: Optional<String> = Optional.empty(),
+      val char2Without: Optional<String> = Optional.empty()
+  )
+
+  data class World(val name: String, val id: String)
+  data class Character(val name: String, val id: String)
+
+  var worldList: List<World> = listOf()
+  var charList: List<Character> = listOf()
 
   fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
     val n = Notifications(ctx, Notifications.Kind.OTHER)
@@ -79,14 +108,40 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
   }
 
   private fun fetchPage(page: Int, n: Notifications): Deferred<String> = async2(CommonPool) {
+    val queryParams = listOf(
+        details.sort.queryParam(),
+        details.timeRange.queryParam(),
+        details.lang.queryParam(),
+        details.genre1.queryParam(1),
+        details.genre2.queryParam(2),
+        details.rating.queryParam(),
+        details.status.queryParam(),
+        details.wordCount.queryParam(),
+        "v1=${details.worldId}",
+        "c1=${details.char1Id}",
+        "c2=${details.char2Id}",
+        "c3=${details.char3Id}",
+        "c4=${details.char4Id}",
+        if (details.genreWithout.isPresent) "_${details.genreWithout.get().queryParam(1)}"
+        else "",
+        if (details.worldWithout.isPresent) "_v1=${details.worldWithout.get()}"
+        else "",
+        if (details.char1Without.isPresent) "_c1=${details.char1Without.get()}"
+        else "",
+        if (details.char2Without.isPresent) "_c2=${details.char2Without.get()}"
+        else ""
+    ).joinToString("&")
+
     return@async2 DOWNLOAD_MUTEX.withLock {
       delay(RATE_LIMIT_MILLISECONDS)
       waitForNetwork(n).await()
       try {
-        return@withLock URL("https://www.fanfiction.net/$canonUrlComponent/?p=$page").readText()
+        return@withLock URL(
+            "https://www.fanfiction.net/${details.urlComponent}/?p=$page&$queryParams")
+            .readText()
       } catch (t: Throwable) {
         // Something happened; retry
-        n.show(MainActivity.res.getString(R.string.error_with_canon_stories, canonTitle))
+        n.show(MainActivity.res.getString(R.string.error_with_canon_stories, details.title))
         Log.e(TAG, "CanonFetcher: retry", t)
         delay(RATE_LIMIT_MILLISECONDS)
         return@withLock fetchPage(page, n).await()
@@ -96,6 +151,13 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
 
   private fun parseHtml(html: String): List<StoryModel> {
     val doc = Jsoup.parse(html)
+
+    val filtersDiv = doc.select("#filters > form > div.modal-body")
+    val worldsElement = filtersDiv.select("select[name=\"verseid1\"]")
+    worldList = worldsElement.map { optionElem -> World(optionElem.text(), optionElem.`val`()) }
+    val charactersElement = filtersDiv.select("select[name=\"characterid1\"]")
+    charList = charactersElement.map { charsElem -> Character(charsElem.text(), charsElem.`val`()) }
+
     val list = mutableListOf<StoryModel>()
     // FIXME use parallel map for this instead of foreach
     doc.select("#content_wrapper_inner > div.z-list.zhover.zpointer").forEach {
@@ -109,9 +171,6 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
       // Href looks like /u/6772732/Gnaoh-El-Nart, pick the id
       val authorId = authorAnchor.attr("href").split('/')[2].toLong()
       val authorName = authorAnchor.textNodes()[0].toString()
-
-      val canon = canonTitle
-      val category = srcCategory
 
       // There is only one such div
       val summaryMetaDiv = it.select("div.z-indent.z-padtop")[0]
@@ -151,8 +210,8 @@ class CanonFetcher(private val ctx: Context, private val canonUrlComponent: Stri
           "scrollAbsolute" to 0L,
           "currentChapter" to 0L,
           "status" to "remote",
-          "canon" to canon,
-          "category" to category,
+          "canon" to details.title,
+          "category" to details.category,
           "summary" to summary,
           "author" to authorName,
           "title" to title,

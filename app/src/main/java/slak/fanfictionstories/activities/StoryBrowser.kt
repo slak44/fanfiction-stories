@@ -117,7 +117,8 @@ class CanonStoryListActivity : AppCompatActivity() {
     val urlComp = intent.extras.getString(CANON_URL_EXTRA_ID)
     val srcCategory = intent.extras.getString(SRC_CATEGORY_EXTRA_ID)
 
-    fetcher = CanonFetcher(this@CanonStoryListActivity, urlComp, title, srcCategory)
+    fetcher = CanonFetcher(this@CanonStoryListActivity,
+        CanonFetcher.Details(urlComp, title, srcCategory))
     adapter = StoryAdapter(this@CanonStoryListActivity)
     canonStoryListView.adapter = adapter
     layoutManager = LinearLayoutManager(this)
