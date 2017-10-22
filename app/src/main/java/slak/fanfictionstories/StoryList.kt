@@ -301,7 +301,6 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   fun clear() {
     data.clear()
     notifyDataSetChanged()
-    notifyItemRangeChanged(0, itemCount)
   }
 
   fun addData(story: Either<StoryModel, String>) {

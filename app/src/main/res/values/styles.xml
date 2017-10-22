@@ -45,4 +45,18 @@
         <item name="android:drawableTint">@color/listDrawableTint</item>
     </style>
 
+    <style name="AppTheme.FilterSpinner">
+        <item name="android:minHeight">@dimen/native_filter_spinner_min_height</item>
+        <item name="android:layout_marginBottom">@dimen/native_filter_spinner_margin</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">match_parent</item>
+    </style>
+
+    <style name="AppTheme.FilterSpinnerLabel">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceSmall</item>
+        <item name="android:layout_marginStart">@dimen/native_filter_spinner_margin</item>
+    </style>
+
 </resources>

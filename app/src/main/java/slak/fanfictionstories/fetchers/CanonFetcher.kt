@@ -75,24 +75,24 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
       val urlComponent: String,
       val title: String,
       val category: String,
-      val sort: Sort = Sort.UPDATE_DATE,
-      val timeRange: TimeRange = TimeRange.ALL,
-      val lang: Language = Language.ALL,
-      val genre1: Genre = Genre.ALL,
-      val genre2: Genre = Genre.ALL,
-      val rating: Rating = Rating.ALL,
-      val status: Status = Status.ALL,
-      val wordCount: WordCount = WordCount.ALL,
-      val worldId: String = "0",
-      val char1Id: String = "0",
-      val char2Id: String = "0",
-      val char3Id: String = "0",
-      val char4Id: String = "0",
+      var sort: Sort = Sort.UPDATE_DATE,
+      var timeRange: TimeRange = TimeRange.ALL,
+      var lang: Language = Language.ALL,
+      var genre1: Genre = Genre.ALL,
+      var genre2: Genre = Genre.ALL,
+      var rating: Rating = Rating.ALL,
+      var status: Status = Status.ALL,
+      var wordCount: WordCount = WordCount.ALL,
+      var worldId: String = "0",
+      var char1Id: String = "0",
+      var char2Id: String = "0",
+      var char3Id: String = "0",
+      var char4Id: String = "0",
 
-      val genreWithout: Optional<Genre> = Optional.empty(),
-      val worldWithout: Optional<String> = Optional.empty(),
-      val char1Without: Optional<String> = Optional.empty(),
-      val char2Without: Optional<String> = Optional.empty()
+      var genreWithout: Optional<Genre> = Optional.empty(),
+      var worldWithout: Optional<String> = Optional.empty(),
+      var char1Without: Optional<String> = Optional.empty(),
+      var char2Without: Optional<String> = Optional.empty()
   )
 
   data class World(val name: String, val id: String)
@@ -152,11 +152,13 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
   private fun parseHtml(html: String): List<StoryModel> {
     val doc = Jsoup.parse(html)
 
-    val filtersDiv = doc.select("#filters > form > div.modal-body")
-    val worldsElement = filtersDiv.select("select[name=\"verseid1\"]")
-    worldList = worldsElement.map { optionElem -> World(optionElem.text(), optionElem.`val`()) }
-    val charactersElement = filtersDiv.select("select[name=\"characterid1\"]")
-    charList = charactersElement.map { charsElem -> Character(charsElem.text(), charsElem.`val`()) }
+    if (worldList.isEmpty() || charList.isEmpty()) {
+      val filtersDiv = doc.select("#filters > form > div.modal-body")
+      val worldsElement = filtersDiv.select("select[name=\"verseid1\"]")[0]
+      worldList = worldsElement.children().map { option -> World(option.text(), option.`val`()) }
+      val charsElement = filtersDiv.select("select[name=\"characterid1\"]")[0]
+      charList = charsElement.children().map { option -> Character(option.text(), option.`val`()) }
+    }
 
     val list = mutableListOf<StoryModel>()
     // FIXME use parallel map for this instead of foreach

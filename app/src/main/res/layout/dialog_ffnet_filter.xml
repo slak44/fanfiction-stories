@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="@dimen/dialog_view_margin">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="?dialogPreferredPadding">
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_sort"/>
+
+        <Spinner
+            android:id="@+id/sort"
+            style="@style/AppTheme.FilterSpinner"
+            android:entries="@array/sorts"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_time_range"/>
+
+        <Spinner
+            android:id="@+id/timeRange"
+            style="@style/AppTheme.FilterSpinner"
+            android:entries="@array/time_ranges"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_rating"/>
+
+        <Spinner
+            android:id="@+id/rating"
+            style="@style/AppTheme.FilterSpinner"
+            android:entries="@array/ratings"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_language"/>
+
+        <Spinner
+            android:id="@+id/language"
+            style="@style/AppTheme.FilterSpinner"
+            android:entries="@array/languages"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_length"/>
+
+        <Spinner
+            android:id="@+id/length"
+            style="@style/AppTheme.FilterSpinner"
+            android:entries="@array/lengths"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_status"/>
+
+        <Spinner
+            android:id="@+id/status"
+            style="@style/AppTheme.FilterSpinner"
+            android:entries="@array/statuses"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_world"/>
+
+        <Spinner
+            android:id="@+id/world"
+            style="@style/AppTheme.FilterSpinner"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_genre1"/>
+
+        <Spinner
+            android:id="@+id/genre1"
+            style="@style/AppTheme.FilterSpinner"
+            android:entries="@array/genres"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_genre2"/>
+
+        <Spinner
+            android:id="@+id/genre2"
+            style="@style/AppTheme.FilterSpinner"
+            android:entries="@array/genres"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_char1"/>
+
+        <Spinner
+            android:id="@+id/char1"
+            style="@style/AppTheme.FilterSpinner"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_char2"/>
+
+        <Spinner
+            android:id="@+id/char2"
+            style="@style/AppTheme.FilterSpinner"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_char3"/>
+
+        <Spinner
+            android:id="@+id/char3"
+            style="@style/AppTheme.FilterSpinner"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_char4"/>
+
+        <Spinner
+            android:id="@+id/char4"
+            style="@style/AppTheme.FilterSpinner"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_not_genre"/>
+
+        <Spinner
+            android:id="@+id/notGenre"
+            style="@style/AppTheme.FilterSpinner"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_not_world"/>
+
+        <Spinner
+            android:id="@+id/notWorld"
+            style="@style/AppTheme.FilterSpinner"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_not_char1"/>
+
+        <Spinner
+            android:id="@+id/notChar1"
+            style="@style/AppTheme.FilterSpinner"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
+            android:text="@string/native_not_char2"/>
+
+        <Spinner
+            android:id="@+id/notChar2"
+            style="@style/AppTheme.FilterSpinner"/>
+
+    </LinearLayout>
+
+</ScrollView>
