@@ -199,6 +199,11 @@ class CanonStoryListActivity : AppCompatActivity() {
     spinner.adapter = adapter
   }
 
+  private fun spinnerSelect(layout: View, @IdRes id: Int, position: Int) {
+    val spinner = layout.findViewById<Spinner>(id) as Spinner
+    spinner.setSelection(position)
+  }
+
   private fun openFilterDialog() {
     val layout = LayoutInflater.from(this)
         .inflate(R.layout.dialog_ffnet_filter, null, false)
@@ -234,8 +239,6 @@ class CanonStoryListActivity : AppCompatActivity() {
     spinnerOnSelect(layout, R.id.language) { _, pos -> fetcher.details.lang = Language.values()[pos] }
     spinnerOnSelect(layout, R.id.status) { _, pos -> fetcher.details.status = Status.values()[pos] }
     spinnerOnSelect(layout, R.id.length) { _, pos -> fetcher.details.wordCount = WordCount.values()[pos] }
-    spinnerOnSelect(layout, R.id.notGenre) { _, pos -> fetcher.details.genreWithout = Optional.of(Genre.values()[pos]) }
-
     spinnerOnSelect(layout, R.id.world) { _, pos -> fetcher.details.worldId = fetcher.worldList[pos].id }
     spinnerOnSelect(layout, R.id.char1) { _, pos -> fetcher.details.char1Id = fetcher.charList[pos].id }
     spinnerOnSelect(layout, R.id.char2) { _, pos -> fetcher.details.char2Id = fetcher.charList[pos].id }
@@ -243,6 +246,34 @@ class CanonStoryListActivity : AppCompatActivity() {
     spinnerOnSelect(layout, R.id.char4) { _, pos -> fetcher.details.char4Id = fetcher.charList[pos].id }
     spinnerOnSelect(layout, R.id.notChar1) { _, pos -> fetcher.details.char1Without = Optional.of(fetcher.charList[pos].id) }
     spinnerOnSelect(layout, R.id.notChar2) { _, pos -> fetcher.details.char2Without = Optional.of(fetcher.charList[pos].id) }
+    spinnerOnSelect(layout, R.id.notGenre) { _, pos -> fetcher.details.genreWithout = Optional.of(Genre.values()[pos]) }
+
+    spinnerSelect(layout, R.id.sort, Sort.values().indexOf(fetcher.details.sort))
+    spinnerSelect(layout, R.id.timeRange, TimeRange.values().indexOf(fetcher.details.timeRange))
+    spinnerSelect(layout, R.id.genre1, Genre.values().indexOf(fetcher.details.genre1))
+    spinnerSelect(layout, R.id.genre2, Genre.values().indexOf(fetcher.details.genre2))
+    spinnerSelect(layout, R.id.rating, Rating.values().indexOf(fetcher.details.rating))
+    spinnerSelect(layout, R.id.language, Language.values().indexOf(fetcher.details.lang))
+    spinnerSelect(layout, R.id.status, Status.values().indexOf(fetcher.details.status))
+    spinnerSelect(layout, R.id.length, WordCount.values().indexOf(fetcher.details.wordCount))
+    spinnerSelect(layout, R.id.world, fetcher.worldList.indexOfFirst { it.id == fetcher.details.worldId})
+    spinnerSelect(layout, R.id.char1, fetcher.charList.indexOfFirst { it.id == fetcher.details.char1Id})
+    spinnerSelect(layout, R.id.char2, fetcher.charList.indexOfFirst { it.id == fetcher.details.char2Id})
+    spinnerSelect(layout, R.id.char3, fetcher.charList.indexOfFirst { it.id == fetcher.details.char3Id})
+    spinnerSelect(layout, R.id.char4, fetcher.charList.indexOfFirst { it.id == fetcher.details.char4Id})
+
+    if (fetcher.details.genreWithout.isPresent) {
+      spinnerSelect(layout, R.id.notGenre,
+          Genre.values().indexOf(fetcher.details.genreWithout.get()))
+    }
+    if (fetcher.details.char1Without.isPresent) {
+      spinnerSelect(layout, R.id.notChar1,
+          charNameList.indexOf(fetcher.details.char1Without.get()))
+    }
+    if (fetcher.details.char2Without.isPresent) {
+      spinnerSelect(layout, R.id.notChar2,
+          charNameList.indexOf(fetcher.details.char2Without.get()))
+    }
 
     AlertDialog.Builder(this)
         .setTitle(R.string.filter_by)
