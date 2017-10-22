@@ -61,6 +61,9 @@ open class Fetcher {
     )
   }
 
+  private fun cleanNrMatch(res: MatchResult?): String? =
+      res?.groupValues?.get(1)?.replace(",", "")?.trim()
+
   fun parseStoryMetadata(metadata: String): Map<String, String?> {
     val ratingLang = Regex("Rated: (?:<a .*?>Fiction[ ]{2})?(.*?)(?:</a>)? - (.*?) -", regexOpts)
         .find(metadata) ?: {
@@ -75,10 +78,10 @@ open class Fetcher {
       throw ex
     }()
 
-    val chapters = Regex("Chapters: ([0-9]+)", regexOpts).find(metadata)
-    val favs = Regex("Favs: ([0-9]+)", regexOpts).find(metadata)
-    val follows = Regex("Follows: ([0-9]+)", regexOpts).find(metadata)
-    val reviews = Regex("Reviews: <a.*?>([0-9]+)</a>", regexOpts).find(metadata)
+    val chapters = Regex("Chapters: ([0-9,]+)", regexOpts).find(metadata)
+    val favs = Regex("Favs: ([0-9,]+)", regexOpts).find(metadata)
+    val follows = Regex("Follows: ([0-9,]+)", regexOpts).find(metadata)
+    val reviews = Regex("Reviews: (?:<a.*?>)?([0-9,]+)(?:</a>)?", regexOpts).find(metadata)
 
     // Disambiguate genres/characters
     val split = ArrayList(metadata.split(" - "))
@@ -94,14 +97,15 @@ open class Fetcher {
     val thingsAfterCharacters =
         Regex("Words|Chapters|Reviews|Favs|Follows|Published|Updated", regexOpts)
     val characters = if (split[2].contains(thingsAfterCharacters)) "None" else split[2]
+
     return mapOf(
         "rating" to ratingLang.groupValues[1],
         "language" to ratingLang.groupValues[2],
         "words" to words.groupValues[1],
-        "chapters" to if (chapters != null) chapters.groupValues[1] else null,
-        "favs" to if (favs != null) favs.groupValues[1] else null,
-        "follows" to if (follows != null) follows.groupValues[1] else null,
-        "reviews" to if (reviews != null) reviews.groupValues[1] else null,
+        "chapters" to cleanNrMatch(chapters),
+        "favs" to cleanNrMatch(favs),
+        "follows" to cleanNrMatch(follows),
+        "reviews" to cleanNrMatch(reviews),
         "genres" to genres,
         "characters" to characters.trim()
     )
