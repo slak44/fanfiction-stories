@@ -299,16 +299,15 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   var orderDirection: OrderDirection = OrderDirection.DESC
 
   fun clear() {
+    val dataSize = data.size
     data.clear()
-    notifyDataSetChanged()
+    notifyItemRangeRemoved(0, dataSize)
   }
 
   fun addData(story: Either<StoryModel, String>) {
     data.add(story)
     story.fold( { stories.add(it) }, { false })
-    launch(UI) {
-      notifyItemInserted(data.size - 1)
-    }
+    notifyItemInserted(data.size - 1)
   }
 
   fun addData(storyList: List<Either<StoryModel, String>>) {
@@ -316,14 +315,12 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     storyList.forEach {
       it.fold( { stories.add(it) }, { false })
     }
-    launch(UI) {
-      notifyDataSetChanged()
-      notifyItemRangeChanged(0, itemCount)
-    }
+    notifyItemRangeInserted(data.size, storyList.size)
   }
 
+  // FIXME this does not belong here
   fun initDataFromDb(): Deferred<Unit> = async2(CommonPool) {
-    data.clear()
+    clear()
     stories = this@StoryAdapter.context.database.getStories().await().toMutableList()
     val toData = stories.filter { true } // FIXME filter
     groupStories(toData.toMutableList(), groupStrategy).forEach {
@@ -334,7 +331,6 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
 
     launch(UI) {
       notifyDataSetChanged()
-      notifyItemRangeChanged(0, itemCount)
     }
     return@async2
   }
@@ -347,7 +343,6 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   }
 
   private var addedStory: Long = 0
-  private val dm = context.resources.displayMetrics
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
     val view: View = if (viewType == 1) {

@@ -161,12 +161,11 @@ class CanonStoryListActivity : AppCompatActivity() {
     })
   }
 
-  private fun addPage(page: Int) = async2(CommonPool) {
+  private fun addPage(page: Int) = async2(UI) {
     // Add page title
     adapter.addData(Right(resources.getString(R.string.page_x, page)))
-    fetcher.get(page).await().forEach {
-      adapter.addData(Left(it))
-    }
+    // Add stories
+    adapter.addData(fetcher.get(page).await().map { Left(it) })
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
