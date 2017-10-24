@@ -79,7 +79,6 @@ class StoryCardView : CardView {
     // Disable touching on the progress seek bar
     storyProgress.setOnTouchListener { _, _ -> true }
     storyMainContent.setOnClickListener {
-      // FIXME do we want this elevation like this?
       cardElevation = if (cardElevation == 7F) 20F else 7F
       // This gets animated automatically
       if (storyDetails.visibility == View.GONE) storyDetails.visibility = View.VISIBLE
