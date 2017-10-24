@@ -320,7 +320,9 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
 
   // FIXME this does not belong here
   fun initDataFromDb(): Deferred<Unit> = async2(CommonPool) {
-    clear()
+    async2(UI) {
+      clear()
+    }.await()
     stories = this@StoryAdapter.context.database.getStories().await().toMutableList()
     val toData = stories.filter { true } // FIXME filter
     groupStories(toData.toMutableList(), groupStrategy).forEach {
