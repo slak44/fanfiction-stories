@@ -101,7 +101,11 @@ class StoryReaderActivity : AppCompatActivity() {
 
     title = model.title
     currentChapter = if (model.currentChapter == 0) 1 else model.currentChapter
-    initText(currentChapter)
+
+    async2(UI) {
+      initText(currentChapter).await()
+      restoreScrollStatus()
+    }
 
     prevChapterBtn.setOnClickListener {
       currentChapter--
@@ -112,6 +116,25 @@ class StoryReaderActivity : AppCompatActivity() {
       initText(currentChapter)
     }
     selectChapterBtn.setOnClickListener { showChapterSelectDialog() }
+  }
+
+  private fun restoreScrollStatus() {
+    database.use {
+      val absoluteScroll = select("stories", "scrollAbsolute")
+          .whereSimple("storyId = ?", model.storyIdRaw.toString())
+          .exec { parseSingle(LongParser) }
+      launch(UI) {
+        if (absoluteScroll > resources.getDimensionPixelSize(R.dimen.app_bar_height))
+          appBar.setExpanded(false)
+        val offset = absoluteScroll.toInt()
+        // FIXME hardcoded font size (it's not even that), that's actually supposed to be the line height
+        val above = (absoluteScroll - offset) * 15F
+        val layout = chapterText.staticLayout!!
+        val line = layout.getLineForOffset(offset)
+        val y = (if (line == 0) -layout.topPadding else layout.getLineTop(line)) - above
+        nestedScroller.scrollTo(0, y.toInt())
+      }
+    }
   }
 
   private fun showChapterSelectDialog() {
@@ -126,7 +149,7 @@ class StoryReaderActivity : AppCompatActivity() {
         }).show()
   }
 
-  private fun initText(chapterToRead: Int) = launch(CommonPool) {
+  private fun initText(chapterToRead: Int) = async2(CommonPool) {
     val text: String = readChapter(model.storyIdRaw, chapterToRead).await()
 
     async2(UI) {
@@ -197,24 +220,6 @@ class StoryReaderActivity : AppCompatActivity() {
             "scrollProgress" to percentageScrolled, "scrollAbsolute" to res)
             .whereSimple("storyid = ?", model.storyIdRaw.toString()).exec()
       } }
-    }
-
-    // Restore scroll status
-    database.use {
-      val absoluteScroll = select("stories", "scrollAbsolute")
-          .whereSimple("storyId = ?", model.storyIdRaw.toString())
-          .exec { parseSingle(LongParser) }
-      launch(UI) {
-        if (absoluteScroll > resources.getDimensionPixelSize(R.dimen.app_bar_height))
-          appBar.setExpanded(false)
-        val offset = absoluteScroll.toInt()
-        // FIXME hardcoded font size (it's not even that), that's actually supposed to be the line height
-        val above = (absoluteScroll - offset) * 15F
-        val layout = chapterText.staticLayout!!
-        val line = layout.getLineForOffset(offset)
-        val y = (if (line == 0) -layout.topPadding else layout.getLineTop(line)) - above
-        nestedScroller.scrollTo(0, y.toInt())
-      }
     }
   }
 
