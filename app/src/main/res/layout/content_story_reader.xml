@@ -33,12 +33,14 @@
             android:layout_margin="@dimen/text_margin"
             tools:text="@string/lorem_ipsum"/>
 
+        <!-- Bottom padding is sum of vertical margins of siblings -->
         <LinearLayout
             android:id="@+id/navButtons"
             style="?android:attr/buttonBarStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:paddingBottom="40dp"
             android:layout_marginBottom="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
