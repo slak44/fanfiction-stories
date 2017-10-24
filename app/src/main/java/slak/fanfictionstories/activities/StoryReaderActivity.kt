@@ -76,7 +76,7 @@ class StoryReaderActivity : AppCompatActivity() {
 
   companion object {
     const val INTENT_STORY_MODEL = "bundle"
-    private val PLACEHOLDER = "######HRPLACEHOLDERHRPLACEHOLDERHRPLACEHOLDER######"
+    private const val PLACEHOLDER = "######HRPLACEHOLDERHRPLACEHOLDERHRPLACEHOLDER######"
     private val tagHandlerFactory = { widthPx: Int -> Html.TagHandler { opening, tag, output, _ ->
       if (tag == "hr") {
         if (opening) output.insert(output.length, PLACEHOLDER)
