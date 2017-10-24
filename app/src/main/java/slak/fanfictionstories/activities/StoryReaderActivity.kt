@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Typeface
 import android.os.Bundle
-import android.support.annotation.ColorRes
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
@@ -38,7 +37,8 @@ private class FastTextView : View {
   constructor(ctx: Context, set: AttributeSet) : super(ctx, set)
   constructor(ctx: Context, set: AttributeSet, defStyle: Int) : super(ctx, set, defStyle)
 
-  private var staticLayout: StaticLayout? = null
+  var staticLayout: StaticLayout? = null
+    private set
 
   fun setText(s: Spanned) = async2(CommonPool) {
     // FIXME hardcoded textpaint
@@ -176,12 +176,25 @@ class StoryReaderActivity : AppCompatActivity() {
 
     // Record scroll status
     nestedScroller.setOnScrollChangeListener { scroller, _, scrollY: Int, _, _ ->
+      val layout = chapterText.staticLayout!!
+      val topPadding = -layout.topPadding
+      val res = if (scrollY <= topPadding) {
+        // FIXME hardcoded font size (it's not even that), that's actually supposed to be the line height
+        (topPadding - scrollY) / 15F
+      } else {
+        val line = layout.getLineForVertical(scrollY - 1) + 1
+        val offset = layout.getLineStart(line)
+        val above = layout.getLineTop(line) - scrollY
+        // FIXME hardcoded font size (it's not even that), that's actually supposed to be the line height
+        offset + above / 15F
+      }
+
       val rawPercentage = scrollY * 100.0 / (scrollingLayout.measuredHeight - scroller.bottom)
       // Make sure that values >100 get clamped to 100
       val percentageScrolled = Math.min(rawPercentage, 100.0)
       launch(CommonPool) { database.use {
         update("stories",
-            "scrollProgress" to percentageScrolled, "scrollAbsolute" to scrollY)
+            "scrollProgress" to percentageScrolled, "scrollAbsolute" to res)
             .whereSimple("storyid = ?", model.storyIdRaw.toString()).exec()
       } }
     }
@@ -194,7 +207,13 @@ class StoryReaderActivity : AppCompatActivity() {
       launch(UI) {
         if (absoluteScroll > resources.getDimensionPixelSize(R.dimen.app_bar_height))
           appBar.setExpanded(false)
-        nestedScroller.scrollTo(0, absoluteScroll.toInt())
+        val offset = absoluteScroll.toInt()
+        // FIXME hardcoded font size (it's not even that), that's actually supposed to be the line height
+        val above = (absoluteScroll - offset) * 15F
+        val layout = chapterText.staticLayout!!
+        val line = layout.getLineForOffset(offset)
+        val y = (if (line == 0) -layout.topPadding else layout.getLineTop(line)) - above
+        nestedScroller.scrollTo(0, y.toInt())
       }
     }
   }
