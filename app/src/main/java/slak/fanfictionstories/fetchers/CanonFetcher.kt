@@ -99,7 +99,11 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
   data class Character(val name: String, val id: String)
 
   var worldList: Optional<List<World>> = Optional.of(listOf())
+    private set
   var charList: List<Character> = listOf()
+    private set
+  var unfilteredStories: Optional<String> = Optional.empty()
+    private set
 
   fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
     val n = Notifications(ctx, Notifications.Kind.OTHER)
@@ -225,6 +229,19 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
           "chapterTitles" to ""
       ), false))
     }
+
+    val centerElem = doc.select("#content_wrapper_inner > center")
+    unfilteredStories = if (centerElem.size == 0) {
+      // If there is no element with the count there, it means there is only one page, so
+      // we get how many stories were on the page
+      Optional.of(list.size.toString())
+    } else {
+      val text = centerElem[0].textNodes()[0].text().split('|')[0].trim()
+      // If the text isn't a number (or at least look like a number), we have no stories unfiltered
+      if (text[0].isDigit()) Optional.of(text)
+      else Optional.of("0")
+    }
+
     return list
   }
 }

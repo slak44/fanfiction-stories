@@ -10,6 +10,7 @@
     <!-- Canon story list -->
     <string name="error_with_canon_stories">Can\'t access %s stories; Retrying…</string>
     <string name="page_x">Page %d</string>
+    <string name="x_stories">%s stories</string>
 
     <!-- Select category activity -->
     <string name="title_activity_select_category">Select Category</string>

@@ -20,6 +20,7 @@ import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.sync.Mutex
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryAdapter
@@ -133,6 +134,8 @@ class CanonStoryListActivity : ActivityWithStatic() {
 
     this.title = title
 
+    addPage(1)
+
     StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ ->
       this@CanonStoryListActivity.startActivity(intent)
     })
@@ -149,23 +152,21 @@ class CanonStoryListActivity : ActivityWithStatic() {
           if (addPageLock.isLocked) return
           launch(CommonPool) {
             addPageLock.lock()
-            addPage(++currentPage).await()
+            addPage(++currentPage).join()
             addPageLock.unlock()
           }
         }
       }
     })
-
-    launch(CommonPool) {
-      addPage(1).await()
-    }
   }
 
-  private fun addPage(page: Int) = async2(UI) {
+  private fun addPage(page: Int) = launch(UI) {
     // Add page title
     adapter.addData(Right(resources.getString(R.string.page_x, page)))
     // Add stories
     adapter.addData(fetcher.get(page).await().map { Left(it) })
+    supportActionBar?.subtitle =
+        resources.getString(R.string.x_stories, fetcher.unfilteredStories.get())
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
