@@ -2,10 +2,8 @@ package slak.fanfictionstories.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.annotation.IdRes
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -18,14 +16,11 @@ import either.Right
 import kotlinx.android.synthetic.main.activity_browse_category.*
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.activity_select_category.*
-import kotlinx.android.synthetic.main.dialog_ffnet_filter.*
 import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.sync.Mutex
-import kotlinx.coroutines.experimental.sync.withLock
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryAdapter
 import slak.fanfictionstories.StoryCardView
@@ -38,10 +33,12 @@ import slak.fanfictionstories.utility.setEntries
 import java.util.*
 import kotlin.properties.Delegates
 
-val CATEGORIES by lazy { Static.res!!.getStringArray(R.array.categories) }
-val URL_COMPONENTS by lazy { Static.res!!.getStringArray(R.array.categories_url_components) }
+val categories: Array<String> by lazy { Static.res!!.getStringArray(R.array.categories) }
+val categoryUrl: Array<String> by lazy {
+  Static.res!!.getStringArray(R.array.categories_url_components)
+}
 
-private val CATEGORIES_IDX_EXTRA_ID = "category_idx"
+private const val CATEGORIES_IDX_EXTRA_ID = "category_idx"
 
 class SelectCategoryActivity : ActivityWithStatic() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,7 +47,7 @@ class SelectCategoryActivity : ActivityWithStatic() {
     setSupportActionBar(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1)
-    adapter.addAll(CATEGORIES.toList())
+    adapter.addAll(categories.toList())
     categoriesList.adapter = adapter
     categoriesList.setOnItemClickListener { _, _, idx: Int, _ ->
       val intent = Intent(this, BrowseCategoryActivity::class.java)
@@ -60,9 +57,9 @@ class SelectCategoryActivity : ActivityWithStatic() {
   }
 }
 
-private val CANON_TITLE_EXTRA_ID = "canon_title"
-private val SRC_CATEGORY_EXTRA_ID = "category_title"
-private val CANON_URL_EXTRA_ID = "canon_url"
+private const val CANON_TITLE_EXTRA_ID = "canon_title"
+private const val SRC_CATEGORY_EXTRA_ID = "category_title"
+private const val CANON_URL_EXTRA_ID = "canon_url"
 
 class BrowseCategoryActivity : ActivityWithStatic() {
   private var categoryIdx: Int by Delegates.notNull()
@@ -74,7 +71,7 @@ class BrowseCategoryActivity : ActivityWithStatic() {
     // FIXME: 'up' button is missing the intent extras, which used to NPE below, now it just bugs out
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     categoryIdx = intent.extras?.getInt(CATEGORIES_IDX_EXTRA_ID) ?: return
-    title = CATEGORIES[categoryIdx]
+    title = categories[categoryIdx]
     launch(CommonPool) {
       canons = CategoryFetcher(this@BrowseCategoryActivity).get(categoryIdx).await()
       val adapter = ArrayAdapter<String>(
@@ -86,7 +83,7 @@ class BrowseCategoryActivity : ActivityWithStatic() {
       val intent = Intent(this, CanonStoryListActivity::class.java)
       intent.putExtra(CANON_URL_EXTRA_ID, canons[idx].url)
       intent.putExtra(CANON_TITLE_EXTRA_ID, canons[idx].title)
-      intent.putExtra(SRC_CATEGORY_EXTRA_ID, CATEGORIES[categoryIdx])
+      intent.putExtra(SRC_CATEGORY_EXTRA_ID, categories[categoryIdx])
       startActivity(intent)
     }
   }
@@ -101,7 +98,7 @@ class BrowseCategoryActivity : ActivityWithStatic() {
       CategoryFetcher.Cache.clear(categoryIdx)
       Snackbar.make(
           findViewById(android.R.id.content)!!,
-          resources.getString(R.string.cleared_from_cache, CATEGORIES[categoryIdx]),
+          resources.getString(R.string.cleared_from_cache, categories[categoryIdx]),
           Snackbar.LENGTH_SHORT
       ).show()
       true

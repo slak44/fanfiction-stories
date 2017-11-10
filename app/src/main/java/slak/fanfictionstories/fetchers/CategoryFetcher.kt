@@ -5,10 +5,9 @@ import android.util.Log
 import kotlinx.coroutines.experimental.*
 import slak.fanfictionstories.Canon
 import slak.fanfictionstories.R
-import slak.fanfictionstories.activities.CATEGORIES
-import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.activities.categories
 import slak.fanfictionstories.activities.Static
-import slak.fanfictionstories.activities.URL_COMPONENTS
+import slak.fanfictionstories.activities.categoryUrl
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.waitForNetwork
@@ -22,7 +21,7 @@ private typealias CategoryCanons = Pair<Long, List<Canon>>
 class CategoryFetcher(private val ctx: Context) : Fetcher() {
   object Cache {
     // Cache categoryIdx's result
-    private var cache = Array<CategoryCanons?>(CATEGORIES.size, { null })
+    private var cache = Array<CategoryCanons?>(categories.size, { null })
     private val cacheMapFile = File(Static.cacheDir, "category_canons.array")
     private val TAG = "CategoryCache"
 
@@ -77,11 +76,11 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
     delay(RATE_LIMIT_MILLISECONDS)
     waitForNetwork(n).await()
     try {
-      return@async2 URL("https://www.fanfiction.net/${URL_COMPONENTS[categoryIdx]}").readText()
+      return@async2 URL("https://www.fanfiction.net/${categoryUrl[categoryIdx]}").readText()
     } catch (t: Throwable) {
       // Something happened; retry
-      n.show(Static.res!!.getString(R.string.error_with_categories, CATEGORIES[categoryIdx]))
-      Log.e(TAG, "getCanonsForCategory${CATEGORIES[categoryIdx]}", t)
+      n.show(Static.res!!.getString(R.string.error_with_categories, categories[categoryIdx]))
+      Log.e(TAG, "getCanonsForCategory${categories[categoryIdx]}", t)
       delay(RATE_LIMIT_MILLISECONDS)
       return@async2 fetchCategory(categoryIdx, n).await()
     }
