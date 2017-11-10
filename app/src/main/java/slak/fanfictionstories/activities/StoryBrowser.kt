@@ -12,16 +12,14 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Spinner
-import android.widget.Switch
+import android.widget.*
 import either.Left
 import either.Right
 import kotlinx.android.synthetic.main.activity_browse_category.*
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.activity_select_category.*
 import kotlinx.android.synthetic.main.dialog_ffnet_filter.*
+import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
@@ -228,11 +226,29 @@ class CanonStoryListActivity : ActivityWithStatic() {
     spinnerSetEntries(layout, R.id.notChar1, charNameList)
     spinnerSetEntries(layout, R.id.notChar2, charNameList)
 
-    val worldNameList = fetcher.worldList.map { it.name }.toMutableList()
-    worldNameList[0] = strAny
-    spinnerSetEntries(layout, R.id.world, worldNameList)
-    worldNameList[0] = strNone
-    spinnerSetEntries(layout, R.id.notWorld, worldNameList)
+    if (fetcher.worldList.isPresent) {
+      val wl = fetcher.worldList.get()
+      val worldNameList = wl.map { it.name }.toMutableList()
+
+      worldNameList[0] = strAny
+      spinnerSetEntries(layout, R.id.world, worldNameList)
+
+      worldNameList[0] = strNone
+      spinnerSetEntries(layout, R.id.notWorld, worldNameList)
+
+      spinnerOnSelect(layout, R.id.world) { _, pos -> fetcher.details.worldId = wl[pos].id }
+      spinnerSelect(layout, R.id.world, wl.indexOfFirst { it.id == fetcher.details.worldId})
+
+      spinnerOnSelect(layout, R.id.notWorld) { _, pos -> fetcher.details.worldWithout = Optional.of(wl[pos].name) }
+      if (fetcher.details.worldWithout.isPresent) {
+        spinnerSelect(layout, R.id.notWorld, worldNameList.indexOf(fetcher.details.worldWithout.get()))
+      }
+    }
+    val worldSpinnerState = if (fetcher.worldList.isPresent) View.VISIBLE else View.GONE
+    (layout.findViewById<Spinner>(R.id.world) as Spinner).visibility = worldSpinnerState
+    (layout.findViewById<Spinner>(R.id.notWorld) as Spinner).visibility = worldSpinnerState
+    (layout.findViewById<TextView>(R.id.worldText) as TextView).visibility = worldSpinnerState
+    (layout.findViewById<TextView>(R.id.notWorldText) as TextView).visibility = worldSpinnerState
 
     spinnerOnSelect(layout, R.id.sort) { _, pos -> fetcher.details.sort = Sort.values()[pos] }
     spinnerOnSelect(layout, R.id.timeRange) { _, pos -> fetcher.details.timeRange = TimeRange.values()[pos] }
@@ -242,7 +258,6 @@ class CanonStoryListActivity : ActivityWithStatic() {
     spinnerOnSelect(layout, R.id.language) { _, pos -> fetcher.details.lang = Language.values()[pos] }
     spinnerOnSelect(layout, R.id.status) { _, pos -> fetcher.details.status = Status.values()[pos] }
     spinnerOnSelect(layout, R.id.length) { _, pos -> fetcher.details.wordCount = WordCount.values()[pos] }
-    spinnerOnSelect(layout, R.id.world) { _, pos -> fetcher.details.worldId = fetcher.worldList[pos].id }
     spinnerOnSelect(layout, R.id.char1) { _, pos -> fetcher.details.char1Id = fetcher.charList[pos].id }
     spinnerOnSelect(layout, R.id.char2) { _, pos -> fetcher.details.char2Id = fetcher.charList[pos].id }
     spinnerOnSelect(layout, R.id.char3) { _, pos -> fetcher.details.char3Id = fetcher.charList[pos].id }
@@ -259,7 +274,6 @@ class CanonStoryListActivity : ActivityWithStatic() {
     spinnerSelect(layout, R.id.language, Language.values().indexOf(fetcher.details.lang))
     spinnerSelect(layout, R.id.status, Status.values().indexOf(fetcher.details.status))
     spinnerSelect(layout, R.id.length, WordCount.values().indexOf(fetcher.details.wordCount))
-    spinnerSelect(layout, R.id.world, fetcher.worldList.indexOfFirst { it.id == fetcher.details.worldId})
     spinnerSelect(layout, R.id.char1, fetcher.charList.indexOfFirst { it.id == fetcher.details.char1Id})
     spinnerSelect(layout, R.id.char2, fetcher.charList.indexOfFirst { it.id == fetcher.details.char2Id})
     spinnerSelect(layout, R.id.char3, fetcher.charList.indexOfFirst { it.id == fetcher.details.char3Id})

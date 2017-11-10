@@ -66,6 +66,7 @@
             android:entries="@array/statuses"/>
 
         <TextView
+            android:id="@+id/worldText"
             style="@style/AppTheme.FilterSpinnerLabel"
             android:text="@string/native_world"/>
 
@@ -132,6 +133,7 @@
             style="@style/AppTheme.FilterSpinner"/>
 
         <TextView
+            android:id="@+id/notWorldText"
             style="@style/AppTheme.FilterSpinnerLabel"
             android:text="@string/native_not_world"/>
 

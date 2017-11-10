@@ -98,7 +98,7 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
   data class World(val name: String, val id: String)
   data class Character(val name: String, val id: String)
 
-  var worldList: List<World> = listOf()
+  var worldList: Optional<List<World>> = Optional.of(listOf())
   var charList: List<Character> = listOf()
 
   fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
@@ -152,12 +152,17 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
   private fun parseHtml(html: String): List<StoryModel> {
     val doc = Jsoup.parse(html)
 
-    if (worldList.isEmpty() || charList.isEmpty()) {
+    if (charList.isEmpty() || (worldList.isPresent && worldList.get().isEmpty())) {
       val filtersDiv = doc.select("#filters > form > div.modal-body")
-      val worldsElement = filtersDiv.select("select[name=\"verseid1\"]")[0]
-      worldList = worldsElement.children().map { option -> World(option.text(), option.`val`()) }
       val charsElement = filtersDiv.select("select[name=\"characterid1\"]")[0]
       charList = charsElement.children().map { option -> Character(option.text(), option.`val`()) }
+      val worldsElement = filtersDiv.select("select[name=\"verseid1\"]")
+      worldList = if (worldsElement.size == 0) {
+        Optional.empty()
+      } else {
+        Optional.of(worldsElement[0].children()
+            .map {option -> World(option.text(), option.`val`()) })
+      }
     }
 
     val list = mutableListOf<StoryModel>()
