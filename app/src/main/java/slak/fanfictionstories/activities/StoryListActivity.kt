@@ -13,6 +13,7 @@ import android.widget.Switch
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.dialog_add_story_view.*
 import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.parseSingle
 import org.jetbrains.anko.db.select
@@ -44,7 +45,7 @@ class StoryListActivity : ActivityWithStatic() {
     storyListView.adapter = adapter
     launch(CommonPool) {
       adapter!!.initDataFromDb().await()
-      if (adapter!!.stories.size == 0) nothingHere.visibility = View.VISIBLE
+      launch(UI) { if (adapter!!.stories.size == 0) nothingHere.visibility = View.VISIBLE }
     }
   }
 
