@@ -100,7 +100,7 @@
     <string name="chapter_progress">Chapter %d of %d</string>
     <string name="one_chapter">1 Chapter</string>
     <string name="x_chapters">%d Chapters</string>
-    <string name="x_words">%d words</string>
+    <string name="x_words">%s words</string>
     <string name="x_reviews">%d reviews</string>
     <string name="x_favorites">%d favorites</string>
     <string name="x_follows">%d follows</string>

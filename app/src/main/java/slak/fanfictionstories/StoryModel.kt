@@ -8,6 +8,7 @@ import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.activities.Static
 import slak.fanfictionstories.fetchers.StoryFetcher
+import slak.fanfictionstories.utility.autoSuffixNumber
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.HashMap
@@ -74,7 +75,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   val isCompleted: Boolean get() = src["isCompleted"] as Long == 1L
   val author: String get() = Static.res!!.getString(R.string.by_author, authorRaw)
   val canon: String get() = Static.res!!.getString(R.string.in_canon, canonRaw)
-  val words: String get() = Static.res!!.getString(R.string.x_words, wordCount)
+  val words: String get() = Static.res!!.getString(R.string.x_words, autoSuffixNumber(wordCount))
   val rating: String get() = Static.res!!.getString(R.string.rated_x, ratingRaw)
   val genres: String get() = Static.res!!.getString(R.string.about_genres, genresRaw)
   val characters: String get() = Static.res!!.getString(R.string.with_characters, charactersRaw)
