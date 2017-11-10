@@ -134,7 +134,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
     this.title = title
 
     StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ ->
-      startActivity(intent)
+      this@CanonStoryListActivity.startActivity(intent)
     })
 
     canonStoryListView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -281,6 +281,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
+      android.R.id.home -> onBackPressed()
       R.id.filter -> if (fetcher.charList.isNotEmpty()) openFilterDialog()
       else -> super.onOptionsItemSelected(item)
     }
