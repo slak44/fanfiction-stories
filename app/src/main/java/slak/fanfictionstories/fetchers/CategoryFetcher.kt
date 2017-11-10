@@ -7,6 +7,7 @@ import slak.fanfictionstories.Canon
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.CATEGORIES
 import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.activities.Static
 import slak.fanfictionstories.activities.URL_COMPONENTS
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.async2
@@ -22,7 +23,7 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
   object Cache {
     // Cache categoryIdx's result
     private var cache = Array<CategoryCanons?>(CATEGORIES.size, { null })
-    private val cacheMapFile = File(MainActivity.cacheDirectory, "category_canons.array")
+    private val cacheMapFile = File(Static.cacheDir, "category_canons.array")
     private val TAG = "CategoryCache"
 
     fun deserialize() = async2(CommonPool) {
@@ -79,7 +80,7 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
       return@async2 URL("https://www.fanfiction.net/${URL_COMPONENTS[categoryIdx]}").readText()
     } catch (t: Throwable) {
       // Something happened; retry
-      n.show(MainActivity.res.getString(R.string.error_with_categories, CATEGORIES[categoryIdx]))
+      n.show(Static.res!!.getString(R.string.error_with_categories, CATEGORIES[categoryIdx]))
       Log.e(TAG, "getCanonsForCategory${CATEGORIES[categoryIdx]}", t)
       delay(RATE_LIMIT_MILLISECONDS)
       return@async2 fetchCategory(categoryIdx, n).await()

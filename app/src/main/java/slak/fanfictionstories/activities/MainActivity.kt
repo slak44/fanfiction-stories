@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
@@ -22,18 +23,38 @@ import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.database
 import java.util.concurrent.TimeUnit
 
-class MainActivity : AppCompatActivity() {
+object Static {
+  var res: Resources? = null
+    private set
+  var cm: ConnectivityManager? = null
+    private set
+  var cacheDir: File? = null
+    private set
+
+  fun init(context: Context) {
+    if (res == null) res = context.resources
+    if (cm == null)
+      cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    if (cacheDir == null) cacheDir = context.cacheDir
+  }
+}
+
+abstract class ActivityWithStatic : AppCompatActivity() {
+  private var cacheInited: Boolean = false
+  override fun onCreate(savedInstanceState: Bundle?) {
+    Static.init(this)
+    // Re-create cache
+    if (!cacheInited) {
+      CategoryFetcher.Cache.deserialize()
+      cacheInited = true
+    }
+    super.onCreate(savedInstanceState)
+  }
+}
+
+class MainActivity : ActivityWithStatic() {
   companion object {
     private const val TAG = "MainActivity"
-
-    lateinit var res: Resources
-      private set
-
-    lateinit var cm: ConnectivityManager
-      private set
-
-    lateinit var cacheDirectory: File
-      private set
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,16 +64,6 @@ class MainActivity : AppCompatActivity() {
 
     // Update alarm
     initAlarm(this)
-
-    // Set static instances
-    // In case this application is ever opened without going through this MainActivity, some code
-    // will be required to init those from whatever other activity we enter from
-    res = resources
-    cacheDirectory = cacheDir
-    cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-    // Init this cache
-    CategoryFetcher.Cache.deserialize()
 
     // FIXME: set drawable and text string for resume button if a story is available to be resumed
     // FIXME: do the above in onResume as well
@@ -91,7 +102,7 @@ class MainActivity : AppCompatActivity() {
       }
       downloadNotifBtn.setOnClickListener {
         val notifs = Notifications(this, Notifications.Kind.DOWNLOADING)
-        notifs.show(res.getString(R.string.waiting_for_connection))
+        notifs.show(resources.getString(R.string.waiting_for_connection))
         launch(UI) {
           delay(2500)
           notifs.cancel()

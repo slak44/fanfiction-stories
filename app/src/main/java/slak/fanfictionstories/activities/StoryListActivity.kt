@@ -24,7 +24,7 @@ import slak.fanfictionstories.utility.database
 import slak.fanfictionstories.utility.iconTint
 import java.util.*
 
-class StoryListActivity : AppCompatActivity() {
+class StoryListActivity : ActivityWithStatic() {
   private var adapter: StoryAdapter? = null
   private var lastStoryId: Optional<Long> = Optional.empty()
 
@@ -42,7 +42,7 @@ class StoryListActivity : AppCompatActivity() {
     // FIXME read the stored strategy from somewhere and set it
     adapter = StoryAdapter(this@StoryListActivity)
     storyListView.adapter = adapter
-    async2(CommonPool) {
+    launch(CommonPool) {
       adapter!!.initDataFromDb().await()
       if (adapter!!.stories.size == 0) nothingHere.visibility = View.VISIBLE
     }

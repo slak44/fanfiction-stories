@@ -6,6 +6,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.activities.Static
 import slak.fanfictionstories.fetchers.StoryFetcher
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,9 +31,9 @@ enum class StoryStatus {
   }
 
   fun toUIString(): String = when (this) {
-    SEEN -> MainActivity.res.getString(R.string.seen)
-    REMOTE -> MainActivity.res.getString(R.string.remote)
-    LOCAL -> MainActivity.res.getString(R.string.local)
+    SEEN -> Static.res!!.getString(R.string.seen)
+    REMOTE -> Static.res!!.getString(R.string.remote)
+    LOCAL -> Static.res!!.getString(R.string.local)
   }
 }
 
@@ -66,20 +67,20 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   val chapterCount: Int = (src["chapters"] as Long).toInt()
   val title = src["title"] as String
   val summary = src["summary"] as String
-  val category: String = MainActivity.res.getString(R.string.in_category, categoryRaw)
+  val category: String = Static.res!!.getString(R.string.in_category, categoryRaw)
   val language = src["language"] as String
   val currentChapter: Int = (src["currentChapter"] as Long).toInt()
-  val storyId: String get() = MainActivity.res.getString(R.string.storyid_x, storyIdRaw)
+  val storyId: String get() = Static.res!!.getString(R.string.storyid_x, storyIdRaw)
   val isCompleted: Boolean get() = src["isCompleted"] as Long == 1L
-  val author: String get() = MainActivity.res.getString(R.string.by_author, authorRaw)
-  val canon: String get() = MainActivity.res.getString(R.string.in_canon, canonRaw)
-  val words: String get() = MainActivity.res.getString(R.string.x_words, wordCount)
-  val rating: String get() = MainActivity.res.getString(R.string.rated_x, ratingRaw)
-  val genres: String get() = MainActivity.res.getString(R.string.about_genres, genresRaw)
-  val characters: String get() = MainActivity.res.getString(R.string.with_characters, charactersRaw)
-  val reviews: String get() = MainActivity.res.getString(R.string.x_reviews, reviewsCount)
-  val favorites: String get() = MainActivity.res.getString(R.string.x_favorites, favoritesCount)
-  val follows: String get() = MainActivity.res.getString(R.string.x_follows, followsCount)
+  val author: String get() = Static.res!!.getString(R.string.by_author, authorRaw)
+  val canon: String get() = Static.res!!.getString(R.string.in_canon, canonRaw)
+  val words: String get() = Static.res!!.getString(R.string.x_words, wordCount)
+  val rating: String get() = Static.res!!.getString(R.string.rated_x, ratingRaw)
+  val genres: String get() = Static.res!!.getString(R.string.about_genres, genresRaw)
+  val characters: String get() = Static.res!!.getString(R.string.with_characters, charactersRaw)
+  val reviews: String get() = Static.res!!.getString(R.string.x_reviews, reviewsCount)
+  val favorites: String get() = Static.res!!.getString(R.string.x_favorites, favoritesCount)
+  val follows: String get() = Static.res!!.getString(R.string.x_follows, followsCount)
   val wordsProgressedApprox: Int get() {
     if (currentChapter == 0) return 0
     // If this is too inaccurate, we might have to store each chapter's word count, then compute
@@ -100,11 +101,11 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
     // If we didn't start reading the thing, show total chapter count
     if (currentChapter == 0) {
       // Special-case one chapter
-      if (chapterCount == 1) return MainActivity.res.getString(R.string.one_chapter)
-      else return MainActivity.res.getString(R.string.x_chapters, chapterCount)
+      if (chapterCount == 1) return Static.res!!.getString(R.string.one_chapter)
+      else return Static.res!!.getString(R.string.x_chapters, chapterCount)
     }
     // Otherwise, list current chapter out of total
-    else return MainActivity.res.getString(R.string.chapter_progress, currentChapter, chapterCount)
+    else return Static.res!!.getString(R.string.chapter_progress, currentChapter, chapterCount)
   }
 
   // Dates
@@ -117,9 +118,9 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   private val updateDateFormatted: String
     get() = SimpleDateFormat.getDateInstance().format(Date(updateDateSeconds * 1000))
   val publishDate: String
-    get() = MainActivity.res.getString(R.string.published_on, publishDateFormatted)
+    get() = Static.res!!.getString(R.string.published_on, publishDateFormatted)
   val updateDate: String
-    get() = MainActivity.res.getString(R.string.updated_on, updateDateFormatted)
+    get() = Static.res!!.getString(R.string.updated_on, updateDateFormatted)
 
   fun toKvPairs(): Array<Pair<String, Any>> {
     return src.entries.map { Pair(it.key, it.value) }.toTypedArray()

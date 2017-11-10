@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.activities.Static
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.Notifications
@@ -149,8 +150,8 @@ class StoryGroupTitle : TextView {
 
   companion object {
     private val borderHeight =
-        MainActivity.res.getDimensionPixelSize(R.dimen.story_list_title_divider_height)
-    private val bottomMargin = MainActivity.res.getDimensionPixelSize(R.dimen.story_list_margin)
+        Static.res!!.getDimensionPixelSize(R.dimen.story_list_title_divider_height)
+    private val bottomMargin = Static.res!!.getDimensionPixelSize(R.dimen.story_list_margin)
   }
 
   init {
@@ -161,8 +162,7 @@ class StoryGroupTitle : TextView {
   private val border: Paint by lazy {
     val border = Paint()
     border.style = Paint.Style.STROKE
-    border.color =
-        MainActivity.res.getColor(android.R.color.secondary_text_dark, this.context.theme)
+    border.color = Static.res!!.getColor(android.R.color.secondary_text_dark, this.context.theme)
     border.strokeWidth = borderHeight.toFloat()
     border
   }
@@ -186,7 +186,7 @@ enum class GroupStrategy {
   // Don't do grouping
   NONE;
 
-  fun toUIString(): String = MainActivity.res.getString(when (this) {
+  fun toUIString(): String = Static.res!!.getString(when (this) {
     CANON -> R.string.group_canon
     AUTHOR -> R.string.group_author
     CATEGORY -> R.string.group_category
@@ -204,7 +204,7 @@ enum class GroupStrategy {
 fun groupStories(stories: MutableList<StoryModel>,
                          strategy: GroupStrategy): Map<String, MutableList<StoryModel>> {
   if (strategy == GroupStrategy.NONE)
-    return mapOf(MainActivity.res.getString(R.string.all_stories) to stories)
+    return mapOf(Static.res!!.getString(R.string.all_stories) to stories)
   val srcKey = when (strategy) {
     GroupStrategy.CANON -> "canon"
     GroupStrategy.AUTHOR -> "author"
@@ -220,8 +220,8 @@ fun groupStories(stories: MutableList<StoryModel>,
     val value: String = when (strategy) {
       GroupStrategy.STATUS -> StoryStatus.fromString(it.src[srcKey] as String).toUIString()
       GroupStrategy.COMPLETION ->
-        if (it.src[srcKey] as Long == 1L) MainActivity.res.getString(R.string.completed)
-        else MainActivity.res.getString(R.string.in_progress)
+        if (it.src[srcKey] as Long == 1L) Static.res!!.getString(R.string.completed)
+        else Static.res!!.getString(R.string.in_progress)
       else -> it.src[srcKey] as String
     }
     if (map[value] == null) map[value] = mutableListOf()
@@ -265,7 +265,7 @@ enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
   // Other
   TITLE_ALPHABETIC(titleAlphabetic);
 
-  fun toUIString(): String = MainActivity.res.getString(when (this) {
+  fun toUIString(): String = Static.res!!.getString(when (this) {
     WORD_COUNT -> R.string.order_word_count
     PROGRESS -> R.string.order_progress
     REVIEW_COUNT -> R.string.order_reviews

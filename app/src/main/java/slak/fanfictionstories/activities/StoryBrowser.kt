@@ -25,6 +25,7 @@ import kotlinx.android.synthetic.main.dialog_ffnet_filter.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
 import slak.fanfictionstories.R
@@ -37,12 +38,12 @@ import slak.fanfictionstories.utility.iconTint
 import java.util.*
 import kotlin.properties.Delegates
 
-val CATEGORIES = MainActivity.res.getStringArray(R.array.categories)
-val URL_COMPONENTS = MainActivity.res.getStringArray(R.array.categories_url_components)
+val CATEGORIES by lazy { Static.res!!.getStringArray(R.array.categories) }
+val URL_COMPONENTS by lazy { Static.res!!.getStringArray(R.array.categories_url_components) }
 
 private val CATEGORIES_IDX_EXTRA_ID = "category_idx"
 
-class SelectCategoryActivity : AppCompatActivity() {
+class SelectCategoryActivity : ActivityWithStatic() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_select_category)
@@ -63,7 +64,7 @@ private val CANON_TITLE_EXTRA_ID = "canon_title"
 private val SRC_CATEGORY_EXTRA_ID = "category_title"
 private val CANON_URL_EXTRA_ID = "canon_url"
 
-class BrowseCategoryActivity : AppCompatActivity() {
+class BrowseCategoryActivity : ActivityWithStatic() {
   private var categoryIdx: Int by Delegates.notNull()
   private lateinit var canons: List<Canon>
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,7 +110,7 @@ class BrowseCategoryActivity : AppCompatActivity() {
   }
 }
 
-class CanonStoryListActivity : AppCompatActivity() {
+class CanonStoryListActivity : ActivityWithStatic() {
   private lateinit var adapter: StoryAdapter
   private lateinit var layoutManager: LinearLayoutManager
   private lateinit var fetcher: CanonFetcher
@@ -139,8 +140,6 @@ class CanonStoryListActivity : AppCompatActivity() {
       startActivity(intent)
     })
 
-    addPage(1)
-
     canonStoryListView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
       override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
         // We only want scroll downs
@@ -151,7 +150,7 @@ class CanonStoryListActivity : AppCompatActivity() {
         if ((visibleItemCount + pastVisiblesItems) >= totalItemCount) {
           // There are lots of scroll events, so use a lock to make sure we don't overdo it
           if (addPageLock.isLocked) return
-          async2(CommonPool) {
+          launch(CommonPool) {
             addPageLock.lock()
             addPage(++currentPage).await()
             addPageLock.unlock()
@@ -159,6 +158,10 @@ class CanonStoryListActivity : AppCompatActivity() {
         }
       }
     })
+
+    launch(CommonPool) {
+      addPage(1).await()
+    }
   }
 
   private fun addPage(page: Int) = async2(UI) {

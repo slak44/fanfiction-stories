@@ -7,7 +7,7 @@ import kotlinx.coroutines.experimental.sync.withLock
 import org.jsoup.Jsoup
 import org.jsoup.nodes.TextNode
 import slak.fanfictionstories.*
-import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.activities.Static
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.waitForNetwork
@@ -141,7 +141,7 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
             .readText()
       } catch (t: Throwable) {
         // Something happened; retry
-        n.show(MainActivity.res.getString(R.string.error_with_canon_stories, details.title))
+        n.show(Static.res!!.getString(R.string.error_with_canon_stories, details.title))
         Log.e(TAG, "CanonFetcher: retry", t)
         delay(RATE_LIMIT_MILLISECONDS)
         return@withLock fetchPage(page, n).await()

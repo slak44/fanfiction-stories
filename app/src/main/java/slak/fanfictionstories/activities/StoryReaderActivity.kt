@@ -72,7 +72,7 @@ private class FastTextView : View {
   }
 }
 
-class StoryReaderActivity : AppCompatActivity() {
+class StoryReaderActivity : ActivityWithStatic() {
 
   companion object {
     const val INTENT_STORY_MODEL = "bundle"
@@ -102,7 +102,7 @@ class StoryReaderActivity : AppCompatActivity() {
     title = model.title
     currentChapter = if (model.currentChapter == 0) 1 else model.currentChapter
 
-    async2(UI) {
+    launch(UI) {
       initText(currentChapter).await()
       restoreScrollStatus()
     }
