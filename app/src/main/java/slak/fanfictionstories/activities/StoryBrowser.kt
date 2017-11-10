@@ -33,6 +33,8 @@ import slak.fanfictionstories.Canon
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.iconTint
+import slak.fanfictionstories.utility.onSelect
+import slak.fanfictionstories.utility.setEntries
 import java.util.*
 import kotlin.properties.Delegates
 
@@ -182,29 +184,6 @@ class CanonStoryListActivity : ActivityWithStatic() {
     return true
   }
 
-  private fun spinnerOnSelect(layout: View, @IdRes id: Int,
-                              block: (spinner: Spinner, position: Int) -> Unit) {
-    val spinner = layout.findViewById<Spinner>(id) as Spinner
-    spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-      override fun onNothingSelected(parent: AdapterView<*>?) {}
-      override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        block(spinner, position)
-      }
-    }
-  }
-
-  private fun spinnerSetEntries(layout: View, @IdRes id: Int, entries: List<String>) {
-    val spinner = layout.findViewById<Spinner>(id) as Spinner
-    val adapter = ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item)
-    adapter.addAll(entries)
-    spinner.adapter = adapter
-  }
-
-  private fun spinnerSelect(layout: View, @IdRes id: Int, position: Int) {
-    val spinner = layout.findViewById<Spinner>(id) as Spinner
-    spinner.setSelection(position)
-  }
-
   private fun openFilterDialog() {
     val layout = LayoutInflater.from(this)
         .inflate(R.layout.dialog_ffnet_filter, null, false)
@@ -212,84 +191,83 @@ class CanonStoryListActivity : ActivityWithStatic() {
     val strNone = resources.getString(R.string.none)
     val strAny = resources.getString(R.string.any)
 
-    val genresEdit = resources.getStringArray(R.array.genres).toMutableList()
-    genresEdit[0] = strNone
-    spinnerSetEntries(layout, R.id.notGenre, genresEdit)
+    with(layout) {
+      val genresEdit = resources.getStringArray(R.array.genres).toMutableList()
+      genresEdit[0] = strNone
+      notGenre.setEntries(genresEdit)
 
-    val charNameList = fetcher.charList.map { it.name }.toMutableList()
-    charNameList[0] = strAny
-    spinnerSetEntries(layout, R.id.char1, charNameList)
-    spinnerSetEntries(layout, R.id.char2, charNameList)
-    spinnerSetEntries(layout, R.id.char3, charNameList)
-    spinnerSetEntries(layout, R.id.char4, charNameList)
-    charNameList[0] = strNone
-    spinnerSetEntries(layout, R.id.notChar1, charNameList)
-    spinnerSetEntries(layout, R.id.notChar2, charNameList)
+      val charNameList = fetcher.charList.map { it.name }.toMutableList()
+      charNameList[0] = strAny
+      char1.setEntries(charNameList)
+      char2.setEntries(charNameList)
+      char3.setEntries(charNameList)
+      char4.setEntries(charNameList)
+      charNameList[0] = strNone
+      notChar1.setEntries(charNameList)
+      notChar2.setEntries(charNameList)
 
-    if (fetcher.worldList.isPresent) {
-      val wl = fetcher.worldList.get()
-      val worldNameList = wl.map { it.name }.toMutableList()
+      sort.onSelect { _, pos -> fetcher.details.sort = Sort.values()[pos] }
+      timeRange.onSelect { _, pos -> fetcher.details.timeRange = TimeRange.values()[pos] }
+      genre1.onSelect { _, pos -> fetcher.details.genre1 = Genre.values()[pos] }
+      genre2.onSelect { _, pos -> fetcher.details.genre2 = Genre.values()[pos] }
+      rating.onSelect { _, pos -> fetcher.details.rating = Rating.values()[pos] }
+      language.onSelect { _, pos -> fetcher.details.lang = Language.values()[pos] }
+      status.onSelect { _, pos -> fetcher.details.status = Status.values()[pos] }
+      length.onSelect { _, pos -> fetcher.details.wordCount = WordCount.values()[pos] }
+      char1.onSelect { _, pos -> fetcher.details.char1Id = fetcher.charList[pos].id }
+      char2.onSelect { _, pos -> fetcher.details.char2Id = fetcher.charList[pos].id }
+      char3.onSelect { _, pos -> fetcher.details.char3Id = fetcher.charList[pos].id }
+      char4.onSelect { _, pos -> fetcher.details.char4Id = fetcher.charList[pos].id }
+      notChar1.onSelect { _, pos -> fetcher.details.char1Without = Optional.of(fetcher.charList[pos].id) }
+      notChar2.onSelect { _, pos -> fetcher.details.char2Without = Optional.of(fetcher.charList[pos].id) }
+      notGenre.onSelect { _, pos -> fetcher.details.genreWithout = Optional.of(Genre.values()[pos]) }
 
-      worldNameList[0] = strAny
-      spinnerSetEntries(layout, R.id.world, worldNameList)
+      sort.setSelection(Sort.values().indexOf(fetcher.details.sort))
+      timeRange.setSelection(TimeRange.values().indexOf(fetcher.details.timeRange))
+      genre1.setSelection(Genre.values().indexOf(fetcher.details.genre1))
+      genre2.setSelection(Genre.values().indexOf(fetcher.details.genre2))
+      rating.setSelection(Rating.values().indexOf(fetcher.details.rating))
+      language.setSelection(Language.values().indexOf(fetcher.details.lang))
+      status.setSelection(Status.values().indexOf(fetcher.details.status))
+      length.setSelection(WordCount.values().indexOf(fetcher.details.wordCount))
+      char1.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char1Id})
+      char2.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char2Id})
+      char3.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char3Id})
+      char4.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char4Id})
 
-      worldNameList[0] = strNone
-      spinnerSetEntries(layout, R.id.notWorld, worldNameList)
+      if (fetcher.worldList.isPresent) {
+        val wl = fetcher.worldList.get()
+        val worldNameList = wl.map { it.name }.toMutableList()
 
-      spinnerOnSelect(layout, R.id.world) { _, pos -> fetcher.details.worldId = wl[pos].id }
-      spinnerSelect(layout, R.id.world, wl.indexOfFirst { it.id == fetcher.details.worldId})
+        worldNameList[0] = strAny
+        world.setEntries(worldNameList)
 
-      spinnerOnSelect(layout, R.id.notWorld) { _, pos -> fetcher.details.worldWithout = Optional.of(wl[pos].name) }
-      if (fetcher.details.worldWithout.isPresent) {
-        spinnerSelect(layout, R.id.notWorld, worldNameList.indexOf(fetcher.details.worldWithout.get()))
+        worldNameList[0] = strNone
+        notWorld.setEntries(worldNameList)
+
+        world.onSelect { _, pos -> fetcher.details.worldId = wl[pos].id }
+        world.setSelection(wl.indexOfFirst { it.id == fetcher.details.worldId})
+
+        notWorld.onSelect { _, pos -> fetcher.details.worldWithout = Optional.of(wl[pos].name) }
+        if (fetcher.details.worldWithout.isPresent) {
+          notWorld.setSelection(worldNameList.indexOf(fetcher.details.worldWithout.get()))
+        }
       }
-    }
-    val worldSpinnerState = if (fetcher.worldList.isPresent) View.VISIBLE else View.GONE
-    (layout.findViewById<Spinner>(R.id.world) as Spinner).visibility = worldSpinnerState
-    (layout.findViewById<Spinner>(R.id.notWorld) as Spinner).visibility = worldSpinnerState
-    (layout.findViewById<TextView>(R.id.worldText) as TextView).visibility = worldSpinnerState
-    (layout.findViewById<TextView>(R.id.notWorldText) as TextView).visibility = worldSpinnerState
+      val worldSpinnerState = if (fetcher.worldList.isPresent) View.VISIBLE else View.GONE
+      world.visibility = worldSpinnerState
+      notWorld.visibility = worldSpinnerState
+      worldText.visibility = worldSpinnerState
+      notWorldText.visibility = worldSpinnerState
 
-    spinnerOnSelect(layout, R.id.sort) { _, pos -> fetcher.details.sort = Sort.values()[pos] }
-    spinnerOnSelect(layout, R.id.timeRange) { _, pos -> fetcher.details.timeRange = TimeRange.values()[pos] }
-    spinnerOnSelect(layout, R.id.genre1) { _, pos -> fetcher.details.genre1 = Genre.values()[pos] }
-    spinnerOnSelect(layout, R.id.genre2) { _, pos -> fetcher.details.genre2 = Genre.values()[pos] }
-    spinnerOnSelect(layout, R.id.rating) { _, pos -> fetcher.details.rating = Rating.values()[pos] }
-    spinnerOnSelect(layout, R.id.language) { _, pos -> fetcher.details.lang = Language.values()[pos] }
-    spinnerOnSelect(layout, R.id.status) { _, pos -> fetcher.details.status = Status.values()[pos] }
-    spinnerOnSelect(layout, R.id.length) { _, pos -> fetcher.details.wordCount = WordCount.values()[pos] }
-    spinnerOnSelect(layout, R.id.char1) { _, pos -> fetcher.details.char1Id = fetcher.charList[pos].id }
-    spinnerOnSelect(layout, R.id.char2) { _, pos -> fetcher.details.char2Id = fetcher.charList[pos].id }
-    spinnerOnSelect(layout, R.id.char3) { _, pos -> fetcher.details.char3Id = fetcher.charList[pos].id }
-    spinnerOnSelect(layout, R.id.char4) { _, pos -> fetcher.details.char4Id = fetcher.charList[pos].id }
-    spinnerOnSelect(layout, R.id.notChar1) { _, pos -> fetcher.details.char1Without = Optional.of(fetcher.charList[pos].id) }
-    spinnerOnSelect(layout, R.id.notChar2) { _, pos -> fetcher.details.char2Without = Optional.of(fetcher.charList[pos].id) }
-    spinnerOnSelect(layout, R.id.notGenre) { _, pos -> fetcher.details.genreWithout = Optional.of(Genre.values()[pos]) }
-
-    spinnerSelect(layout, R.id.sort, Sort.values().indexOf(fetcher.details.sort))
-    spinnerSelect(layout, R.id.timeRange, TimeRange.values().indexOf(fetcher.details.timeRange))
-    spinnerSelect(layout, R.id.genre1, Genre.values().indexOf(fetcher.details.genre1))
-    spinnerSelect(layout, R.id.genre2, Genre.values().indexOf(fetcher.details.genre2))
-    spinnerSelect(layout, R.id.rating, Rating.values().indexOf(fetcher.details.rating))
-    spinnerSelect(layout, R.id.language, Language.values().indexOf(fetcher.details.lang))
-    spinnerSelect(layout, R.id.status, Status.values().indexOf(fetcher.details.status))
-    spinnerSelect(layout, R.id.length, WordCount.values().indexOf(fetcher.details.wordCount))
-    spinnerSelect(layout, R.id.char1, fetcher.charList.indexOfFirst { it.id == fetcher.details.char1Id})
-    spinnerSelect(layout, R.id.char2, fetcher.charList.indexOfFirst { it.id == fetcher.details.char2Id})
-    spinnerSelect(layout, R.id.char3, fetcher.charList.indexOfFirst { it.id == fetcher.details.char3Id})
-    spinnerSelect(layout, R.id.char4, fetcher.charList.indexOfFirst { it.id == fetcher.details.char4Id})
-
-    if (fetcher.details.genreWithout.isPresent) {
-      spinnerSelect(layout, R.id.notGenre,
-          Genre.values().indexOf(fetcher.details.genreWithout.get()))
-    }
-    if (fetcher.details.char1Without.isPresent) {
-      spinnerSelect(layout, R.id.notChar1,
-          charNameList.indexOf(fetcher.details.char1Without.get()))
-    }
-    if (fetcher.details.char2Without.isPresent) {
-      spinnerSelect(layout, R.id.notChar2,
-          charNameList.indexOf(fetcher.details.char2Without.get()))
+      if (fetcher.details.genreWithout.isPresent) {
+        notGenre.setSelection(Genre.values().indexOf(fetcher.details.genreWithout.get()))
+      }
+      if (fetcher.details.char1Without.isPresent) {
+        notChar1.setSelection(charNameList.indexOf(fetcher.details.char1Without.get()))
+      }
+      if (fetcher.details.char2Without.isPresent) {
+        notChar2.setSelection(charNameList.indexOf(fetcher.details.char2Without.get()))
+      }
     }
 
     AlertDialog.Builder(this)

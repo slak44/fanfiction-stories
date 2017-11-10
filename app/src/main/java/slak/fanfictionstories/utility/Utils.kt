@@ -11,6 +11,10 @@ import android.support.annotation.StringRes
 import android.text.style.ReplacementSpan
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.TextView
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
@@ -116,4 +120,26 @@ class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpa
                     y: Int, bottom: Int, paint: Paint) {
     canvas.drawRect(x, top.toFloat(), (y + width).toFloat(), (top + heightPx).toFloat(), paint)
   }
+}
+
+/**
+ * Pretty wrapper for [AdapterView.OnItemSelectedListener] in the common case where only
+ * onItemSelected needs to be overridden
+ */
+fun Spinner.onSelect(block: (spinner: Spinner, position: Int) -> Unit) {
+  this.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+    override fun onNothingSelected(parent: AdapterView<*>?) {}
+    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+      block(this@onSelect, position)
+    }
+  }
+}
+
+/**
+ * Set [Spinner] entries using [android.R.layout.simple_spinner_dropdown_item] and a [ArrayAdapter].
+ */
+fun <T> Spinner.setEntries(entries: List<T>) {
+  val adapter = ArrayAdapter<T>(context, android.R.layout.simple_spinner_dropdown_item)
+  adapter.addAll(entries)
+  this.adapter = adapter
 }
