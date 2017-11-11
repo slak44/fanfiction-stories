@@ -57,8 +57,7 @@ class StoryListActivity : ActivityWithStatic() {
             .whereSimple("storyId = ?", lastStoryId.get().toString())
             .exec { parseSingle(StoryModel.dbParser) }
         val idx = adapter!!.stories.indexOfFirst { it.storyIdRaw == lastStoryId.get() }
-        adapter!!.stories[idx] = newModel
-        adapter!!.initDataFromDb()
+        launch(UI) { adapter!!.updateStory(idx, newModel) }
       }
     }
   }

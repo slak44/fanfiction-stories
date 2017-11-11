@@ -20,7 +20,6 @@ import either.fold
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.activities.Static
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.getFullStory
@@ -291,7 +290,9 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   // Story or group title
   private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
 
+  // Adapter data, but only with the stories
   var stories: MutableList<StoryModel> = mutableListOf()
+    private set
 
   var groupStrategy: GroupStrategy = GroupStrategy.NONE
   var orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC
@@ -303,18 +304,25 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     notifyItemRangeRemoved(0, dataSize)
   }
 
-  fun addData(story: Either<StoryModel, String>) {
-    data.add(story)
-    story.fold( { stories.add(it) }, { false })
+  fun addData(storyOrTitle: Either<StoryModel, String>) {
+    data.add(storyOrTitle)
+    storyOrTitle.fold( { stories.add(it) }, { false })
     notifyItemInserted(data.size - 1)
   }
 
-  fun addData(storyList: List<Either<StoryModel, String>>) {
-    data.addAll(storyList)
-    storyList.forEach {
+  fun addData(storyOrTitleList: List<Either<StoryModel, String>>) {
+    data.addAll(storyOrTitleList)
+    storyOrTitleList.forEach {
       it.fold( { stories.add(it) }, { false })
     }
-    notifyItemRangeInserted(data.size, storyList.size)
+    notifyItemRangeInserted(data.size, storyOrTitleList.size)
+  }
+
+  fun updateStory(storyIdx: Int, storyModel: StoryModel) {
+    val storyDataIdx = data.indexOf(Left(stories[storyIdx]))
+    data[storyDataIdx] = Left(storyModel)
+    stories[storyIdx] = storyModel
+    notifyItemChanged(storyDataIdx)
   }
 
   // FIXME this does not belong here
