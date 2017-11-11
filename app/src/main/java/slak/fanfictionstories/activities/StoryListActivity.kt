@@ -9,7 +9,9 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import android.widget.Switch
+import either.Left
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.dialog_add_story_view.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -67,15 +69,15 @@ class StoryListActivity : ActivityWithStatic() {
         .setTitle(R.string.story_by_id_title)
         .setView(R.layout.dialog_add_story_view)
         .setPositiveButton(R.string.add, { dialog, _ ->
+          val editText = (dialog as AlertDialog).findViewById<EditText>(R.id.dialogStoryId)!!
+          val id = editText.text.toString().toLong()
           dialog.dismiss()
-          val id = dialogStoryId.text.toString().toLong()
           val n = Notifications(this@StoryListActivity, Notifications.Kind.DOWNLOADING)
           launch(CommonPool) {
             val model = getFullStory(this@StoryListActivity, id, n).await()
             n.cancel()
             if (model.isPresent) {
-              adapter!!.stories.add(model.get())
-              adapter!!.initDataFromDb()
+              launch(UI) { adapter!!.addData(Left(model.get())) }
             }
           }
         })

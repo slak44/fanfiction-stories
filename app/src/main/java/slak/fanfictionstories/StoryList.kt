@@ -334,14 +334,8 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     val toData = stories.filter { true } // FIXME filter
     groupStories(toData.toMutableList(), groupStrategy).forEach {
       val ordered = orderStories(it.value, orderStrategy, orderDirection)
-      data.add(Right(it.key))
-      data.addAll(ordered.map { Left(it) })
+      launch(UI) { addData(listOf(Right(it.key), *ordered.map { Left(it) }.toTypedArray())) }
     }
-
-    launch(UI) {
-      notifyDataSetChanged()
-    }
-    return@async2
   }
 
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
