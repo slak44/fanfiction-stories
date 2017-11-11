@@ -151,14 +151,22 @@ class StoryReaderActivity : ActivityWithStatic() {
 
   private fun initText(chapterToRead: Int) = async2(CommonPool) {
     val text: String = readChapter(model.storyIdRaw, chapterToRead).await()
+    val chapterWordCount = autoSuffixNumber(text.split(Regex("\\w+")).size)
 
     async2(UI) {
+      chapterWordCountText.text = resources.getString(R.string.x_words, chapterWordCount)
+      currentChapterText.text = resources.getString(
+          R.string.chapter_progress, chapterToRead, model.chapterCount)
+      // This data is more or less useless with only one chapter, so we hide it
+      val extraDataVisibility = if (model.chapterCount == 1) View.GONE else View.VISIBLE
+      chapterWordCountText.visibility = extraDataVisibility
+      currentChapterText.visibility = extraDataVisibility
+
       chapterText.forceLayout()
     }.await()
 
-    val html =
-        Html.fromHtml(
-            text, Html.FROM_HTML_MODE_LEGACY, null, tagHandlerFactory(chapterText.width))
+    val html = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY,
+        null, tagHandlerFactory(chapterText.width))
 
     chapterText.setText(html).await()
 
