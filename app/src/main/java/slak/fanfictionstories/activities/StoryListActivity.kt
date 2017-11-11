@@ -25,7 +25,7 @@ import slak.fanfictionstories.utility.iconTint
 import java.util.*
 
 class StoryListActivity : ActivityWithStatic() {
-  private var adapter: StoryAdapter? = null
+  private lateinit var adapter: StoryAdapter
   private var lastStoryId: Optional<Long> = Optional.empty()
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,10 +43,10 @@ class StoryListActivity : ActivityWithStatic() {
     adapter = StoryAdapter(this@StoryListActivity)
     storyListView.adapter = adapter
     launch(CommonPool) {
-      adapter!!.setStories(database.getStories().await().toMutableList())
+      adapter.setStories(database.getStories().await().toMutableList())
       launch(UI) {
-        adapter!!.arrangeStories()
-        if (adapter!!.getStories().isEmpty()) nothingHere.visibility = View.VISIBLE
+        adapter.arrangeStories()
+        if (adapter.getStories().isEmpty()) nothingHere.visibility = View.VISIBLE
       }
     }
   }
@@ -54,12 +54,12 @@ class StoryListActivity : ActivityWithStatic() {
   override fun onResume() {
     super.onResume()
     launch(CommonPool) {
-      if (lastStoryId.isPresent && adapter != null) database.use {
+      if (lastStoryId.isPresent) database.use {
         val newModel = select("stories")
             .whereSimple("storyId = ?", lastStoryId.get().toString())
             .exec { parseSingle(StoryModel.dbParser) }
-        val idx = adapter!!.getStories().indexOfFirst { it.storyIdRaw == lastStoryId.get() }
-        launch(UI) { adapter!!.updateStory(idx, newModel) }
+        val idx = adapter.getStories().indexOfFirst { it.storyIdRaw == lastStoryId.get() }
+        launch(UI) { adapter.updateStory(idx, newModel) }
       }
     }
   }
@@ -77,7 +77,7 @@ class StoryListActivity : ActivityWithStatic() {
             val model = getFullStory(this@StoryListActivity, id, n).await()
             n.cancel()
             if (model.isPresent) {
-              launch(UI) { adapter!!.addData(Left(model.get())) }
+              launch(UI) { adapter.addData(Left(model.get())) }
             }
           }
         })
@@ -91,8 +91,8 @@ class StoryListActivity : ActivityWithStatic() {
         .setItems(GroupStrategy.values().map { it.toUIString() }.toTypedArray(), { dialog, which ->
           dialog.dismiss()
           // FIXME store the chosen group strategy somewhere
-          adapter!!.groupStrategy = GroupStrategy.values()[which]
-          adapter!!.arrangeStories()
+          adapter.groupStrategy = GroupStrategy.values()[which]
+          adapter.arrangeStories()
         }).show()
   }
 
@@ -108,10 +108,10 @@ class StoryListActivity : ActivityWithStatic() {
         .setItems(OrderStrategy.values().map { it.toUIString() }.toTypedArray(), { dialog, which ->
           dialog.dismiss()
           // FIXME store the chosen order strategy somewhere
-          adapter!!.orderStrategy = OrderStrategy.values()[which]
-          adapter!!.orderDirection =
+          adapter.orderStrategy = OrderStrategy.values()[which]
+          adapter.orderDirection =
               if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC
-          adapter!!.arrangeStories()
+          adapter.arrangeStories()
         })
         .show()
   }
@@ -119,10 +119,10 @@ class StoryListActivity : ActivityWithStatic() {
   private fun statisticsDialog() {
     var totalWords = 0
     var passedApprox = 0
-    val totalStories = adapter!!.getStories().size
+    val totalStories = adapter.getStories().size
     var storiesRead = 0
     var storiesNotStarted = 0
-    adapter!!.getStories().forEach {
+    adapter.getStories().forEach {
       totalWords += it.wordCount
       println(it.wordsProgressedApprox)
       passedApprox += it.wordsProgressedApprox
