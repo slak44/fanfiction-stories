@@ -17,83 +17,91 @@
             style="@style/AppTheme.Touchable"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/storyDetails"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:id="@+id/titleText"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
                 android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="Title, A Very Very Very Long Title"/>
+                tools:text="Title, A Very Very Very Very Very Very Long Title"/>
 
             <TextView
                 android:id="@+id/authorText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="18dp"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="0dp"
                 android:textAppearance="@android:style/TextAppearance.Material.Small"
                 android:textStyle="italic"
+                app:layout_constraintBottom_toTopOf="@+id/canonText"
+                app:layout_constraintEnd_toStartOf="@+id/isCompletedText"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/titleText"
                 tools:text="by Slak44"/>
 
             <TextView
                 android:id="@+id/canonText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="18dp"
+                android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
                 android:textAppearance="@android:style/TextAppearance.Material.Small"
                 android:textStyle="italic"
+                app:layout_constraintBottom_toTopOf="@+id/storyProgress"
+                app:layout_constraintEnd_toStartOf="@+id/wordsText"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/authorText"
-                tools:text="in Test Category"
-                />
+                tools:text="in Test Category"/>
+
+            <TextView
+                android:id="@+id/isCompletedText"
+                android:layout_width="0dp"
+                android:layout_height="18dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="end"
+                android:text="@string/completed"
+                app:layout_constraintBottom_toTopOf="@+id/wordsText"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/authorText"
+                app:layout_constraintTop_toBottomOf="@+id/titleText"
+                tools:text="Completed"/>
 
             <TextView
                 android:id="@+id/wordsText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="18dp"
+                android:layout_marginBottom="8dp"
                 android:layout_marginEnd="8dp"
-                app:layout_constraintBottom_toBottomOf="@+id/canonText"
+                android:gravity="end"
+                app:layout_constraintBottom_toTopOf="@+id/storyProgress"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/canonText"
+                app:layout_constraintTop_toBottomOf="@+id/isCompletedText"
                 tools:text="182,390 words"/>
 
             <SeekBar
                 android:id="@+id/storyProgress"
                 style="@style/AppTheme.NotTouchable"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:layout_marginTop="8dp"
+                android:layout_height="4dp"
+                android:layout_marginBottom="1dp"
                 android:max="100"
                 android:paddingEnd="0dp"
                 android:paddingStart="0dp"
                 android:thumb="@color/alpha"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/canonText"
                 tools:progress="50"/>
-
-            <TextView
-                android:id="@+id/isCompletedText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="0dp"
-                android:layout_marginEnd="8dp"
-                android:text="@string/completed"
-                app:layout_constraintBottom_toTopOf="@+id/wordsText"
-                app:layout_constraintEnd_toEndOf="parent"
-                tools:text="Completed"/>
 
         </android.support.constraint.ConstraintLayout>
 
@@ -101,14 +109,12 @@
             android:id="@+id/storyDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="0dp"
-            android:layout_marginTop="0dp"
+            android:layout_marginTop="8dp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/storyMainContent"
+            app:layout_constraintTop_toBottomOf="@id/storyMainContent"
             tools:visibility="visible">
 
             <TextView
