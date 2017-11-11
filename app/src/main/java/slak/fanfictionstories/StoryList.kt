@@ -291,14 +291,19 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
 
   // Adapter data, but only with the stories
-  var stories: MutableList<StoryModel> = mutableListOf()
-    private set
+  private var stories: MutableList<StoryModel> = mutableListOf()
+  // 'Read-only' getter
+  fun getStories(): List<StoryModel> = stories.toList()
+  fun setStories(stories: MutableList<StoryModel>) {
+    this.stories = stories
+    clearData()
+  }
 
   var groupStrategy: GroupStrategy = GroupStrategy.NONE
   var orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC
   var orderDirection: OrderDirection = OrderDirection.DESC
 
-  fun clear() {
+  fun clearData() {
     val dataSize = data.size
     data.clear()
     notifyItemRangeRemoved(0, dataSize)
@@ -325,16 +330,19 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     notifyItemChanged(storyDataIdx)
   }
 
-  // FIXME this does not belong here
-  fun initDataFromDb(): Deferred<Unit> = async2(CommonPool) {
-    async2(UI) {
-      clear()
-    }.await()
-    stories = this@StoryAdapter.context.database.getStories().await().toMutableList()
-    val toData = stories.filter { true } // FIXME filter
-    groupStories(toData.toMutableList(), groupStrategy).forEach {
+  /**
+   * Filter, group, then sort [stories] according to the [orderDirection], [orderStrategy],
+   * [groupStrategy].
+   *
+   * Rebuilds [data] and [stories]. Call in UI thread.
+   */
+  fun arrangeStories() {
+    val toData = stories.filter { true }.toMutableList() // FIXME filter
+    stories.clear()
+    clearData()
+    groupStories(toData, groupStrategy).forEach {
       val ordered = orderStories(it.value, orderStrategy, orderDirection)
-      launch(UI) { addData(listOf(Right(it.key), *ordered.map { Left(it) }.toTypedArray())) }
+      addData(listOf(Right(it.key), *ordered.map { Left(it) }.toTypedArray()))
     }
   }
 

@@ -3,7 +3,6 @@ package slak.fanfictionstories.activities
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.Menu
@@ -13,7 +12,6 @@ import android.widget.EditText
 import android.widget.Switch
 import either.Left
 import kotlinx.android.synthetic.main.activity_story_list.*
-import kotlinx.android.synthetic.main.dialog_add_story_view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
@@ -22,7 +20,6 @@ import org.jetbrains.anko.db.select
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.Notifications
-import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.database
 import slak.fanfictionstories.utility.iconTint
 import java.util.*
@@ -46,8 +43,11 @@ class StoryListActivity : ActivityWithStatic() {
     adapter = StoryAdapter(this@StoryListActivity)
     storyListView.adapter = adapter
     launch(CommonPool) {
-      adapter!!.initDataFromDb().await()
-      launch(UI) { if (adapter!!.stories.size == 0) nothingHere.visibility = View.VISIBLE }
+      adapter!!.setStories(database.getStories().await().toMutableList())
+      launch(UI) {
+        adapter!!.arrangeStories()
+        if (adapter!!.getStories().isEmpty()) nothingHere.visibility = View.VISIBLE
+      }
     }
   }
 
@@ -58,7 +58,7 @@ class StoryListActivity : ActivityWithStatic() {
         val newModel = select("stories")
             .whereSimple("storyId = ?", lastStoryId.get().toString())
             .exec { parseSingle(StoryModel.dbParser) }
-        val idx = adapter!!.stories.indexOfFirst { it.storyIdRaw == lastStoryId.get() }
+        val idx = adapter!!.getStories().indexOfFirst { it.storyIdRaw == lastStoryId.get() }
         launch(UI) { adapter!!.updateStory(idx, newModel) }
       }
     }
@@ -92,7 +92,7 @@ class StoryListActivity : ActivityWithStatic() {
           dialog.dismiss()
           // FIXME store the chosen group strategy somewhere
           adapter!!.groupStrategy = GroupStrategy.values()[which]
-          adapter!!.initDataFromDb()
+          adapter!!.arrangeStories()
         }).show()
   }
 
@@ -111,7 +111,7 @@ class StoryListActivity : ActivityWithStatic() {
           adapter!!.orderStrategy = OrderStrategy.values()[which]
           adapter!!.orderDirection =
               if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC
-          adapter!!.initDataFromDb()
+          adapter!!.arrangeStories()
         })
         .show()
   }
@@ -119,10 +119,10 @@ class StoryListActivity : ActivityWithStatic() {
   private fun statisticsDialog() {
     var totalWords = 0
     var passedApprox = 0
-    val totalStories = adapter!!.stories.size
+    val totalStories = adapter!!.getStories().size
     var storiesRead = 0
     var storiesNotStarted = 0
-    adapter!!.stories.forEach {
+    adapter!!.getStories().forEach {
       totalWords += it.wordCount
       println(it.wordsProgressedApprox)
       passedApprox += it.wordsProgressedApprox

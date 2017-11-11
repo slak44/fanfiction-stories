@@ -20,14 +20,12 @@ import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.sync.Mutex
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryAdapter
 import slak.fanfictionstories.StoryCardView
 import slak.fanfictionstories.Canon
 import slak.fanfictionstories.fetchers.*
-import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.iconTint
 import slak.fanfictionstories.utility.onSelect
 import slak.fanfictionstories.utility.setEntries
@@ -271,7 +269,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
     AlertDialog.Builder(this)
         .setTitle(R.string.filter_by)
         .setPositiveButton(R.string.native_filter_btn, { dialog, _ ->
-          adapter.clear()
+          adapter.clearData()
           currentPage = 1
           addPage(1)
           dialog.dismiss()
