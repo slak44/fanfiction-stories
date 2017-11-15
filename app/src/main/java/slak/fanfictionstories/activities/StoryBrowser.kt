@@ -108,10 +108,8 @@ class BrowseCategoryActivity : ActivityWithStatic() {
 
 class CanonStoryListActivity : ActivityWithStatic() {
   private lateinit var adapter: StoryAdapter
-  private lateinit var layoutManager: LinearLayoutManager
   private lateinit var fetcher: CanonFetcher
   private var currentPage = 1
-  private val addPageLock = Mutex()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -127,7 +125,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
         CanonFetcher.Details(urlComp, title, srcCategory))
     adapter = StoryAdapter(this@CanonStoryListActivity)
     canonStoryListView.adapter = adapter
-    layoutManager = LinearLayoutManager(this)
+    val layoutManager = LinearLayoutManager(this)
     canonStoryListView.layoutManager = layoutManager
 
     this.title = title
@@ -139,6 +137,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
     })
 
     canonStoryListView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+      private val addPageLock = Mutex()
       override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
         // We only want scroll downs
         if (dy <= 0) return
