@@ -179,7 +179,11 @@ class CanonStoryListActivity : ActivityWithStatic() {
     return true
   }
 
+  private var dialogOpened: Boolean = false
   private fun openFilterDialog() {
+    // Don't open more than one dialog
+    if (dialogOpened) return
+    dialogOpened = true
     val layout = LayoutInflater.from(this)
         .inflate(R.layout.dialog_ffnet_filter, null, false)
 
@@ -267,6 +271,9 @@ class CanonStoryListActivity : ActivityWithStatic() {
 
     AlertDialog.Builder(this)
         .setTitle(R.string.filter_by)
+        .setOnDismissListener {
+          dialogOpened = false
+        }
         .setPositiveButton(R.string.native_filter_btn, { dialog, _ ->
           adapter.clearData()
           currentPage = 1
