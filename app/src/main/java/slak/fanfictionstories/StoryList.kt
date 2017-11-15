@@ -43,15 +43,11 @@ class StoryCardView : CardView {
     ): ItemTouchHelper {
       var swipeStory: ItemTouchHelper? = null
       swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
-        override fun getMovementFlags(recycler: RecyclerView?,
-                                      viewHolder: RecyclerView.ViewHolder?): Int {
-          return makeMovementFlags(0, ItemTouchHelper.RIGHT)
-        }
+        override fun getMovementFlags(recycler: RecyclerView?, vh: RecyclerView.ViewHolder?): Int
+            = makeMovementFlags(0, ItemTouchHelper.RIGHT)
 
         override fun onMove(recycler: RecyclerView?, viewHolder: RecyclerView.ViewHolder?,
-                            target: RecyclerView.ViewHolder?): Boolean {
-          return false
-        }
+                            target: RecyclerView.ViewHolder?): Boolean = false
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
           val intent = Intent(recyclerView.context, StoryReaderActivity::class.java)

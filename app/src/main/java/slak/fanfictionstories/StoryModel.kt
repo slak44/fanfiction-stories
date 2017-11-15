@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import org.jetbrains.anko.db.MapRowParser
-import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.activities.Static
 import slak.fanfictionstories.fetchers.StoryFetcher
 import slak.fanfictionstories.utility.autoSuffixNumber
@@ -123,9 +122,8 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   val updateDate: String
     get() = Static.res!!.getString(R.string.updated_on, updateDateFormatted)
 
-  fun toKvPairs(): Array<Pair<String, Any>> {
-    return src.entries.map { Pair(it.key, it.value) }.toTypedArray()
-  }
+  fun toKvPairs(): Array<Pair<String, Any>> =
+      src.entries.map { Pair(it.key, it.value) }.toTypedArray()
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     val bundle = Bundle()
@@ -134,9 +132,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
     parcel.writeInt(if (_id.isPresent) 1 else 0)
   }
 
-  override fun describeContents(): Int {
-    return 0
-  }
+  override fun describeContents(): Int = 0
   companion object {
     @JvmField @Suppress("unused")
     val CREATOR = object : Parcelable.Creator<StoryModel> {
@@ -149,9 +145,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
         return StoryModel(map, fromDb)
       }
 
-      override fun newArray(size: Int): Array<StoryModel?> {
-        return arrayOfNulls(size)
-      }
+      override fun newArray(size: Int): Array<StoryModel?> = arrayOfNulls(size)
     }
 
     val dbParser = object : MapRowParser<StoryModel> {
