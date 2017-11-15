@@ -5,11 +5,14 @@
     android:layout_height="match_parent"
     android:layout_marginTop="@dimen/dialog_view_margin">
 
-    <LinearLayout
+    <GridLayout
+        android:columnCount="2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="?dialogPreferredPadding">
+        android:paddingTop="?dialogPreferredPadding"
+        android:paddingBottom="?dialogPreferredPadding"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
 
         <TextView
             style="@style/AppTheme.FilterSpinnerLabel"
@@ -157,6 +160,6 @@
             android:id="@+id/notChar2"
             style="@style/AppTheme.FilterSpinner"/>
 
-    </LinearLayout>
+    </GridLayout>
 
 </ScrollView>
