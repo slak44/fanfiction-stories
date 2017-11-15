@@ -1,5 +1,6 @@
 package slak.fanfictionstories.activities
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Typeface
@@ -89,15 +90,20 @@ class StoryReaderActivity : ActivityWithStatic() {
   private lateinit var model: StoryModel
   private var currentChapter: Int = 0
 
+  // We actually *don't* want the last story id written in the background
+  @SuppressLint("ApplySharedPref")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_story_reader)
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    // FIXME set app to resume to this
-
     model = intent.getParcelableExtra(INTENT_STORY_MODEL)
+
+    // Save story for the resume button
+    val edit = Static.sharedPref!!.edit()
+    edit.putLong(Prefs.RESUME_STORY_ID, model.storyIdRaw)
+    edit.commit()
 
     title = model.title
     currentChapter = if (model.currentChapter == 0) 1 else model.currentChapter

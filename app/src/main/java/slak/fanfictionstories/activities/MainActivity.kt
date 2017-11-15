@@ -2,11 +2,13 @@ package slak.fanfictionstories.activities
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.support.v7.app.AppCompatActivity
+import android.text.Html
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -16,10 +18,13 @@ import kotlinx.coroutines.experimental.android.UI
 import org.jetbrains.anko.db.dropTable
 import java.io.File
 import kotlinx.coroutines.experimental.*
+import org.jetbrains.anko.db.select
+import org.jetbrains.anko.defaultSharedPreferences
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.CategoryFetcher
 import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.Notifications
+import slak.fanfictionstories.utility.Prefs
 import slak.fanfictionstories.utility.database
 import java.util.concurrent.TimeUnit
 
@@ -30,12 +35,16 @@ object Static {
     private set
   var cacheDir: File? = null
     private set
+  var sharedPref: SharedPreferences? = null
+    private set
 
   fun init(context: Context) {
     if (res == null) res = context.resources
     if (cm == null)
       cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     if (cacheDir == null) cacheDir = context.cacheDir
+    if (sharedPref == null)
+      sharedPref = context.getSharedPreferences(Prefs.PREFS_FILE, Context.MODE_PRIVATE)
   }
 }
 
@@ -114,6 +123,23 @@ class MainActivity : ActivityWithStatic() {
         intent.action = "slak.fanfictionstories.StoryUpdateReceiver"
         sendBroadcast(intent)
       } }
+    }
+  }
+
+  override fun onResume() {
+    super.onResume()
+    val storyId = Static.sharedPref!!.getLong(Prefs.RESUME_STORY_ID, -1)
+    if (storyId == -1L) return
+    val model = database.readableDatabase
+        .select("stories")
+        .whereSimple("storyId = ?", storyId.toString())
+        .parseSingle(StoryModel.dbParser)
+    resumeButton.text = Html.fromHtml(getString(R.string.resume_story, model.title,
+        model.authorRaw, model.currentChapter, model.chapterCount), Html.FROM_HTML_MODE_COMPACT)
+    resumeButton.setOnClickListener {
+      val intent = Intent(this@MainActivity, StoryReaderActivity::class.java)
+      intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, model)
+      startActivity(intent)
     }
   }
 

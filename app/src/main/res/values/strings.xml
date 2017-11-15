@@ -54,7 +54,7 @@
 
     <!-- Main activity -->
     <string name="action_settings">Settings</string>
-    <string name="resume_story">Resume: <b>%s</b>%nby<i>%s</i> — Chapter %d/%d</string>
+    <string name="resume_story">Resume: &lt;b&gt;%s&lt;/b&gt;%nby &lt;i&gt;%s&lt;/i&gt; — Chapter %d/%d</string>
     <string name="nothing_to_resume">No story to resume</string>
     <string name="story_browse">Browse Stories</string>
 
