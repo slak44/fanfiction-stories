@@ -23,7 +23,9 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
     // Cache categoryIdx's result
     private var cache = Array<CategoryCanons?>(categories.size, { null })
     private val cacheMapFile = File(Static.cacheDir, "category_canons.array")
-    private val TAG = "CategoryCache"
+    private const val TAG = "CategoryCache"
+    // 7 days
+    private const val CACHE_LIFE_MS = 1000 * 60 * 60 * 24 * 7
 
     fun deserialize() = async2(CommonPool) {
       if (!cacheMapFile.exists()) {
@@ -59,8 +61,7 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
         Log.d(TAG, "Cache miss: $categoryIdx")
         return Optional.empty()
       }
-      // 7 days
-      if (System.currentTimeMillis() - cache[categoryIdx]!!.first > 1000 * 60 * 60 * 24 * 7) {
+      if (System.currentTimeMillis() - cache[categoryIdx]!!.first > CACHE_LIFE_MS) {
         // Cache expired; remove and return nothing
         Log.d(TAG, "Cache expired: $categoryIdx")
         cache[categoryIdx] = null
