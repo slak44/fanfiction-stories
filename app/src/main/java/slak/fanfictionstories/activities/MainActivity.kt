@@ -92,7 +92,7 @@ class MainActivity : ActivityWithStatic() {
     val model = database.readableDatabase
         .select("stories")
         .whereSimple("storyId = ?", storyId.toString())
-        .parseSingle(StoryModel.dbParser)
+        .parseOpt(StoryModel.dbParser) ?: return
     resumeButton.text = Html.fromHtml(getString(R.string.resume_story, model.title,
         model.authorRaw, model.currentChapter, model.chapterCount), Html.FROM_HTML_MODE_COMPACT)
     resumeButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_restore_black_24dp, 0, 0, 0)
