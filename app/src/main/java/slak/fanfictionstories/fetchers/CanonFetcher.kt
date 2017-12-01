@@ -1,7 +1,12 @@
 package slak.fanfictionstories.fetchers
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.Log
+import kotlinx.android.parcel.Parcelize
+import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.delay
@@ -73,7 +78,9 @@ enum class WordCount(val ffnetValue: String) {
   fun queryParam(): String = "len=$ffnetValue"
 }
 
-class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
+class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher(), Parcelable {
+  @Parcelize
+  @SuppressLint("ParcelCreator")
   data class Details(
       val urlComponent: String,
       val title: String,
@@ -92,14 +99,18 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
       var char3Id: String = "0",
       var char4Id: String = "0",
 
-      var genreWithout: Optional<Genre> = Optional.empty(),
-      var worldWithout: Optional<String> = Optional.empty(),
-      var char1Without: Optional<String> = Optional.empty(),
-      var char2Without: Optional<String> = Optional.empty()
-  )
+      var genreWithout: @RawValue Optional<Genre> = Optional.empty(),
+      var worldWithout: @RawValue Optional<String> = Optional.empty(),
+      var char1Without: @RawValue Optional<String> = Optional.empty(),
+      var char2Without: @RawValue Optional<String> = Optional.empty()
+  ) : Parcelable
 
-  data class World(val name: String, val id: String)
-  data class Character(val name: String, val id: String)
+  @Parcelize
+  @SuppressLint("ParcelCreator")
+  data class World(val name: String, val id: String) : Parcelable
+  @Parcelize
+  @SuppressLint("ParcelCreator")
+  data class Character(val name: String, val id: String) : Parcelable
 
   var worldList: Optional<List<World>> = Optional.of(listOf())
     private set
@@ -107,6 +118,43 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
     private set
   var unfilteredStories: Optional<String> = Optional.empty()
     private set
+
+  constructor(parcel: Parcel) : this(
+      parcel.readValue(Context::class.java.classLoader) as Context,
+      parcel.readParcelable(Details::class.java.classLoader)) {
+    @Suppress("unchecked_cast")
+    val worldArray = parcel.readArray(Array<World>::class.java.classLoader) as Array<World>?
+    worldList = if (worldArray == null) Optional.empty() else Optional.of(worldArray.toList())
+
+    @Suppress("unchecked_cast")
+    val charArray = parcel.readArray(Array<Character>::class.java.classLoader) as Array<Character>
+    charList = charArray.toList()
+
+    val str = parcel.readString()
+    unfilteredStories = if (str == null) Optional.empty() else Optional.of(str)
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) {
+    dest.writeValue(ctx)
+    dest.writeParcelable(details, 0)
+    dest.writeArray(if (worldList.isPresent) worldList.get().toTypedArray() else null)
+    dest.writeArray(charList.toTypedArray())
+    dest.writeString(if (unfilteredStories.isPresent) unfilteredStories.get() else null)
+  }
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  companion object CREATOR : Parcelable.Creator<CanonFetcher> {
+    override fun createFromParcel(parcel: Parcel): CanonFetcher {
+      return CanonFetcher(parcel)
+    }
+
+    override fun newArray(size: Int): Array<CanonFetcher?> {
+      return arrayOfNulls(size)
+    }
+  }
 
   fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
     val n = Notifications(ctx, Notifications.Kind.OTHER)

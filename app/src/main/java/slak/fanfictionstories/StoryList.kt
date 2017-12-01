@@ -1,10 +1,12 @@
 package slak.fanfictionstories
 
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.os.Parcelable
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -17,6 +19,8 @@ import either.Either
 import either.Left
 import either.Right
 import either.fold
+import kotlinx.android.parcel.Parcelize
+import kotlinx.android.parcel.RawValue
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -304,10 +308,10 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
 
   // Story or group title
   private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
+  fun getAdapterData(): List<Either<StoryModel, String>> = data.toList()
 
   // Adapter data, but only with the stories
   private var stories: MutableList<StoryModel> = mutableListOf()
-  // 'Read-only' getter
   fun getStories(): List<StoryModel> = stories.toList()
   fun setStories(stories: MutableList<StoryModel>) {
     this.stories = stories

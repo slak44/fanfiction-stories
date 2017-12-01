@@ -1,5 +1,6 @@
 package slak.fanfictionstories.activities
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -11,6 +12,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
+import either.Either
 import either.Left
 import either.Right
 import kotlinx.android.synthetic.main.activity_browse_category.*
@@ -21,10 +23,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.sync.Mutex
-import slak.fanfictionstories.Canon
-import slak.fanfictionstories.R
-import slak.fanfictionstories.StoryAdapter
-import slak.fanfictionstories.StoryCardView
+import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 import java.util.*
@@ -105,9 +104,17 @@ class BrowseCategoryActivity : ActivityWithStatic() {
 }
 
 class CanonStoryListActivity : ActivityWithStatic() {
+  companion object {
+    private const val CURRENT_PAGE_RESTORE = "current_page"
+    private const val FETCHER_RESTORE = "canon_fetcher"
+    private const val ADAPTER_DATA_RESTORE = "adapter_data"
+  }
+
   private lateinit var adapter: StoryAdapter
   private lateinit var fetcher: CanonFetcher
   private var currentPage = 1
+
+  private var hasSaved = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -119,8 +126,6 @@ class CanonStoryListActivity : ActivityWithStatic() {
     val urlComp = intent.extras.getString(CANON_URL_EXTRA_ID)
     val srcCategory = intent.extras.getString(SRC_CATEGORY_EXTRA_ID)
 
-    fetcher = CanonFetcher(this@CanonStoryListActivity,
-        CanonFetcher.Details(urlComp, title, srcCategory))
     adapter = StoryAdapter(this@CanonStoryListActivity)
     canonStoryListView.adapter = adapter
     val layoutManager = LinearLayoutManager(this)
@@ -128,7 +133,11 @@ class CanonStoryListActivity : ActivityWithStatic() {
 
     this.title = title
 
-    addPage(1)
+    if (!hasSaved) {
+      fetcher = CanonFetcher(this@CanonStoryListActivity,
+          CanonFetcher.Details(urlComp, title, srcCategory))
+      addPage(1)
+    }
 
     StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ ->
       this@CanonStoryListActivity.startActivity(intent)
@@ -153,6 +162,24 @@ class CanonStoryListActivity : ActivityWithStatic() {
         }
       }
     })
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    hasSaved = true
+    super.onSaveInstanceState(outState)
+    outState.putInt(CURRENT_PAGE_RESTORE, currentPage)
+    outState.putParcelable(FETCHER_RESTORE, fetcher)
+    outState.putParcelableArray(ADAPTER_DATA_RESTORE,
+        adapter.getAdapterData().map { it -> EitherWrapper(it) }.toTypedArray())
+  }
+
+  override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+    super.onRestoreInstanceState(savedInstanceState)
+    currentPage = savedInstanceState.getInt(CURRENT_PAGE_RESTORE)
+    fetcher = savedInstanceState.getParcelable(FETCHER_RESTORE)
+    val data = savedInstanceState.getParcelableArray(ADAPTER_DATA_RESTORE)
+    @Suppress("unchecked_cast")
+    adapter.addData(data.map { (it as EitherWrapper<StoryModel, String>).e })
   }
 
   private fun addPage(page: Int) = launch(UI) {

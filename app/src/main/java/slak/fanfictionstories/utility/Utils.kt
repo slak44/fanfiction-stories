@@ -8,6 +8,7 @@ import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
+import android.os.Parcelable
 import android.support.annotation.ColorRes
 import android.support.annotation.StringRes
 import android.text.style.ReplacementSpan
@@ -18,6 +19,9 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
+import either.Either
+import kotlinx.android.parcel.Parcelize
+import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import slak.fanfictionstories.R
@@ -198,3 +202,7 @@ fun usePrefs(block: (SharedPreferences.Editor) -> Unit) {
   block(editor)
   editor.apply()
 }
+
+@Parcelize
+@SuppressLint("ParcelCreator")
+data class EitherWrapper<out T1, out T2>(val e: @RawValue Either<T1, T2>) : Parcelable
