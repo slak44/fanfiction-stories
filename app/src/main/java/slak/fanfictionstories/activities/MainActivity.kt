@@ -1,65 +1,24 @@
 package slak.fanfictionstories.activities
 
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
-import android.content.res.Resources
-import android.net.ConnectivityManager
 import android.os.Bundle
-import android.os.PersistableBundle
-import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.dropTable
-import java.io.File
-import kotlinx.coroutines.experimental.*
 import org.jetbrains.anko.db.select
-import org.jetbrains.anko.defaultSharedPreferences
 import slak.fanfictionstories.*
-import slak.fanfictionstories.fetchers.CategoryFetcher
 import slak.fanfictionstories.fetchers.getFullStory
-import slak.fanfictionstories.utility.Notifications
-import slak.fanfictionstories.utility.Prefs
-import slak.fanfictionstories.utility.database
+import slak.fanfictionstories.utility.*
+import java.io.File
 import java.util.concurrent.TimeUnit
-
-object Static {
-  var res: Resources? = null
-    private set
-  var cm: ConnectivityManager? = null
-    private set
-  var cacheDir: File? = null
-    private set
-  var sharedPref: SharedPreferences? = null
-    private set
-
-  fun init(context: Context) {
-    if (res == null) res = context.resources
-    if (cm == null)
-      cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    if (cacheDir == null) cacheDir = context.cacheDir
-    if (sharedPref == null)
-      sharedPref = context.getSharedPreferences(Prefs.PREFS_FILE, Context.MODE_PRIVATE)
-  }
-}
-
-abstract class ActivityWithStatic : AppCompatActivity() {
-  private var cacheInited: Boolean = false
-  override fun onCreate(savedInstanceState: Bundle?) {
-    Static.init(this)
-    // Re-create cache
-    if (!cacheInited) {
-      CategoryFetcher.Cache.deserialize()
-      cacheInited = true
-    }
-    super.onCreate(savedInstanceState)
-  }
-}
 
 class MainActivity : ActivityWithStatic() {
   companion object {
