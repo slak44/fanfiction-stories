@@ -33,9 +33,6 @@ class MainActivity : ActivityWithStatic() {
     // Update alarm
     initAlarm(this)
 
-    // FIXME: set drawable and text string for resume button if a story is available to be resumed
-    // FIXME: do the above in onResume as well
-
     storyListButton.setOnClickListener {
       val intent = Intent(this, StoryListActivity::class.java)
       startActivity(intent)
@@ -88,13 +85,18 @@ class MainActivity : ActivityWithStatic() {
   override fun onResume() {
     super.onResume()
     val storyId = Static.sharedPref!!.getLong(Prefs.RESUME_STORY_ID, -1)
-    if (storyId == -1L) return
+    if (storyId == -1L) {
+      resumeButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+      return
+    }
     val model = database.readableDatabase
         .select("stories")
         .whereSimple("storyId = ?", storyId.toString())
         .parseSingle(StoryModel.dbParser)
     resumeButton.text = Html.fromHtml(getString(R.string.resume_story, model.title,
         model.authorRaw, model.currentChapter, model.chapterCount), Html.FROM_HTML_MODE_COMPACT)
+    resumeButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_restore_black_24dp, 0, 0, 0)
+    resumeButton.drawableTint(android.R.color.white, theme, Direction.LEFT)
     resumeButton.setOnClickListener {
       val intent = Intent(this@MainActivity, StoryReaderActivity::class.java)
       intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, model)

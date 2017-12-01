@@ -19,7 +19,6 @@ import android.widget.TextView
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import slak.fanfictionstories.R
-import slak.fanfictionstories.activities.Static
 import slak.fanfictionstories.fetchers.Fetcher
 import java.util.*
 import java.util.concurrent.TimeUnit

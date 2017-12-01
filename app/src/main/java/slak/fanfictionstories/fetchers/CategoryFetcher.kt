@@ -2,13 +2,16 @@ package slak.fanfictionstories.fetchers
 
 import android.content.Context
 import android.util.Log
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.Canon
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categories
-import slak.fanfictionstories.activities.Static
 import slak.fanfictionstories.activities.categoryUrl
 import slak.fanfictionstories.utility.Notifications
+import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.waitForNetwork
 import java.io.*

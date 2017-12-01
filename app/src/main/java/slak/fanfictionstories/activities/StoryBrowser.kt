@@ -10,7 +10,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.*
+import android.widget.ArrayAdapter
 import either.Left
 import either.Right
 import kotlinx.android.synthetic.main.activity_browse_category.*
@@ -21,14 +21,12 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.sync.Mutex
+import slak.fanfictionstories.Canon
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryAdapter
 import slak.fanfictionstories.StoryCardView
-import slak.fanfictionstories.Canon
 import slak.fanfictionstories.fetchers.*
-import slak.fanfictionstories.utility.iconTint
-import slak.fanfictionstories.utility.onSelect
-import slak.fanfictionstories.utility.setEntries
+import slak.fanfictionstories.utility.*
 import java.util.*
 import kotlin.properties.Delegates
 

@@ -19,6 +19,7 @@ import org.jetbrains.anko.db.parseSingle
 import org.jetbrains.anko.db.select
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.getFullStory
+import slak.fanfictionstories.utility.ActivityWithStatic
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.database
 import slak.fanfictionstories.utility.iconTint

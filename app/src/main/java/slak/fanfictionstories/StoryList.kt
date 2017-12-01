@@ -18,14 +18,14 @@ import either.Left
 import either.Right
 import either.fold
 import kotlinx.android.synthetic.main.story_component.view.*
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
-import slak.fanfictionstories.activities.Static
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.Notifications
-import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.database
+import slak.fanfictionstories.utility.Static
 import java.util.*
 import kotlin.Comparator
 

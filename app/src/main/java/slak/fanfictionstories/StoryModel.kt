@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import org.jetbrains.anko.db.MapRowParser
-import slak.fanfictionstories.activities.Static
 import slak.fanfictionstories.fetchers.StoryFetcher
+import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.autoSuffixNumber
 import java.text.SimpleDateFormat
 import java.util.*
