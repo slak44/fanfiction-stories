@@ -30,9 +30,9 @@ import slak.fanfictionstories.utility.*
 import java.util.*
 import kotlin.properties.Delegates
 
-val categories: Array<String> by lazy { Static.res!!.getStringArray(R.array.categories) }
+val categories: Array<String> by lazy { Static.res.getStringArray(R.array.categories) }
 val categoryUrl: Array<String> by lazy {
-  Static.res!!.getStringArray(R.array.categories_url_components)
+  Static.res.getStringArray(R.array.categories_url_components)
 }
 
 private const val CATEGORIES_IDX_EXTRA_ID = "category_idx"

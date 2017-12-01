@@ -60,16 +60,16 @@ fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
  */
 fun waitForNetwork(n: Notifications) = async2(CommonPool) {
   while (true) {
-    val activeNetwork = Static.cm!!.activeNetworkInfo
+    val activeNetwork = Static.cm.activeNetworkInfo
     // FIXME figure out network status even when app is not focused
     if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
       // No connection; wait
-      n.show(Static.res!!.getString(R.string.waiting_for_connection))
+      n.show(Static.res.getString(R.string.waiting_for_connection))
       Log.e("waitForNetwork", "No connection")
       delay(Fetcher.CONNECTION_MISSING_DELAY_SECONDS, TimeUnit.SECONDS)
     } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
       // We're connecting; wait
-      n.show(Static.res!!.getString(R.string.waiting_for_connection))
+      n.show(Static.res.getString(R.string.waiting_for_connection))
       Log.e("waitForNetwork", "Connecting...")
       delay(Fetcher.CONNECTION_WAIT_DELAY_SECONDS, TimeUnit.SECONDS)
     } else {
@@ -82,7 +82,7 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
  * Emulates android:iconTint. Must be called in onPrepareOptionsMenu for each icon.
  */
 fun MenuItem.iconTint(@ColorRes colorRes: Int, theme: Resources.Theme) {
-  val color = Static.res!!.getColor(colorRes, theme)
+  val color = Static.res.getColor(colorRes, theme)
   val drawable = this.icon
   drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
   this.icon = drawable
@@ -96,7 +96,7 @@ enum class Direction {
  * Tints a drawable. No-op if the specified drawable is null.
  */
 fun TextView.drawableTint(@ColorRes colorRes: Int, theme: Resources.Theme, which: Direction) {
-  val color = Static.res!!.getColor(colorRes, theme)
+  val color = Static.res.getColor(colorRes, theme)
   val drawable = this.compoundDrawables[which.ordinal] ?: return
   drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
   when (which) {

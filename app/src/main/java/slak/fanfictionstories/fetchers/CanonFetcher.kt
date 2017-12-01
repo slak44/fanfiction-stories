@@ -148,7 +148,7 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher() {
             .readText()
       } catch (t: Throwable) {
         // Something happened; retry
-        n.show(Static.res!!.getString(R.string.error_with_canon_stories, details.title))
+        n.show(Static.res.getString(R.string.error_with_canon_stories, details.title))
         Log.e(TAG, "CanonFetcher: retry", t)
         delay(RATE_LIMIT_MILLISECONDS)
         return@withLock fetchPage(page, n).await()

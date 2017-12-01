@@ -15,23 +15,29 @@ import java.io.File
  * instant run.
  */
 object Static {
-  var res: Resources? = null
+  var resProp: Resources? = null
     private set
-  var cm: ConnectivityManager? = null
+  var cmProp: ConnectivityManager? = null
     private set
-  var cacheDir: File? = null
+  var cacheDirProp: File? = null
     private set
   var sharedPref: SharedPreferences? = null
     private set
 
   val prefs: SharedPreferences
     get() = sharedPref!!
+  val cacheDir: File
+    get() = cacheDirProp!!
+  val res: Resources
+    get() = resProp!!
+  val cm: ConnectivityManager
+    get() = cmProp!!
 
   fun init(context: Context) {
-    if (res == null) res = context.resources
-    if (cm == null)
-      cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    if (cacheDir == null) cacheDir = context.cacheDir
+    if (resProp == null) resProp = context.resources
+    if (cmProp == null)
+      cmProp = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    if (cacheDirProp == null) cacheDirProp = context.cacheDir
     if (sharedPref == null)
       sharedPref = context.getSharedPreferences(Prefs.PREFS_FILE, Context.MODE_PRIVATE)
   }

@@ -89,7 +89,7 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
       return@async2 URL("https://www.fanfiction.net/${categoryUrl[categoryIdx]}").readText()
     } catch (t: Throwable) {
       // Something happened; retry
-      n.show(Static.res!!.getString(R.string.error_with_categories, categories[categoryIdx]))
+      n.show(Static.res.getString(R.string.error_with_categories, categories[categoryIdx]))
       Log.e(TAG, "getCanonsForCategory${categories[categoryIdx]}", t)
       delay(RATE_LIMIT_MILLISECONDS)
       return@async2 fetchCategory(categoryIdx, n).await()
