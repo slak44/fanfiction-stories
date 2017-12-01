@@ -30,11 +30,17 @@ class CategoryFetcher(private val ctx: Context) : Fetcher() {
         return@async2
       }
       val objIn = ObjectInputStream(FileInputStream(cacheMapFile))
-      // I serialize it however I like, I deserialize it however I like, so stfu
-      @Suppress("Unchecked_Cast")
-      val array = objIn.readObject() as Array<CategoryCanons?>
-      cache = array
-      objIn.close()
+      try {
+        // I serialize it however I like, I deserialize it however I like, so stfu
+        @Suppress("Unchecked_Cast")
+        val array = objIn.readObject() as Array<CategoryCanons?>
+        cache = array
+      } catch (ex: IOException) {
+        // Ignore errors with the cache; don't crash the app because of it
+        cacheMapFile.delete()
+      } finally {
+        objIn.close()
+      }
     }
 
     fun serialize() = launch(CommonPool) {
