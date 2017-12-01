@@ -336,6 +336,11 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     notifyItemChanged(storyDataIdx)
   }
 
+  val storyCount
+    get() = stories.size
+  var filteredCount: Int = 0
+    private set
+
   /**
    * Filter, group, then sort [stories] according to the [orderDirection], [orderStrategy],
    * [groupStrategy].
@@ -344,6 +349,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    */
   fun arrangeStories() {
     val toData = stories.filter { true }.toMutableList() // FIXME filter
+    filteredCount = stories.size - toData.size
     stories.clear()
     clearData()
     groupStories(toData, groupStrategy).forEach {

@@ -49,10 +49,19 @@ class StoryListActivity : ActivityWithStatic() {
     launch(CommonPool) {
       adapter.setStories(database.getStories().await().toMutableList())
       launch(UI) {
-        adapter.arrangeStories()
+        arrangeStories()
         if (adapter.getStories().isEmpty()) nothingHere.visibility = View.VISIBLE
       }
     }
+  }
+
+  /**
+   * Wrap [StoryAdapter.arrangeStories] to also set the subtitle on this activity.
+   */
+  private fun arrangeStories() {
+    adapter.arrangeStories()
+    toolbar.subtitle = resources.getString(R.string.x_stories_y_filtered,
+        adapter.storyCount, adapter.filteredCount)
   }
 
   override fun onResume() {
@@ -96,7 +105,7 @@ class StoryListActivity : ActivityWithStatic() {
           dialog.dismiss()
           usePrefs { it.putInt(LIST_GROUP_STRATEGY, which) }
           adapter.groupStrategy = GroupStrategy.values()[which]
-          adapter.arrangeStories()
+          arrangeStories()
         }).show()
   }
 
@@ -120,7 +129,7 @@ class StoryListActivity : ActivityWithStatic() {
           adapter.orderStrategy = OrderStrategy.values()[which]
           adapter.orderDirection =
               if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC
-          adapter.arrangeStories()
+          arrangeStories()
         })
         .show()
   }
