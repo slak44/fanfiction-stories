@@ -67,6 +67,9 @@ class StoryCardView : CardView {
       swipeStory.attachToRecyclerView(recyclerView)
       return swipeStory
     }
+
+    const val DEFAULT_ELEVATION = 7F
+    const val CLICK_ELEVATION = 20F
   }
 
   var storyId: Optional<Long> = Optional.empty()
@@ -75,7 +78,7 @@ class StoryCardView : CardView {
     // Disable touching on the progress seek bar
     storyProgress.setOnTouchListener { _, _ -> true }
     storyMainContent.setOnClickListener {
-      cardElevation = if (cardElevation == 7F) 20F else 7F
+      cardElevation = if (cardElevation == DEFAULT_ELEVATION) CLICK_ELEVATION else DEFAULT_ELEVATION
       // This gets animated automatically
       if (storyDetails.visibility == View.GONE) storyDetails.visibility = View.VISIBLE
       else storyDetails.visibility = View.GONE
@@ -91,7 +94,6 @@ class StoryCardView : CardView {
         launch(UI) {
           if (model.isPresent) {
             addBtn.visibility = View.INVISIBLE
-
           } else {
             addBtn.isEnabled = true
             addBtn.text = resources.getString(R.string.add)
@@ -135,6 +137,13 @@ class StoryCardView : CardView {
 
     storyId = Optional.of(model.storyIdRaw)
     if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.INVISIBLE
+
+    // Reset card UI (including the measured size) to default
+    storyDetails.visibility = View.GONE
+    cardElevation = DEFAULT_ELEVATION
+    addBtn.isEnabled = true
+    val unspec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+    measure(unspec, unspec)
   }
 }
 
@@ -387,7 +396,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
 
   override fun getItemCount(): Int = data.size
   override fun getItemId(position: Int): Long = data[position].fold(
-      { model -> model._id.get() },
+      { model -> model.storyIdRaw },
       { title -> title.hashCode().toLong() }
   )
   override fun getItemViewType(position: Int): Int = data[position].fold({ return 0 }, { return 1 })
