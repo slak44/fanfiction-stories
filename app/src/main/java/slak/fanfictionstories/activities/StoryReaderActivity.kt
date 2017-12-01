@@ -229,11 +229,12 @@ class StoryReaderActivity : ActivityWithStatic() {
       val rawPercentage = scrollY * 100.0 / (scrollingLayout.measuredHeight - scroller.bottom)
       // Make sure that values >100 get clamped to 100
       val percentageScrolled = Math.min(rawPercentage, 100.0)
-      launch(CommonPool) { database.use {
+
+      database.use {
         update("stories",
             "scrollProgress" to percentageScrolled, "scrollAbsolute" to res)
             .whereSimple("storyid = ?", model.storyIdRaw.toString()).exec()
-      } }
+      }
     }
   }
 
@@ -260,7 +261,6 @@ class StoryReaderActivity : ActivityWithStatic() {
       true
     }
     R.id.goToBottom -> {
-      // FIXME this scrolls to the bottom of the **text**, not the bottom of the entire nested scroller
       nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
       true
     }
