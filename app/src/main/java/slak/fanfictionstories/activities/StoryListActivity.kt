@@ -19,10 +19,10 @@ import org.jetbrains.anko.db.parseSingle
 import org.jetbrains.anko.db.select
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.getFullStory
-import slak.fanfictionstories.utility.ActivityWithStatic
-import slak.fanfictionstories.utility.Notifications
-import slak.fanfictionstories.utility.database
-import slak.fanfictionstories.utility.iconTint
+import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Prefs.LIST_GROUP_STRATEGY
+import slak.fanfictionstories.utility.Prefs.LIST_ORDER_IS_REVERSE
+import slak.fanfictionstories.utility.Prefs.LIST_ORDER_STRATEGY
 import java.util.*
 
 class StoryListActivity : ActivityWithStatic() {
@@ -40,8 +40,11 @@ class StoryListActivity : ActivityWithStatic() {
       lastStoryId = Optional.of(storyId)
       startActivity(intent)
     })
-    // FIXME read the stored strategy from somewhere and set it
     adapter = StoryAdapter(this@StoryListActivity)
+    adapter.groupStrategy = GroupStrategy[Static.prefs.getInt(LIST_GROUP_STRATEGY, GroupStrategy.NONE.ordinal)]
+    adapter.orderStrategy = OrderStrategy[Static.prefs.getInt(LIST_ORDER_STRATEGY, OrderStrategy.TITLE_ALPHABETIC.ordinal)]
+    adapter.orderDirection = if (Static.prefs.getInt(LIST_ORDER_IS_REVERSE, 1) == 1)
+      OrderDirection.ASC else OrderDirection.DESC
     storyListView.adapter = adapter
     launch(CommonPool) {
       adapter.setStories(database.getStories().await().toMutableList())
@@ -86,12 +89,12 @@ class StoryListActivity : ActivityWithStatic() {
   }
 
   private fun groupByDialog() {
-    // FIXME get current strategy and put a tick next to the respective item
+    val strategy = Static.prefs.getInt(LIST_GROUP_STRATEGY, GroupStrategy.NONE.ordinal)
     AlertDialog.Builder(this)
         .setTitle(R.string.group_by)
-        .setItems(GroupStrategy.values().map { it.toUIString() }.toTypedArray(), { dialog, which ->
+        .setSingleChoiceItems(GroupStrategy.uiItems(), strategy, { dialog, which ->
           dialog.dismiss()
-          // FIXME store the chosen group strategy somewhere
+          usePrefs { it.putInt(LIST_GROUP_STRATEGY, which) }
           adapter.groupStrategy = GroupStrategy.values()[which]
           adapter.arrangeStories()
         }).show()
@@ -99,16 +102,21 @@ class StoryListActivity : ActivityWithStatic() {
 
   @SuppressLint("InflateParams")
   private fun orderByDialog() {
-    // FIXME get current strategy + direction and put a tick next to the respective item
+    val strategy = Static.prefs.getInt(LIST_ORDER_STRATEGY, OrderStrategy.TITLE_ALPHABETIC.ordinal)
+    val isReverse = Static.prefs.getInt(LIST_ORDER_IS_REVERSE, 0)
     val layout = LayoutInflater.from(this)
-        .inflate(R.layout.dialog_group_by_switch, null, false)
+        .inflate(R.layout.dialog_order_by_switch, null, false)
     val switch = layout.findViewById<Switch>(R.id.reverseOrderSw) as Switch
+    if (isReverse == 1) switch.toggle()
     AlertDialog.Builder(this)
         .setTitle(R.string.sort_by)
         .setView(layout)
-        .setItems(OrderStrategy.values().map { it.toUIString() }.toTypedArray(), { dialog, which ->
+        .setSingleChoiceItems(OrderStrategy.uiItems(), strategy, { dialog, which ->
           dialog.dismiss()
-          // FIXME store the chosen order strategy somewhere
+          usePrefs {
+            it.putInt(LIST_ORDER_STRATEGY, which)
+            it.putInt(LIST_ORDER_IS_REVERSE, if (switch.isChecked) 1 else 0)
+          }
           adapter.orderStrategy = OrderStrategy.values()[which]
           adapter.orderDirection =
               if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC
@@ -125,7 +133,6 @@ class StoryListActivity : ActivityWithStatic() {
     var storiesNotStarted = 0
     adapter.getStories().forEach {
       totalWords += it.wordCount
-      println(it.wordsProgressedApprox)
       passedApprox += it.wordsProgressedApprox
       when {
         it.progress > 98.0 -> storiesRead++

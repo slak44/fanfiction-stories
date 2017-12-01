@@ -1,7 +1,9 @@
 package slak.fanfictionstories.utility
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -176,3 +178,23 @@ fun autoSuffixNumber(value: Long): String {
  * @see autoSuffixNumber(Long)
  */
 fun autoSuffixNumber(value: Int): String = autoSuffixNumber(value.toLong())
+
+/**
+ * Like [usePrefs], but uses [SharedPreferences.Editor.commit] instead of apply.
+ * @see usePrefs
+ */
+@SuppressLint("ApplySharedPref")
+fun usePrefsImmediate(block: (SharedPreferences.Editor) -> Unit) {
+  val editor = Static.prefs.edit()
+  block(editor)
+  editor.commit()
+}
+
+/**
+ * Wraps [SharedPreferences]'s edit-change-apply boilerplate.
+ */
+fun usePrefs(block: (SharedPreferences.Editor) -> Unit) {
+  val editor = Static.prefs.edit()
+  block(editor)
+  editor.apply()
+}

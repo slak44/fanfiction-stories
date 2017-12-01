@@ -84,7 +84,7 @@ class MainActivity : ActivityWithStatic() {
 
   override fun onResume() {
     super.onResume()
-    val storyId = Static.sharedPref!!.getLong(Prefs.RESUME_STORY_ID, -1)
+    val storyId = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
     if (storyId == -1L) {
       resumeButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
       return

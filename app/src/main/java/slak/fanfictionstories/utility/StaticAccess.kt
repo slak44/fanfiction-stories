@@ -24,6 +24,9 @@ object Static {
   var sharedPref: SharedPreferences? = null
     private set
 
+  val prefs: SharedPreferences
+    get() = sharedPref!!
+
   fun init(context: Context) {
     if (res == null) res = context.resources
     if (cm == null)

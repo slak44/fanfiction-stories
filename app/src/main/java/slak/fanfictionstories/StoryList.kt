@@ -191,6 +191,11 @@ enum class GroupStrategy {
     COMPLETION -> R.string.group_completion
     NONE -> R.string.group_none
   })
+
+  companion object {
+    operator fun get(index: Int) = values()[index]
+    fun uiItems() = values().map { it.toUIString() }.toTypedArray()
+  }
 }
 
 /**
@@ -271,6 +276,11 @@ enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
     UPDATE_DATE -> R.string.order_update_date
     TITLE_ALPHABETIC -> R.string.order_title_alphabetic
   })
+
+  companion object {
+    operator fun get(index: Int) = values()[index]
+    fun uiItems() = values().map { it.toUIString() }.toTypedArray()
+  }
 }
 
 fun orderStories(stories: MutableList<StoryModel>,
