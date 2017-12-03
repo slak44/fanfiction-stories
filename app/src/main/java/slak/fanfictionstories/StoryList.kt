@@ -62,7 +62,7 @@ class StoryCardView : CardView {
           // We do this because we might go back from the reader to this activity and
           // it has to look properly
           launch(UI) {
-            delay(2500)
+            delay(500)
             swipeStory!!.attachToRecyclerView(null)
             swipeStory!!.attachToRecyclerView(recyclerView)
           }
