@@ -263,7 +263,7 @@ class CanonFetcher(val details: Details) : Parcelable {
           "scrollProgress" to 0.0,
           "scrollAbsolute" to 0L,
           "currentChapter" to 0L,
-          "status" to "remote",
+          "status" to "transient",
           "canon" to details.title,
           "category" to details.category,
           "summary" to summary,
