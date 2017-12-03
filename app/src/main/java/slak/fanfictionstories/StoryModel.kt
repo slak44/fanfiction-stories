@@ -13,11 +13,18 @@ import java.util.*
 import kotlin.collections.HashMap
 
 enum class StoryStatus {
-  SEEN, REMOTE, LOCAL;
+  SEEN, // FIXME do we want this?
+  // Incomplete metadata, will be set to remote if user wants to read it
+  TRANSIENT,
+  // Partially on disk
+  REMOTE,
+  // Fully on disk
+  LOCAL;
 
   companion object {
     fun fromString(s: String): StoryStatus = when (s) {
       "seen" -> SEEN
+      "transient" -> TRANSIENT
       "remote" -> REMOTE
       "local" -> LOCAL
       else -> throw IllegalArgumentException("Invalid arg: " + s)
@@ -26,12 +33,14 @@ enum class StoryStatus {
 
   override fun toString(): String = when (this) {
     SEEN -> "seen"
+    TRANSIENT -> "transient"
     REMOTE -> "remote"
     LOCAL -> "local"
   }
 
   fun toUIString(): String = when (this) {
     SEEN -> Static.res.getString(R.string.seen)
+    TRANSIENT -> throw IllegalArgumentException("Does not have an associated string")
     REMOTE -> Static.res.getString(R.string.remote)
     LOCAL -> Static.res.getString(R.string.local)
   }
