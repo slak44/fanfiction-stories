@@ -60,7 +60,8 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   }
 
   fun getStories() : Deferred<List<StoryModel>> = async2(CommonPool) {
-    readableDatabase.select(tableName = "stories").exec { parseList(StoryModel.dbParser) }
+    readableDatabase.select(tableName = "stories")
+        .whereSimple("status = ?", "local").parseList(StoryModel.dbParser)
   }
 }
 
