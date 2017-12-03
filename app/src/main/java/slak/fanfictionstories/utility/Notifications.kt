@@ -63,7 +63,7 @@ class Notifications(val context: Context, val kind: Kind) {
       context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
   init {
-    if (Build.VERSION.SDK_INT >= 26) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       val title = context.resources.getString(R.string.download_notification_channel)
       val channel =
           NotificationChannel(DOWNLOAD_CHANNEL, title, NotificationManager.IMPORTANCE_DEFAULT)
