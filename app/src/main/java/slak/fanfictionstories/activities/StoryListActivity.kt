@@ -70,7 +70,7 @@ class StoryListActivity : ActivityWithStatic() {
       if (lastStoryId.isPresent) database.use {
         val newModel = select("stories")
             .whereSimple("storyId = ?", lastStoryId.get().toString())
-            .exec { parseSingle(StoryModel.dbParser) }
+            .parseSingle(StoryModel.dbParser)
         val idx = adapter.getStories().indexOfFirst { it.storyIdRaw == lastStoryId.get() }
         launch(UI) { adapter.updateStory(idx, newModel) }
       }
