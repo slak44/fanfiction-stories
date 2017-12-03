@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.Log
+import kotlinx.android.parcel.Parceler
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.CommonPool
@@ -15,6 +16,12 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.TextNode
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.fetchers.Fetcher.DOWNLOAD_MUTEX
+import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
+import slak.fanfictionstories.fetchers.Fetcher.TAG
+import slak.fanfictionstories.fetchers.Fetcher.parseStoryMetadata
+import slak.fanfictionstories.fetchers.Fetcher.publishedTimeStoryMeta
+import slak.fanfictionstories.fetchers.Fetcher.updatedTimeStoryMeta
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.async2
@@ -78,9 +85,9 @@ enum class WordCount(val ffnetValue: String) {
   fun queryParam(): String = "len=$ffnetValue"
 }
 
-class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher(), Parcelable {
-  @Parcelize
-  @SuppressLint("ParcelCreator")
+@Parcelize @SuppressLint("ParcelCreator")
+class CanonFetcher(val details: Details) : Parcelable {
+  @Parcelize @SuppressLint("ParcelCreator")
   data class Details(
       val urlComponent: String,
       val title: String,
@@ -99,65 +106,54 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher(), 
       var char3Id: String = "0",
       var char4Id: String = "0",
 
-      var genreWithout: @RawValue Optional<Genre> = Optional.empty(),
-      var worldWithout: @RawValue Optional<String> = Optional.empty(),
-      var char1Without: @RawValue Optional<String> = Optional.empty(),
-      var char2Without: @RawValue Optional<String> = Optional.empty()
+      var genreWithout: Genre? = null,
+      var worldWithout: String? = null,
+      var char1Without: String? = null,
+      var char2Without: String? = null
   ) : Parcelable
 
-  @Parcelize
-  @SuppressLint("ParcelCreator")
+  @Parcelize @SuppressLint("ParcelCreator")
   data class World(val name: String, val id: String) : Parcelable
-  @Parcelize
-  @SuppressLint("ParcelCreator")
+  @Parcelize @SuppressLint("ParcelCreator")
   data class Character(val name: String, val id: String) : Parcelable
 
+  @Suppress("PLUGIN_WARNING")
   var worldList: Optional<List<World>> = Optional.of(listOf())
     private set
+  @Suppress("PLUGIN_WARNING")
   var charList: List<Character> = listOf()
     private set
+  @Suppress("PLUGIN_WARNING")
   var unfilteredStories: Optional<String> = Optional.empty()
     private set
 
-  constructor(parcel: Parcel) : this(
-      parcel.readValue(Context::class.java.classLoader) as Context,
-      parcel.readParcelable(Details::class.java.classLoader)) {
-    @Suppress("unchecked_cast")
-    val worldArray = parcel.readArray(Array<World>::class.java.classLoader) as Array<World>?
-    worldList = if (worldArray == null) Optional.empty() else Optional.of(worldArray.toList())
+  companion object : Parceler<CanonFetcher> {
+    override fun create(parcel: Parcel): CanonFetcher {
+      val c = CanonFetcher(parcel.readParcelable(Details::class.java.classLoader) as Details)
+      @Suppress("unchecked_cast")
+      val worldArray = parcel.readArray(Array<World>::class.java.classLoader) as Array<World>?
+      c.worldList = if (worldArray == null) Optional.empty() else Optional.of(worldArray.toList())
 
-    @Suppress("unchecked_cast")
-    val charArray = parcel.readArray(Array<Character>::class.java.classLoader) as Array<Character>
-    charList = charArray.toList()
+      @Suppress("unchecked_cast")
+      val charArray = parcel.readArray(Array<Character>::class.java.classLoader) as Array<Character>
+      c.charList = charArray.toList()
 
-    val str = parcel.readString()
-    unfilteredStories = if (str == null) Optional.empty() else Optional.of(str)
-  }
+      val str = parcel.readString()
+      c.unfilteredStories = if (str == null) Optional.empty() else Optional.of(str)
 
-  override fun writeToParcel(dest: Parcel, flags: Int) {
-    dest.writeValue(ctx)
-    dest.writeParcelable(details, 0)
-    dest.writeArray(if (worldList.isPresent) worldList.get().toTypedArray() else null)
-    dest.writeArray(charList.toTypedArray())
-    dest.writeString(if (unfilteredStories.isPresent) unfilteredStories.get() else null)
-  }
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  companion object CREATOR : Parcelable.Creator<CanonFetcher> {
-    override fun createFromParcel(parcel: Parcel): CanonFetcher {
-      return CanonFetcher(parcel)
+      return c
     }
 
-    override fun newArray(size: Int): Array<CanonFetcher?> {
-      return arrayOfNulls(size)
+    override fun CanonFetcher.write(parcel: Parcel, flags: Int) {
+      parcel.writeParcelable(details, 0)
+      parcel.writeArray(if (worldList.isPresent) worldList.get().toTypedArray() else null)
+      parcel.writeArray(charList.toTypedArray())
+      parcel.writeString(if (unfilteredStories.isPresent) unfilteredStories.get() else null)
     }
   }
 
-  fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
-    val n = Notifications(ctx, Notifications.Kind.OTHER)
+  fun get(page: Int, context: Context): Deferred<List<StoryModel>> = async2(CommonPool) {
+    val n = Notifications(context, Notifications.Kind.OTHER)
     val html = fetchPage(page, n).await()
     return@async2 parseHtml(html)
   }
@@ -177,14 +173,10 @@ class CanonFetcher(private val ctx: Context, val details: Details) : Fetcher(), 
         "c2=${details.char2Id}",
         "c3=${details.char3Id}",
         "c4=${details.char4Id}",
-        if (details.genreWithout.isPresent) "_${details.genreWithout.get().queryParam(1)}"
-        else "",
-        if (details.worldWithout.isPresent) "_v1=${details.worldWithout.get()}"
-        else "",
-        if (details.char1Without.isPresent) "_c1=${details.char1Without.get()}"
-        else "",
-        if (details.char2Without.isPresent) "_c2=${details.char2Without.get()}"
-        else ""
+        if (details.genreWithout != null) "_${details.genreWithout!!.queryParam(1)}" else "",
+        if (details.worldWithout != null) "_v1=${details.worldWithout}" else "",
+        if (details.char1Without != null) "_c1=${details.char1Without}" else "",
+        if (details.char2Without != null) "_c2=${details.char2Without}" else ""
     ).joinToString("&")
 
     return@async2 DOWNLOAD_MUTEX.withLock {

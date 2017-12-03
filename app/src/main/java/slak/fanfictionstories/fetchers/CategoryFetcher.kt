@@ -10,6 +10,9 @@ import slak.fanfictionstories.Canon
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categories
 import slak.fanfictionstories.activities.categoryUrl
+import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
+import slak.fanfictionstories.fetchers.Fetcher.TAG
+import slak.fanfictionstories.fetchers.Fetcher.regexOpts
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.async2
@@ -21,7 +24,7 @@ import java.util.*
 // Unix timestamp + canon list
 private typealias CategoryCanons = Pair<Long, List<Canon>>
 
-class CategoryFetcher(private val ctx: Context) : Fetcher() {
+class CategoryFetcher(private val ctx: Context) {
   object Cache {
     // Cache categoryIdx's result
     private var cache = Array<CategoryCanons?>(categories.size, { null })

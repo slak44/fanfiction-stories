@@ -11,6 +11,12 @@ import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
 import org.jetbrains.anko.db.update
 import slak.fanfictionstories.*
+import slak.fanfictionstories.fetchers.Fetcher.DOWNLOAD_MUTEX
+import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
+import slak.fanfictionstories.fetchers.Fetcher.STORAGE_WAIT_DELAY_SECONDS
+import slak.fanfictionstories.fetchers.Fetcher.TAG
+import slak.fanfictionstories.fetchers.Fetcher.parseMetadata
+import slak.fanfictionstories.fetchers.Fetcher.regexOpts
 import slak.fanfictionstories.utility.*
 import java.net.URL
 import java.util.*
@@ -43,27 +49,28 @@ fun getFullStory(ctx: Context, storyId: Long,
   return@async2 Optional.of(model)
 }
 
-open class Fetcher {
-  companion object {
-    const val RATE_LIMIT_MILLISECONDS = 300L
-    const val CONNECTION_WAIT_DELAY_SECONDS = 3L
-    const val CONNECTION_MISSING_DELAY_SECONDS = 5L
-    const val STORAGE_WAIT_DELAY_SECONDS = 5L
-    @JvmStatic
-    protected val DOWNLOAD_MUTEX = Mutex()
-    @JvmStatic
-    protected val TAG = "Fetcher"
-    @JvmStatic
-    protected val regexOpts: Set<RegexOption> = hashSetOf(
-        RegexOption.MULTILINE,
-        RegexOption.UNIX_LINES,
-        RegexOption.DOT_MATCHES_ALL
-    )
-  }
+object Fetcher {
+  const val RATE_LIMIT_MILLISECONDS = 300L
+  const val CONNECTION_WAIT_DELAY_SECONDS = 3L
+  const val CONNECTION_MISSING_DELAY_SECONDS = 5L
+  const val STORAGE_WAIT_DELAY_SECONDS = 5L
+  @JvmStatic
+  val DOWNLOAD_MUTEX = Mutex()
+  @JvmStatic
+  val TAG = "Fetcher"
+  @JvmStatic
+  val regexOpts: Set<RegexOption> = hashSetOf(
+      RegexOption.MULTILINE,
+      RegexOption.UNIX_LINES,
+      RegexOption.DOT_MATCHES_ALL
+  )
 
   private fun cleanNrMatch(res: MatchResult?): String? =
       res?.groupValues?.get(1)?.replace(",", "")?.trim()
 
+  /**
+   * Parses story metadata from the metadata div.
+   */
   fun parseStoryMetadata(metadata: String): Map<String, String?> {
     val ratingLang = Regex("Rated: (?:<a .*?>Fiction[ ]{2})?(.*?)(?:</a>)? - (.*?) -", regexOpts)
         .find(metadata) ?: {
@@ -121,31 +128,18 @@ open class Fetcher {
     return if (time == null) null else time.groupValues[1]
   }
 
-  // TODO: consider a general cache for all fetchers (with different cache times obv)
-}
-
-class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetcher() {
-  companion object {
-    // Regen DB if you change this separator
-    const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
-  }
-
-  private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
-  private var metadataChapter: Optional<String> = Optional.empty()
-
-  fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async2(CommonPool) {
-    DOWNLOAD_MUTEX.lock()
-    delay(RATE_LIMIT_MILLISECONDS)
-    val html: String = fetchChapter(1, n).await()
-    DOWNLOAD_MUTEX.unlock()
-
+  /**
+   * Parses all required metadata for a [StoryModel].
+   * @param html html string of any chapter of the story
+   */
+  fun parseMetadata(html: String, storyId: Long): MutableMap<String, Any> {
     // FIXME: one day replace some of the regex with the html parser
     // The regex are shit, because so is what we're trying to parse
     // I mean really, using ' for attributes?
     // Sometimes not using any quotes at all?
     // Mixing lower case and upper case for tags?
     // Inline css/js?
-    // Tag soup?
+    // Having a tag soup because line breaks appear at random?
     // Not closing tags that should have been?
     // Are the standards too permissive, or browser implementations...
 
@@ -177,15 +171,15 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
           ?: throw IllegalStateException("Cannot find chapter titles")
       chapterTitles = Optional.of(chapterTitlesRaw.groupValues[1].replace(
           // The space at the end of this regex is intentional
-          Regex("<option.*?>\\d+\\. ", regexOpts), CHAPTER_TITLE_SEPARATOR)
+          Regex("<option.*?>\\d+\\. ", regexOpts), StoryFetcher.CHAPTER_TITLE_SEPARATOR)
           // There is one at the beginning that we don't care about (because it's not a separator)
-          .removePrefix(CHAPTER_TITLE_SEPARATOR))
+          .removePrefix(StoryFetcher.CHAPTER_TITLE_SEPARATOR))
     }
 
     val publishTime = publishedTimeStoryMeta(html)
     val updateTime = updatedTimeStoryMeta(html)
 
-    metadata = Optional.of(mutableMapOf(
+    return mutableMapOf(
         "storyId" to storyId,
         "authorid" to author.groupValues[1].toLong(),
         "rating" to meta["rating"]!!,
@@ -210,10 +204,33 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
         "author" to author.groupValues[2],
         "title" to title.groupValues[1],
         "chapterTitles" to if (chapterTitles.isPresent) chapterTitles.get() else ""
-    ))
+    )
+  }
+  // TODO: consider a general cache for all fetchers (with different cache times obv)
+}
 
+class StoryFetcher(private val storyId: Long, private val ctx: Context) {
+  companion object {
+    // Regen DB if you change this separator
+    const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
+  }
+
+  private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
+  private var metadataChapter: Optional<String> = Optional.empty()
+
+  fun setMetadata(model: StoryModel) {
+    if (model.storyIdRaw != storyId) throw IllegalArgumentException("Arg storyId does not match")
+    metadata = Optional.of(model.src)
+  }
+
+  fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async2(CommonPool) {
+    DOWNLOAD_MUTEX.lock()
+    delay(RATE_LIMIT_MILLISECONDS)
+    val html: String = fetchChapter(1, n).await()
+    DOWNLOAD_MUTEX.unlock()
     metadataChapter = Optional.of(parseChapter(html))
-
+    val meta = parseMetadata(html, storyId)
+    metadata = Optional.of(meta)
     return@async2 StoryModel(metadata.get(), fromDb = false)
   }
 
@@ -291,7 +308,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
     return@async2 true
   }
 
-  private fun fetchChapter(chapter: Int, n: Notifications): Deferred<String> = async2(CommonPool) {
+  fun fetchChapter(chapter: Int, n: Notifications): Deferred<String> = async2(CommonPool) {
     waitForNetwork(n).await()
     try {
       return@async2 URL("https://www.fanfiction.net/s/$storyId/$chapter/").readText()
@@ -304,7 +321,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) : Fetche
     }
   }
 
-  private fun parseChapter(fromHtml: String): String {
+  fun parseChapter(fromHtml: String): String {
     val story = Regex("id='storytext'>(.*?)</div>", regexOpts).find(fromHtml) ?:
         throw IllegalStateException("Cannot find story")
     return story.groupValues[1]
