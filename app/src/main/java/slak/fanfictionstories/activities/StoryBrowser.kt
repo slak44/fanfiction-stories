@@ -1,6 +1,5 @@
 package slak.fanfictionstories.activities
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -15,6 +14,7 @@ import android.widget.ArrayAdapter
 import either.Either
 import either.Left
 import either.Right
+import either.fold
 import kotlinx.android.synthetic.main.activity_browse_category.*
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.activity_select_category.*
@@ -26,7 +26,6 @@ import kotlinx.coroutines.experimental.sync.Mutex
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
-import java.util.*
 import kotlin.properties.Delegates
 
 val categories: Array<String> by lazy { Static.res.getStringArray(R.array.categories) }
@@ -134,8 +133,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
     this.title = title
 
     if (!hasSaved) {
-      fetcher = CanonFetcher(this@CanonStoryListActivity,
-          CanonFetcher.Details(urlComp, title, srcCategory))
+      fetcher = CanonFetcher(CanonFetcher.Details(urlComp, title, srcCategory))
       addPage(1)
     }
 
@@ -169,8 +167,9 @@ class CanonStoryListActivity : ActivityWithStatic() {
     super.onSaveInstanceState(outState)
     outState.putInt(CURRENT_PAGE_RESTORE, currentPage)
     outState.putParcelable(FETCHER_RESTORE, fetcher)
-    outState.putParcelableArray(ADAPTER_DATA_RESTORE,
-        adapter.getAdapterData().map { it -> EitherWrapper(it) }.toTypedArray())
+    outState.putParcelableArray(ADAPTER_DATA_RESTORE, adapter.getAdapterData().map {
+      it.fold({ EitherWrapper(it, null) }, { EitherWrapper(null, it) })
+    }.toTypedArray())
   }
 
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -179,14 +178,17 @@ class CanonStoryListActivity : ActivityWithStatic() {
     fetcher = savedInstanceState.getParcelable(FETCHER_RESTORE)
     val data = savedInstanceState.getParcelableArray(ADAPTER_DATA_RESTORE)
     @Suppress("unchecked_cast")
-    adapter.addData(data.map { (it as EitherWrapper<StoryModel, String>).e })
+    adapter.addData(data.map {
+      it as EitherWrapper<StoryModel, String>
+      return@map if (it.l == null) Right(it.r) else Left(it.l)
+    } as List<Either<StoryModel, String>>)
   }
 
   private fun addPage(page: Int) = launch(UI) {
     // Add page title
     adapter.addData(Right(resources.getString(R.string.page_x, page)))
     // Add stories
-    adapter.addData(fetcher.get(page).await().map { Left(it) })
+    adapter.addData(fetcher.get(page, this@CanonStoryListActivity).await().map { Left(it) })
     supportActionBar?.subtitle =
         resources.getString(R.string.x_stories, fetcher.unfilteredStories.get())
   }
@@ -242,9 +244,9 @@ class CanonStoryListActivity : ActivityWithStatic() {
       char2.onSelect { _, pos -> fetcher.details.char2Id = fetcher.charList[pos].id }
       char3.onSelect { _, pos -> fetcher.details.char3Id = fetcher.charList[pos].id }
       char4.onSelect { _, pos -> fetcher.details.char4Id = fetcher.charList[pos].id }
-      notChar1.onSelect { _, pos -> fetcher.details.char1Without = Optional.of(fetcher.charList[pos].id) }
-      notChar2.onSelect { _, pos -> fetcher.details.char2Without = Optional.of(fetcher.charList[pos].id) }
-      notGenre.onSelect { _, pos -> fetcher.details.genreWithout = Optional.of(Genre.values()[pos]) }
+      notChar1.onSelect { _, pos -> fetcher.details.char1Without = fetcher.charList[pos].id }
+      notChar2.onSelect { _, pos -> fetcher.details.char2Without = fetcher.charList[pos].id }
+      notGenre.onSelect { _, pos -> fetcher.details.genreWithout = Genre.values()[pos] }
 
       sort.setSelection(Sort.values().indexOf(fetcher.details.sort))
       timeRange.setSelection(TimeRange.values().indexOf(fetcher.details.timeRange))
@@ -272,9 +274,9 @@ class CanonStoryListActivity : ActivityWithStatic() {
         world.onSelect { _, pos -> fetcher.details.worldId = wl[pos].id }
         world.setSelection(wl.indexOfFirst { it.id == fetcher.details.worldId})
 
-        notWorld.onSelect { _, pos -> fetcher.details.worldWithout = Optional.of(wl[pos].name) }
-        if (fetcher.details.worldWithout.isPresent) {
-          notWorld.setSelection(worldNameList.indexOf(fetcher.details.worldWithout.get()))
+        notWorld.onSelect { _, pos -> fetcher.details.worldWithout = wl[pos].name }
+        if (fetcher.details.worldWithout != null) {
+          notWorld.setSelection(worldNameList.indexOf(fetcher.details.worldWithout!!))
         }
       }
       val worldSpinnerState = if (fetcher.worldList.isPresent) View.VISIBLE else View.GONE
@@ -283,14 +285,14 @@ class CanonStoryListActivity : ActivityWithStatic() {
       worldText.visibility = worldSpinnerState
       notWorldText.visibility = worldSpinnerState
 
-      if (fetcher.details.genreWithout.isPresent) {
-        notGenre.setSelection(Genre.values().indexOf(fetcher.details.genreWithout.get()))
+      if (fetcher.details.genreWithout != null) {
+        notGenre.setSelection(Genre.values().indexOf(fetcher.details.genreWithout!!))
       }
-      if (fetcher.details.char1Without.isPresent) {
-        notChar1.setSelection(charNameList.indexOf(fetcher.details.char1Without.get()))
+      if (fetcher.details.char1Without != null) {
+        notChar1.setSelection(charNameList.indexOf(fetcher.details.char1Without!!))
       }
-      if (fetcher.details.char2Without.isPresent) {
-        notChar2.setSelection(charNameList.indexOf(fetcher.details.char2Without.get()))
+      if (fetcher.details.char2Without != null) {
+        notChar2.setSelection(charNameList.indexOf(fetcher.details.char2Without!!))
       }
     }
 

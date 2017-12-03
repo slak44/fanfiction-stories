@@ -19,7 +19,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
-import either.Either
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.*
@@ -203,6 +202,5 @@ fun usePrefs(block: (SharedPreferences.Editor) -> Unit) {
   editor.apply()
 }
 
-@Parcelize
-@SuppressLint("ParcelCreator")
-data class EitherWrapper<out T1, out T2>(val e: @RawValue Either<T1, T2>) : Parcelable
+@Parcelize @SuppressLint("ParcelCreator")
+data class EitherWrapper<out T1, out T2>(val l: @RawValue T1?, val r: @RawValue T2?) : Parcelable

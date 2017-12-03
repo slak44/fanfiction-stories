@@ -1,6 +1,5 @@
 package slak.fanfictionstories.activities
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Typeface
@@ -22,12 +21,12 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import org.jetbrains.anko.db.LongParser
-import org.jetbrains.anko.db.parseSingle
-import org.jetbrains.anko.db.select
-import org.jetbrains.anko.db.update
+import org.jetbrains.anko.db.*
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.StoryStatus
+import slak.fanfictionstories.fetchers.Fetcher.parseMetadata
+import slak.fanfictionstories.fetchers.StoryFetcher
 import slak.fanfictionstories.storyDir
 import slak.fanfictionstories.utility.*
 import java.io.File
@@ -77,7 +76,6 @@ private class FastTextView : View {
 }
 
 class StoryReaderActivity : ActivityWithStatic() {
-
   companion object {
     const val INTENT_STORY_MODEL = "bundle"
     private const val PLACEHOLDER = "######HRPLACEHOLDERHRPLACEHOLDERHRPLACEHOLDER######"
@@ -100,9 +98,16 @@ class StoryReaderActivity : ActivityWithStatic() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     model = intent.getParcelableExtra(INTENT_STORY_MODEL)
+    if (model.status == StoryStatus.TRANSIENT) database.use {
+      val maybeModel = select("stories")
+          .whereSimple("storyId = ?", model.storyIdRaw.toString())
+          .parseOpt(StoryModel.dbParser)
+      model = maybeModel ?: model
+    }
 
-    // Save story for the resume button
-    usePrefs { it.putLong(Prefs.RESUME_STORY_ID, model.storyIdRaw) }
+    // Save story for the resume button, but only for local stories
+    if (model.status == StoryStatus.LOCAL)
+      usePrefs { it.putLong(Prefs.RESUME_STORY_ID, model.storyIdRaw) }
 
     title = model.title
     currentChapter = if (model.currentChapter == 0) 1 else model.currentChapter
@@ -127,7 +132,7 @@ class StoryReaderActivity : ActivityWithStatic() {
     database.use {
       val absoluteScroll = select("stories", "scrollAbsolute")
           .whereSimple("storyId = ?", model.storyIdRaw.toString())
-          .exec { parseSingle(LongParser) }
+          .parseOpt(DoubleParser) ?: return@use
       launch(UI) {
         if (absoluteScroll > resources.getDimensionPixelSize(R.dimen.app_bar_height))
           appBar.setExpanded(false)
@@ -278,17 +283,28 @@ class StoryReaderActivity : ActivityWithStatic() {
     else -> super.onOptionsItemSelected(item)
   }
 
+  private var fetcher: StoryFetcher? = null
   private fun readChapter(storyId: Long, chapter: Int): Deferred<String> = async2(CommonPool) {
+    if (fetcher == null) fetcher = StoryFetcher(storyId, this@StoryReaderActivity)
     val storyDir = storyDir(this@StoryReaderActivity, storyId)
     if (!storyDir.isPresent) throw IllegalStateException("Cannot read $storyId dir")
-    if (!storyDir.get().exists()) {
-      // FIXME download it
-      return@async2 ""
+    if (!storyDir.get().exists()) storyDir.get().mkdirs()
+    val chapterFile = File(storyDir.get(), "$chapter.html")
+    if (!chapterFile.exists()) {
+      // FIXME show loading thingy, this may not be fast
+      val n = Notifications(this@StoryReaderActivity, Notifications.Kind.DOWNLOADING)
+      val chapterHtmlText = fetcher!!.fetchChapter(chapter, n).await()
+      val text = fetcher!!.parseChapter(chapterHtmlText)
+      chapterFile.printWriter().use { it.print(text) }
+      if (model.status == StoryStatus.TRANSIENT) {
+        model = StoryModel(parseMetadata(chapterHtmlText, storyId), fromDb = false)
+        model.status = StoryStatus.REMOTE
+        fetcher!!.setMetadata(model)
+        database.use { insertOrThrow("stories", *model.toKvPairs()) }
+      }
+      return@async2 text
+    } else {
+      return@async2 chapterFile.readText()
     }
-    val chapterHtml = File(storyDir.get(), "$chapter.html")
-    if (!chapterHtml.exists()) {
-      throw NoSuchFileException(chapterHtml, null, "Cannot read $storyId/$chapter.html")
-    }
-    return@async2 chapterHtml.readText()
   }
 }
