@@ -19,6 +19,7 @@ import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.fetchers.Fetcher.DOWNLOAD_MUTEX
 import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
 import slak.fanfictionstories.fetchers.Fetcher.TAG
+import slak.fanfictionstories.fetchers.Fetcher.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.Fetcher.parseStoryMetadata
 import slak.fanfictionstories.fetchers.Fetcher.publishedTimeStoryMeta
 import slak.fanfictionstories.fetchers.Fetcher.updatedTimeStoryMeta
@@ -219,8 +220,6 @@ class CanonFetcher(val details: Details) : Parcelable {
 
       // The author 'a' element is the second last before the reviews
       val authorAnchor = it.select("a:not(.reviews)").last()
-      // Href looks like /u/6772732/Gnaoh-El-Nart, pick the id
-      val authorId = authorAnchor.attr("href").split('/')[2].toLong()
       val authorName = authorAnchor.textNodes()[0].toString()
 
       // There is only one such div
@@ -244,7 +243,7 @@ class CanonFetcher(val details: Details) : Parcelable {
 
       list.add(StoryModel(mutableMapOf(
           "storyId" to storyId,
-          "authorid" to authorId,
+          "authorid" to authorIdFromAuthor(authorAnchor),
           "rating" to meta["rating"]!!,
           "language" to meta["language"]!!,
           "genres" to meta["genres"]!!,

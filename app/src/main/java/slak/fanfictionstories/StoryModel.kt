@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import org.jetbrains.anko.db.MapRowParser
+import slak.fanfictionstories.fetchers.Fetcher.CHAPTER_TITLE_SEPARATOR
 import slak.fanfictionstories.fetchers.StoryFetcher
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.autoSuffixNumber
@@ -69,7 +70,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   private val chapterTitlesRaw: String = src["chapterTitles"] as String
 
   // UI data
-  val chapterTitles = chapterTitlesRaw.split(StoryFetcher.CHAPTER_TITLE_SEPARATOR)
+  val chapterTitles = chapterTitlesRaw.split(CHAPTER_TITLE_SEPARATOR)
   val chapterCount: Int = (src["chapters"] as Long).toInt()
   val title = src["title"] as String
   val summary = src["summary"] as String

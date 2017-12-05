@@ -3,13 +3,17 @@ package slak.fanfictionstories.fetchers
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.util.Log
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
-import org.jetbrains.anko.db.update
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Fetcher.DOWNLOAD_MUTEX
 import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
@@ -61,6 +65,9 @@ object Fetcher {
       RegexOption.UNIX_LINES,
       RegexOption.DOT_MATCHES_ALL
   )
+
+  // Regen DB if you change this separator
+  const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
 
   private fun cleanNrMatch(res: MatchResult?): String? =
       res?.groupValues?.get(1)?.replace(",", "")?.trim()
@@ -125,13 +132,17 @@ object Fetcher {
     return if (time == null) null else time.groupValues[1]
   }
 
+  fun authorIdFromAuthor(author: Element): Long {
+    // The `href` on the author element looks like /u/6772732/Gnaoh-El-Nart, so pick the id at pos 2
+    return author.attr("href").split("/")[2].toLong()
+  }
+
   /**
    * Parses all required metadata for a [StoryModel].
    * @param html html string of any chapter of the story
    */
   fun parseMetadata(html: String, storyId: Long): MutableMap<String, Any> {
-    // FIXME: one day replace some of the regex with the html parser
-    // The regex are shit, because so is what we're trying to parse
+    // The raw html is completely insane
     // I mean really, using ' for attributes?
     // Sometimes not using any quotes at all?
     // Mixing lower case and upper case for tags?
@@ -139,38 +150,25 @@ object Fetcher {
     // Having a tag soup because line breaks appear at random?
     // Not closing tags that should have been?
     // Are the standards too permissive, or browser implementations...
+    // Thank god for html parsers
 
-    val author =
-        Regex("<a class='xcontrast_txt' href='/u/([0-9]+)/.*?'>(.*?)</a>", regexOpts)
-            .find(html) ?: throw IllegalStateException("Can't match author")
+    val doc = Jsoup.parse(html)
 
-    val title = Regex("<b class='xcontrast_txt'>(.*?)</b>", regexOpts).find(html) ?:
-        throw IllegalStateException("Can't match title")
+    val author = doc.select("#profile_top > a.xcontrast_txt")[0]
+    val title = doc.select("#profile_top > b.xcontrast_txt")[0].text()
+    val summary = doc.select("#profile_top > div.xcontrast_txt")[0].text()
+    val categories = doc.select("#pre_story_links > span.lc-left > a.xcontrast_txt")
+    val metaString = doc.select("#profile_top > span.xgray").html()
+    val meta = parseStoryMetadata(metaString)
 
-    val summary =
-        Regex("<div style='margin-top:2px' class='xcontrast_txt'>(.*?)</div>", regexOpts)
-            .find(html) ?: throw IllegalStateException("Can't match summary")
-
-    val categories =
-        Regex("id=pre_story_links>.*?<a .*?>(.*?)</a>.*?<a .*?>(.*?)</a>", regexOpts)
-            .find(html) ?: throw IllegalStateException("Can't match categories")
-
-    val metadataInnerHtml =
-        Regex("<span class='xgray xcontrast_txt'>(.*?)</span>.*?</span>", regexOpts)
-            .find(html) ?: throw IllegalStateException("Can't match metadata for FF.net chapter 1")
-    val metadataStr = metadataInnerHtml.groupValues[1]
-    val meta = parseStoryMetadata(metadataStr)
-
-    var chapterTitles: Optional<String> = Optional.empty()
-    // Parsing chapter titles only if there are any chapters to name
-    if (meta["chapters"] != null) {
-      val chapterTitlesRaw = Regex("id=chap_select.*?>(.*?)</select>", regexOpts).find(html)
-          ?: throw IllegalStateException("Cannot find chapter titles")
-      chapterTitles = chapterTitlesRaw.groupValues[1].replace(
-          // The space at the end of this regex is intentional
-          Regex("<option.*?>\\d+\\. ", regexOpts), StoryFetcher.CHAPTER_TITLE_SEPARATOR)
-          // There is one at the beginning that we don't care about (because it's not a separator)
-          .removePrefix(StoryFetcher.CHAPTER_TITLE_SEPARATOR).opt()
+    // Parse chapter titles only if there are any chapters to name
+    val chapterTitles: Optional<String> = if (meta["chapters"] == null) {
+      Optional.empty()
+    } else {
+      doc.select("#chap_select > option").joinToString(CHAPTER_TITLE_SEPARATOR) {
+        // The actual chapter title is preceded by the chapter nr, a dot, and a space:
+        it.text().replace(Regex("\\d+\\. ", regexOpts), "")
+      }.opt()
     }
 
     val publishTime = publishedTimeStoryMeta(html)
@@ -178,7 +176,6 @@ object Fetcher {
 
     return mutableMapOf(
         "storyId" to storyId,
-        "authorid" to author.groupValues[1].toLong(),
         "rating" to meta["rating"]!!,
         "language" to meta["language"]!!,
         "genres" to meta["genres"]!!,
@@ -190,16 +187,17 @@ object Fetcher {
         "follows" to if (meta["follows"] != null) meta["follows"]!!.toLong() else 0L,
         "publishDate" to (publishTime?.toLong() ?: 0L),
         "updateDate" to (updateTime?.toLong() ?: 0L),
-        "isCompleted" to if (metadataInnerHtml.groupValues[0].indexOf("Complete") > -1) 1L else 0L,
+        "isCompleted" to if (metaString.indexOf("Complete") > -1) 1L else 0L,
         "scrollProgress" to 0.0,
         "scrollAbsolute" to 0L,
         "currentChapter" to 0L,
         "status" to "remote",
-        "canon" to categories.groupValues[2],
-        "category" to categories.groupValues[1],
-        "summary" to summary.groupValues[1],
-        "author" to author.groupValues[2],
-        "title" to title.groupValues[1],
+        "canon" to categories[0].text(),
+        "category" to categories[1].text(),
+        "summary" to summary,
+        "authorid" to authorIdFromAuthor(author),
+        "author" to author.text(),
+        "title" to title,
         "chapterTitles" to chapterTitles.orElse("")
     )
   }
@@ -207,11 +205,6 @@ object Fetcher {
 }
 
 class StoryFetcher(private val storyId: Long, private val ctx: Context) {
-  companion object {
-    // Regen DB if you change this separator
-    const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
-  }
-
   private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
   private var metadataChapter: Optional<String> = Optional.empty()
 
