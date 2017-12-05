@@ -57,7 +57,7 @@ class StoryUpdateReceiver : BroadcastReceiver() {
   private fun update(context: Context, n: Notifications) = async2(CommonPool) {
     Log.i("StoryUpdateReceiver", "Updating")
     updatedStories = mutableListOf()
-    val storyModels = context.database.getStories().await()
+    val storyModels = context.database.getLocalStories().await()
     // We can launch all of them at once since there can only be one holding the download lock,
     // so we won't assblast their site with requests
     val jobs = storyModels.map { model ->

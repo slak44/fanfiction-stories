@@ -66,10 +66,9 @@ class StoryListActivity : ActivityWithStatic() {
   override fun onResume() {
     super.onResume()
     launch(CommonPool) {
-      if (lastStoryId.isPresent) database.use {
-        val newModel = select("stories")
-            .whereSimple("storyId = ?", lastStoryId.get().toString())
-            .parseSingle(StoryModel.dbParser)
+      if (lastStoryId.isPresent) {
+        val newModel = database.storyById(lastStoryId.get())
+            .orElseThrow(IllegalStateException("Story $lastStoryId MUST exist"))
         val idx = adapter.getStories().indexOfFirst { it.storyIdRaw == lastStoryId.get() }
         launch(UI) { adapter.updateStory(idx, newModel) }
       }

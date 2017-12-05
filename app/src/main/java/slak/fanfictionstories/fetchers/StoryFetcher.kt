@@ -41,10 +41,7 @@ fun getFullStory(ctx: Context, storyId: Long,
   if (isWriting) {
     Notifications.downloadedStory(ctx, model.title)
   } else {
-    ctx.database.use {
-      update("stories", "status" to "remote")
-          .whereSimple("storyId = ?", storyId.toString()).exec()
-    }
+    ctx.database.updateInStory(storyId, "status" to "remote")
   }
   return@async2 model.opt()
 }

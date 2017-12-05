@@ -206,6 +206,19 @@ fun usePrefs(block: (SharedPreferences.Editor) -> Unit) {
 data class EitherWrapper<out T1, out T2>(val l: @RawValue T1?, val r: @RawValue T2?) : Parcelable
 
 /**
- * Shorthand for [Optional.of]
+ * Shorthand for `if (obj == null) Optional.empty() else Optional.of(obj)`
+ * @see Optional.of
+ * @see Optional.empty
  */
-fun <T> T.opt(): Optional<T> = Optional.of(this)
+fun <T> T?.opt(): Optional<T> = if (this == null) Optional.empty() else Optional.of(this)
+
+/**
+ * A prettier, `inline` version of [Optional.orElseGet].
+ */
+inline fun <T> Optional<T>.orElse(block: () -> T): T = if (this.isPresent) this.get() else block()
+
+/**
+ * Sugar for the default orElseThrow.
+ */
+fun <T> Optional<T>.orElseThrow(th: Throwable): T = if (this.isPresent) this.get() else throw th
+

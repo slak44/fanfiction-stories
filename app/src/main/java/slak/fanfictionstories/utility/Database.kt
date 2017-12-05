@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import kotlinx.coroutines.experimental.*
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.StoryModel
+import java.util.*
 
 class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 1) {
   companion object {
@@ -59,9 +60,24 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     // Here you can upgrade tables, as usual
   }
 
-  fun getStories() : Deferred<List<StoryModel>> = async2(CommonPool) {
+  fun getLocalStories() : Deferred<List<StoryModel>> = async2(CommonPool) {
     readableDatabase.select(tableName = "stories")
         .whereSimple("status = ?", "local").parseList(StoryModel.dbParser)
+  }
+
+  fun getStories() : Deferred<List<StoryModel>> = async2(CommonPool) {
+    readableDatabase.select(tableName = "stories").parseList(StoryModel.dbParser)
+  }
+
+  fun storyById(storyId: Long): Optional<StoryModel> {
+    return readableDatabase.select("stories")
+        .whereSimple("storyId = ?", storyId.toString())
+        .parseOpt(StoryModel.dbParser).opt()
+  }
+
+  fun updateInStory(storyId: Long, vararg pairs: Pair<String, Any>) {
+    writableDatabase.update("stories", *pairs)
+        .whereSimple("storyId = ?", storyId.toString())
   }
 }
 

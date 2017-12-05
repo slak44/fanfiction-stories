@@ -21,6 +21,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
@@ -98,11 +99,9 @@ class StoryReaderActivity : ActivityWithStatic() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     model = intent.getParcelableExtra(INTENT_STORY_MODEL)
-    if (model.status == StoryStatus.TRANSIENT) database.use {
-      val maybeModel = select("stories")
-          .whereSimple("storyId = ?", model.storyIdRaw.toString())
-          .parseOpt(StoryModel.dbParser)
-      model = maybeModel ?: model
+    if (model.status == StoryStatus.TRANSIENT) {
+      // If it's in the db, use it, else set keep the transient one
+      model = database.storyById(model.storyIdRaw).orElse(model)
     }
 
     // Save story for the resume button, but only for local stories
@@ -181,10 +180,7 @@ class StoryReaderActivity : ActivityWithStatic() {
     chapterText.setText(html).await()
 
     updateUiAfterFetchingText(chapterToRead)
-    database.use {
-      update("stories", "currentChapter" to chapterToRead)
-          .whereSimple("storyId = ?", model.storyIdRaw.toString()).exec()
-    }
+    database.updateInStory(model.storyIdRaw, "currentChapter" to chapterToRead)
   }
 
   private fun getColorFor(textView: TextView): Int {
@@ -234,11 +230,8 @@ class StoryReaderActivity : ActivityWithStatic() {
       // Make sure that values >100 get clamped to 100
       val percentageScrolled = Math.min(rawPercentage, 100.0)
 
-      database.use {
-        update("stories",
-            "scrollProgress" to percentageScrolled, "scrollAbsolute" to res)
-            .whereSimple("storyid = ?", model.storyIdRaw.toString()).exec()
-      }
+      database.updateInStory(model.storyIdRaw,
+          "scrollProgress" to percentageScrolled, "scrollAbsolute" to res)
     }
   }
 
