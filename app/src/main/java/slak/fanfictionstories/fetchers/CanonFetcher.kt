@@ -26,6 +26,7 @@ import slak.fanfictionstories.fetchers.Fetcher.updatedTimeStoryMeta
 import slak.fanfictionstories.utility.*
 import java.net.URL
 import java.util.*
+import java.util.stream.Collectors
 
 enum class Sort(val ffnetValue: String) {
   UPDATE_DATE("1"), PUBLISH_DATE("2"),
@@ -210,9 +211,7 @@ class CanonFetcher(val details: Details) : Parcelable {
       }
     }
 
-    val list = mutableListOf<StoryModel>()
-    // FIXME use parallel map for this instead of foreach
-    doc.select("#content_wrapper_inner > div.z-list.zhover.zpointer").forEach {
+    val list = doc.select("#content_wrapper_inner > div.z-list.zhover.zpointer").parallelStream().map {
       // Looks like /s/12656819/1/For-the-Motherland, pick the id
       val storyId = it.child(0).attr("href").split('/')[2].toLong()
       // The one and only text node there is the title
@@ -241,7 +240,7 @@ class CanonFetcher(val details: Details) : Parcelable {
         }
       }
 
-      list.add(StoryModel(mutableMapOf(
+      return@map StoryModel(mutableMapOf(
           "storyId" to storyId,
           "authorid" to authorIdFromAuthor(authorAnchor),
           "rating" to meta["rating"]!!,
@@ -266,8 +265,8 @@ class CanonFetcher(val details: Details) : Parcelable {
           "author" to authorName,
           "title" to title,
           "chapterTitles" to ""
-      ), false))
-    }
+      ), false)
+    }.collect(Collectors.toList())
 
     val centerElem = doc.select("#content_wrapper_inner > center")
     unfilteredStories = if (centerElem.size == 0) {
