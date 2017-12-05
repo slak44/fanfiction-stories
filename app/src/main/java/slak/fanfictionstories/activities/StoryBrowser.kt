@@ -63,7 +63,6 @@ class BrowseCategoryActivity : ActivityWithStatic() {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_browse_category)
     setSupportActionBar(findViewById(R.id.toolbar))
-    // FIXME: 'up' button is missing the intent extras, which used to NPE below, now it just bugs out
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     categoryIdx = intent.extras?.getInt(CATEGORIES_IDX_EXTRA_ID) ?: return
     title = categories[categoryIdx]
