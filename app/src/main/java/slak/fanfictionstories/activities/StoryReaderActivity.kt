@@ -33,7 +33,7 @@ import java.io.File
 
 private class FastTextView : View {
   companion object {
-    const val TAG = "FastTextView"
+    private const val TAG = "FastTextView"
   }
 
   constructor(ctx: Context) : super(ctx)
