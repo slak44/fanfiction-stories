@@ -79,6 +79,12 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="slak.fanfictionstories.activities.BrowseCategoryActivity"/>
         </activity>
+        <activity
+            android:name=".activities.SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName=".activities.MainActivity"
+            android:theme="@style/AppTheme">
+        </activity>
     </application>
 
 </manifest>

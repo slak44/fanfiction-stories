@@ -107,7 +107,10 @@ class MainActivity : ActivityWithStatic() {
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-    R.id.action_settings -> true
+    R.id.action_settings -> {
+      startActivity(Intent(this, SettingsActivity::class.java))
+      true
+    }
     else -> super.onOptionsItemSelected(item)
   }
 }
