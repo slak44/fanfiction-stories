@@ -280,9 +280,9 @@ class StoryReaderActivity : ActivityWithStatic() {
   private fun readChapter(storyId: Long, chapter: Int): Deferred<String> = async2(CommonPool) {
     if (fetcher == null) fetcher = StoryFetcher(storyId, this@StoryReaderActivity)
     val storyDir = storyDir(this@StoryReaderActivity, storyId)
-    if (!storyDir.isPresent) throw IllegalStateException("Cannot read $storyId dir")
-    if (!storyDir.get().exists()) storyDir.get().mkdirs()
-    val chapterFile = File(storyDir.get(), "$chapter.html")
+        .orElseThrow(IllegalStateException("Cannot read $storyId dir"))
+    if (!storyDir.exists()) storyDir.mkdirs()
+    val chapterFile = File(storyDir, "$chapter.html")
     if (!chapterFile.exists()) {
       // FIXME show loading thingy, this may not be fast
       val n = Notifications(this@StoryReaderActivity, Notifications.Kind.DOWNLOADING)

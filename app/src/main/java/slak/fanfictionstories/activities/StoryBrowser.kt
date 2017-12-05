@@ -260,8 +260,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
       char3.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char3Id})
       char4.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char4Id})
 
-      if (fetcher.worldList.isPresent) {
-        val wl = fetcher.worldList.get()
+      fetcher.worldList.ifPresent { wl ->
         val worldNameList = wl.map { it.name }.toMutableList()
 
         worldNameList[0] = strAny

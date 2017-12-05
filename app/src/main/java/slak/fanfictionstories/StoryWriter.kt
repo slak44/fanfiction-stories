@@ -10,6 +10,7 @@ import kotlinx.coroutines.experimental.channels.consumeEach
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.errorDialog
 import slak.fanfictionstories.utility.opt
+import slak.fanfictionstories.utility.orElse
 import java.io.File
 import java.util.*
 
@@ -25,13 +26,12 @@ fun getStorageDir(ctx: Context): Optional<File> =
  * @returns a File representing the stories dir, or Optional.empty() if it's unavailable
  */
 fun storyDir(ctx: Context, storyId: Long): Optional<File> {
-  val storage = getStorageDir(ctx)
-  if (!storage.isPresent) {
+  val storage = getStorageDir(ctx).orElse {
     Log.e("StoryWriter#storyDir", "no ext storage")
     errorDialog(ctx, R.string.ext_store_unavailable, R.string.ext_store_unavailable_tip)
     return Optional.empty()
   }
-  val storiesDir = File(storage.get(), "storiesData")
+  val storiesDir = File(storage, "storiesData")
   return File(storiesDir, storyId.toString()).opt()
 }
 
@@ -42,26 +42,25 @@ fun storyDir(ctx: Context, storyId: Long): Optional<File> {
  */
 fun writeStory(ctx: Context, storyId: Long,
                chapters: Channel<String>): Deferred<Boolean> = async2(CommonPool) {
-  val targetDir = storyDir(ctx, storyId)
-  if (!targetDir.isPresent) return@async2 false
-  if (targetDir.get().exists()) {
+  val targetDir = storyDir(ctx, storyId).orElse { return@async2 false }
+  if (targetDir.exists()) {
     // FIXME maybe ask the user if he wants to overwrite or legitimize this by getting the metadata
     Log.e("StoryWriter", "targetDir exists")
     errorDialog(ctx, R.string.storyid_already_exists, R.string.storyid_already_exists_tip)
     return@async2 false
   }
-  val madeDirs = targetDir.get().mkdirs()
+  val madeDirs = targetDir.mkdirs()
   if (!madeDirs) {
     Log.e("StoryWriter", "can't make dirs")
     errorDialog(ctx,
         ctx.resources.getString(R.string.failed_making_dirs),
-        ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.get().absolutePath))
+        ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.absolutePath))
     return@async2 false
   }
   innerAsync@ async2(CommonPool) {
     var idx = 1
     chapters.consumeEach { chapterText: String ->
-      File(targetDir.get(), "$idx.html").printWriter().use { it.print(chapterText) }
+      File(targetDir, "$idx.html").printWriter().use { it.print(chapterText) }
       idx++
     }
     return@innerAsync true

@@ -143,9 +143,9 @@ class CanonFetcher(val details: Details) : Parcelable {
 
     override fun CanonFetcher.write(parcel: Parcel, flags: Int) {
       parcel.writeParcelable(details, 0)
-      parcel.writeArray(if (worldList.isPresent) worldList.get().toTypedArray() else null)
+      parcel.writeArray(worldList.orElse(null)?.toTypedArray())
       parcel.writeArray(charList.toTypedArray())
-      parcel.writeString(if (unfilteredStories.isPresent) unfilteredStories.get() else null)
+      parcel.writeString(unfilteredStories.orElse(null))
     }
   }
 

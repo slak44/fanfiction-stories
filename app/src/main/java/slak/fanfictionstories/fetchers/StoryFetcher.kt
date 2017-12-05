@@ -200,7 +200,7 @@ object Fetcher {
         "summary" to summary.groupValues[1],
         "author" to author.groupValues[2],
         "title" to title.groupValues[1],
-        "chapterTitles" to if (chapterTitles.isPresent) chapterTitles.get() else ""
+        "chapterTitles" to chapterTitles.orElse("")
     )
   }
   // TODO: consider a general cache for all fetchers (with different cache times obv)
@@ -235,21 +235,20 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
    * @returns whether or not the update was done
    */
   fun update(oldModel: StoryModel, n: Notifications): Deferred<Boolean> = async2(CommonPool) {
-    if (!metadata.isPresent) throw IllegalStateException("Cannot update before fetching metadata")
+    val meta = metadata.orElseThrow(IllegalStateException("Cannot update before fetching metadata"))
     n.show(ctx.resources.getString(R.string.checking_story, oldModel.title))
-    val metaWithInitedValues = metadata.get()
     val newChapterCount = metadata.get()["chapters"] as Long
     if (oldModel.currentChapter > newChapterCount) {
-      metaWithInitedValues["currentChapter"] = newChapterCount
-      metaWithInitedValues["scrollProgress"] = 0.0
-      metaWithInitedValues["scrollAbsolute"] = 0L
+      meta["currentChapter"] = newChapterCount
+      meta["scrollProgress"] = 0.0
+      meta["scrollAbsolute"] = 0L
     } else {
-      metaWithInitedValues["currentChapter"] = oldModel.currentChapter.toLong()
-      metaWithInitedValues["scrollProgress"] = oldModel.src["scrollProgress"] as Double
-      metaWithInitedValues["scrollAbsolute"] = oldModel.src["scrollAbsolute"] as Long
+      meta["currentChapter"] = oldModel.currentChapter.toLong()
+      meta["scrollProgress"] = oldModel.src["scrollProgress"] as Double
+      meta["scrollAbsolute"] = oldModel.src["scrollAbsolute"] as Long
     }
-    metaWithInitedValues["status"] = oldModel.status.toString()
-    val newModel = StoryModel(metaWithInitedValues, fromDb = false)
+    meta["status"] = oldModel.status.toString()
+    val newModel = StoryModel(meta, fromDb = false)
     ctx.database.use {
       replaceOrThrow("stories", *newModel.toKvPairs())
     }

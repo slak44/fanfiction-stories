@@ -66,12 +66,12 @@ class StoryListActivity : ActivityWithStatic() {
   override fun onResume() {
     super.onResume()
     launch(CommonPool) {
-      if (lastStoryId.isPresent) {
-        val newModel = database.storyById(lastStoryId.get())
-            .orElseThrow(IllegalStateException("Story $lastStoryId MUST exist"))
-        val idx = adapter.getStories().indexOfFirst { it.storyIdRaw == lastStoryId.get() }
-        launch(UI) { adapter.updateStory(idx, newModel) }
-      }
+      val id = lastStoryId.orElse { return@launch }
+      val newModel = database.storyById(id)
+          .orElseThrow(IllegalStateException("Story $lastStoryId MUST exist"))
+      val idx = adapter.getStories().indexOfFirst { it.storyIdRaw == id }
+      launch(UI) { adapter.updateStory(idx, newModel) }
+
     }
   }
 
@@ -87,9 +87,7 @@ class StoryListActivity : ActivityWithStatic() {
           launch(CommonPool) {
             val model = getFullStory(this@StoryListActivity, id, n).await()
             n.cancel()
-            if (model.isPresent) {
-              launch(UI) { adapter.addData(Left(model.get())) }
-            }
+            model.ifPresent { model -> launch(UI) { adapter.addData(Left(model)) } }
           }
         })
         .show()

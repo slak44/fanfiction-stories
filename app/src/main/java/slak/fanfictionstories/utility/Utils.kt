@@ -215,10 +215,18 @@ fun <T> T?.opt(): Optional<T> = if (this == null) Optional.empty() else Optional
 /**
  * A prettier, `inline` version of [Optional.orElseGet].
  */
-inline fun <T> Optional<T>.orElse(block: () -> T): T = if (this.isPresent) this.get() else block()
+inline fun <T> Optional<T>.orElse(block: () -> T): T = if (isPresent) this.get() else block()
 
 /**
- * Sugar for the default orElseThrow.
+ * `inline` version of [Optional.ifPresent]. Unfortunately, since the signatures are similar enough,
+ * this version must be named `ifPresent2`.
  */
-fun <T> Optional<T>.orElseThrow(th: Throwable): T = if (this.isPresent) this.get() else throw th
+inline fun <T> Optional<T>.ifPresent2(block: (T) -> Unit) {
+  if (isPresent) block(this.get())
+}
+
+/**
+ * Sugar for the default Optional.orElseThrow.
+ */
+fun <T> Optional<T>.orElseThrow(th: Throwable): T = if (isPresent) this.get() else throw th
 

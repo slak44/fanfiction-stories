@@ -31,6 +31,7 @@ import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.opt
+import slak.fanfictionstories.utility.orElseThrow
 import java.util.*
 import kotlin.Comparator
 
@@ -91,11 +92,11 @@ class StoryCardView : CardView {
     addBtn.setOnClickListener {
       addBtn.isEnabled = false
       addBtn.text = context.resources.getString(R.string.adding___)
-      if (!storyId.isPresent)
-        throw IllegalStateException("StoryCardView clicked, but data not filled by model")
+      val id = storyId
+          .orElseThrow(IllegalStateException("StoryCardView clicked, but data not filled by model"))
       val n = Notifications(this@StoryCardView.context, Notifications.Kind.DOWNLOADING)
       launch(CommonPool) {
-        val model = getFullStory(this@StoryCardView.context, storyId.get(), n).await()
+        val model = getFullStory(this@StoryCardView.context, id, n).await()
         launch(UI) {
           if (model.isPresent) {
             addBtn.visibility = View.INVISIBLE

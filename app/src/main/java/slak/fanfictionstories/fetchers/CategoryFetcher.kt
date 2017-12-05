@@ -97,8 +97,7 @@ class CategoryFetcher(private val ctx: Context) {
   }
 
   fun get(categoryIdx: Int): Deferred<List<Canon>> = async2(CommonPool) {
-    val cachedValue = Cache.hit(categoryIdx)
-    if (cachedValue.isPresent) return@async2 cachedValue.get()
+    Cache.hit(categoryIdx).ifPresent2 { return@async2 it }
     val n = Notifications(ctx, Notifications.Kind.OTHER)
     // FIXME be nice and show some spinny loady crap if we miss the cache
     val html = fetchCategory(categoryIdx, n).await()
