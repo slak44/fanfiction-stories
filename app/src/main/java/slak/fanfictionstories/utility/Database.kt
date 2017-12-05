@@ -52,12 +52,8 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     """)
   }
 
-  override fun onOpen(db: SQLiteDatabase?) {
-    super.onOpen(db)
-  }
-
-  override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-    // Here you can upgrade tables, as usual
+  override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
+    // Empty for now, there is only one version
   }
 
   fun getLocalStories() : Deferred<List<StoryModel>> = async2(CommonPool) {
@@ -81,6 +77,8 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   }
 }
 
-// Access property for Context
+/**
+ * Access property for [Context].
+ */
 val Context.database: DatabaseHelper
   get() = DatabaseHelper.getInstance(this.applicationContext)
