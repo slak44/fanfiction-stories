@@ -42,10 +42,10 @@ fun <T> async2(
   return c
 }
 
-fun errorDialog(ctx: Context, @StringRes title: Int, @StringRes msg: Int) {
-  errorDialog(ctx, ctx.resources.getString(title), ctx.resources.getString(msg))
-}
-
+/**
+ * Create an error dialog with a title, message and a dismiss button.
+ * @see AlertDialog
+ */
 fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
   AlertDialog.Builder(ctx)
       .setTitle(title)
@@ -54,6 +54,13 @@ fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
         // User acknowledged error
         dialogInterface.dismiss()
       }).create().show()
+}
+
+/**
+ * Same as [errorDialog], but with [StringRes] texts.
+ */
+fun errorDialog(ctx: Context, @StringRes title: Int, @StringRes msg: Int) {
+  errorDialog(ctx, ctx.resources.getString(title), ctx.resources.getString(msg))
 }
 
 /**
