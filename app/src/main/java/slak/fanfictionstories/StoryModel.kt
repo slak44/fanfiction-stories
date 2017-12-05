@@ -128,8 +128,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   val updateDate: String
     get() = Static.res.getString(R.string.updated_on, updateDateFormatted)
 
-  fun toKvPairs(): Array<Pair<String, Any>> =
-      src.entries.map { Pair(it.key, it.value) }.toTypedArray()
+  fun toKvPairs(): Array<Pair<String, Any>> = src.entries.map { it.key to it.value }.toTypedArray()
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeSerializable(HashMap(src))
@@ -153,7 +152,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
     val dbParser = object : MapRowParser<StoryModel> {
       override fun parseRow(columns: Map<String, Any?>) = StoryModel(
           // We are allowed to do this because nothing in the DB is null
-          columns.entries.map { Pair(it.key, it.value!!) }.toMap().toMutableMap(), fromDb = true)
+          columns.entries.map { it.key to it.value!! }.toMap().toMutableMap(), fromDb = true)
     }
   }
 }

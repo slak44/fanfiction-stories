@@ -55,7 +55,7 @@ class CategoryFetcher(private val ctx: Context) {
     }
 
     fun update(categoryIdx: Int, canons: List<Canon>) {
-      cache[categoryIdx] = Pair(System.currentTimeMillis(), canons)
+      cache[categoryIdx] = System.currentTimeMillis() to canons
       serialize()
     }
 
