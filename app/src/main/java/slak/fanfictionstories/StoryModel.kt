@@ -1,12 +1,9 @@
 package slak.fanfictionstories
 
-import android.annotation.SuppressLint
-import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.fetchers.Fetcher.CHAPTER_TITLE_SEPARATOR
-import slak.fanfictionstories.fetchers.StoryFetcher
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.autoSuffixNumber
 import slak.fanfictionstories.utility.opt

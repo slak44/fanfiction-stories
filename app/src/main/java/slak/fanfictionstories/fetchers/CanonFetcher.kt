@@ -7,7 +7,6 @@ import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parceler
 import kotlinx.android.parcel.Parcelize
-import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.delay
