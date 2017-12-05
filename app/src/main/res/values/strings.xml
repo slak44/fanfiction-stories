@@ -28,7 +28,6 @@
     <!-- Story status -->
     <string name="local">Local Stories</string>
     <string name="remote">Remote Stories</string>
-    <string name="seen">Stories Encountered</string>
 
     <!-- Group strategies -->
     <string name="group_none">No Groups</string>
