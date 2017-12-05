@@ -6,6 +6,7 @@ import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import slak.fanfictionstories.fetchers.CategoryFetcher
 import java.io.File
 
@@ -44,16 +45,22 @@ object Static {
 }
 
 /**
- * Helper base class for use with [Static].
+ * Helper base class for use with [Static]. Also runs various static initializers.
  */
 abstract class ActivityWithStatic : AppCompatActivity() {
-  private var cacheInited: Boolean = false
+  private var hasCache: Boolean = false
+  private var hasExHandler: Boolean = false
   override fun onCreate(savedInstanceState: Bundle?) {
     Static.init(this)
-    // Re-create cache
-    if (!cacheInited) {
+    if (!hasCache) {
       CategoryFetcher.Cache.deserialize()
-      cacheInited = true
+      hasCache = true
+    }
+    if (hasExHandler) {
+      Thread.setDefaultUncaughtExceptionHandler {
+        thread, throwable -> Log.e("UNCAUGHT DEFAULT", thread.toString(), throwable)
+      }
+      hasExHandler = true
     }
     super.onCreate(savedInstanceState)
   }
