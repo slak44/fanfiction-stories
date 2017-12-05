@@ -13,10 +13,7 @@ import slak.fanfictionstories.activities.categoryUrl
 import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
 import slak.fanfictionstories.fetchers.Fetcher.TAG
 import slak.fanfictionstories.fetchers.Fetcher.regexOpts
-import slak.fanfictionstories.utility.Notifications
-import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.waitForNetwork
+import slak.fanfictionstories.utility.*
 import java.io.*
 import java.net.URL
 import java.util.*
@@ -75,7 +72,7 @@ class CategoryFetcher(private val ctx: Context) {
         return Optional.empty()
       }
       Log.d(TAG, "Cache hit: $categoryIdx")
-      return Optional.of(cache[categoryIdx]!!.second)
+      return cache[categoryIdx]!!.second.opt()
     }
 
     fun clear(categoryIdx: Int) {

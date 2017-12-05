@@ -30,6 +30,7 @@ import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.Static
+import slak.fanfictionstories.utility.opt
 import java.util.*
 import kotlin.Comparator
 
@@ -139,7 +140,7 @@ class StoryCardView : CardView {
     followsText.text = model.follows
     storyIdText.text = model.storyId
 
-    storyId = Optional.of(model.storyIdRaw)
+    storyId = model.storyIdRaw.opt()
     if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.INVISIBLE
 
     // Reset card UI (including the measured size) to default

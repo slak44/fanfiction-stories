@@ -22,10 +22,7 @@ import slak.fanfictionstories.fetchers.Fetcher.TAG
 import slak.fanfictionstories.fetchers.Fetcher.parseStoryMetadata
 import slak.fanfictionstories.fetchers.Fetcher.publishedTimeStoryMeta
 import slak.fanfictionstories.fetchers.Fetcher.updatedTimeStoryMeta
-import slak.fanfictionstories.utility.Notifications
-import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.waitForNetwork
+import slak.fanfictionstories.utility.*
 import java.net.URL
 import java.util.*
 
@@ -118,7 +115,7 @@ class CanonFetcher(val details: Details) : Parcelable {
   data class Character(val name: String, val id: String) : Parcelable
 
   @Suppress("PLUGIN_WARNING")
-  var worldList: Optional<List<World>> = Optional.of(listOf())
+  var worldList: Optional<List<World>> = listOf<World>().opt()
     private set
   @Suppress("PLUGIN_WARNING")
   var charList: List<Character> = listOf()
@@ -132,14 +129,14 @@ class CanonFetcher(val details: Details) : Parcelable {
       val c = CanonFetcher(parcel.readParcelable(Details::class.java.classLoader) as Details)
       @Suppress("unchecked_cast")
       val worldArray = parcel.readArray(Array<World>::class.java.classLoader) as Array<World>?
-      c.worldList = if (worldArray == null) Optional.empty() else Optional.of(worldArray.toList())
+      c.worldList = worldArray?.toList()?.opt() ?: Optional.empty()
 
       @Suppress("unchecked_cast")
       val charArray = parcel.readArray(Array<Character>::class.java.classLoader) as Array<Character>
       c.charList = charArray.toList()
 
       val str = parcel.readString()
-      c.unfilteredStories = if (str == null) Optional.empty() else Optional.of(str)
+      c.unfilteredStories = str?.opt() ?: Optional.empty()
 
       return c
     }
@@ -207,8 +204,8 @@ class CanonFetcher(val details: Details) : Parcelable {
       worldList = if (worldsElement.size == 0) {
         Optional.empty()
       } else {
-        Optional.of(worldsElement[0].children()
-            .map {option -> World(option.text(), option.`val`()) })
+        worldsElement[0].children()
+            .map {option -> World(option.text(), option.`val`()) }.opt()
       }
     }
 
@@ -277,12 +274,12 @@ class CanonFetcher(val details: Details) : Parcelable {
     unfilteredStories = if (centerElem.size == 0) {
       // If there is no element with the count there, it means there is only one page, so
       // we get how many stories were on the page
-      Optional.of(list.size.toString())
+      list.size.toString().opt()
     } else {
       val text = centerElem[0].textNodes()[0].text().split('|')[0].trim()
       // If the text isn't a number (or at least look like a number), we have no stories unfiltered
-      if (text[0].isDigit()) Optional.of(text)
-      else Optional.of("0")
+      if (text[0].isDigit()) text.opt()
+      else "0".opt()
     }
 
     return list

@@ -9,6 +9,7 @@ import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.consumeEach
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.errorDialog
+import slak.fanfictionstories.utility.opt
 import java.io.File
 import java.util.*
 
@@ -18,7 +19,7 @@ fun haveExternalStorage() = Environment.MEDIA_MOUNTED == Environment.getExternal
  * @returns a File representing the external storage dir, or Optional.empty() if it's unavailable
  */
 fun getStorageDir(ctx: Context): Optional<File> =
-    if (haveExternalStorage()) Optional.of(ctx.getExternalFilesDir(null)) else Optional.empty()
+    if (haveExternalStorage()) ctx.getExternalFilesDir(null).opt() else Optional.empty()
 
 /**
  * @returns a File representing the stories dir, or Optional.empty() if it's unavailable
@@ -31,7 +32,7 @@ fun storyDir(ctx: Context, storyId: Long): Optional<File> {
     return Optional.empty()
   }
   val storiesDir = File(storage.get(), "storiesData")
-  return Optional.of(File(storiesDir, storyId.toString()))
+  return File(storiesDir, storyId.toString()).opt()
 }
 
 /**

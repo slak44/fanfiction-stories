@@ -8,12 +8,13 @@ import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.fetchers.StoryFetcher
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.autoSuffixNumber
+import slak.fanfictionstories.utility.opt
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.HashMap
 
 enum class StoryStatus {
-  SEEN, // FIXME do we want this?
+  SEEN, // FIXME do we want this? anymore
   // Incomplete metadata, will be set to remote if user wants to read it
   TRANSIENT,
   // Partially on disk
@@ -48,7 +49,7 @@ enum class StoryStatus {
 
 class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable {
   // DB primary key. Does not exist if story not from db
-  val _id: Optional<Long> = if (fromDb) Optional.of(src["_id"] as Long) else Optional.empty()
+  val _id: Optional<Long> = if (fromDb) (src["_id"] as Long).opt() else Optional.empty()
 
   var status = StoryStatus.fromString(src["status"] as String) // FIXME: ui for this where
     set(value) {

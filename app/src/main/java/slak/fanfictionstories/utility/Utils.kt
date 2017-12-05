@@ -204,3 +204,8 @@ fun usePrefs(block: (SharedPreferences.Editor) -> Unit) {
 
 @Parcelize @SuppressLint("ParcelCreator")
 data class EitherWrapper<out T1, out T2>(val l: @RawValue T1?, val r: @RawValue T2?) : Parcelable
+
+/**
+ * Shorthand for [Optional.of]
+ */
+fun <T> T.opt(): Optional<T> = Optional.of(this)

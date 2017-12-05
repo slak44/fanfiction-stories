@@ -15,7 +15,6 @@ import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import org.jetbrains.anko.db.parseSingle
 import org.jetbrains.anko.db.select
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.getFullStory
@@ -37,7 +36,7 @@ class StoryListActivity : ActivityWithStatic() {
 
     storyListView.layoutManager = LinearLayoutManager(this)
     StoryCardView.createRightSwipeHelper(storyListView, { intent, storyId ->
-      lastStoryId = Optional.of(storyId)
+      lastStoryId = storyId.opt()
       startActivity(intent)
     })
     adapter = StoryAdapter(this@StoryListActivity)

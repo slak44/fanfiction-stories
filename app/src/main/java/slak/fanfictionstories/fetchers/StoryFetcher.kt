@@ -46,7 +46,7 @@ fun getFullStory(ctx: Context, storyId: Long,
           .whereSimple("storyId = ?", storyId.toString()).exec()
     }
   }
-  return@async2 Optional.of(model)
+  return@async2 model.opt()
 }
 
 object Fetcher {
@@ -169,11 +169,11 @@ object Fetcher {
     if (meta["chapters"] != null) {
       val chapterTitlesRaw = Regex("id=chap_select.*?>(.*?)</select>", regexOpts).find(html)
           ?: throw IllegalStateException("Cannot find chapter titles")
-      chapterTitles = Optional.of(chapterTitlesRaw.groupValues[1].replace(
+      chapterTitles = chapterTitlesRaw.groupValues[1].replace(
           // The space at the end of this regex is intentional
           Regex("<option.*?>\\d+\\. ", regexOpts), StoryFetcher.CHAPTER_TITLE_SEPARATOR)
           // There is one at the beginning that we don't care about (because it's not a separator)
-          .removePrefix(StoryFetcher.CHAPTER_TITLE_SEPARATOR))
+          .removePrefix(StoryFetcher.CHAPTER_TITLE_SEPARATOR).opt()
     }
 
     val publishTime = publishedTimeStoryMeta(html)
@@ -220,7 +220,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
 
   fun setMetadata(model: StoryModel) {
     if (model.storyIdRaw != storyId) throw IllegalArgumentException("Arg storyId does not match")
-    metadata = Optional.of(model.src)
+    metadata = model.src.opt()
   }
 
   fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async2(CommonPool) {
@@ -228,9 +228,9 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     delay(RATE_LIMIT_MILLISECONDS)
     val html: String = fetchChapter(1, n).await()
     DOWNLOAD_MUTEX.unlock()
-    metadataChapter = Optional.of(parseChapter(html))
+    metadataChapter = parseChapter(html).opt()
     val meta = parseMetadata(html, storyId)
-    metadata = Optional.of(meta)
+    metadata = meta.opt()
     return@async2 StoryModel(metadata.get(), fromDb = false)
   }
 
