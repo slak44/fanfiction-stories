@@ -132,9 +132,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
       src.entries.map { Pair(it.key, it.value) }.toTypedArray()
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
-    val bundle = Bundle()
-    bundle.putSerializable("map", HashMap(src))
-    parcel.writeBundle(bundle)
+    parcel.writeSerializable(HashMap(src))
     parcel.writeInt(if (_id.isPresent) 1 else 0)
   }
 
@@ -142,11 +140,9 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   companion object {
     @JvmField @Suppress("unused")
     val CREATOR = object : Parcelable.Creator<StoryModel> {
-      @SuppressLint("ParcelClassLoader")
       override fun createFromParcel(parcel: Parcel): StoryModel {
-        val bundle = parcel.readBundle()
-        @Suppress("UNCHECKED_CAST")
-        val map = bundle.getSerializable("map") as HashMap<String, Any>
+        @Suppress("unchecked_cast")
+        val map = parcel.readSerializable() as HashMap<String, Any>
         val fromDb = parcel.readInt() == 1
         return StoryModel(map, fromDb)
       }
