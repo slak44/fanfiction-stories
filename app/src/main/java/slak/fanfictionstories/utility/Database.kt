@@ -73,7 +73,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
 
   fun updateInStory(storyId: Long, vararg pairs: Pair<String, Any>) {
     writableDatabase.update("stories", *pairs)
-        .whereSimple("storyId = ?", storyId.toString())
+        .whereSimple("storyId = ?", storyId.toString()).exec()
   }
 }
 
