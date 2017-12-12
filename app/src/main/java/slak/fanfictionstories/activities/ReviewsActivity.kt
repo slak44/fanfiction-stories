@@ -19,7 +19,6 @@ import slak.fanfictionstories.utility.iconTint
 import slak.fanfictionstories.utility.infinitePageScroll
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.log
 
 class ReviewsActivity : ActivityWithStatic() {
   companion object {
