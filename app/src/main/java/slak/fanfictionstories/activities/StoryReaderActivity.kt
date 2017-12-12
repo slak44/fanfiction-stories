@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Typeface
 import android.os.Bundle
+import android.support.v4.app.NavUtils
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
@@ -265,7 +266,8 @@ class StoryReaderActivity : ActivityWithStatic() {
         intent.putExtra(ReviewsActivity.INTENT_TARGET_CHAPTER, currentChapter)
         startActivity(intent)
       }
-      else -> super.onOptionsItemSelected(item)
+      android.R.id.home -> NavUtils.navigateUpFromSameTask(this)
+      else -> return super.onOptionsItemSelected(item)
     }
     return true
   }

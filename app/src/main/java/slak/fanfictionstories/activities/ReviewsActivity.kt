@@ -1,6 +1,7 @@
 package slak.fanfictionstories.activities
 
 import android.os.Bundle
+import android.support.v4.app.NavUtils
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
@@ -113,8 +114,10 @@ class ReviewsActivity : ActivityWithStatic() {
               setSubtitle()
             }).show()
       }
+      android.R.id.home -> NavUtils.navigateUpFromSameTask(this)
+      else -> return super.onOptionsItemSelected(item)
     }
-    return super.onOptionsItemSelected(item)
+    return true
   }
 }
 
