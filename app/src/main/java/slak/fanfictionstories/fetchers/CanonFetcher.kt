@@ -177,21 +177,11 @@ class CanonFetcher(val details: Details) : Parcelable {
         if (details.char2Without != null) "_c2=${details.char2Without}" else ""
     ).joinToString("&")
 
-    return@async2 DOWNLOAD_MUTEX.withLock {
-      delay(RATE_LIMIT_MILLISECONDS)
-      waitForNetwork(n).await()
-      try {
-        return@withLock URL(
-            "https://www.fanfiction.net/${details.urlComponent}/?p=$page&$queryParams")
-            .readText()
-      } catch (t: Throwable) {
-        // Something happened; retry
-        n.show(Static.res.getString(R.string.error_with_canon_stories, details.title))
-        Log.e(TAG, "CanonFetcher: retry", t)
-        delay(RATE_LIMIT_MILLISECONDS)
-        return@withLock fetchPage(page, n).await()
-      }
-    }
+    return@async2 patientlyFetchURL(
+        "https://www.fanfiction.net/${details.urlComponent}/?p=$page&$queryParams", n) {
+      n.show(Static.res.getString(R.string.error_with_canon_stories, details.title))
+      Log.e(TAG, "CanonFetcher: retry", it)
+    }.await()
   }
 
   private fun parseHtml(html: String): List<StoryModel> {

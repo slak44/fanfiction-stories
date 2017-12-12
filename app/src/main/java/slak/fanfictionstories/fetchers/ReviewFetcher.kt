@@ -11,10 +11,7 @@ import kotlinx.coroutines.experimental.delay
 import org.jsoup.Jsoup
 import slak.fanfictionstories.R
 import slak.fanfictionstories.fetchers.Fetcher.authorIdFromAuthor
-import slak.fanfictionstories.utility.Notifications
-import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.waitForNetwork
+import slak.fanfictionstories.utility.*
 import java.net.URL
 
 @Parcelize @SuppressLint("ParcelCreator")
@@ -63,20 +60,9 @@ private fun parseReviewPage(storyId: Long, html: String): Pair<List<Review>, Int
   return Pair(list, lastPageNr)
 }
 
-private fun fetchReviewPage(
-    storyId: Long,
-    chapter: Int,
-    page: Int,
-    n: Notifications
-): Deferred<String> = async2(CommonPool) {
-  waitForNetwork(n).await()
-  try {
-    return@async2 URL("https://www.fanfiction.net/r/$storyId/$chapter/$page/").readText()
-  } catch (t: Throwable) {
-    // Something happened; retry
-    n.show(Static.res.getString(R.string.error_fetching_something, storyId.toString()))
-    Log.e(Fetcher.TAG, "fetchReviewPage", t)
-    delay(Fetcher.RATE_LIMIT_MILLISECONDS)
-    return@async2 fetchReviewPage(storyId, chapter, page, n).await()
-  }
+private fun fetchReviewPage(storyId: Long,
+                            chapter: Int, page: Int, n: Notifications): Deferred<String> =
+    patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/", n) {
+  n.show(Static.res.getString(R.string.error_fetching_something, storyId.toString()))
+  Log.e(Fetcher.TAG, "fetchReviewPage", it)
 }

@@ -27,8 +27,12 @@ import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.sync.Mutex
+import kotlinx.coroutines.experimental.sync.withLock
 import slak.fanfictionstories.R
 import slak.fanfictionstories.fetchers.Fetcher
+import slak.fanfictionstories.fetchers.Fetcher.DOWNLOAD_MUTEX
+import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
+import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.experimental.CoroutineContext
@@ -91,6 +95,31 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
     }
   }
 }
+
+/**
+ * Fetches the resource at the specified url, patiently.
+ *
+ * Waits for the download lock [Fetcher.DOWNLOAD_MUTEX].
+ * Waits for the network using [waitForNetwork].
+ * Waits for the rate limit [Fetcher.RATE_LIMIT_MILLISECONDS].
+ *
+ * If the download fails, call the error callback, wait for the rate limit again, and then call this
+ * function recursively.
+ */
+fun patientlyFetchURL(url: String, n: Notifications,
+                      onError: (t: Throwable) -> Unit): Deferred<String> =
+    async2(CommonPool) { DOWNLOAD_MUTEX.withLock {
+  waitForNetwork(n).await()
+  delay(RATE_LIMIT_MILLISECONDS)
+  try {
+    return@withLock URL(url).readText()
+  } catch (t: Throwable) {
+    // Something happened; retry
+    onError(t)
+    delay(RATE_LIMIT_MILLISECONDS)
+    return@withLock patientlyFetchURL(url, n, onError).await()
+  }
+} }
 
 /**
  * Emulates android:iconTint. Must be called in onPrepareOptionsMenu for each icon.

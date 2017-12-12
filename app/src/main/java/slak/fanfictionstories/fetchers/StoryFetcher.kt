@@ -139,17 +139,10 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     return@async2 true
   }
 
-  fun fetchChapter(chapter: Int, n: Notifications): Deferred<String> = async2(CommonPool) {
-    waitForNetwork(n).await()
-    try {
-      return@async2 URL("https://www.fanfiction.net/s/$storyId/$chapter/").readText()
-    } catch (t: Throwable) {
-      // Something happened; retry
-      n.show(ctx.resources.getString(R.string.error_fetching_something, storyId.toString()))
-      Log.e(TAG, "fetchChapter", t)
-      delay(RATE_LIMIT_MILLISECONDS)
-      return@async2 fetchChapter(chapter, n).await()
-    }
+  fun fetchChapter(chapter: Int, n: Notifications): Deferred<String> =
+      patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/", n) {
+    n.show(ctx.resources.getString(R.string.error_fetching_something, storyId.toString()))
+    Log.e(TAG, "fetchChapter", it)
   }
 
   fun parseChapter(fromHtml: String): String {

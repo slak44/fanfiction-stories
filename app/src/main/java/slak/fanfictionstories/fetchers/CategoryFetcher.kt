@@ -81,19 +81,10 @@ class CategoryFetcher(private val ctx: Context) {
     }
   }
 
-  private fun fetchCategory(categoryIdx: Int,
-                            n: Notifications): Deferred<String> = async2(CommonPool) {
-    delay(RATE_LIMIT_MILLISECONDS)
-    waitForNetwork(n).await()
-    try {
-      return@async2 URL("https://www.fanfiction.net/${categoryUrl[categoryIdx]}").readText()
-    } catch (t: Throwable) {
-      // Something happened; retry
-      n.show(Static.res.getString(R.string.error_with_categories, categories[categoryIdx]))
-      Log.e(TAG, "getCanonsForCategory${categories[categoryIdx]}", t)
-      delay(RATE_LIMIT_MILLISECONDS)
-      return@async2 fetchCategory(categoryIdx, n).await()
-    }
+  private fun fetchCategory(categoryIdx: Int, n: Notifications): Deferred<String> =
+      patientlyFetchURL("https://www.fanfiction.net/${categoryUrl[categoryIdx]}", n) {
+    n.show(Static.res.getString(R.string.error_with_categories, categories[categoryIdx]))
+    Log.e(TAG, "getCanonsForCategory${categories[categoryIdx]}", it)
   }
 
   fun get(categoryIdx: Int): Deferred<List<Canon>> = async2(CommonPool) {
