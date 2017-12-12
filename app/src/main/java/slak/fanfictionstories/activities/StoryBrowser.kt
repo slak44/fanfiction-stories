@@ -140,25 +140,9 @@ class CanonStoryListActivity : ActivityWithStatic() {
       this@CanonStoryListActivity.startActivity(intent)
     })
 
-    canonStoryListView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-      private val addPageLock = Mutex()
-      override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-        // We only want scroll downs
-        if (dy <= 0) return
-        val visibleItemCount = layoutManager.childCount
-        val totalItemCount = layoutManager.itemCount
-        val pastVisiblesItems = layoutManager.findFirstVisibleItemPosition()
-        if ((visibleItemCount + pastVisiblesItems) >= totalItemCount) {
-          // There are lots of scroll events, so use a lock to make sure we don't overdo it
-          if (addPageLock.isLocked) return
-          launch(CommonPool) {
-            addPageLock.lock()
-            addPage(++currentPage).join()
-            addPageLock.unlock()
-          }
-        }
-      }
-    })
+    infinitePageScroll(canonStoryListView, layoutManager) {
+      addPage(++currentPage)
+    }
   }
 
   override fun onSaveInstanceState(outState: Bundle) {

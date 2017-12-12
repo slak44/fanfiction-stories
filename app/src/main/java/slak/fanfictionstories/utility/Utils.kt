@@ -11,7 +11,10 @@ import android.graphics.PorterDuff
 import android.os.Parcelable
 import android.support.annotation.ColorRes
 import android.support.annotation.StringRes
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.text.style.ReplacementSpan
+import android.util.AttributeSet
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
@@ -23,6 +26,7 @@ import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.sync.Mutex
 import slak.fanfictionstories.R
 import slak.fanfictionstories.fetchers.Fetcher
 import java.util.*
@@ -237,3 +241,29 @@ inline fun <T> Optional<T>.ifPresent2(block: (T) -> Unit) {
  */
 fun <T> Optional<T>.orElseThrow(th: Throwable): T = if (isPresent) this.get() else throw th
 
+/**
+ * Provide infinite scrolling for a [RecyclerView] with a [LinearLayoutManager], using the provided
+ * function to add more content when at the end. Attaches a [RecyclerView.OnScrollListener] to the
+ * recycler.
+ */
+fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage: () -> Job) {
+  recycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+    private val addPageLock = Mutex()
+    override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+      // We only want scroll downs
+      if (dy <= 0) return
+      val visibleItemCount = lm.childCount
+      val totalItemCount = lm.itemCount
+      val pastVisibleItems = lm.findFirstVisibleItemPosition()
+      if ((visibleItemCount + pastVisibleItems) >= totalItemCount) {
+        // There are lots of scroll events, so use a lock to make sure we don't overdo it
+        if (addPageLock.isLocked) return
+        launch(CommonPool) {
+          addPageLock.lock()
+          addPage().join()
+          addPageLock.unlock()
+        }
+      }
+    }
+  })
+}

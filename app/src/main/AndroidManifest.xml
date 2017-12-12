@@ -85,6 +85,15 @@
             android:parentActivityName=".activities.MainActivity"
             android:theme="@style/AppTheme">
         </activity>
+        <activity
+            android:name=".activities.ReviewsActivity"
+            android:label="@string/title_activity_reviews"
+            android:parentActivityName=".activities.StoryReaderActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="slak.fanfictionstories.activities.StoryReaderActivity"/>
+        </activity>
     </application>
 
 </manifest>

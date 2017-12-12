@@ -14,4 +14,8 @@
 
     <dimen name="native_filter_spinner_min_height">32dp</dimen>
     <dimen name="native_filter_spinner_margin">8dp</dimen>
+
+    <dimen name="list_separator_height">8dp</dimen>
+
+    <dimen name="flat_button_height">36dp</dimen>
 </resources>

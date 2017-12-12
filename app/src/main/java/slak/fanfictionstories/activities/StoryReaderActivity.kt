@@ -1,6 +1,7 @@
 package slak.fanfictionstories.activities
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Typeface
 import android.os.Bundle
@@ -21,7 +22,6 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
@@ -252,28 +252,22 @@ class StoryReaderActivity : ActivityWithStatic() {
     return true
   }
 
-  override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-    R.id.goToTop -> {
-      nestedScroller.scrollTo(0, 0)
-      true
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      R.id.goToTop -> nestedScroller.scrollTo(0, 0)
+      R.id.goToBottom -> nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
+      R.id.selectChapter -> showChapterSelectDialog()
+      R.id.nextChapter -> nextChapterBtn.callOnClick()
+      R.id.prevChapter -> prevChapterBtn.callOnClick()
+      R.id.storyReviews -> {
+        val intent = Intent(this, ReviewsActivity::class.java)
+        intent.putExtra(ReviewsActivity.INTENT_STORY_MODEL, model)
+        intent.putExtra(ReviewsActivity.INTENT_TARGET_CHAPTER, currentChapter)
+        startActivity(intent)
+      }
+      else -> super.onOptionsItemSelected(item)
     }
-    R.id.goToBottom -> {
-      nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
-      true
-    }
-    R.id.selectChapter -> {
-      showChapterSelectDialog()
-      true
-    }
-    R.id.nextChapter -> {
-      nextChapterBtn.callOnClick()
-      true
-    }
-    R.id.prevChapter -> {
-      prevChapterBtn.callOnClick()
-      true
-    }
-    else -> super.onOptionsItemSelected(item)
+    return true
   }
 
   private var fetcher: StoryFetcher? = null

@@ -5,13 +5,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="slak.fanfictionstories.activities.CanonStoryListActivity">
+    android:fitsSystemWindows="true"
+    tools:context="slak.fanfictionstories.activities.ReviewsActivity">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:theme="@style/AppTheme.AppBarOverlay"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
@@ -22,21 +26,23 @@
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/canonStoryListView"
+        android:id="@+id/reviewList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/story_list_margin"
         android:paddingBottom="?attr/actionBarSize"
-        android:divider="@color/alpha"
-        android:dividerHeight="@dimen/list_separator_height"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="4dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appBar"
-        tools:context="slak.fanfictionstories.activities.CanonStoryListActivity"
-        tools:listitem="@layout/story_component"
-        tools:showIn="@layout/activity_canon_story_list">
+        tools:listitem="@layout/review_component">
 
     </android.support.v7.widget.RecyclerView>
 
+    <TextView
+        android:id="@+id/noReviewsText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="@string/no_reviews"
+        android:visibility="invisible"/>
 
 </android.support.constraint.ConstraintLayout>

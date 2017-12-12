@@ -6,6 +6,7 @@
     <string name="in_progress">In-progress</string>
     <string name="any">Any</string>
     <string name="none">None</string>
+    <string name="select_chapter">Select Chapter</string>
 
     <!-- Canon story list -->
     <string name="error_with_canon_stories">Can\'t access %s stories; Retrying…</string>
@@ -113,11 +114,20 @@
     <!-- Story reader -->
     <string name="go_to_top">Go to Top</string>
     <string name="go_to_bottom">Go to Bottom</string>
-    <string name="select_chapter">Select Chapter</string>
     <string name="next_chapter">Next Chapter</string>
     <string name="prev_chapter">Previous Chapter</string>
+    <string name="reviews">Story Reviews</string>
     <string name="next">Next</string>
     <string name="prev">Prev</string>
+
+    <!-- Story reviews -->
+    <string name="reviews_for">Reviews for %s</string>
+    <string name="chapter_x">For chapter %d</string>
+    <string name="all_chapters">All Chapters</string>
+    <string name="view_author">View Author</string>
+    <string name="reply">Reply</string>
+    <string name="report">Report</string>
+    <string name="no_reviews">No reviews found</string>
 
     <!-- Error dialogs -->
     <string name="got_it">Got it</string>
@@ -275,6 +285,12 @@
         <item>tv</item>
     </string-array>
 
+    <!-- Default activity titles -->
+    <string name="title_activity_story_reader">StoryReaderActivity</string>
+    <string name="title_activity_browse_category">BrowseCategoryActivity</string>
+    <string name="title_activity_canon_story_list">CanonStoryListActivity</string>
+    <string name="title_activity_reviews">ReviewsActivity</string>
+
     <!-- These are development strings -->
     <string name="debug_title">!!! DEBUG !!!</string>
     <string name="regen_stories_table">Regen stories table</string>
@@ -283,9 +299,6 @@
     <string name="test_notif">Test notification</string>
     <string name="update_stories">Update in 3 seconds</string>
     <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.</string>
-    <string name="title_activity_story_reader">StoryReaderActivity</string>
-    <string name="title_activity_browse_category">BrowseCategoryActivity</string>
-    <string name="title_activity_canon_story_list">CanonStoryListActivity</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"
 
