@@ -46,9 +46,6 @@ class ReviewsActivity : ActivityWithStatic() {
     chapter = intent.getIntExtra(INTENT_TARGET_CHAPTER, 0)
 
     title = resources.getString(R.string.reviews_for, model.title)
-    toolbar.subtitle =
-        if (chapter != 0) resources.getString(R.string.chapter_x, chapter)
-        else resources.getString(R.string.all_chapters)
     setSubtitle()
 
     adapter = ReviewAdapter()
@@ -64,9 +61,14 @@ class ReviewsActivity : ActivityWithStatic() {
   }
 
   private fun setSubtitle() {
+    // No need for a subtitle saying which chapter it is when there is only one
+    if (model.chapterCount == 1) {
+      toolbar.subtitle = ""
+      return
+    }
     toolbar.subtitle =
-        if (chapter != 0) resources.getString(R.string.chapter_x, chapter)
-        else resources.getString(R.string.all_chapters)
+        if (chapter == 0) resources.getString(R.string.all_chapters)
+        else resources.getString(R.string.chapter_x, chapter)
   }
 
   private fun addPage(page: Int) = launch(UI) {
@@ -85,6 +87,8 @@ class ReviewsActivity : ActivityWithStatic() {
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    // Don't show a chapter selection menu if there is only one chapter
+    if (model.chapterCount == 1) return false
     menuInflater.inflate(R.menu.menu_reviews, menu)
     return true
   }
