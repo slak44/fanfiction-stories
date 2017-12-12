@@ -33,7 +33,7 @@ object Fetcher {
    * Parses story metadata from the metadata div.
    */
   fun parseStoryMetadata(metadata: String): Map<String, String?> {
-    val ratingLang = Regex("Rated: (?:<a .*?>Fiction[ ]{2})?(.*?)(?:</a>)? - (.*?) -", regexOpts)
+    val ratingLang = Regex("Rated: (?:<a .*?>Fiction[ ]+?)?(.*?)(?:</a>)? - (.*?) -", regexOpts)
         .find(metadata) ?: {
       val ex = IllegalStateException("Can't match rating/language")
       Log.e("parseStoryMetadata", "", ex)
