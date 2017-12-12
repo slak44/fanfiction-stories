@@ -168,10 +168,10 @@ class CanonStoryListActivity : ActivityWithStatic() {
   }
 
   private fun addPage(page: Int) = launch(UI) {
-    // Add page title
+    val pageData = fetcher.get(page, this@CanonStoryListActivity).await().map { Left(it) }
+    if (pageData.isEmpty()) return@launch
     adapter.addData(Right(resources.getString(R.string.page_x, page)))
-    // Add stories
-    adapter.addData(fetcher.get(page, this@CanonStoryListActivity).await().map { Left(it) })
+    adapter.addData(pageData)
     supportActionBar?.subtitle =
         resources.getString(R.string.x_stories, fetcher.unfilteredStories.get())
   }
