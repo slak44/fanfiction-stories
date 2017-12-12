@@ -79,6 +79,9 @@ class MainActivity : ActivityWithStatic() {
         intent.action = "slak.fanfictionstories.StoryUpdateReceiver"
         sendBroadcast(intent)
       } }
+      wipeSettings.setOnClickListener {
+        usePrefsImmediate { it.clear() }
+      }
     }
   }
 
