@@ -140,17 +140,17 @@ enum class Direction {
  */
 fun TextView.drawableTint(@ColorRes colorRes: Int, theme: Resources.Theme, which: Direction) {
   val color = Static.res.getColor(colorRes, theme)
-  val drawable = this.compoundDrawables[which.ordinal] ?: return
+  val drawable = compoundDrawables[which.ordinal] ?: return
   drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
   when (which) {
-    Direction.LEFT -> this.setCompoundDrawablesWithIntrinsicBounds(drawable,
-        this.compoundDrawables[1], this.compoundDrawables[2], this.compoundDrawables[3])
-    Direction.TOP -> this.setCompoundDrawablesWithIntrinsicBounds(this.compoundDrawables[0],
-        drawable, this.compoundDrawables[2], this.compoundDrawables[3])
-    Direction.RIGHT -> this.setCompoundDrawablesWithIntrinsicBounds(this.compoundDrawables[0],
-        this.compoundDrawables[1], drawable, this.compoundDrawables[3])
-    Direction.BOTTOM -> this.setCompoundDrawablesWithIntrinsicBounds(this.compoundDrawables[0],
-        this.compoundDrawables[1], this.compoundDrawables[2], drawable)
+    Direction.LEFT -> setCompoundDrawablesWithIntrinsicBounds(drawable, compoundDrawables[1],
+        compoundDrawables[2], compoundDrawables[3])
+    Direction.TOP -> setCompoundDrawablesWithIntrinsicBounds(compoundDrawables[0], drawable,
+        compoundDrawables[2], compoundDrawables[3])
+    Direction.RIGHT -> setCompoundDrawablesWithIntrinsicBounds(compoundDrawables[0],
+        compoundDrawables[1], drawable, compoundDrawables[3])
+    Direction.BOTTOM -> setCompoundDrawablesWithIntrinsicBounds(compoundDrawables[0],
+        compoundDrawables[1], compoundDrawables[2], drawable)
   }
 }
 
