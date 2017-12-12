@@ -1,7 +1,6 @@
 package slak.fanfictionstories.fetchers
 
 import android.util.Log
-import kotlinx.coroutines.experimental.sync.Mutex
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import slak.fanfictionstories.utility.opt
@@ -12,8 +11,6 @@ object Fetcher {
   const val CONNECTION_WAIT_DELAY_SECONDS = 3L
   const val CONNECTION_MISSING_DELAY_SECONDS = 5L
   const val STORAGE_WAIT_DELAY_SECONDS = 5L
-  @JvmStatic
-  val DOWNLOAD_MUTEX = Mutex()
   @JvmStatic
   val TAG = "Fetcher"
   @JvmStatic

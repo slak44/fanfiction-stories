@@ -14,7 +14,6 @@ import android.support.annotation.StringRes
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.style.ReplacementSpan
-import android.util.AttributeSet
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
@@ -30,7 +29,6 @@ import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
 import slak.fanfictionstories.R
 import slak.fanfictionstories.fetchers.Fetcher
-import slak.fanfictionstories.fetchers.Fetcher.DOWNLOAD_MUTEX
 import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
 import java.net.URL
 import java.util.*
@@ -96,10 +94,12 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
   }
 }
 
+private val DOWNLOAD_LOCK = Mutex()
+
 /**
- * Fetches the resource at the specified url, patiently.
+ * Fetches the resource at the specified url, patiently. Only processes one request at a time.
  *
- * Waits for the download lock [Fetcher.DOWNLOAD_MUTEX].
+ * Waits for the download lock [DOWNLOAD_LOCK].
  * Waits for the network using [waitForNetwork].
  * Waits for the rate limit [Fetcher.RATE_LIMIT_MILLISECONDS].
  *
@@ -108,7 +108,7 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
  */
 fun patientlyFetchURL(url: String, n: Notifications,
                       onError: (t: Throwable) -> Unit): Deferred<String> =
-    async2(CommonPool) { DOWNLOAD_MUTEX.withLock {
+    async2(CommonPool) { DOWNLOAD_LOCK.withLock {
   waitForNetwork(n).await()
   delay(RATE_LIMIT_MILLISECONDS)
   try {

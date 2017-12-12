@@ -8,18 +8,15 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.sync.withLock
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
 import slak.fanfictionstories.*
-import slak.fanfictionstories.fetchers.Fetcher.DOWNLOAD_MUTEX
 import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
 import slak.fanfictionstories.fetchers.Fetcher.STORAGE_WAIT_DELAY_SECONDS
 import slak.fanfictionstories.fetchers.Fetcher.TAG
 import slak.fanfictionstories.fetchers.Fetcher.parseMetadata
 import slak.fanfictionstories.fetchers.Fetcher.regexOpts
 import slak.fanfictionstories.utility.*
-import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -56,10 +53,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
   }
 
   fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async2(CommonPool) {
-    DOWNLOAD_MUTEX.lock()
-    delay(RATE_LIMIT_MILLISECONDS)
-    val html: String = fetchChapter(1, n).await()
-    DOWNLOAD_MUTEX.unlock()
+    val html = fetchChapter(1, n).await()
     metadataChapter = parseChapter(html).opt()
     val meta = parseMetadata(html, storyId)
     metadata = meta.opt()
@@ -158,7 +152,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     val storyName = if (metadata.isPresent) metadata.get()["title"] else ""
     // The buffer size is completely arbitrary
     val channel = Channel<String>(10)
-    launch(CommonPool) { DOWNLOAD_MUTEX.withLock {
+    launch(CommonPool) {
       for (chapterNr in from..target) {
         n.show(ctx.resources.getString(R.string.fetching_chapter, chapterNr, storyName))
         delay(RATE_LIMIT_MILLISECONDS)
@@ -166,7 +160,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
       }
       channel.close()
       n.show(ctx.resources.getString(R.string.done_story, storyName))
-    } }
+    }
     return channel
   }
 

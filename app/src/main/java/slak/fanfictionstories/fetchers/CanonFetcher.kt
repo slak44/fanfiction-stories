@@ -9,21 +9,16 @@ import kotlinx.android.parcel.Parceler
 import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.sync.withLock
 import org.jsoup.Jsoup
 import org.jsoup.nodes.TextNode
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
-import slak.fanfictionstories.fetchers.Fetcher.DOWNLOAD_MUTEX
-import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
 import slak.fanfictionstories.fetchers.Fetcher.TAG
 import slak.fanfictionstories.fetchers.Fetcher.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.Fetcher.parseStoryMetadata
 import slak.fanfictionstories.fetchers.Fetcher.publishedTimeStoryMeta
 import slak.fanfictionstories.fetchers.Fetcher.updatedTimeStoryMeta
 import slak.fanfictionstories.utility.*
-import java.net.URL
 import java.util.*
 import java.util.stream.Collectors
 
