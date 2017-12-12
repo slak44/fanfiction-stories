@@ -115,11 +115,14 @@ object Fetcher {
     val metaString = doc.select("#profile_top > span.xgray").html()
     val meta = parseStoryMetadata(metaString)
 
+    val chapters = if (meta["chapters"] != null) meta["chapters"]!!.toLong() else 1L
+
     // Parse chapter titles only if there are any chapters to name
     val chapterTitles: Optional<String> = if (meta["chapters"] == null) {
       Optional.empty()
     } else {
-      doc.select("#chap_select > option").joinToString(CHAPTER_TITLE_SEPARATOR) {
+      doc.select("#chap_select > option").slice(0..(chapters - 1).toInt())
+          .joinToString(CHAPTER_TITLE_SEPARATOR) {
         // The actual chapter title is preceded by the chapter nr, a dot, and a space:
         it.text().replace(Regex("\\d+\\. ", regexOpts), "")
       }.opt()
@@ -134,7 +137,7 @@ object Fetcher {
         "language" to meta["language"]!!,
         "genres" to meta["genres"]!!,
         "characters" to meta["characters"]!!,
-        "chapters" to if (meta["chapters"] != null) meta["chapters"]!!.toLong() else 1L,
+        "chapters" to chapters,
         "wordCount" to meta["words"]!!.replace(",", "").toLong(),
         "reviews" to if (meta["reviews"] != null) meta["reviews"]!!.toLong() else 0L,
         "favorites" to if (meta["favs"] != null) meta["favs"]!!.toLong() else 0L,

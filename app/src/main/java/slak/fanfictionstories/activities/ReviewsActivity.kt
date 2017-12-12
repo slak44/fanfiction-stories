@@ -96,7 +96,6 @@ class ReviewsActivity : ActivityWithStatic() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.selectReviewsFor -> {
-        println(model.chapterTitles)
         val items = listOf(
             resources.getString(R.string.all_chapters),
             *model.chapterTitles.toTypedArray()
