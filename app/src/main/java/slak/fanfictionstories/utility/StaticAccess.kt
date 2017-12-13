@@ -35,12 +35,12 @@ object Static {
     get() = cmProp!!
 
   fun init(context: Context) {
-    if (resProp == null) resProp = context.resources
-    if (cmProp == null)
-      cmProp = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    if (cacheDirProp == null) cacheDirProp = context.cacheDir
-    if (sharedPref == null)
-      sharedPref = context.getSharedPreferences(Prefs.PREFS_FILE, Context.MODE_PRIVATE)
+    if (resProp == null) resProp = context.applicationContext.resources
+    if (cmProp == null) cmProp = context.applicationContext
+        .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    if (cacheDirProp == null) cacheDirProp = context.applicationContext.cacheDir
+    if (sharedPref == null) sharedPref = context.applicationContext
+        .getSharedPreferences(Prefs.PREFS_FILE, Context.MODE_PRIVATE)
   }
 }
 
