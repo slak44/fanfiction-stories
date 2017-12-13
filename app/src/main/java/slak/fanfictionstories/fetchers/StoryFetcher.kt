@@ -127,7 +127,6 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
       dir = storyDir(ctx, storyId)
       i++
     }
-    dir.get().deleteRecursively()
     val isWriting = writeStory(ctx, storyId, fetchChapters(n)).await()
     if (!isWriting) return@async2 revertUpdate()
     return@async2 true

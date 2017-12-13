@@ -7,10 +7,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.consumeEach
-import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.errorDialog
-import slak.fanfictionstories.utility.opt
-import slak.fanfictionstories.utility.orElse
+import slak.fanfictionstories.utility.*
 import java.io.File
 import java.util.*
 
@@ -60,7 +57,7 @@ fun writeStory(ctx: Context, storyId: Long,
   innerAsync@ async2(CommonPool) {
     var idx = 1
     chapters.consumeEach { chapterText: String ->
-      File(targetDir, "$idx.html").printWriter().use { it.print(chapterText) }
+      File(targetDir, "$idx.html").overwritePrintWriter().use { it.print(chapterText) }
       idx++
     }
     return@innerAsync true

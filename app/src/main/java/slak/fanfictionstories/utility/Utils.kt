@@ -30,7 +30,11 @@ import kotlinx.coroutines.experimental.sync.withLock
 import slak.fanfictionstories.R
 import slak.fanfictionstories.fetchers.Fetcher
 import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
+import java.io.File
+import java.io.FileOutputStream
+import java.io.PrintWriter
 import java.net.URL
+import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.experimental.CoroutineContext
@@ -296,3 +300,8 @@ fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage:
     }
   })
 }
+
+/**
+ * A [PrintWriter] instance that overwrites the target file.
+ */
+fun File.overwritePrintWriter() = PrintWriter(FileOutputStream(this, false))
