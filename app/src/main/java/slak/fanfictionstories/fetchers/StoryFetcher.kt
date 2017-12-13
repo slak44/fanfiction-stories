@@ -70,17 +70,14 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     if (oldModel.currentChapter > newChapterCount) {
       meta["currentChapter"] = newChapterCount
       meta["scrollProgress"] = 0.0
-      meta["scrollAbsolute"] = 0L
+      meta["scrollAbsolute"] = 0.0
     } else {
       meta["currentChapter"] = oldModel.currentChapter.toLong()
       meta["scrollProgress"] = oldModel.src["scrollProgress"] as Double
-      meta["scrollAbsolute"] = oldModel.src["scrollAbsolute"] as Long
+      meta["scrollAbsolute"] = oldModel.src["scrollAbsolute"] as Double
     }
     meta["status"] = oldModel.status.toString()
     val newModel = StoryModel(meta, fromDb = false)
-    ctx.database.use {
-      replaceOrThrow("stories", *newModel.toKvPairs())
-    }
     // Skip non-locals from global updates
     if (oldModel.status != StoryStatus.LOCAL) return@async2 false
     // Stories can't get un-updated
@@ -91,11 +88,14 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     // Update time is identical, nothing to do again
     if (oldModel.updateDateSeconds == newModel.updateDateSeconds) return@async2 false
 
+    ctx.database.use {
+      replaceOrThrow("stories", *newModel.toKvPairs())
+    }
+
     val revertUpdate: () -> Boolean = {
       // Revert model to old values
       ctx.database.use { replaceOrThrow("stories", *oldModel.toKvPairs()) }
       Log.e(TAG, "Had to revert update to $storyId")
-      n.show(ctx.resources.getString(R.string.update_failed, oldModel.title))
       false
     }
 

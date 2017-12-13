@@ -44,8 +44,6 @@ class BootBroadcastReceiver : BroadcastReceiver() {
 class StoryUpdateReceiver : BroadcastReceiver() {
   private var updatedStories: MutableList<StoryModel> = mutableListOf()
   override fun onReceive(context: Context, intent: Intent) {
-    //FIXME temporary hack to get rid of annoying update notifications
-    return
     val n = Notifications(context, Notifications.Kind.UPDATING)
     launch(CommonPool) {
       update(context, n).await()
@@ -59,11 +57,10 @@ class StoryUpdateReceiver : BroadcastReceiver() {
     updatedStories = mutableListOf()
     val storyModels = context.database.getLocalStories().await()
     // We can launch all of them at once since there can only be one holding the download lock,
-    // so we won't assblast their site with requests
+    // so we won't blast their site with requests
     val jobs = storyModels.map { model ->
       async2(CommonPool) {
         val fetcher = StoryFetcher(model.storyIdRaw, context)
-        waitForNetwork(n).await()
         fetcher.fetchMetadata(n).await()
         val updated = fetcher.update(model, n).await()
         if (updated) updatedStories.add(model)
