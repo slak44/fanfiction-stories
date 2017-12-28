@@ -27,4 +27,3 @@ class MainSettingsFragment : PreferenceFragment() {
     addPreferencesFromResource(R.xml.settings_main)
   }
 }
-
