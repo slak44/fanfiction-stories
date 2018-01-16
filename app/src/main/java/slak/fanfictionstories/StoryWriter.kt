@@ -7,6 +7,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.consumeEach
+import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.utility.*
 import java.io.File
 import java.util.*
@@ -62,4 +63,21 @@ fun writeStory(ctx: Context, storyId: Long,
     }
     return@innerAsync true
   }.await()
+}
+
+/**
+ * Deletes the story chapter data directory
+ */
+fun deleteLocalStory(ctx: Context, storyId: Long) = launch(CommonPool) {
+  val targetDir = storyDir(ctx, storyId).orElseThrow(IllegalStateException("Storage missing"))
+  if (!targetDir.exists()) {
+    Log.w("StoryWriter#deleteLocalStory", "Tried to delete a story that does not exist")
+    // Our job here is done ¯\_(ツ)_/¯
+    return@launch
+  }
+  val deleted = targetDir.deleteRecursively()
+  if (!deleted) {
+    Log.e("StoryWriter#deleteLocalStory", "Failed to delete story dir")
+    return@launch
+  }
 }

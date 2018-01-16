@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Typeface
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v4.app.NavUtils
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
@@ -23,13 +24,11 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.*
-import slak.fanfictionstories.R
-import slak.fanfictionstories.StoryModel
-import slak.fanfictionstories.StoryStatus
+import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Fetcher.parseMetadata
 import slak.fanfictionstories.fetchers.StoryFetcher
-import slak.fanfictionstories.storyDir
 import slak.fanfictionstories.utility.*
 import java.io.File
 
@@ -257,6 +256,24 @@ class StoryReaderActivity : ActivityWithStatic() {
     }
   }
 
+  private fun deleteLocal() {
+    val snack = Snackbar.make(contentView!!, R.string.data_deleted, Snackbar.LENGTH_LONG)
+    snack.setAction(R.string.undo, {})
+    snack.addCallback(object : Snackbar.Callback() {
+      override fun onDismissed(transientBottomBar: Snackbar, event: Int) { launch(CommonPool) {
+        // These actions should trigger the story deletion
+        // The user clicking undo or the code calling dismiss() do not trigger this
+        val actions = arrayOf(DISMISS_EVENT_CONSECUTIVE, DISMISS_EVENT_SWIPE, DISMISS_EVENT_TIMEOUT)
+        if (event in actions) {
+          deleteLocalStory(this@StoryReaderActivity, model.storyIdRaw)
+          database.updateInStory(model.storyIdRaw, "status" to "remote")
+          model.status = StoryStatus.REMOTE
+        }
+      } }
+    })
+    snack.show()
+  }
+
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     val toTint = arrayOf(
         menu.findItem(R.id.goToTop),
@@ -287,6 +304,7 @@ class StoryReaderActivity : ActivityWithStatic() {
         intent.putExtra(ReviewsActivity.INTENT_TARGET_CHAPTER, currentChapter)
         startActivity(intent)
       }
+      R.id.deleteLocal -> deleteLocal()
       android.R.id.home -> NavUtils.navigateUpFromSameTask(this)
       else -> return super.onOptionsItemSelected(item)
     }
