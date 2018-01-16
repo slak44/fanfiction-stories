@@ -115,8 +115,8 @@ class StoryReaderActivity : ActivityWithStatic() {
       model = database.storyById(model.storyIdRaw).orElse(model)
     }
 
-    // Save story for the resume button, but only for local stories
-    if (model.status == StoryStatus.LOCAL)
+    // Save story for the resume button, but not for transient stories
+    if (model.status != StoryStatus.TRANSIENT)
       usePrefs { it.putLong(Prefs.RESUME_STORY_ID, model.storyIdRaw) }
 
     title = model.title
