@@ -56,7 +56,7 @@ abstract class ActivityWithStatic : AppCompatActivity() {
       CategoryFetcher.Cache.deserialize()
       hasCache = true
     }
-    if (hasExHandler) {
+    if (!hasExHandler) {
       Thread.setDefaultUncaughtExceptionHandler {
         thread, throwable -> Log.e("UNCAUGHT DEFAULT", thread.toString(), throwable)
       }
