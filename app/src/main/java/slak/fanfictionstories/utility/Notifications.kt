@@ -1,5 +1,6 @@
 package slak.fanfictionstories.utility
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -44,6 +45,7 @@ class Notifications(val context: Context, val kind: Kind) {
 
     private var updatedIds = UPDATED_STORIES_REQ_ID_BEGIN
     fun updatedStories(context: Context, titles: List<String>) {
+      if (titles.isEmpty()) return
       val n = Notifications(context, Kind.DONE_UPDATING)
       n.show(n.create(context.resources.getString(R.string.x_stories_updated, titles.size))
           .setGroupSummary(true)
