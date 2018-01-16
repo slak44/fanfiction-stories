@@ -65,6 +65,7 @@ class Notifications(val context: Context, val kind: Kind) {
       context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
   init {
+    @SuppressLint("NewAPI")
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       val title = context.resources.getString(R.string.download_notification_channel)
       val channel =
