@@ -71,7 +71,6 @@ class StoryListActivity : ActivityWithStatic() {
           .orElseThrow(IllegalStateException("Story $lastStoryId MUST exist"))
       val idx = adapter.getStories().indexOfFirst { it.storyIdRaw == id }
       launch(UI) { adapter.updateStory(idx, newModel) }
-
     }
   }
 
