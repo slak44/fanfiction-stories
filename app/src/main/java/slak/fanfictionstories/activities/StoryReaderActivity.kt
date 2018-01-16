@@ -45,6 +45,14 @@ private class FastTextView : View {
   var staticLayout: StaticLayout? = null
     private set
 
+  private var onTextChange: (Spanned) -> Unit = {}
+  /**
+   * @param listener called when the text changes, more precisely, when the [staticLayout] changes
+   */
+  fun setOnTextChangeListener(listener: (Spanned) -> Unit) {
+    onTextChange = listener
+  }
+
   fun setText(s: Spanned) = async2(CommonPool) {
     // FIXME hardcoded textpaint
     val tp = TextPaint()
@@ -54,7 +62,7 @@ private class FastTextView : View {
     tp.isAntiAlias = true
 
     if (!ViewCompat.isLaidOut(this@FastTextView)) {
-      Log.w(TAG, "forcing layout, setText was called before we were laid out")
+      Log.w(TAG, "Forcing layout, setText was called before we were laid out")
       async2(UI) {
         this@FastTextView.forceLayout()
       }.await()
@@ -67,12 +75,14 @@ private class FastTextView : View {
       this@FastTextView.layoutParams.height = staticLayout!!.height
       this@FastTextView.invalidate()
     }.await()
+
+    onTextChange(s)
   }
 
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
     canvas.save()
-    staticLayout?.draw(canvas)
+    staticLayout?.draw(canvas) ?: Log.w(TAG, "Drawing view, but no layout is present")
     canvas.restore()
   }
 }
@@ -113,6 +123,10 @@ class StoryReaderActivity : ActivityWithStatic() {
     title = model.title
     currentChapter = if (model.currentChapter == 0) 1 else model.currentChapter
 
+    chapterText.setOnTextChangeListener {
+      restoreScrollStatus()
+    }
+
     launch(UI) {
       initText(currentChapter).await()
       restoreScrollStatus()
@@ -137,26 +151,21 @@ class StoryReaderActivity : ActivityWithStatic() {
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
     super.onRestoreInstanceState(savedInstanceState)
     model = savedInstanceState.getParcelable(RESTORE_STORY_MODEL)
-    restoreScrollStatus()
   }
 
-  private fun restoreScrollStatus() {
-    database.use {
-      val absoluteScroll = select("stories", "scrollAbsolute")
-          .whereSimple("storyId = ?", model.storyIdRaw.toString())
-          .parseOpt(DoubleParser) ?: return@use
-      launch(UI) {
-        if (absoluteScroll > resources.getDimensionPixelSize(R.dimen.app_bar_height))
-          appBar.setExpanded(false)
-        val offset = absoluteScroll.toInt()
-        // FIXME hardcoded font size (it's not even that), that's actually supposed to be the line height
-        val above = (absoluteScroll - offset) * 15F
-        val layout = chapterText.staticLayout!!
-        val line = layout.getLineForOffset(offset)
-        val y = (if (line == 0) -layout.topPadding else layout.getLineTop(line)) - above
-        nestedScroller.scrollTo(0, y.toInt())
-      }
-    }
+  private fun restoreScrollStatus() = launch(UI) {
+    val absoluteScroll = database.readableDatabase.select("stories", "scrollAbsolute")
+        .whereSimple("storyId = ?", model.storyIdRaw.toString())
+        .parseOpt(DoubleParser) ?: return@launch
+    if (absoluteScroll > resources.getDimensionPixelSize(R.dimen.app_bar_height))
+      appBar.setExpanded(false)
+    val offset = absoluteScroll.toInt()
+    // FIXME hardcoded font size (it's not even that), that's actually supposed to be the line height
+    val above = (absoluteScroll - offset) * 15F
+    val layout = chapterText.staticLayout!!
+    val line = layout.getLineForOffset(offset)
+    val y = (if (line == 0) -layout.topPadding else layout.getLineTop(line)) - above
+    nestedScroller.scrollTo(0, y.toInt())
   }
 
   private fun showChapterSelectDialog() {
