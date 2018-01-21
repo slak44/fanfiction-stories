@@ -90,6 +90,7 @@ class StoryReaderActivity : ActivityWithStatic() {
   companion object {
     const val INTENT_STORY_MODEL = "bundle"
     private const val RESTORE_STORY_MODEL = "story_model"
+    private const val RESTORE_CURRENT_CHAPTER = "current_chapter"
     private const val PLACEHOLDER = "######HRPLACEHOLDERHRPLACEHOLDERHRPLACEHOLDER######"
     private val tagHandlerFactory = { widthPx: Int -> Html.TagHandler { opening, tag, output, _ ->
       if (tag == "hr") {
@@ -145,11 +146,13 @@ class StoryReaderActivity : ActivityWithStatic() {
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
     outState.putParcelable(RESTORE_STORY_MODEL, model)
+    outState.putInt(RESTORE_CURRENT_CHAPTER, currentChapter)
   }
 
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
     super.onRestoreInstanceState(savedInstanceState)
     model = savedInstanceState.getParcelable(RESTORE_STORY_MODEL)
+    currentChapter = savedInstanceState.getInt(RESTORE_CURRENT_CHAPTER)
   }
 
   private fun restoreScrollStatus() = launch(UI) {
