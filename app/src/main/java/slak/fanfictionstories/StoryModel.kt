@@ -45,7 +45,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
   // DB primary key. Does not exist if story not from db
   val _id: Optional<Long> = if (fromDb) (src["_id"] as Long).opt() else Optional.empty()
 
-  var status = StoryStatus.fromString(src["status"] as String) // FIXME: ui for this where
+  var status = StoryStatus.fromString(src["status"] as String)
     set(value) {
       field = value
       src["status"] = value.toString()
