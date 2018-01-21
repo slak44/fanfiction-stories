@@ -2,6 +2,7 @@ package slak.fanfictionstories.activities
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Parcelable
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
@@ -27,7 +28,9 @@ import java.util.*
 
 class StoryListActivity : ActivityWithStatic() {
   private lateinit var adapter: StoryAdapter
-  private var lastStoryId: Optional<Long> = Optional.empty()
+  companion object {
+    private const val SCROLL_STATE = "recycler_scroll_state"
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -36,10 +39,7 @@ class StoryListActivity : ActivityWithStatic() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     storyListView.layoutManager = LinearLayoutManager(this)
-    StoryCardView.createRightSwipeHelper(storyListView, { intent, storyId ->
-      lastStoryId = storyId.opt()
-      startActivity(intent)
-    })
+    StoryCardView.createRightSwipeHelper(storyListView, { intent, _ -> startActivity(intent) })
     adapter = StoryAdapter(this@StoryListActivity)
     adapter.groupStrategy = GroupStrategy[Static.prefs.getInt(LIST_GROUP_STRATEGY, GroupStrategy.NONE.ordinal)]
     adapter.orderStrategy = OrderStrategy[Static.prefs.getInt(LIST_ORDER_STRATEGY, OrderStrategy.TITLE_ALPHABETIC.ordinal)]
@@ -64,16 +64,29 @@ class StoryListActivity : ActivityWithStatic() {
         adapter.storyCount, adapter.filteredCount)
   }
 
+  private var layoutState: Parcelable? = null
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    outState.putParcelable(SCROLL_STATE, storyListView.layoutManager.onSaveInstanceState())
+  }
+
+  override fun onPause() {
+    super.onPause()
+    layoutState = storyListView.layoutManager.onSaveInstanceState()
+  }
+
+  override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+    super.onRestoreInstanceState(savedInstanceState)
+    layoutState = savedInstanceState.getParcelable(SCROLL_STATE)
+  }
+
   override fun onResume() {
     super.onResume()
     launch(UI) {
       adapter.setStories(database.getStories().await().toMutableList())
       arrangeStories()
-      val id = lastStoryId.orElse { return@launch }
-      val position = adapter
-          .getAdapterData().indexOfFirst { it.fold({ it.storyIdRaw == id }, { false }) }
-      // FIXME use onsavedinstancestate
-      (storyListView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, 0)
+      storyListView.layoutManager.onRestoreInstanceState(layoutState)
     }
   }
 
