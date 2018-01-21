@@ -282,7 +282,13 @@ private val titleAlphabetic = Comparator<StoryModel> { m1, m2 ->
   return@Comparator if (m1.title < m2.title) 1 else -1
 }
 
-enum class OrderDirection { ASC, DESC }
+enum class OrderDirection {
+  ASC, DESC;
+
+  companion object {
+    operator fun get(index: Int) = OrderDirection.values()[index]
+  }
+}
 
 enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
   // Numeric orderings
@@ -317,9 +323,53 @@ fun orderStories(stories: MutableList<StoryModel>,
   return stories
 }
 
+/**
+ * Contains all the data necessary to arrange a list of [StoryModel]s.
+ */
+data class Arrangement(val orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC,
+                       val orderDirection: OrderDirection = OrderDirection.DESC,
+                       val groupStrategy: GroupStrategy = GroupStrategy.NONE)
+
 class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
+
+  /**
+   * Stores working data (stories and group titles).
+   */
+  private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
+
+  /**
+   * Get an immutable copy of [data], for serialization purposes.
+   */
+  fun getData(): List<Either<StoryModel, String>> = data.toList()
+
+  /**
+   * Clear adapter data, including any pending items.
+   * @see data
+   * @see pendingItems
+   */
+  fun clearData() {
+    val dataSize = data.size
+    data.clear()
+    notifyItemRangeRemoved(0, dataSize)
+    pendingItems.clear()
+    onSizeChange(0, 0)
+  }
+
+  fun addData(storyOrTitle: Either<StoryModel, String>) {
+    data.add(storyOrTitle)
+    notifyItemInserted(data.size - 1)
+    storyCount++
+    onSizeChange(storyCount, filteredCount)
+  }
+
+  fun addData(storyOrTitleList: List<Either<StoryModel, String>>) {
+    data.addAll(storyOrTitleList)
+    notifyItemRangeInserted(data.size, storyOrTitleList.size)
+    storyCount += storyOrTitleList.size
+    onSizeChange(storyCount, filteredCount)
+  }
 
   /**
    * Pending items are items that have been hidden with [hideStory], and can be reinstated using
@@ -338,6 +388,8 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     pendingItems[model] = position
     data.removeAt(position)
     notifyItemRemoved(position)
+    storyCount--
+    onSizeChange(storyCount, filteredCount)
   }
 
   /**
@@ -351,67 +403,37 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     data.add(pos, Left(model))
     pendingItems.remove(model)
     notifyItemInserted(pos)
+    storyCount++
+    onSizeChange(storyCount, filteredCount)
   }
 
   /**
-   * Stores working data (stories and group titles).
+   * Called when the story count changes.
    */
-  private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
+  var onSizeChange: (storyCount: Int, filteredCount: Int) -> Unit = { _, _ -> }
 
   /**
-   * Get list of [StoryModel]s in [data].
+   * How many stories have been filtered in the latest [arrangeStories] call.
    */
-  fun stories(): List<StoryModel> = data.mapNotNull { it.fold({ it }, { null }) }
+  private var filteredCount = 0
+  /**
+   * How many stories were passed to the latest [arrangeStories] call.
+   */
+  private var storyCount = 0
 
   /**
-   * Get an immutable copy of [data], for serialization purposes.
+   * Filter, group, sort [stories] according to the [arrangement], and put the results in [data].
    */
-  fun getAdapterData(): List<Either<StoryModel, String>> = data.toList()
-
-  /**
-   * Clear adapter data, including any pending items.
-   * @see data
-   * @see pendingItems
-   */
-  fun clearData() {
-    val dataSize = data.size
-    data.clear()
-    notifyItemRangeRemoved(0, dataSize)
-    pendingItems.clear()
-  }
-
-  fun addData(storyOrTitle: Either<StoryModel, String>) {
-    data.add(storyOrTitle)
-    notifyItemInserted(data.size - 1)
-  }
-
-  fun addData(storyOrTitleList: List<Either<StoryModel, String>>) {
-    data.addAll(storyOrTitleList)
-    notifyItemRangeInserted(data.size, storyOrTitleList.size)
-  }
-
-  var filteredCount: Int = 0
-    private set
-
-  var groupStrategy: GroupStrategy = GroupStrategy.NONE
-  var orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC
-  var orderDirection: OrderDirection = OrderDirection.DESC
-
-  /**
-   * Filter, group, then sort [stories] according to the [orderDirection], [orderStrategy],
-   * [groupStrategy].
-   *
-   * Rebuilds [data]. Call in UI thread.
-   */
-  fun arrangeStories() {
-    val stories = stories()
-    val toData = stories.filter { true }.toMutableList() // FIXME filter
-    filteredCount = stories.size - toData.size
+  fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) {
     clearData()
-    groupStories(toData, groupStrategy).forEach {
-      val ordered = orderStories(it.value, orderStrategy, orderDirection)
+    val toData = stories.filter { true }.toMutableList() // FIXME filter
+    groupStories(toData, arrangement.groupStrategy).forEach {
+      val ordered = orderStories(it.value, arrangement.orderStrategy, arrangement.orderDirection)
       addData(listOf(Right(it.key), *ordered.map { Left(it) }.toTypedArray()))
     }
+    filteredCount = stories.size - toData.size
+    storyCount = stories.size
+    onSizeChange(storyCount, filteredCount)
   }
 
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {

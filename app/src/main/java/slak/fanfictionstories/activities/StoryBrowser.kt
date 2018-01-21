@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -22,7 +21,6 @@ import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.sync.Mutex
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
@@ -150,7 +148,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
     super.onSaveInstanceState(outState)
     outState.putInt(CURRENT_PAGE_RESTORE, currentPage)
     outState.putParcelable(FETCHER_RESTORE, fetcher)
-    outState.putParcelableArray(ADAPTER_DATA_RESTORE, adapter.getAdapterData().map {
+    outState.putParcelableArray(ADAPTER_DATA_RESTORE, adapter.getData().map {
       it.fold({ EitherWrapper(it, null) }, { EitherWrapper(null, it) })
     }.toTypedArray())
   }

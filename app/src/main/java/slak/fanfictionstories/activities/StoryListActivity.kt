@@ -12,19 +12,14 @@ import android.view.View
 import android.widget.EditText
 import android.widget.Switch
 import either.Left
-import either.fold
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import org.jetbrains.anko.db.select
+import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.*
-import slak.fanfictionstories.utility.Prefs.LIST_GROUP_STRATEGY
-import slak.fanfictionstories.utility.Prefs.LIST_ORDER_IS_REVERSE
-import slak.fanfictionstories.utility.Prefs.LIST_ORDER_STRATEGY
-import java.util.*
 
 class StoryListActivity : ActivityWithStatic() {
   private lateinit var adapter: StoryAdapter
@@ -41,10 +36,10 @@ class StoryListActivity : ActivityWithStatic() {
     storyListView.layoutManager = LinearLayoutManager(this)
     StoryCardView.createRightSwipeHelper(storyListView, { intent, _ -> startActivity(intent) })
     adapter = StoryAdapter(this@StoryListActivity)
-    adapter.groupStrategy = GroupStrategy[Static.prefs.getInt(LIST_GROUP_STRATEGY, GroupStrategy.NONE.ordinal)]
-    adapter.orderStrategy = OrderStrategy[Static.prefs.getInt(LIST_ORDER_STRATEGY, OrderStrategy.TITLE_ALPHABETIC.ordinal)]
-    adapter.orderDirection = if (Static.prefs.getInt(LIST_ORDER_IS_REVERSE, 1) == 1)
-      OrderDirection.ASC else OrderDirection.DESC
+    adapter.onSizeChange = { storyCount, filteredCount ->
+      toolbar.subtitle =
+          resources.getString(R.string.x_stories_y_filtered, storyCount, filteredCount)
+    }
     storyListView.adapter = adapter
     initializeAdapter()
   }
@@ -53,18 +48,7 @@ class StoryListActivity : ActivityWithStatic() {
     val stories = database.getStories().await()
     if (stories.isEmpty()) nothingHere.visibility = View.VISIBLE
     else nothingHere.visibility = View.GONE
-    adapter.clearData()
-    adapter.addData(stories.map { Left(it) })
-    arrangeStories()
-  }
-
-  /**
-   * Wrap [StoryAdapter.arrangeStories] to also set the subtitle on this activity.
-   */
-  private fun arrangeStories() {
-    adapter.arrangeStories()
-    toolbar.subtitle = resources.getString(R.string.x_stories_y_filtered,
-        adapter.stories().size, adapter.filteredCount)
+    adapter.arrangeStories(stories, Prefs.arrangement())
   }
 
   private var layoutState: Parcelable? = null
@@ -110,49 +94,41 @@ class StoryListActivity : ActivityWithStatic() {
   }
 
   private fun groupByDialog() {
-    val strategy = Static.prefs.getInt(LIST_GROUP_STRATEGY, GroupStrategy.NONE.ordinal)
     AlertDialog.Builder(this)
         .setTitle(R.string.group_by)
-        .setSingleChoiceItems(GroupStrategy.uiItems(), strategy, { dialog, which ->
-          dialog.dismiss()
-          usePrefs { it.putInt(LIST_GROUP_STRATEGY, which) }
-          adapter.groupStrategy = GroupStrategy.values()[which]
-          arrangeStories()
+        .setSingleChoiceItems(GroupStrategy.uiItems(), Prefs.groupStrategy.ordinal, { d, which ->
+          d.dismiss()
+          Prefs.groupStrategy = GroupStrategy[which]
+          initializeAdapter()
         }).show()
   }
 
   @SuppressLint("InflateParams")
   private fun orderByDialog() {
-    val strategy = Static.prefs.getInt(LIST_ORDER_STRATEGY, OrderStrategy.TITLE_ALPHABETIC.ordinal)
-    val isReverse = Static.prefs.getInt(LIST_ORDER_IS_REVERSE, 0)
     val layout = LayoutInflater.from(this)
         .inflate(R.layout.dialog_order_by_switch, null, false)
-    val switch = layout.findViewById<Switch>(R.id.reverseOrderSw) as Switch
-    if (isReverse == 1) switch.toggle()
+    val switch = layout.findViewById(R.id.reverseOrderSw) as Switch
+    if (Prefs.orderDirection == OrderDirection.ASC) switch.toggle()
     AlertDialog.Builder(this)
         .setTitle(R.string.sort_by)
         .setView(layout)
-        .setSingleChoiceItems(OrderStrategy.uiItems(), strategy, { dialog, which ->
-          dialog.dismiss()
-          usePrefs {
-            it.putInt(LIST_ORDER_STRATEGY, which)
-            it.putInt(LIST_ORDER_IS_REVERSE, if (switch.isChecked) 1 else 0)
-          }
-          adapter.orderStrategy = OrderStrategy.values()[which]
-          adapter.orderDirection =
-              if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC
-          arrangeStories()
+        .setSingleChoiceItems(OrderStrategy.uiItems(), Prefs.orderDirection.ordinal, { d, which ->
+          d.dismiss()
+          Prefs.orderDirection = if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC
+          Prefs.orderStrategy = OrderStrategy[which]
+          initializeAdapter()
         })
         .show()
   }
 
   private fun statisticsDialog() {
+    val stories = runBlocking { database.getStories().await() }
     var totalWords = 0
     var passedApprox = 0
-    val totalStories = adapter.stories().size
+    val totalStories = stories.size
     var storiesRead = 0
     var storiesNotStarted = 0
-    adapter.stories().forEach {
+    stories.forEach {
       totalWords += it.wordCount
       passedApprox += it.wordsProgressedApprox
       when {
