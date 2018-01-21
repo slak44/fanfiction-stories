@@ -89,7 +89,7 @@ class StoryListActivity : ActivityWithStatic() {
           launch(CommonPool) {
             val model = getFullStory(this@StoryListActivity, id, n).await()
             n.cancel()
-            model.ifPresent { model -> launch(UI) { adapter.addData(Left(model)) } }
+            model.ifPresent { launch(UI) { adapter.addData(Left(it)) } }
           }
         })
         .show()
