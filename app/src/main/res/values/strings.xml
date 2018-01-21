@@ -2,6 +2,8 @@
     <!-- Generic -->
     <string name="app_name">Fanfiction Stories</string>
     <string name="add">Add</string>
+    <string name="remove">Remove</string>
+    <string name="download">Download</string>
     <string name="completed">Completed</string>
     <string name="in_progress">In-progress</string>
     <string name="any">Any</string>
@@ -92,6 +94,7 @@
     <string name="story_by_id_title">Add Story by ID</string>
     <string name="all_stories">All</string>
     <string name="x_stories_y_filtered">%d stories (%d filtered)</string>
+    <string name="removed_story">Story removed</string>
 
     <!-- Story component -->
     <string name="updated_on">Updated on %s</string>
@@ -142,6 +145,8 @@
     <string name="ext_store_unavailable_tip">Try disconnecting the phone\'s USB</string>
     <string name="unique_constraint_violated">Story Already Downloaded</string>
     <string name="unique_constraint_violated_tip">Search the story list to find it</string>
+    <string name="storyid_does_not_exist">Story Missing from Database</string>
+    <string name="storyid_does_not_exist_tip">This story could not be found in the database</string>
 
     <!-- Native FFnet filtering -->
     <string name="native_sort">Sort by…</string>

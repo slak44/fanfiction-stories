@@ -1,12 +1,10 @@
 package slak.fanfictionstories
 
 import android.animation.ObjectAnimator
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.os.Parcelable
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -19,8 +17,6 @@ import either.Either
 import either.Left
 import either.Right
 import either.fold
-import kotlinx.android.parcel.Parcelize
-import kotlinx.android.parcel.RawValue
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -28,11 +24,7 @@ import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.getFullStory
-import slak.fanfictionstories.utility.Notifications
-import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.opt
-import slak.fanfictionstories.utility.orElseThrow
-import java.util.*
+import slak.fanfictionstories.utility.*
 import kotlin.Comparator
 
 class StoryCardView : CardView {
@@ -59,7 +51,7 @@ class StoryCardView : CardView {
           val intent = Intent(recyclerView.context, StoryReaderActivity::class.java)
           val cardView = viewHolder.itemView as StoryCardView
           intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, cardView.currentModel!!)
-          openStoryReader(intent, cardView.storyId.get())
+          openStoryReader(intent, cardView.currentModel!!.storyIdRaw)
           // After the reader was opened, reset the translation by reattaching
           // We do this because we might go back from the reader to this activity and
           // it has to look properly
@@ -76,39 +68,6 @@ class StoryCardView : CardView {
 
     const val DEFAULT_ELEVATION = 7F
     const val CLICK_ELEVATION = 20F
-  }
-
-  var storyId: Optional<Long> = Optional.empty()
-
-  override fun onCreateDrawableState(extraSpace: Int): IntArray {
-    // Disable touching on the progress seek bar
-    storyProgress.setOnTouchListener { _, _ -> true }
-    storyMainContent.setOnClickListener {
-      cardElevation = if (cardElevation == DEFAULT_ELEVATION) CLICK_ELEVATION else DEFAULT_ELEVATION
-      // This gets animated automatically
-      if (storyDetails.visibility == View.GONE) storyDetails.visibility = View.VISIBLE
-      else storyDetails.visibility = View.GONE
-    }
-    addBtn.setOnClickListener {
-      addBtn.isEnabled = false
-      addBtn.text = context.resources.getString(R.string.adding___)
-      val id = storyId
-          .orElseThrow(IllegalStateException("StoryCardView clicked, but data not filled by model"))
-      val n = Notifications(this@StoryCardView.context, Notifications.Kind.DOWNLOADING)
-      launch(CommonPool) {
-        val model = getFullStory(this@StoryCardView.context, id, n).await()
-        launch(UI) {
-          if (model.isPresent) {
-            addBtn.visibility = View.INVISIBLE
-          } else {
-            addBtn.isEnabled = true
-            addBtn.text = resources.getString(R.string.add)
-          }
-        }
-        n.cancel()
-      }
-    }
-    return super.onCreateDrawableState(extraSpace)
   }
 
   fun loadFromModel(model: StoryModel) {
@@ -141,15 +100,69 @@ class StoryCardView : CardView {
     followsText.text = model.follows
     storyIdText.text = model.storyId
 
-    storyId = model.storyIdRaw.opt()
-    if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.INVISIBLE
+    if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.GONE
+    if (model.status == StoryStatus.TRANSIENT) removeBtn.visibility = View.GONE
 
     // Reset card UI (including the measured size) to default
     storyDetails.visibility = View.GONE
+    divider.visibility = View.GONE
+    btnBar.visibility = View.GONE
     cardElevation = DEFAULT_ELEVATION
     addBtn.isEnabled = true
     val unspec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
     measure(unspec, unspec)
+  }
+
+  fun setChildrenListeners(model: StoryModel, holder: RecyclerView.ViewHolder, adapter: StoryAdapter) {
+    // Disable touching on the progress seek bar
+    storyProgress.setOnTouchListener { _, _ -> true }
+    storyMainContent.setOnClickListener {
+      cardElevation = if (cardElevation == DEFAULT_ELEVATION) CLICK_ELEVATION else DEFAULT_ELEVATION
+      if (storyDetails.visibility == View.GONE) {
+        storyDetails.visibility = View.VISIBLE
+        divider.visibility = View.VISIBLE
+        btnBar.visibility = View.VISIBLE
+      } else {
+        storyDetails.visibility = View.GONE
+        divider.visibility = View.GONE
+        btnBar.visibility = View.GONE
+      }
+    }
+    removeBtn.setOnClickListener {
+      // Even though we have a model, fetch it from db to make sure there are no inconsistencies
+      val dbModel = context.database.storyById(model.storyIdRaw)
+      if (!dbModel.isPresent) {
+        errorDialog(context, R.string.storyid_does_not_exist, R.string.storyid_does_not_exist_tip)
+        return@setOnClickListener
+      }
+      // Hide card
+      adapter.hideStory(holder.adapterPosition, model)
+      undoableAction(holder.itemView, R.string.removed_story, {
+        adapter.undoHideStory(model)
+      }) {
+        deleteLocalStory(context, model.storyIdRaw).join()
+        context.database.writableDatabase
+            .delete("stories", "storyId = ?", arrayOf(model.storyIdRaw.toString()))
+      }
+    }
+    addBtn.setOnClickListener {
+      addBtn.isEnabled = false
+      addBtn.text = context.resources.getString(R.string.adding___)
+      val n = Notifications(this@StoryCardView.context, Notifications.Kind.DOWNLOADING)
+      launch(CommonPool) {
+        val newModel = getFullStory(this@StoryCardView.context, model.storyIdRaw, n).await()
+        launch(UI) {
+          if (newModel.isPresent) {
+            addBtn.visibility = View.GONE
+          } else {
+            addBtn.visibility = View.VISIBLE
+            addBtn.isEnabled = true
+            addBtn.text = resources.getString(R.string.add)
+          }
+        }
+        n.cancel()
+      }
+    }
   }
 }
 
@@ -308,26 +321,91 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
 
-  // Story or group title
-  private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
-  fun getAdapterData(): List<Either<StoryModel, String>> = data.toList()
-
-  // Adapter data, but only with the stories
-  private var stories: MutableList<StoryModel> = mutableListOf()
-  fun getStories(): List<StoryModel> = stories.toList()
-  fun setStories(stories: MutableList<StoryModel>) {
-    this.stories = stories
-    clearData()
+  /**
+   * Reference to currently linked [RecyclerView]. Null if not attached.
+   */
+  private var recycler: RecyclerView? = null
+  override fun onAttachedToRecyclerView(recyclerView: RecyclerView?) {
+    super.onAttachedToRecyclerView(recyclerView)
+    recycler = recyclerView
+  }
+  override fun onDetachedFromRecyclerView(oldRecyclerView: RecyclerView?) {
+    super.onDetachedFromRecyclerView(oldRecyclerView)
+    recycler = null
   }
 
-  var groupStrategy: GroupStrategy = GroupStrategy.NONE
-  var orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC
-  var orderDirection: OrderDirection = OrderDirection.DESC
+  /**
+   * Pending items are items that have been hidden with [hideStory], and can be reinstated using
+   * [undoHideStory]. This maps a [StoryModel] to a pair containing its current adapter position and
+   * [stories] array position.
+   */
+  private val pendingItems = mutableMapOf<StoryModel, Pair<Int, Int>>()
 
+  /**
+   * Remove the story from the adapter and keep track of its data.
+   * @param position adapter position of story view
+   * @see pendingItems
+   * @see undoHideStory
+   */
+  fun hideStory(position: Int, model: StoryModel) {
+    if (!stories.contains(model)) throw IllegalArgumentException("Model not part of the adapter")
+    val storiesIndex = stories.indexOf(model)
+    pendingItems[model] = Pair(position, storiesIndex)
+    data.removeAt(position)
+    stories.removeAt(storiesIndex)
+    notifyItemRemoved(position)
+  }
+
+  /**
+   * Reverses the effects of [hideStory].
+   * @param model a model that was previously passed to [hideStory]
+   * @see pendingItems
+   * @see hideStory
+   */
+  fun undoHideStory(model: StoryModel) {
+    val pos = pendingItems[model] ?: throw IllegalArgumentException("This model was never hidden")
+    data.add(pos.first, Left(model))
+    stories.add(pos.second, model)
+    pendingItems.remove(model)
+    notifyItemInserted(pos.first)
+  }
+
+  /**
+   * Stores working data (stories and group titles).
+   */
+  private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
+
+  /**
+   * Get an immutable copy of [data], for serialization purposes.
+   */
+  fun getAdapterData(): List<Either<StoryModel, String>> = data.toList()
+
+  /**
+   * Clear adapter data, including any pending items.
+   * @see data
+   * @see pendingItems
+   */
   fun clearData() {
     val dataSize = data.size
     data.clear()
     notifyItemRangeRemoved(0, dataSize)
+    pendingItems.clear()
+  }
+
+  /**
+   * Stories held by this adapter.
+   */
+  private var stories: MutableList<StoryModel> = mutableListOf()
+
+  /**
+   * Get an immutable copy of [stories].
+   */
+  fun getStories(): List<StoryModel> = stories.toList()
+
+  @Deprecated("Should use addData instead")
+  fun setStories(stories: MutableList<StoryModel>) {
+    this.stories = stories
+    clearData()
   }
 
   fun addData(storyOrTitle: Either<StoryModel, String>) {
@@ -351,10 +429,16 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     notifyItemChanged(storyDataIdx)
   }
 
+  @Deprecated("Should use getStories().size")
   val storyCount
     get() = stories.size
+
   var filteredCount: Int = 0
     private set
+
+  var groupStrategy: GroupStrategy = GroupStrategy.NONE
+  var orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC
+  var orderDirection: OrderDirection = OrderDirection.DESC
 
   /**
    * Filter, group, then sort [stories] according to the [orderDirection], [orderStrategy],
@@ -375,7 +459,11 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
 
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
     data[position].fold(
-        { model -> (holder as StoryViewHolder).view.loadFromModel(model) },
+        { model ->
+          val view = (holder as StoryViewHolder).view
+          view.loadFromModel(model)
+          view.setChildrenListeners(model, holder, this)
+        },
         { title -> (holder as TitleViewHolder).view.text = title }
     )
   }

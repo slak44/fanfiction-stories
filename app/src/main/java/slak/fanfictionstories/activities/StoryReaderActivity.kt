@@ -256,24 +256,6 @@ class StoryReaderActivity : ActivityWithStatic() {
     }
   }
 
-  private fun deleteLocal() {
-    val snack = Snackbar.make(contentView!!, R.string.data_deleted, Snackbar.LENGTH_LONG)
-    snack.setAction(R.string.undo, {})
-    snack.addCallback(object : Snackbar.Callback() {
-      override fun onDismissed(transientBottomBar: Snackbar, event: Int) { launch(CommonPool) {
-        // These actions should trigger the story deletion
-        // The user clicking undo or the code calling dismiss() do not trigger this
-        val actions = arrayOf(DISMISS_EVENT_CONSECUTIVE, DISMISS_EVENT_SWIPE, DISMISS_EVENT_TIMEOUT)
-        if (event in actions) {
-          deleteLocalStory(this@StoryReaderActivity, model.storyIdRaw)
-          database.updateInStory(model.storyIdRaw, "status" to "remote")
-          model.status = StoryStatus.REMOTE
-        }
-      } }
-    })
-    snack.show()
-  }
-
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     val toTint = arrayOf(
         menu.findItem(R.id.goToTop),
@@ -304,7 +286,11 @@ class StoryReaderActivity : ActivityWithStatic() {
         intent.putExtra(ReviewsActivity.INTENT_TARGET_CHAPTER, currentChapter)
         startActivity(intent)
       }
-      R.id.deleteLocal -> deleteLocal()
+      R.id.deleteLocal -> undoableAction(contentView!!, R.string.data_deleted) {
+        deleteLocalStory(this@StoryReaderActivity, model.storyIdRaw)
+        database.updateInStory(model.storyIdRaw, "status" to "remote")
+        model.status = StoryStatus.REMOTE
+      }
       android.R.id.home -> NavUtils.navigateUpFromSameTask(this)
       else -> return super.onOptionsItemSelected(item)
     }

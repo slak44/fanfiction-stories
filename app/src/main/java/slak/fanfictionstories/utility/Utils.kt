@@ -11,10 +11,12 @@ import android.graphics.PorterDuff
 import android.os.Parcelable
 import android.support.annotation.ColorRes
 import android.support.annotation.StringRes
+import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.style.ReplacementSpan
 import android.util.Log
+import android.util.SparseBooleanArray
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
@@ -305,3 +307,39 @@ fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage:
  * A [PrintWriter] instance that overwrites the target file.
  */
 fun File.overwritePrintWriter() = PrintWriter(FileOutputStream(this, false))
+
+/**
+ * Shows a snack with an undo button. If [Snackbar.dismiss] isn't called and the undo button wasn't
+ * pressed, execute the provided action in a coroutine.
+ * @param view snackbar target
+ */
+fun undoableAction(view: View, snackText: String,
+                   onUndo: (View) -> Unit = {}, action: suspend () -> Unit): Snackbar {
+  val snack = Snackbar.make(view, snackText, Snackbar.LENGTH_LONG)
+  snack.setAction(R.string.undo, onUndo)
+  snack.addCallback(object : Snackbar.Callback() {
+    override fun onDismissed(transientBottomBar: Snackbar, event: Int) { launch(CommonPool) {
+      // These actions should trigger the action
+      // The user clicking undo or the code calling dismiss() do not trigger this
+      val actions = arrayOf(DISMISS_EVENT_CONSECUTIVE, DISMISS_EVENT_SWIPE, DISMISS_EVENT_TIMEOUT)
+      if (event in actions) action()
+    } }
+  })
+  snack.show()
+  return snack
+}
+
+/**
+ * @see undoableAction
+ */
+fun undoableAction(view: View, @StringRes snackText: Int,
+                   onUndo: (View) -> Unit = {}, action: suspend () -> Unit): Snackbar {
+  return undoableAction(view, Static.res.getString(snackText), onUndo, action)
+}
+
+/**
+ * Enables property access syntax for [SparseBooleanArray]. Forwards to [SparseBooleanArray.put].
+ */
+operator fun SparseBooleanArray.set(key: Int, value: Boolean) {
+  put(key, value)
+}
