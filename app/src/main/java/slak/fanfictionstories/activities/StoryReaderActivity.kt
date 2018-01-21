@@ -156,14 +156,13 @@ class StoryReaderActivity : ActivityWithStatic() {
     val absoluteScroll = database.readableDatabase.select("stories", "scrollAbsolute")
         .whereSimple("storyId = ?", model.storyIdRaw.toString())
         .parseOpt(DoubleParser) ?: return@launch
-    if (absoluteScroll > resources.getDimensionPixelSize(R.dimen.app_bar_height))
-      appBar.setExpanded(false)
     val offset = absoluteScroll.toInt()
     // FIXME hardcoded font size (it's not even that), that's actually supposed to be the line height
     val above = (absoluteScroll - offset) * 15F
     val layout = chapterText.staticLayout!!
     val line = layout.getLineForOffset(offset)
     val y = (if (line == 0) -layout.topPadding else layout.getLineTop(line)) - above
+    if (y > resources.getDimensionPixelSize(R.dimen.app_bar_height)) appBar.setExpanded(false)
     nestedScroller.scrollTo(0, y.toInt())
   }
 
