@@ -39,7 +39,7 @@ class StoryCardView : CardView {
         recyclerView: RecyclerView,
         openStoryReader: (intent: Intent, id: Long) -> Unit
     ): ItemTouchHelper {
-      var swipeStory: ItemTouchHelper? = null
+      lateinit var swipeStory: ItemTouchHelper
       swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
         override fun getMovementFlags(recycler: RecyclerView?, vh: RecyclerView.ViewHolder?): Int
             = makeMovementFlags(0, ItemTouchHelper.RIGHT)
@@ -57,8 +57,8 @@ class StoryCardView : CardView {
           // it has to look properly
           launch(UI) {
             delay(500)
-            swipeStory!!.attachToRecyclerView(null)
-            swipeStory!!.attachToRecyclerView(recyclerView)
+            swipeStory.attachToRecyclerView(null)
+            swipeStory.attachToRecyclerView(recyclerView)
           }
         }
       })
