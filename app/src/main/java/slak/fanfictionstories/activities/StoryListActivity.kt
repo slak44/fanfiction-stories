@@ -46,13 +46,16 @@ class StoryListActivity : ActivityWithStatic() {
     adapter.orderDirection = if (Static.prefs.getInt(LIST_ORDER_IS_REVERSE, 1) == 1)
       OrderDirection.ASC else OrderDirection.DESC
     storyListView.adapter = adapter
-    launch(CommonPool) {
-      adapter.setStories(database.getStories().await().toMutableList())
-      launch(UI) {
-        arrangeStories()
-        if (adapter.getStories().isEmpty()) nothingHere.visibility = View.VISIBLE
-      }
-    }
+    initializeAdapter()
+  }
+
+  private fun initializeAdapter() = launch(UI) {
+    val stories = database.getStories().await()
+    if (stories.isEmpty()) nothingHere.visibility = View.VISIBLE
+    else nothingHere.visibility = View.GONE
+    adapter.clearData()
+    adapter.addData(stories.map { Left(it) })
+    arrangeStories()
   }
 
   /**
@@ -61,7 +64,7 @@ class StoryListActivity : ActivityWithStatic() {
   private fun arrangeStories() {
     adapter.arrangeStories()
     toolbar.subtitle = resources.getString(R.string.x_stories_y_filtered,
-        adapter.storyCount, adapter.filteredCount)
+        adapter.stories().size, adapter.filteredCount)
   }
 
   private var layoutState: Parcelable? = null
@@ -83,9 +86,7 @@ class StoryListActivity : ActivityWithStatic() {
 
   override fun onResume() {
     super.onResume()
-    launch(UI) {
-      adapter.setStories(database.getStories().await().toMutableList())
-      arrangeStories()
+    initializeAdapter().invokeOnCompletion {
       storyListView.layoutManager.onRestoreInstanceState(layoutState)
     }
   }
@@ -148,10 +149,10 @@ class StoryListActivity : ActivityWithStatic() {
   private fun statisticsDialog() {
     var totalWords = 0
     var passedApprox = 0
-    val totalStories = adapter.getStories().size
+    val totalStories = adapter.stories().size
     var storiesRead = 0
     var storiesNotStarted = 0
-    adapter.getStories().forEach {
+    adapter.stories().forEach {
       totalWords += it.wordCount
       passedApprox += it.wordsProgressedApprox
       when {

@@ -336,10 +336,9 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
 
   /**
    * Pending items are items that have been hidden with [hideStory], and can be reinstated using
-   * [undoHideStory]. This maps a [StoryModel] to a pair containing its current adapter position and
-   * [stories] array position.
+   * [undoHideStory]. This maps a [StoryModel] to its current adapter position.
    */
-  private val pendingItems = mutableMapOf<StoryModel, Pair<Int, Int>>()
+  private val pendingItems = mutableMapOf<StoryModel, Int>()
 
   /**
    * Remove the story from the adapter and keep track of its data.
@@ -348,11 +347,9 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    * @see undoHideStory
    */
   fun hideStory(position: Int, model: StoryModel) {
-    if (!stories.contains(model)) throw IllegalArgumentException("Model not part of the adapter")
-    val storiesIndex = stories.indexOf(model)
-    pendingItems[model] = Pair(position, storiesIndex)
+    if (!data.contains(Left(model))) throw IllegalArgumentException("Model not part of the adapter")
+    pendingItems[model] = position
     data.removeAt(position)
-    stories.removeAt(storiesIndex)
     notifyItemRemoved(position)
   }
 
@@ -364,16 +361,20 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    */
   fun undoHideStory(model: StoryModel) {
     val pos = pendingItems[model] ?: throw IllegalArgumentException("This model was never hidden")
-    data.add(pos.first, Left(model))
-    stories.add(pos.second, model)
+    data.add(pos, Left(model))
     pendingItems.remove(model)
-    notifyItemInserted(pos.first)
+    notifyItemInserted(pos)
   }
 
   /**
    * Stores working data (stories and group titles).
    */
   private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
+
+  /**
+   * Get list of [StoryModel]s in [data].
+   */
+  fun stories(): List<StoryModel> = data.mapNotNull { it.fold({ it }, { null }) }
 
   /**
    * Get an immutable copy of [data], for serialization purposes.
@@ -392,46 +393,15 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     pendingItems.clear()
   }
 
-  /**
-   * Stories held by this adapter.
-   */
-  private var stories: MutableList<StoryModel> = mutableListOf()
-
-  /**
-   * Get an immutable copy of [stories].
-   */
-  fun getStories(): List<StoryModel> = stories.toList()
-
-  @Deprecated("Should use addData instead")
-  fun setStories(stories: MutableList<StoryModel>) {
-    this.stories = stories
-    clearData()
-  }
-
   fun addData(storyOrTitle: Either<StoryModel, String>) {
     data.add(storyOrTitle)
-    storyOrTitle.fold( { stories.add(it) }, { false })
     notifyItemInserted(data.size - 1)
   }
 
   fun addData(storyOrTitleList: List<Either<StoryModel, String>>) {
     data.addAll(storyOrTitleList)
-    storyOrTitleList.forEach {
-      it.fold( { stories.add(it) }, { false })
-    }
     notifyItemRangeInserted(data.size, storyOrTitleList.size)
   }
-
-  fun updateStory(storyIdx: Int, storyModel: StoryModel) {
-    val storyDataIdx = data.indexOf(Left(stories[storyIdx]))
-    data[storyDataIdx] = Left(storyModel)
-    stories[storyIdx] = storyModel
-    notifyItemChanged(storyDataIdx)
-  }
-
-  @Deprecated("Should use getStories().size")
-  val storyCount
-    get() = stories.size
 
   var filteredCount: Int = 0
     private set
@@ -444,12 +414,12 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    * Filter, group, then sort [stories] according to the [orderDirection], [orderStrategy],
    * [groupStrategy].
    *
-   * Rebuilds [data] and [stories]. Call in UI thread.
+   * Rebuilds [data]. Call in UI thread.
    */
   fun arrangeStories() {
+    val stories = stories()
     val toData = stories.filter { true }.toMutableList() // FIXME filter
     filteredCount = stories.size - toData.size
-    stories.clear()
     clearData()
     groupStories(toData, groupStrategy).forEach {
       val ordered = orderStories(it.value, orderStrategy, orderDirection)
