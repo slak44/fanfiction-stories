@@ -322,19 +322,6 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
 
   /**
-   * Reference to currently linked [RecyclerView]. Null if not attached.
-   */
-  private var recycler: RecyclerView? = null
-  override fun onAttachedToRecyclerView(recyclerView: RecyclerView?) {
-    super.onAttachedToRecyclerView(recyclerView)
-    recycler = recyclerView
-  }
-  override fun onDetachedFromRecyclerView(oldRecyclerView: RecyclerView?) {
-    super.onDetachedFromRecyclerView(oldRecyclerView)
-    recycler = null
-  }
-
-  /**
    * Pending items are items that have been hidden with [hideStory], and can be reinstated using
    * [undoHideStory]. This maps a [StoryModel] to its current adapter position.
    */
