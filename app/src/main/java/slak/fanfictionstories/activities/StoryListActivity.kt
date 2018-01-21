@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.EditText
 import android.widget.Switch
 import either.Left
+import either.fold
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -65,12 +66,14 @@ class StoryListActivity : ActivityWithStatic() {
 
   override fun onResume() {
     super.onResume()
-    launch(CommonPool) {
+    launch(UI) {
+      adapter.setStories(database.getStories().await().toMutableList())
+      arrangeStories()
       val id = lastStoryId.orElse { return@launch }
-      val newModel = database.storyById(id)
-          .orElseThrow(IllegalStateException("Story $lastStoryId MUST exist"))
-      val idx = adapter.getStories().indexOfFirst { it.storyIdRaw == id }
-      launch(UI) { adapter.updateStory(idx, newModel) }
+      val position = adapter
+          .getAdapterData().indexOfFirst { it.fold({ it.storyIdRaw == id }, { false }) }
+      // FIXME use onsavedinstancestate
+      (storyListView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, 0)
     }
   }
 

@@ -298,23 +298,35 @@ class StoryReaderActivity : ActivityWithStatic() {
   }
 
   private var fetcher: StoryFetcher? = null
-  private fun readChapter(storyId: Long, chapter: Int): Deferred<String> = async2(CommonPool) {
+  private fun downloadChapter(storyId: Long,
+                              chapter: Int, target: File): Deferred<String> = async2(CommonPool) {
     if (fetcher == null) fetcher = StoryFetcher(storyId, this@StoryReaderActivity)
+    // FIXME show loading thingy, this may not be fast
+    val n = Notifications(this@StoryReaderActivity, Notifications.Kind.DOWNLOADING)
+    val chapterHtmlText = fetcher!!.fetchChapter(chapter, n).await()
+    val text = fetcher!!.parseChapter(chapterHtmlText)
+    target.printWriter().use { it.print(text) }
+    if (model.status == StoryStatus.TRANSIENT) {
+      model = StoryModel(parseMetadata(chapterHtmlText, storyId), fromDb = false)
+      model.status = StoryStatus.REMOTE
+      fetcher!!.setMetadata(model)
+      database.use { insertOrThrow("stories", *model.toKvPairs()) }
+    }
+    return@async2 text
+  }
+  private fun readChapter(storyId: Long, chapter: Int): Deferred<String> = async2(CommonPool) {
     val storyDir = storyDir(this@StoryReaderActivity, storyId)
         .orElseThrow(IllegalStateException("Cannot read $storyId dir"))
     if (!storyDir.exists()) storyDir.mkdirs()
     val chapterFile = File(storyDir, "$chapter.html")
     if (!chapterFile.exists()) {
-      // FIXME show loading thingy, this may not be fast
-      val n = Notifications(this@StoryReaderActivity, Notifications.Kind.DOWNLOADING)
-      val chapterHtmlText = fetcher!!.fetchChapter(chapter, n).await()
-      val text = fetcher!!.parseChapter(chapterHtmlText)
-      chapterFile.printWriter().use { it.print(text) }
-      if (model.status == StoryStatus.TRANSIENT) {
-        model = StoryModel(parseMetadata(chapterHtmlText, storyId), fromDb = false)
-        model.status = StoryStatus.REMOTE
-        fetcher!!.setMetadata(model)
-        database.use { insertOrThrow("stories", *model.toKvPairs()) }
+      val text = downloadChapter(storyId, chapter, chapterFile).await()
+      launch(CommonPool) {
+        // If all chapters are on disk, set to local
+        if (storyDir.list().size == model.chapterCount) {
+          model.status = StoryStatus.LOCAL
+          database.updateInStory(storyId, "status" to "local")
+        }
       }
       return@async2 text
     } else {
