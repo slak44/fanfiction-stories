@@ -298,14 +298,18 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    * Filter, group, sort [stories] according to the [arrangement], and put the results in [data].
    */
   fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) {
+    // Ignore currently pending stories, the user might have rearranged before the db was updated
+    val storiesNotPending = stories.filter { story ->
+      pendingItems.keys.find { it.storyIdRaw == story.storyIdRaw } == null
+    }
     clearData()
-    val toData = stories.filter { true }.toMutableList() // FIXME filter
+    val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
     groupStories(toData, arrangement.groupStrategy).forEach {
       val ordered = orderStories(it.value, arrangement.orderStrategy, arrangement.orderDirection)
       addData(listOf(Right(it.key), *ordered.map { Left(it) }.toTypedArray()))
     }
-    filteredCount = stories.size - toData.size
-    storyCount = stories.size
+    filteredCount = storiesNotPending.size - toData.size
+    storyCount = storiesNotPending.size
     onSizeChange(storyCount, filteredCount)
   }
 
