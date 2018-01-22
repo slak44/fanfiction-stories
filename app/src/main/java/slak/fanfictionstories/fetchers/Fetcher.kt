@@ -91,6 +91,8 @@ object Fetcher {
     return author.attr("href").split("/")[2].toLong()
   }
 
+  fun isComplete(metaString: String): Long = if (metaString.indexOf("Complete") > -1) 1L else 0L
+
   /**
    * Parses all required metadata for a [StoryModel].
    * @param html html string of any chapter of the story
@@ -144,7 +146,7 @@ object Fetcher {
         "follows" to if (meta["follows"] != null) meta["follows"]!!.toLong() else 0L,
         "publishDate" to (publishTime?.toLong() ?: 0L),
         "updateDate" to (updateTime?.toLong() ?: 0L),
-        "isCompleted" to if (metaString.indexOf("Complete") > -1) 1L else 0L,
+        "isCompleted" to isComplete(metaString),
         "scrollProgress" to 0.0,
         "scrollAbsolute" to 0L,
         "currentChapter" to 0L,
