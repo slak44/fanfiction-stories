@@ -139,7 +139,7 @@ class CanonFetcher(val details: Details) : Parcelable {
 
     override fun CanonFetcher.write(parcel: Parcel, flags: Int) {
       parcel.writeParcelable(details, 0)
-      parcel.writeArray(worldList.orElse(null)?.toTypedArray())
+      parcel.writeArray(worldList.orElse(listOf())?.toTypedArray())
       parcel.writeArray(charList.toTypedArray())
       parcel.writeString(unfilteredStories.orElse(null))
     }
