@@ -62,7 +62,7 @@ fun getAuthor(context: Context, authorId: Long): Deferred<Author> = async2(Commo
       // Image url
       doc.select("#bio > img").first().attr("src"),
       // User bio (first child is image)
-      Elements(doc.getElementById("bio").children().drop(1)).html(),
+      Elements(doc.getElementById("bio").children().drop(1)).outerHtml(),
       stories,
       favStories,
       favAuthors
