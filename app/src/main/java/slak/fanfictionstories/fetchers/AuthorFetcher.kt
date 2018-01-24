@@ -12,10 +12,8 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
-import slak.fanfictionstories.utility.Notifications
-import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.patientlyFetchURL
+import slak.fanfictionstories.utility.*
+import java.util.*
 
 @Parcelize @SuppressLint("ParcelCreator")
 data class Author(val name: String,
@@ -41,9 +39,13 @@ fun getAuthor(context: Context, authorId: Long): Deferred<Author> = async2(Commo
   val retardedTableCell =
       doc.select("#content_wrapper_inner > table[cellpadding=\"4\"] td[colspan=\"2\"]")
   val authorName = doc.select("#content_wrapper_inner > span").first().text()
-  val stories = doc.getElementById("st_inside").children().map(parseStoryElement)
+  val stories = doc.getElementById("st_inside").children().map {
+    parseStoryElement(it, Pair(authorId, authorName).opt())
+  }
   // Drop a COMPLETELY FUCKING RANDOM SCRIPT TAG
-  val favStories = doc.getElementById("fs_inside").children().drop(1).map(parseStoryElement)
+  val favStories = doc.getElementById("fs_inside").children().drop(1).map {
+    parseStoryElement(it)
+  }
   val favAuthors = doc.getElementById("fa").select("dl").map {
     val authorElement = it.select("a").first()
     return@map Pair(Fetcher.authorIdFromAuthor(authorElement), authorElement.text())
@@ -67,10 +69,11 @@ fun getAuthor(context: Context, authorId: Long): Deferred<Author> = async2(Commo
   )
 }
 
-private val parseStoryElement: (Element) -> StoryModel = {
+private fun parseStoryElement(it: Element,
+                              a: Optional<Pair<Long, String>> = Optional.empty()): StoryModel {
   val metaHtml = it.children().last().children().last().html()
   val meta = Fetcher.parseStoryMetadata(metaHtml)
-  StoryModel(mutableMapOf(
+  return StoryModel(mutableMapOf(
       "storyId" to it.attr("data-storyid").toLong(),
       "rating" to meta["rating"]!!,
       "language" to meta["language"]!!,
@@ -93,8 +96,8 @@ private val parseStoryElement: (Element) -> StoryModel = {
       // FIXME: This info is unavailable here!
       "category" to "",
       "summary" to it.children().last().textNodes().first().text(),
-      "author" to it.select("a")[2].text(),
-      "authorid" to Fetcher.authorIdFromAuthor(it.select("a")[2]),
+      "author" to if (a.isPresent) a.get().second else it.children()[2].text(),
+      "authorid" to if (a.isPresent) a.get().first else Fetcher.authorIdFromAuthor(it.children()[2]),
       "title" to it.select("a.stitle").first().textNodes().last().text(),
       "chapterTitles" to ""
   ), fromDb = false)
