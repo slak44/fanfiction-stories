@@ -51,7 +51,7 @@ object Fetcher {
     // Disambiguate genres/characters
     val split = ArrayList(metadata.split(" - "))
     val findGenres = split.filter {
-      it.contains(Regex("Adventure|Angst|Drama|Fantasy|Friendship|Humor|Hurt/Comfort|"+
+      it.contains(Regex("Adventure|Angst|Drama|Fantasy|Friendship|Humor|Hurt/Comfort|" +
           "Poetry|Romance|Sci-Fi|Supernatural|Tragedy"))
     }
     var genres = "None"
