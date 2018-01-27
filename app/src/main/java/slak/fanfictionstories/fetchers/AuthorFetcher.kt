@@ -93,7 +93,7 @@ private fun parseStoryElement(it: Element,
       "status" to "transient",
       // FFnet category is our canon
       "canon" to it.attr("data-category"),
-      // FIXME: This info is unavailable here!
+      // Category info is unavailable here!
       "category" to "",
       "summary" to it.children().last().textNodes().first().text(),
       "author" to if (a.isPresent) a.get().second else it.children()[2].text(),

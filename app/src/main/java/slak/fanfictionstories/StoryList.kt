@@ -89,6 +89,7 @@ class StoryCardView : CardView {
     genresText.text = model.genres
     charactersText.text = model.characters
     categoryText.text = model.category
+    categoryText.visibility = if (model.categoryRaw.isEmpty()) View.GONE else View.VISIBLE
     updateDateText.text = model.updateDate
     if (model.updateDateSeconds == 0L) {
       // Do this instead of View.GONE or View.INVISIBLE because we want
