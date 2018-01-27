@@ -85,6 +85,7 @@ class CanonFetcher(val details: Details) : Parcelable {
       val urlComponent: String,
       val title: String,
       val category: String,
+
       var sort: Sort = Sort.UPDATE_DATE,
       var timeRange: TimeRange = TimeRange.ALL,
       var lang: Language = Language.ALL,
