@@ -24,6 +24,7 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
+import java.util.*
 import kotlin.properties.Delegates
 
 val categories: Array<String> by lazy { Static.res.getStringArray(R.array.categories) }
@@ -123,6 +124,8 @@ class CanonStoryListActivity : ActivityWithStatic() {
 
   private var hasSaved = false
 
+  private var userStories: Optional<List<StoryModel>> = Optional.empty()
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_canon_story_list)
@@ -177,10 +180,17 @@ class CanonStoryListActivity : ActivityWithStatic() {
   }
 
   private fun addPage(page: Int) = launch(UI) {
-    val pageData = fetcher.get(page, this@CanonStoryListActivity).await().map { Left(it) }
+    if (!userStories.isPresent) userStories = database.getStories().await().opt()
+    val pageData = fetcher.get(page, this@CanonStoryListActivity).await().map {
+      val model = userStories.get().find { st -> st.storyIdRaw == it.storyIdRaw } ?: return@map it
+      it.src["scrollProgress"] = model.src["scrollProgress"] as Double
+      it.src["scrollAbsolute"] = model.src["scrollAbsolute"] as Double
+      it.src["currentChapter"] = model.src["currentChapter"] as Long
+      return@map StoryModel(it.src, it._id.isPresent)
+    }
     if (pageData.isEmpty()) return@launch
     adapter.addData(Right(resources.getString(R.string.page_x, page)))
-    adapter.addData(pageData)
+    adapter.addData(pageData.map { Left(it) })
     supportActionBar?.subtitle =
         resources.getString(R.string.x_stories, fetcher.unfilteredStories.get())
   }
