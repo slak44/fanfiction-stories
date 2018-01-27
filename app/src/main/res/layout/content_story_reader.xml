@@ -73,7 +73,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:drawableStart="@drawable/ic_keyboard_arrow_left_black_24dp"
-                android:drawableTint="@android:color/white"
+                android:drawableTint="@color/white"
                 android:text="@string/prev"/>
 
             <Button
@@ -85,7 +85,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:drawableStart="@drawable/ic_arrow_drop_down_black_24dp"
-                android:drawableTint="@android:color/white"/>
+                android:drawableTint="@color/white"/>
 
             <Button
                 android:id="@+id/nextChapterBtn"
@@ -97,7 +97,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:drawableEnd="@drawable/ic_keyboard_arrow_right_black_24dp"
-                android:drawableTint="@android:color/white"
+                android:drawableTint="@color/white"
                 android:text="@string/next"/>
 
         </LinearLayout>

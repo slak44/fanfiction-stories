@@ -199,7 +199,7 @@ class StoryReaderActivity : ActivityWithStatic() {
   }
 
   private fun getColorFor(textView: TextView): Int {
-    return if (textView.isEnabled) android.R.color.white
+    return if (textView.isEnabled) R.color.white
     else android.R.color.tertiary_text_light
   }
 
@@ -255,7 +255,7 @@ class StoryReaderActivity : ActivityWithStatic() {
         menu.findItem(R.id.goToTop),
         menu.findItem(R.id.goToBottom)
     )
-    for (item in toTint) item.iconTint(android.R.color.white, theme)
+    for (item in toTint) item.iconTint(R.color.white, theme)
     menu.findItem(R.id.nextChapter).isEnabled = nextChapterBtn.isEnabled
     menu.findItem(R.id.prevChapter).isEnabled = prevChapterBtn.isEnabled
     menu.findItem(R.id.selectChapter).isEnabled = selectChapterBtn.isEnabled

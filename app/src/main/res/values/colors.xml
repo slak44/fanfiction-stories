@@ -3,4 +3,5 @@
     <color name="listDrawableTint">#FFFFFF</color>
     <color name="alpha">#00000000</color>
     <color name="dividerColor">#C7C7C7</color>
+    <color name="white">#FFF</color>
 </resources>

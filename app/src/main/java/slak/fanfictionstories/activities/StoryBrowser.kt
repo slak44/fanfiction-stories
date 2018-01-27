@@ -199,7 +199,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
     val toTint = arrayOf(
         menu.findItem(R.id.filter)
     )
-    for (item in toTint) item.iconTint(android.R.color.white, theme)
+    for (item in toTint) item.iconTint(R.color.white, theme)
     return super.onPrepareOptionsMenu(menu)
   }
 

@@ -96,7 +96,7 @@ class MainActivity : ActivityWithStatic() {
     resumeButton.text = Html.fromHtml(getString(R.string.resume_story, model.title,
         model.authorRaw, model.currentChapter, model.chapterCount), Html.FROM_HTML_MODE_COMPACT)
     resumeButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_restore_black_24dp, 0, 0, 0)
-    resumeButton.drawableTint(android.R.color.white, theme, Direction.LEFT)
+    resumeButton.drawableTint(R.color.white, theme, Direction.LEFT)
     resumeButton.setOnClickListener {
       val intent = Intent(this@MainActivity, StoryReaderActivity::class.java)
       intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, model)

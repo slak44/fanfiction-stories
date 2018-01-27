@@ -125,7 +125,7 @@ class StoryListActivity : ActivityWithStatic() {
         menu.findItem(R.id.sort),
         menu.findItem(R.id.group)
     )
-    for (item in toTint) item.iconTint(android.R.color.white, theme)
+    for (item in toTint) item.iconTint(R.color.white, theme)
     return super.onPrepareOptionsMenu(menu)
   }
 

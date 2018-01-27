@@ -83,7 +83,7 @@ class ReviewsActivity : ActivityWithStatic() {
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-    menu.findItem(R.id.selectReviewsFor).iconTint(android.R.color.white, theme)
+    menu.findItem(R.id.selectReviewsFor).iconTint(R.color.white, theme)
     return super.onPrepareOptionsMenu(menu)
   }
 

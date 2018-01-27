@@ -89,7 +89,7 @@ class AuthorActivity : AppCompatActivity() {
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-    menu.findItem(R.id.favoriteAuthor).iconTint(android.R.color.white, theme)
+    menu.findItem(R.id.favoriteAuthor).iconTint(R.color.white, theme)
     // This can be called before the author is filled
     if (author.isPresent && author.get().favoriteAuthors.isEmpty()) {
       menu.findItem(R.id.favoritedAuthors).isVisible = false
