@@ -38,9 +38,16 @@ private fun parseReviewPage(storyId: Long, html: String): Pair<List<Review>, Int
   val doc = Jsoup.parse(html)
   val list = doc.select("div.table-bordered > table > tbody > tr > td").map {
     if (it.text().contains("No Reviews found")) return@parseReviewPage Pair(listOf(), -1)
-    val reviewAuthor = it.select("img + a")[0]
-    val authorId = authorIdFromAuthor(reviewAuthor)
-    val author = reviewAuthor.text().trim()
+    val maybeAuthor = it.select("img + a")
+    val author: String
+    val authorId: Long
+    if (maybeAuthor.isEmpty()) {
+      author = Static.res.getString(R.string.guest)
+      authorId = -1L
+    } else {
+      author = maybeAuthor[0].text().trim()
+      authorId = authorIdFromAuthor(maybeAuthor[0])
+    }
     val container = it.select("small")[0]
     val chapterText = container.textNodes()[0].text()
     val chapter = chapterText.replace(Regex("[^\\d]"), "").toInt()

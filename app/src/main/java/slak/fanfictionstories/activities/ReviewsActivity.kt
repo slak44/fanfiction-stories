@@ -161,6 +161,13 @@ class ReviewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
       reportBtn.setOnClickListener {
         // FIXME: report review for abuse
       }
+      if (reviews[pos].authorId == -1L) {
+        viewAuthorBtn.visibility = View.GONE
+        replyBtn.visibility = View.GONE
+      } else {
+        viewAuthorBtn.visibility = View.VISIBLE
+        replyBtn.visibility = View.VISIBLE
+      }
       forceLayout()
     }
   }

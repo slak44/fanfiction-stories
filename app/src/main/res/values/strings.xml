@@ -135,6 +135,7 @@
     <string name="all_chapters">All Chapters</string>
     <string name="reply">Reply</string>
     <string name="report">Report</string>
+    <string name="guest">Guest</string>
     <string name="no_reviews">No reviews found</string>
 
     <!-- Author page -->
