@@ -7,12 +7,10 @@ import android.util.Log
 import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.delay
 import org.jsoup.Jsoup
 import slak.fanfictionstories.R
 import slak.fanfictionstories.fetchers.Fetcher.authorIdFromAuthor
 import slak.fanfictionstories.utility.*
-import java.net.URL
 
 @Parcelize @SuppressLint("ParcelCreator")
 data class Review(
@@ -63,6 +61,6 @@ private fun parseReviewPage(storyId: Long, html: String): Pair<List<Review>, Int
 private fun fetchReviewPage(storyId: Long,
                             chapter: Int, page: Int, n: Notifications): Deferred<String> =
     patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/", n) {
-  n.show(Static.res.getString(R.string.error_fetching_something, storyId.toString()))
+  n.show(Static.res.getString(R.string.error_fetching_review_data, storyId.toString()))
   Log.e(Fetcher.TAG, "fetchReviewPage", it)
 }

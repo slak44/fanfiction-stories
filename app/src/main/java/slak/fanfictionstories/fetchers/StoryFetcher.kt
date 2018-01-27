@@ -134,7 +134,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
 
   fun fetchChapter(chapter: Int, n: Notifications): Deferred<String> =
       patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/", n) {
-    n.show(ctx.resources.getString(R.string.error_fetching_something, storyId.toString()))
+    n.show(ctx.resources.getString(R.string.error_fetching_story_data, storyId.toString()))
     Log.e(TAG, "fetchChapter", it)
   }
 

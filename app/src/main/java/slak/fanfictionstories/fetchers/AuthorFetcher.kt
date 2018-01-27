@@ -105,6 +105,6 @@ private fun parseStoryElement(it: Element,
 
 private fun fetchAuthorPage(authorId: Long, n: Notifications): Deferred<String> =
     patientlyFetchURL("https://www.fanfiction.net/u/$authorId/", n) {
-      n.show(Static.res.getString(R.string.error_fetching_something, authorId.toString()))
+      n.show(Static.res.getString(R.string.error_fetching_author_data, authorId.toString()))
       Log.e(Fetcher.TAG, "fetchAuthorPage", it)
     }

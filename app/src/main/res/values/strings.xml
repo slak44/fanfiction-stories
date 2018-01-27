@@ -73,7 +73,9 @@
     <string name="downloading_story">Downloading Story</string>
     <string name="updating_story">Updating Story</string>
     <string name="waiting_for_connection">Waiting for connection…</string>
-    <string name="error_fetching_something">Couldn\'t fetch data for story %s; Retrying…</string>
+    <string name="error_fetching_story_data">Couldn\'t fetch story data (id %s); Retrying…</string>
+    <string name="error_fetching_review_data">Couldn\'t fetch reviews (id %s); Retrying…</string>
+    <string name="error_fetching_author_data">Couldn\'t fetch author data (id %s); Retrying…</string>
     <string name="checking_story">Checking %s for updates</string>
     <string name="fetching_chapter">Fetching chapter %d for story %s</string>
     <string name="done_story">Done fetching story %s</string>
