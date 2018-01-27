@@ -134,30 +134,25 @@ class StoryListActivity : ActivityWithStatic() {
     return true
   }
 
-  override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-    R.id.addById -> {
-      addByIdDialog()
-      true
-    }
-    R.id.group -> {
-      groupByDialog(this, Prefs.groupStrategy) {
-        Prefs.groupStrategy = it
-        initializeAdapter()
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      R.id.group -> {
+        groupByDialog(this, Prefs.groupStrategy) {
+          Prefs.groupStrategy = it
+          initializeAdapter()
+        }
       }
-      true
-    }
-    R.id.sort -> {
-      orderByDialog(this, Prefs.orderStrategy, Prefs.orderDirection) { str, dir ->
-        Prefs.orderDirection = dir
-        Prefs.orderStrategy = str
-        initializeAdapter()
+      R.id.sort -> {
+        orderByDialog(this, Prefs.orderStrategy, Prefs.orderDirection) { str, dir ->
+          Prefs.orderDirection = dir
+          Prefs.orderStrategy = str
+          initializeAdapter()
+        }
       }
-      true
+      R.id.addById -> addByIdDialog()
+      R.id.statistics -> statisticsDialog()
+      else -> return super.onOptionsItemSelected(item)
     }
-    R.id.statistics -> {
-      statisticsDialog()
-      true
-    }
-    else -> super.onOptionsItemSelected(item)
+    return true
   }
 }

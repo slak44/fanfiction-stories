@@ -85,17 +85,19 @@ class BrowseCategoryActivity : ActivityWithStatic() {
     return true
   }
 
-  override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-    R.id.clearCache -> {
-      CategoryFetcher.Cache.clear(categoryIdx)
-      Snackbar.make(
-          findViewById(android.R.id.content)!!,
-          resources.getString(R.string.cleared_from_cache, categories[categoryIdx]),
-          Snackbar.LENGTH_SHORT
-      ).show()
-      true
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      R.id.clearCache -> {
+        CategoryFetcher.Cache.clear(categoryIdx)
+        Snackbar.make(
+            findViewById(android.R.id.content)!!,
+            resources.getString(R.string.cleared_from_cache, categories[categoryIdx]),
+            Snackbar.LENGTH_SHORT
+        ).show()
+      }
+      else -> return super.onOptionsItemSelected(item)
     }
-    else -> super.onOptionsItemSelected(item)
+    return true
   }
 }
 
@@ -295,7 +297,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
     when (item.itemId) {
       android.R.id.home -> onBackPressed()
       R.id.filter -> if (fetcher.charList.isNotEmpty()) openFilterDialog()
-      else -> super.onOptionsItemSelected(item)
+      else -> return super.onOptionsItemSelected(item)
     }
     return true
   }
