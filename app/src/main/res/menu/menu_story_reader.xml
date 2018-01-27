@@ -36,6 +36,11 @@
         android:visible="true"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/viewAuthor"
+        android:title="@string/view_author"
+        android:visible="true"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/deleteLocal"
         android:title="@string/delete_local"
         android:visible="true"

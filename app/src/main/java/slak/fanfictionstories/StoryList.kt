@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -22,6 +23,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
+import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.*
@@ -162,6 +164,12 @@ class StoryCardView : CardView {
         }
         n.cancel()
       }
+    }
+    authorBtn.setOnClickListener {
+      val intent = Intent(context, AuthorActivity::class.java)
+      intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, model.authorIdRaw)
+      intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, model.authorRaw)
+      startActivity(context, intent, null)
     }
   }
 }

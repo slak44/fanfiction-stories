@@ -43,9 +43,9 @@ fun getAuthor(context: Context, authorId: Long): Deferred<Author> = async2(Commo
     parseStoryElement(it, Pair(authorId, authorName).opt())
   }
   // Drop a COMPLETELY FUCKING RANDOM SCRIPT TAG
-  val favStories = doc.getElementById("fs_inside").children().drop(1).map {
+  val favStories = doc.getElementById("fs_inside")?.children()?.drop(1)?.map {
     parseStoryElement(it)
-  }
+  } ?: listOf()
   val favAuthors = doc.getElementById("fa").select("dl").map {
     val authorElement = it.select("a").first()
     return@map Pair(Fetcher.authorIdFromAuthor(authorElement), authorElement.text())

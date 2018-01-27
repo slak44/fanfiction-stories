@@ -10,6 +10,9 @@
     <string name="none">None</string>
     <string name="undo">Undo</string>
     <string name="select_chapter">Select Chapter</string>
+    <string name="view_author">View Author</string>
+    <string name="sort_by">Order by…</string>
+    <string name="group_by">Group by…</string>
 
     <!-- Canon story list -->
     <string name="error_with_canon_stories">Can\'t access %s stories; Retrying…</string>
@@ -86,10 +89,8 @@
 
     <!-- Story list -->
     <string name="story_list">Story List</string>
-    <string name="nothing_here">There\'s nothing here. Browse and add some stories!</string>
+    <string name="nothing_here_add_stories">There\'s nothing here. Browse and add some stories!</string>
     <string name="filter_by">Filter by…</string>
-    <string name="sort_by">Order by…</string>
-    <string name="group_by">Group by…</string>
     <string name="add_by_ffid">Add by FF.net ID</string>
     <string name="story_by_id_title">Add Story by ID</string>
     <string name="all_stories">All</string>
@@ -130,10 +131,19 @@
     <string name="reviews_for">Reviews for %s</string>
     <string name="chapter_x">For chapter %d</string>
     <string name="all_chapters">All Chapters</string>
-    <string name="view_author">View Author</string>
     <string name="reply">Reply</string>
     <string name="report">Report</string>
     <string name="no_reviews">No reviews found</string>
+
+    <!-- Author page -->
+    <string name="tab_author_bio">Bio</string>
+    <string name="tab_author_stories">Stories</string>
+    <string name="tab_favorite">Favourites</string>
+    <string name="favorite_authors">Favorite Authors</string>
+    <string name="action_pm">Send PM</string>
+    <string name="follow">Follow</string>
+    <string name="favorite">Favorite</string>
+    <string name="no_stories_here">There are no stories here</string>
 
     <!-- Error dialogs -->
     <string name="got_it">Got it</string>
@@ -298,6 +308,7 @@
     <string name="title_activity_browse_category">BrowseCategoryActivity</string>
     <string name="title_activity_canon_story_list">CanonStoryListActivity</string>
     <string name="title_activity_reviews">ReviewsActivity</string>
+    <string name="title_activity_author">AuthorActivity</string>
 
     <!-- These are development strings -->
     <string name="debug_title">!!! DEBUG !!!</string>

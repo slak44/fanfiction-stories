@@ -1,9 +1,15 @@
 package slak.fanfictionstories
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
+import android.support.v7.app.AlertDialog
+import android.view.LayoutInflater
+import android.widget.Switch
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.fetchers.Fetcher.CHAPTER_TITLE_SEPARATOR
+import slak.fanfictionstories.utility.Prefs
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.autoSuffixNumber
 import slak.fanfictionstories.utility.opt
@@ -209,6 +215,36 @@ fun groupStories(stories: MutableList<StoryModel>,
     map[value]!!.add(it)
   }
   return map
+}
+
+fun groupByDialog(context: Context, defaultStrategy: GroupStrategy,
+                  action: (GroupStrategy) -> Unit) {
+  AlertDialog.Builder(context)
+      .setTitle(R.string.group_by)
+      .setSingleChoiceItems(GroupStrategy.uiItems(), defaultStrategy.ordinal, { d, which ->
+        d.dismiss()
+        action(GroupStrategy[which])
+      }).show()
+}
+
+@SuppressLint("InflateParams")
+fun orderByDialog(context: Context,
+                  defaultStrategy: OrderStrategy,
+                  defaultDirection: OrderDirection,
+                  action: (OrderStrategy, OrderDirection) -> Unit) {
+  val layout = LayoutInflater.from(context)
+      .inflate(R.layout.dialog_order_by_switch, null, false)
+  val switch = layout.findViewById(R.id.reverseOrderSw) as Switch
+  if (defaultDirection == OrderDirection.ASC) switch.toggle()
+  AlertDialog.Builder(context)
+      .setTitle(R.string.sort_by)
+      .setView(layout)
+      .setSingleChoiceItems(OrderStrategy.uiItems(), defaultStrategy.ordinal, { d, which ->
+        d.dismiss()
+        action(OrderStrategy[which],
+            if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC)
+      })
+      .show()
 }
 
 private val progress = Comparator<StoryModel>

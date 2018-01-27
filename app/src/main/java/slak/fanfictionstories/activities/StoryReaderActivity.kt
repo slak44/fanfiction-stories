@@ -91,14 +91,6 @@ class StoryReaderActivity : ActivityWithStatic() {
     const val INTENT_STORY_MODEL = "bundle"
     private const val RESTORE_STORY_MODEL = "story_model"
     private const val RESTORE_CURRENT_CHAPTER = "current_chapter"
-    private const val PLACEHOLDER = "######HRPLACEHOLDERHRPLACEHOLDERHRPLACEHOLDER######"
-    private val tagHandlerFactory = { widthPx: Int -> Html.TagHandler { opening, tag, output, _ ->
-      if (tag == "hr") {
-        if (opening) output.insert(output.length, PLACEHOLDER)
-        else output.setSpan(HrSpan(1, widthPx),
-            output.length - PLACEHOLDER.length, output.length, 0)
-      }
-    } }
   }
 
   private lateinit var model: StoryModel
@@ -198,7 +190,7 @@ class StoryReaderActivity : ActivityWithStatic() {
     }.await()
 
     val html = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY,
-        null, tagHandlerFactory(chapterText.width))
+        null, HrSpan.tagHandlerFactory(chapterText.width))
 
     chapterText.setText(html).await()
 
@@ -286,6 +278,12 @@ class StoryReaderActivity : ActivityWithStatic() {
         val intent = Intent(this, ReviewsActivity::class.java)
         intent.putExtra(ReviewsActivity.INTENT_STORY_MODEL, model)
         intent.putExtra(ReviewsActivity.INTENT_TARGET_CHAPTER, currentChapter)
+        startActivity(intent)
+      }
+      R.id.viewAuthor -> {
+        val intent = Intent(this, AuthorActivity::class.java)
+        intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, model.authorIdRaw)
+        intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, model.authorRaw)
         startActivity(intent)
       }
       R.id.deleteLocal -> undoableAction(contentView!!, R.string.data_deleted) {

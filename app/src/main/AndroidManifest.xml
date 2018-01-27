@@ -95,6 +95,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="slak.fanfictionstories.activities.StoryReaderActivity"/>
         </activity>
+        <activity
+            android:name=".activities.AuthorActivity"
+            android:label="@string/title_activity_author"
+            android:theme="@style/AppTheme">
+        </activity>
     </application>
 
 </manifest>

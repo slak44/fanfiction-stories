@@ -14,6 +14,7 @@ import android.support.annotation.StringRes
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.text.Html
 import android.text.style.ReplacementSpan
 import android.util.Log
 import android.util.SparseBooleanArray
@@ -160,7 +161,20 @@ fun TextView.drawableTint(@ColorRes colorRes: Int, theme: Resources.Theme, which
   }
 }
 
+/**
+ * A [ReplacementSpan] that tries to emulate a <hr> element.
+ */
 class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpan() {
+  companion object {
+    private const val PLACEHOLDER = "######HRPLACEHOLDERHRPLACEHOLDERHRPLACEHOLDER######"
+    val tagHandlerFactory = { widthPx: Int -> Html.TagHandler { opening, tag, output, _ ->
+      if (tag == "hr") {
+        if (opening) output.insert(output.length, PLACEHOLDER)
+        else output.setSpan(HrSpan(1, widthPx),
+            output.length - PLACEHOLDER.length, output.length, 0)
+      }
+    } }
+  }
   override fun getSize(p0: Paint?, p1: CharSequence?, p2: Int, p3: Int,
                        p4: Paint.FontMetricsInt?): Int {
     return 0

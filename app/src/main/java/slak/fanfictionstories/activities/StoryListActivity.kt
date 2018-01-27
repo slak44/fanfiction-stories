@@ -1,16 +1,13 @@
 package slak.fanfictionstories.activities
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Parcelable
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
-import android.widget.Switch
 import either.Left
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -93,34 +90,6 @@ class StoryListActivity : ActivityWithStatic() {
         .show()
   }
 
-  private fun groupByDialog() {
-    AlertDialog.Builder(this)
-        .setTitle(R.string.group_by)
-        .setSingleChoiceItems(GroupStrategy.uiItems(), Prefs.groupStrategy.ordinal, { d, which ->
-          d.dismiss()
-          Prefs.groupStrategy = GroupStrategy[which]
-          initializeAdapter()
-        }).show()
-  }
-
-  @SuppressLint("InflateParams")
-  private fun orderByDialog() {
-    val layout = LayoutInflater.from(this)
-        .inflate(R.layout.dialog_order_by_switch, null, false)
-    val switch = layout.findViewById(R.id.reverseOrderSw) as Switch
-    if (Prefs.orderDirection == OrderDirection.ASC) switch.toggle()
-    AlertDialog.Builder(this)
-        .setTitle(R.string.sort_by)
-        .setView(layout)
-        .setSingleChoiceItems(OrderStrategy.uiItems(), Prefs.orderDirection.ordinal, { d, which ->
-          d.dismiss()
-          Prefs.orderDirection = if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC
-          Prefs.orderStrategy = OrderStrategy[which]
-          initializeAdapter()
-        })
-        .show()
-  }
-
   private fun statisticsDialog() {
     val stories = runBlocking { database.getStories().await() }
     var totalWords = 0
@@ -171,11 +140,18 @@ class StoryListActivity : ActivityWithStatic() {
       true
     }
     R.id.group -> {
-      groupByDialog()
+      groupByDialog(this, Prefs.groupStrategy) {
+        Prefs.groupStrategy = it
+        initializeAdapter()
+      }
       true
     }
     R.id.sort -> {
-      orderByDialog()
+      orderByDialog(this, Prefs.orderStrategy, Prefs.orderDirection) { str, dir ->
+        Prefs.orderDirection = dir
+        Prefs.orderStrategy = str
+        initializeAdapter()
+      }
       true
     }
     R.id.statistics -> {

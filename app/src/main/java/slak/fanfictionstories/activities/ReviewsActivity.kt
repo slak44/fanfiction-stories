@@ -1,7 +1,9 @@
 package slak.fanfictionstories.activities
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.NavUtils
+import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
@@ -149,7 +151,10 @@ class ReviewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
           .format(Date(reviews[pos].unixTimeSeconds * 1000))
       reviewContent.text = reviews[pos].content
       viewAuthorBtn.setOnClickListener {
-        // FIXME: show author page
+        val intent = Intent(context, AuthorActivity::class.java)
+        intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, reviews[pos].authorId)
+        intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, reviews[pos].author)
+        startActivity(context, intent, null)
       }
       replyBtn.setOnClickListener {
         // FIXME: reply to review

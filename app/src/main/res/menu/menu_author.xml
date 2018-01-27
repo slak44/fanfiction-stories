@@ -1,0 +1,26 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="slak.fanfictionstories.activities.AuthorActivity">
+    <item
+        android:id="@+id/favoriteAuthor"
+        android:icon="@drawable/ic_favorite_black_24dp"
+        android:orderInCategory="5"
+        android:title="@string/favorite"
+        app:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/followAuthor"
+        android:orderInCategory="5"
+        android:title="@string/follow"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/privateMessage"
+        android:orderInCategory="10"
+        android:title="@string/action_pm"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/favoritedAuthors"
+        android:orderInCategory="20"
+        android:title="@string/favorite_authors"
+        app:showAsAction="never"/>
+</menu>
