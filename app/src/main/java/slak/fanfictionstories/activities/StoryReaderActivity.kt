@@ -5,8 +5,6 @@ import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Typeface
 import android.os.Bundle
-import android.support.design.widget.Snackbar
-import android.support.v4.app.NavUtils
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
@@ -25,7 +23,9 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.contentView
-import org.jetbrains.anko.db.*
+import org.jetbrains.anko.db.DoubleParser
+import org.jetbrains.anko.db.insertOrThrow
+import org.jetbrains.anko.db.select
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Fetcher.parseMetadata
 import slak.fanfictionstories.fetchers.StoryFetcher
@@ -291,7 +291,7 @@ class StoryReaderActivity : ActivityWithStatic() {
         database.updateInStory(model.storyIdRaw, "status" to "remote")
         model.status = StoryStatus.REMOTE
       }
-      android.R.id.home -> NavUtils.navigateUpFromSameTask(this)
+      android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
     }
     return true

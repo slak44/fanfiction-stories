@@ -2,7 +2,6 @@ package slak.fanfictionstories.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.NavUtils
 import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.CardView
@@ -116,7 +115,7 @@ class ReviewsActivity : ActivityWithStatic() {
               setSubtitle()
             }).show()
       }
-      android.R.id.home -> NavUtils.navigateUpFromSameTask(this)
+      android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
     }
     return true

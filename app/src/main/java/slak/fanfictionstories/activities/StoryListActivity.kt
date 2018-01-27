@@ -151,6 +151,7 @@ class StoryListActivity : ActivityWithStatic() {
       }
       R.id.addById -> addByIdDialog()
       R.id.statistics -> statisticsDialog()
+      android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
     }
     return true

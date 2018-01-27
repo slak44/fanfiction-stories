@@ -120,6 +120,7 @@ class AuthorActivity : AppCompatActivity() {
               startActivity(intent)
             }).show()
       }
+      android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
     }
     return true

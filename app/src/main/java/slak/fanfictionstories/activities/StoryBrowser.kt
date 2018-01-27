@@ -48,6 +48,14 @@ class SelectCategoryActivity : ActivityWithStatic() {
       startActivity(intent)
     }
   }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      android.R.id.home -> onBackPressed()
+      else -> return super.onOptionsItemSelected(item)
+    }
+    return true
+  }
 }
 
 private const val CANON_TITLE_EXTRA_ID = "canon_title"
@@ -95,6 +103,7 @@ class BrowseCategoryActivity : ActivityWithStatic() {
             Snackbar.LENGTH_SHORT
         ).show()
       }
+      android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
     }
     return true
@@ -295,8 +304,8 @@ class CanonStoryListActivity : ActivityWithStatic() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
-      android.R.id.home -> onBackPressed()
       R.id.filter -> if (fetcher.charList.isNotEmpty()) openFilterDialog()
+      android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
     }
     return true
