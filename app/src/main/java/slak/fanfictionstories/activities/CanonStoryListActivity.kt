@@ -34,8 +34,6 @@ class CanonStoryListActivity : ActivityWithStatic() {
   private lateinit var fetcher: CanonFetcher
   private var currentPage = 1
 
-  private var hasSaved = false
-
   private var userStories: Optional<List<StoryModel>> = Optional.empty()
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,11 +49,12 @@ class CanonStoryListActivity : ActivityWithStatic() {
     val layoutManager = LinearLayoutManager(this)
     canonStoryListView.layoutManager = layoutManager
 
-    setTitle(R.string.loading___)
-
-    if (!hasSaved) {
+    if (savedInstanceState == null) {
+      setTitle(R.string.loading___)
       fetcher = CanonFetcher(CanonFetcher.Details(parentLink))
       addPage(1)
+    } else {
+      onRestoreInstanceState(savedInstanceState)
     }
 
     StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ ->
@@ -68,7 +67,6 @@ class CanonStoryListActivity : ActivityWithStatic() {
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
-    hasSaved = true
     super.onSaveInstanceState(outState)
     outState.putInt(CURRENT_PAGE_RESTORE, currentPage)
     outState.putParcelable(FETCHER_RESTORE, fetcher)
@@ -87,6 +85,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
       it as EitherWrapper<StoryModel, String>
       return@map if (it.l == null) Right(it.r) else Left(it.l)
     } as List<Either<StoryModel, String>>)
+    setAppbarText()
   }
 
   private fun addPage(page: Int) = launch(UI) {
@@ -101,6 +100,10 @@ class CanonStoryListActivity : ActivityWithStatic() {
     if (pageData.isEmpty()) return@launch
     adapter.addData(Right(resources.getString(R.string.page_x, page)))
     adapter.addData(pageData.map { Left(it) })
+    setAppbarText()
+  }
+
+  private fun setAppbarText() {
     title = fetcher.canonTitle.get()
     supportActionBar?.subtitle =
         resources.getString(R.string.x_stories, fetcher.unfilteredStories.get())
