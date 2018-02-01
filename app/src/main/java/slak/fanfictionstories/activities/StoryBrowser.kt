@@ -2,7 +2,7 @@ package slak.fanfictionstories.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.Snackbar
+import android.os.Parcelable
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
@@ -21,18 +21,16 @@ import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import org.jetbrains.anko.contentView
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 import java.util.*
-import kotlin.properties.Delegates
 
 val categories: Array<String> by lazy { Static.res.getStringArray(R.array.categories) }
 val categoryUrl: Array<String> by lazy {
   Static.res.getStringArray(R.array.categories_url_components)
 }
-
-private const val CATEGORIES_IDX_EXTRA_ID = "category_idx"
 
 class SelectCategoryActivity : ActivityWithStatic() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,8 +42,9 @@ class SelectCategoryActivity : ActivityWithStatic() {
     adapter.addAll(categories.toList())
     categoriesList.adapter = adapter
     categoriesList.setOnItemClickListener { _, _, idx: Int, _ ->
+      val urlComponent = (if (useCrossover.isChecked) "crossovers/" else "") + categoryUrl[idx] + "/"
       val intent = Intent(this, BrowseCategoryActivity::class.java)
-      intent.putExtra(CATEGORIES_IDX_EXTRA_ID, idx)
+      intent.putExtra(INTENT_LINK_DATA, CategoryLink(categories[idx], urlComponent, "") as Parcelable)
       startActivity(intent)
     }
   }
@@ -59,33 +58,32 @@ class SelectCategoryActivity : ActivityWithStatic() {
   }
 }
 
-private const val CANON_TITLE_EXTRA_ID = "canon_title"
-private const val SRC_CATEGORY_EXTRA_ID = "category_title"
-private const val CANON_URL_EXTRA_ID = "canon_url"
+private const val INTENT_LINK_DATA = "link_data_cat_browser"
 
 class BrowseCategoryActivity : ActivityWithStatic() {
-  private var categoryIdx: Int by Delegates.notNull()
-  private lateinit var canons: List<Canon>
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_browse_category)
     setSupportActionBar(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
-    categoryIdx = intent.extras?.getInt(CATEGORIES_IDX_EXTRA_ID) ?: return
-    title = categories[categoryIdx]
+    val parentLink = intent.extras?.getParcelable<CategoryLink>(INTENT_LINK_DATA) ?: return
+    title = parentLink.displayName
     launch(CommonPool) {
-      canons = CategoryFetcher(this@BrowseCategoryActivity).get(categoryIdx).await()
+      val links = fetchCategoryData(this@BrowseCategoryActivity, parentLink.urlComponent).await()
       val adapter = ArrayAdapter<String>(
           this@BrowseCategoryActivity, android.R.layout.simple_list_item_1)
-      adapter.addAll(canons.map { "${it.title} - ${it.stories}" })
-      launch(UI) { inCategoryList.adapter = adapter }
-    }
-    inCategoryList.setOnItemClickListener { _, _, idx, _ ->
-      val intent = Intent(this, CanonStoryListActivity::class.java)
-      intent.putExtra(CANON_URL_EXTRA_ID, canons[idx].url)
-      intent.putExtra(CANON_TITLE_EXTRA_ID, canons[idx].title)
-      intent.putExtra(SRC_CATEGORY_EXTRA_ID, categories[categoryIdx])
-      startActivity(intent)
+      adapter.addAll(links.map { "${it.text} - ${it.storyCount}" })
+      launch(UI) {
+        inCategoryList.adapter = adapter
+        inCategoryList.setOnItemClickListener { _, _, idx, _ ->
+          val target =
+              if (links[idx].isTargetCategory()) BrowseCategoryActivity::class.java
+              else CanonStoryListActivity::class.java
+          val intent = Intent(this@BrowseCategoryActivity, target)
+          intent.putExtra(INTENT_LINK_DATA, links[idx] as Parcelable)
+          startActivity(intent)
+        }
+      }
     }
   }
 
@@ -97,12 +95,9 @@ class BrowseCategoryActivity : ActivityWithStatic() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.clearCache -> {
-        CategoryFetcher.Cache.clear(categoryIdx)
-        Snackbar.make(
-            findViewById(android.R.id.content)!!,
-            resources.getString(R.string.cleared_from_cache, categories[categoryIdx]),
-            Snackbar.LENGTH_SHORT
-        ).show()
+        undoableAction(contentView!!, getString(R.string.cleared_from_cache)) {
+          categoryCache.clear()
+        }
       }
       android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
@@ -132,19 +127,17 @@ class CanonStoryListActivity : ActivityWithStatic() {
     setSupportActionBar(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    val title = intent.extras.getString(CANON_TITLE_EXTRA_ID)
-    val urlComp = intent.extras.getString(CANON_URL_EXTRA_ID)
-    val srcCategory = intent.extras.getString(SRC_CATEGORY_EXTRA_ID)
+    val parentLink: CategoryLink = intent.extras.getParcelable(INTENT_LINK_DATA)
 
     adapter = StoryAdapter(this@CanonStoryListActivity)
     canonStoryListView.adapter = adapter
     val layoutManager = LinearLayoutManager(this)
     canonStoryListView.layoutManager = layoutManager
 
-    this.title = title
+    setTitle(R.string.loading___)
 
     if (!hasSaved) {
-      fetcher = CanonFetcher(CanonFetcher.Details(urlComp, title, srcCategory))
+      fetcher = CanonFetcher(CanonFetcher.Details(parentLink))
       addPage(1)
     }
 
@@ -191,6 +184,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
     if (pageData.isEmpty()) return@launch
     adapter.addData(Right(resources.getString(R.string.page_x, page)))
     adapter.addData(pageData.map { Left(it) })
+    title = fetcher.canonTitle.get()
     supportActionBar?.subtitle =
         resources.getString(R.string.x_stories, fetcher.unfilteredStories.get())
   }

@@ -13,6 +13,7 @@
     <string name="view_author">View Author</string>
     <string name="sort_by">Order by…</string>
     <string name="group_by">Group by…</string>
+    <string name="loading...">Loading…</string>
 
     <!-- Canon story list -->
     <string name="error_with_canon_stories">Can\'t access %s stories; Retrying…</string>
@@ -21,10 +22,12 @@
 
     <!-- Select category activity -->
     <string name="title_activity_select_category">Select Category</string>
+    <string name="use_crossover">Crossovers</string>
 
     <!-- Browse category activity -->
-    <string name="clear_cache">Clear Canon Cache</string>
-    <string name="cleared_from_cache">%s cleared from cache</string>
+    <string name="clear_cache">Clear Cache</string>
+    <string name="cleared_from_cache">Category cache cleared</string>
+    <string name="title_crossover">%s (crossovers)</string>
 
     <!-- Statistics -->
     <string name="statistics">Statistics</string>

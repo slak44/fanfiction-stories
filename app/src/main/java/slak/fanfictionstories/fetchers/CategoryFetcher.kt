@@ -1,110 +1,54 @@
 package slak.fanfictionstories.fetchers
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Parcelable
 import android.util.Log
+import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import slak.fanfictionstories.Canon
+import org.jsoup.Jsoup
 import slak.fanfictionstories.R
-import slak.fanfictionstories.activities.categories
 import slak.fanfictionstories.activities.categoryUrl
-import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
 import slak.fanfictionstories.fetchers.Fetcher.TAG
-import slak.fanfictionstories.fetchers.Fetcher.regexOpts
 import slak.fanfictionstories.utility.*
-import java.io.*
-import java.net.URL
-import java.util.*
+import java.io.Serializable
+import java.util.concurrent.TimeUnit
 
-// Unix timestamp + canon list
-private typealias CategoryCanons = Pair<Long, List<Canon>>
-
-class CategoryFetcher(private val ctx: Context) {
-  object Cache {
-    // Cache categoryIdx's result
-    private var cache = Array<CategoryCanons?>(categories.size, { null })
-    private val cacheMapFile = File(Static.cacheDir, "category_canons.array")
-    private const val TAG = "CategoryCache"
-    // 7 days
-    private const val CACHE_LIFE_MS = 1000 * 60 * 60 * 24 * 7
-
-    fun deserialize() = async2(CommonPool) {
-      if (!cacheMapFile.exists()) {
-        return@async2
-      }
-      val objIn = ObjectInputStream(FileInputStream(cacheMapFile))
-      try {
-        // I serialize it however I like, I deserialize it however I like, so stfu
-        @Suppress("Unchecked_Cast")
-        val array = objIn.readObject() as Array<CategoryCanons?>
-        cache = array
-      } catch (ex: IOException) {
-        // Ignore errors with the cache; don't crash the app because of it
-        cacheMapFile.delete()
-      } finally {
-        objIn.close()
-      }
-    }
-
-    fun serialize() = launch(CommonPool) {
-      val objOut = ObjectOutputStream(FileOutputStream(cacheMapFile))
-      objOut.writeObject(cache)
-      objOut.close()
-    }
-
-    fun update(categoryIdx: Int, canons: List<Canon>) {
-      cache[categoryIdx] = System.currentTimeMillis() to canons
-      serialize()
-    }
-
-    fun hit(categoryIdx: Int): Optional<List<Canon>> {
-      if (cache[categoryIdx] == null) {
-        Log.d(TAG, "Cache miss: $categoryIdx")
-        return Optional.empty()
-      }
-      if (System.currentTimeMillis() - cache[categoryIdx]!!.first > CACHE_LIFE_MS) {
-        // Cache expired; remove and return nothing
-        Log.d(TAG, "Cache expired: $categoryIdx")
-        cache[categoryIdx] = null
-        serialize()
-        return Optional.empty()
-      }
-      Log.d(TAG, "Cache hit: $categoryIdx")
-      return cache[categoryIdx]!!.second.opt()
-    }
-
-    fun clear(categoryIdx: Int) {
-      cache[categoryIdx] = null
-      serialize()
-    }
+@Parcelize @SuppressLint("ParcelCreator")
+data class CategoryLink(val text: String,
+                        val urlComponent: String,
+                        val storyCount: String) : Parcelable, Serializable {
+  fun isTargetCrossover(): Boolean =
+      urlComponent.contains(Regex("crossovers", RegexOption.IGNORE_CASE))
+  fun isTargetCategory(): Boolean {
+    val pieces = urlComponent.split("/")
+    if (pieces.size == 2 && categoryUrl.contains(pieces[1])) return true
+    if (pieces[1] == "crossovers") return true
+    return false
   }
+  val displayName: String
+    get() = if (isTargetCrossover()) Static.res.getString(R.string.title_crossover, text) else text
+}
 
-  private fun fetchCategory(categoryIdx: Int, n: Notifications): Deferred<String> =
-      patientlyFetchURL("https://www.fanfiction.net/${categoryUrl[categoryIdx]}", n) {
-    n.show(Static.res.getString(R.string.error_with_categories, categories[categoryIdx]))
-    Log.e(TAG, "getCanonsForCategory${categories[categoryIdx]}", it)
-  }
+val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMillis(7))
 
-  fun get(categoryIdx: Int): Deferred<List<Canon>> = async2(CommonPool) {
-    Cache.hit(categoryIdx).ifPresent2 { return@async2 it }
-    val n = Notifications(ctx, Notifications.Kind.OTHER)
-    // FIXME be nice and show some spinny loady crap if we miss the cache
-    val html = fetchCategory(categoryIdx, n).await()
-    val table =
-        Regex("id='list_output'><TABLE WIDTH='100%'><TR>(.*?)</TR></TABLE>", regexOpts)
-            .find(html) ?: throw IllegalStateException("Can't get category table")
-    // Get rid of the td's so we're left with (regular) divs
-    val divString =
-        table.groupValues[1].replace(Regex("</?TD.*?>", regexOpts), "")
-    val results = Regex(
-        "<div><a href=\"(.*?)\" title=\"(.*?)\">.*?CLASS='gray'>\\((.*?)\\)</SPAN></div>",
-        regexOpts).findAll(divString)
-    val canons = results.map {
-      Canon(it.groupValues[2], it.groupValues[1], it.groupValues[3])
-    }.toList()
-    Cache.update(categoryIdx, canons)
-    return@async2 canons
-  }
+fun fetchCategoryData(ctx: Context, categoryUrlComponent: String): Deferred<Array<CategoryLink>>
+    = async2(CommonPool) {
+  categoryCache.hit(categoryUrlComponent).ifPresent2 { return@async2 it }
+  // FIXME be nice and show some spinny loady crap if we miss the cache
+  val n = Notifications(ctx, Notifications.Kind.OTHER)
+  val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/", n) {
+    n.show(Static.res.getString(R.string.error_with_categories, categoryUrlComponent))
+    Log.e(TAG, "Category fetch fail: $categoryUrlComponent", it)
+  }.await()
+  val doc = Jsoup.parse(html)
+  val result = doc.select("#list_output div").map {
+    val urlComponent = it.child(0).attr("href")
+    val title = it.child(0).text()
+    val storyCount = it.child(1).text().replace(Regex("[(),]"), "")
+    CategoryLink(title, urlComponent, storyCount)
+  }.toTypedArray()
+  categoryCache.update(categoryUrlComponent, result)
+  return@async2 result
 }

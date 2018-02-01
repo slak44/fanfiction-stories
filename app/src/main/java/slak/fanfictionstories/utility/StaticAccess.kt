@@ -7,7 +7,7 @@ import android.net.ConnectivityManager
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import slak.fanfictionstories.fetchers.CategoryFetcher
+import slak.fanfictionstories.fetchers.categoryCache
 import java.io.File
 
 /**
@@ -53,7 +53,7 @@ abstract class ActivityWithStatic : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     Static.init(this)
     if (!hasCache) {
-      CategoryFetcher.Cache.deserialize()
+      categoryCache.deserialize()
       hasCache = true
     }
     if (!hasExHandler) {

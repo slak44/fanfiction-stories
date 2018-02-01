@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.Log
+import kotlinx.android.parcel.IgnoredOnParcel
 import kotlinx.android.parcel.Parceler
 import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.experimental.CommonPool
@@ -82,9 +83,7 @@ enum class WordCount(val ffnetValue: String) {
 class CanonFetcher(val details: Details) : Parcelable {
   @Parcelize @SuppressLint("ParcelCreator")
   data class Details(
-      val urlComponent: String,
-      val title: String,
-      val category: String,
+      val parentLink: CategoryLink,
 
       var sort: Sort = Sort.UPDATE_DATE,
       var timeRange: TimeRange = TimeRange.ALL,
@@ -111,14 +110,17 @@ class CanonFetcher(val details: Details) : Parcelable {
   @Parcelize @SuppressLint("ParcelCreator")
   data class Character(val name: String, val id: String) : Parcelable
 
-  @Suppress("PLUGIN_WARNING")
+  @IgnoredOnParcel
   var worldList: Optional<List<World>> = listOf<World>().opt()
     private set
-  @Suppress("PLUGIN_WARNING")
+  @IgnoredOnParcel
   var charList: List<Character> = listOf()
     private set
-  @Suppress("PLUGIN_WARNING")
+  @IgnoredOnParcel
   var unfilteredStories: Optional<String> = Optional.empty()
+    private set
+  @IgnoredOnParcel
+  var canonTitle: Optional<String> = Optional.empty()
     private set
 
   companion object : Parceler<CanonFetcher> {
@@ -135,6 +137,9 @@ class CanonFetcher(val details: Details) : Parcelable {
       val str = parcel.readString()
       c.unfilteredStories = str?.opt() ?: Optional.empty()
 
+      val title = parcel.readString()
+      c.canonTitle = title?.opt() ?: Optional.empty()
+
       return c
     }
 
@@ -143,6 +148,7 @@ class CanonFetcher(val details: Details) : Parcelable {
       parcel.writeArray(worldList.orElse(listOf())?.toTypedArray())
       parcel.writeArray(charList.toTypedArray())
       parcel.writeString(unfilteredStories.orElse(null))
+      parcel.writeString(canonTitle.orElse(null))
     }
   }
 
@@ -174,8 +180,8 @@ class CanonFetcher(val details: Details) : Parcelable {
     ).joinToString("&")
 
     return@async2 patientlyFetchURL(
-        "https://www.fanfiction.net/${details.urlComponent}/?p=$page&$queryParams", n) {
-      n.show(Static.res.getString(R.string.error_with_canon_stories, details.title))
+        "https://www.fanfiction.net/${details.parentLink.urlComponent}/?p=$page&$queryParams", n) {
+      n.show(Static.res.getString(R.string.error_with_canon_stories, details.parentLink.displayName))
       Log.e(TAG, "CanonFetcher: retry", it)
     }.await()
   }
@@ -195,6 +201,12 @@ class CanonFetcher(val details: Details) : Parcelable {
             .map {option -> World(option.text(), option.`val`()) }.opt()
       }
     }
+
+    val div = doc.getElementById("content_wrapper_inner")
+    canonTitle = doc.title().replace(Regex("(?:FanFiction Archive)? \\| FanFiction"), "").opt()
+    // That span only exists for normal canons
+    val isCurrentlyCrossover = !div.child(0).`is`("span")
+    val categoryTitle = if (isCurrentlyCrossover) canonTitle.get() else div.child(2).text()
 
     val list = doc.select("#content_wrapper_inner > div.z-list.zhover.zpointer").parallelStream().map {
       // Looks like /s/12656819/1/For-the-Motherland, pick the id
@@ -244,8 +256,8 @@ class CanonFetcher(val details: Details) : Parcelable {
           "scrollAbsolute" to 0L,
           "currentChapter" to 0L,
           "status" to "transient",
-          "canon" to details.title,
-          "category" to details.category,
+          "canon" to canonTitle.get(),
+          "category" to categoryTitle,
           "summary" to summary,
           "author" to authorName,
           "title" to title,
@@ -253,7 +265,7 @@ class CanonFetcher(val details: Details) : Parcelable {
       ), false)
     }.collect(Collectors.toList())
 
-    val centerElem = doc.select("#content_wrapper_inner > center")
+    val centerElem = doc.select("#filters + center")
     unfilteredStories = if (centerElem.size == 0) {
       // If there is no element with the count there, it means there is only one page, so
       // we get how many stories were on the page
