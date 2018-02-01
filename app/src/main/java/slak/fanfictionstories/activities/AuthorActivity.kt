@@ -161,7 +161,7 @@ class AuthorActivity : AppCompatActivity() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
       val rootView = inflater.inflate(R.layout.fragment_author_bio, container, false)
-      rootView.html.text = Html.fromHtml(arguments.getString(ARG_HTML_TEXT),
+      rootView.html.text = Html.fromHtml(arguments!!.getString(ARG_HTML_TEXT),
           Html.FROM_HTML_MODE_LEGACY, null, HrSpan.tagHandlerFactory(rootView.width))
       rootView.html.movementMethod = LinkMovementMethod.getInstance()
       return rootView
@@ -199,10 +199,10 @@ class AuthorActivity : AppCompatActivity() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
-      stories = arguments.getParcelableArrayList(ARG_STORIES)
+      stories = arguments!!.getParcelableArrayList(ARG_STORIES)
       rootView.stories.layoutManager = LinearLayoutManager(context)
       StoryCardView.createRightSwipeHelper(rootView.stories, { intent, _ -> startActivity(intent) })
-      adapter = StoryAdapter(context)
+      adapter = StoryAdapter(context!!)
       rootView.stories.adapter = adapter
       if (stories.isEmpty()) {
         rootView.noStories.visibility = View.VISIBLE
@@ -215,14 +215,14 @@ class AuthorActivity : AppCompatActivity() {
         adapter.arrangeStories(stories, arrangement)
       }
       rootView.orderBy.setOnClickListener {
-        orderByDialog(context, arrangement.orderStrategy, arrangement.orderDirection) { str, dir ->
+        orderByDialog(context!!, arrangement.orderStrategy, arrangement.orderDirection) { str, dir ->
           arrangement = Arrangement(
               orderDirection = dir, orderStrategy = str, groupStrategy = arrangement.groupStrategy)
           adapter.arrangeStories(stories, arrangement)
         }
       }
       rootView.groupBy.setOnClickListener {
-        groupByDialog(context, arrangement.groupStrategy) {
+        groupByDialog(context!!, arrangement.groupStrategy) {
           arrangement = Arrangement(arrangement.orderStrategy, arrangement.orderDirection, it)
           adapter.arrangeStories(stories, arrangement)
         }
