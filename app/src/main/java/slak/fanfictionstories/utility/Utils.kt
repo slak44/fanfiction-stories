@@ -101,12 +101,9 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
   }
 }
 
-private val DOWNLOAD_LOCK = Mutex()
-
 /**
- * Fetches the resource at the specified url, patiently. Only processes one request at a time.
+ * Fetches the resource at the specified url, patiently.
  *
- * Waits for the download lock [DOWNLOAD_LOCK].
  * Waits for the network using [waitForNetwork].
  * Waits for the rate limit [Fetcher.RATE_LIMIT_MILLISECONDS].
  *
@@ -114,19 +111,18 @@ private val DOWNLOAD_LOCK = Mutex()
  * function recursively.
  */
 fun patientlyFetchURL(url: String, n: Notifications,
-                      onError: (t: Throwable) -> Unit): Deferred<String> =
-    async2(CommonPool) { DOWNLOAD_LOCK.withLock {
+                      onError: (t: Throwable) -> Unit): Deferred<String> = async2(CommonPool) {
   waitForNetwork(n).await()
   delay(RATE_LIMIT_MILLISECONDS)
-  try {
-    return@withLock URL(url).readText()
+  return@async2 try {
+    URL(url).readText()
   } catch (t: Throwable) {
     // Something happened; retry
     onError(t)
     delay(RATE_LIMIT_MILLISECONDS)
-    return@withLock patientlyFetchURL(url, n, onError).await()
+    patientlyFetchURL(url, n, onError).await()
   }
-} }
+}
 
 /**
  * Emulates android:iconTint. Must be called in onPrepareOptionsMenu for each icon.
