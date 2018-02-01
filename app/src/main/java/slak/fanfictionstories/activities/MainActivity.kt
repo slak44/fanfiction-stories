@@ -13,7 +13,6 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.dropTable
-import org.jetbrains.anko.db.select
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.*
@@ -80,7 +79,7 @@ class MainActivity : ActivityWithStatic() {
         sendBroadcast(intent)
       } }
       wipeSettings.setOnClickListener {
-        usePrefsImmediate { it.clear() }
+        Prefs.useImmediate { it.clear() }
       }
     }
   }

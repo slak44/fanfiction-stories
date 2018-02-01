@@ -105,7 +105,7 @@ class StoryReaderActivity : ActivityWithStatic() {
 
     // Save story for the resume button, but not for transient stories
     if (model.status != StoryStatus.TRANSIENT)
-      usePrefs { it.putLong(Prefs.RESUME_STORY_ID, model.storyIdRaw) }
+      Prefs.use { it.putLong(Prefs.RESUME_STORY_ID, model.storyIdRaw) }
 
     title = model.title
     currentChapter = if (model.currentChapter == 0) 1 else model.currentChapter

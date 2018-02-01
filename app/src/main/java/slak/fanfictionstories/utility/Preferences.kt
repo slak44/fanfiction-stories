@@ -1,5 +1,7 @@
 package slak.fanfictionstories.utility
 
+import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Typeface
 import android.text.TextPaint
@@ -16,15 +18,15 @@ object Prefs {
 
   var groupStrategy
     get() = GroupStrategy[Static.prefs.getInt(LIST_GROUP_STRATEGY, GroupStrategy.NONE.ordinal)]
-    set(new) { usePrefs { it.putInt(LIST_GROUP_STRATEGY, new.ordinal) } }
+    set(new) { use { it.putInt(LIST_GROUP_STRATEGY, new.ordinal) } }
 
   var orderStrategy
     get() = OrderStrategy[Static.prefs.getInt(LIST_ORDER_STRATEGY, OrderStrategy.TITLE_ALPHABETIC.ordinal)]
-    set(new) { usePrefs { it.putInt(LIST_ORDER_STRATEGY, new.ordinal) } }
+    set(new) { use { it.putInt(LIST_ORDER_STRATEGY, new.ordinal) } }
 
   var orderDirection
     get() = OrderDirection[Static.prefs.getInt(LIST_ORDER_IS_REVERSE, OrderDirection.DESC.ordinal)]
-    set(new) { usePrefs { it.putInt(LIST_ORDER_IS_REVERSE, new.ordinal) } }
+    set(new) { use { it.putInt(LIST_ORDER_IS_REVERSE, new.ordinal) } }
 
   fun arrangement() = Arrangement(orderStrategy, orderDirection, groupStrategy)
 
@@ -48,5 +50,25 @@ object Prefs {
         TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textSize(), Static.res.displayMetrics)
     tp.isAntiAlias = textAntiAlias()
     return tp
+  }
+
+  /**
+   * Like [use], but uses [SharedPreferences.Editor.commit] instead of apply.
+   * @see use
+   */
+  @SuppressLint("ApplySharedPref")
+  fun useImmediate(block: (SharedPreferences.Editor) -> Unit) {
+    val editor = Static.prefs.edit()
+    block(editor)
+    editor.commit()
+  }
+
+  /**
+   * Wraps [SharedPreferences]'s edit-change-apply boilerplate.
+   */
+  fun use(block: (SharedPreferences.Editor) -> Unit) {
+    val editor = Static.prefs.edit()
+    block(editor)
+    editor.apply()
   }
 }

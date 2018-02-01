@@ -3,7 +3,6 @@ package slak.fanfictionstories.utility
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -29,7 +28,6 @@ import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.sync.Mutex
-import kotlinx.coroutines.experimental.sync.withLock
 import slak.fanfictionstories.R
 import slak.fanfictionstories.fetchers.Fetcher
 import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
@@ -37,7 +35,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
 import java.net.URL
-import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.experimental.CoroutineContext
@@ -237,26 +234,6 @@ fun autoSuffixNumber(value: Long): String {
  * @see autoSuffixNumber(Long)
  */
 fun autoSuffixNumber(value: Int): String = autoSuffixNumber(value.toLong())
-
-/**
- * Like [usePrefs], but uses [SharedPreferences.Editor.commit] instead of apply.
- * @see usePrefs
- */
-@SuppressLint("ApplySharedPref")
-fun usePrefsImmediate(block: (SharedPreferences.Editor) -> Unit) {
-  val editor = Static.prefs.edit()
-  block(editor)
-  editor.commit()
-}
-
-/**
- * Wraps [SharedPreferences]'s edit-change-apply boilerplate.
- */
-fun usePrefs(block: (SharedPreferences.Editor) -> Unit) {
-  val editor = Static.prefs.edit()
-  block(editor)
-  editor.apply()
-}
 
 @Parcelize @SuppressLint("ParcelCreator")
 data class EitherWrapper<out T1, out T2>(val l: @RawValue T1?, val r: @RawValue T2?) : Parcelable
