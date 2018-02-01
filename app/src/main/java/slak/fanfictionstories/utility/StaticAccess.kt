@@ -5,8 +5,10 @@ import android.content.SharedPreferences
 import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import org.jetbrains.anko.defaultSharedPreferences
 import slak.fanfictionstories.fetchers.categoryCache
 import java.io.File
 
@@ -24,9 +26,13 @@ object Static {
     private set
   var sharedPref: SharedPreferences? = null
     private set
+  var defaultPref: SharedPreferences? = null
+    private set
 
   val prefs: SharedPreferences
     get() = sharedPref!!
+  val defaultPrefs: SharedPreferences
+    get() = defaultPref!!
   val cacheDir: File
     get() = cacheDirProp!!
   val res: Resources
@@ -41,6 +47,8 @@ object Static {
     if (cacheDirProp == null) cacheDirProp = context.applicationContext.cacheDir
     if (sharedPref == null) sharedPref = context.applicationContext
         .getSharedPreferences(Prefs.PREFS_FILE, Context.MODE_PRIVATE)
+    if (defaultPref == null)
+      defaultPref = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
   }
 }
 

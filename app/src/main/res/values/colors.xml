@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="listDrawableTint">#FFFFFF</color>
+    <!-- Generic -->
     <color name="alpha">#00000000</color>
-    <color name="dividerColor">#C7C7C7</color>
     <color name="white">#FFF</color>
+    <color name="black">#000000</color>
+
+    <color name="listDrawableTint">#FFFFFF</color>
+    <color name="dividerColor">#C7C7C7</color>
+    <color name="textDefault">#BEBEBE</color>
+
+    <array name="textColors">
+        <item>@color/textDefault</item>
+        <item>@color/black</item>
+        <item>@color/white</item>
+        <!-- FIXME add more -->
+    </array>
 </resources>

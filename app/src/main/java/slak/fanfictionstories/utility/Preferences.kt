@@ -1,9 +1,10 @@
 package slak.fanfictionstories.utility
 
-import slak.fanfictionstories.Arrangement
-import slak.fanfictionstories.GroupStrategy
-import slak.fanfictionstories.OrderDirection
-import slak.fanfictionstories.OrderStrategy
+import android.content.res.Resources
+import android.graphics.Typeface
+import android.text.TextPaint
+import android.util.TypedValue
+import slak.fanfictionstories.*
 
 object Prefs {
   const val PREFS_FILE = "slak.fanfictionstories.SHARED_PREFERENCES"
@@ -26,4 +27,26 @@ object Prefs {
     set(new) { usePrefs { it.putInt(LIST_ORDER_IS_REVERSE, new.ordinal) } }
 
   fun arrangement() = Arrangement(orderStrategy, orderDirection, groupStrategy)
+
+  const val TEXT_SIZE = "font_option_size"
+  const val TEXT_FONT = "font_option_type"
+  const val TEXT_COLOR = "font_option_color"
+  const val TEXT_ANTIALIAS = "font_option_antialias"
+
+  fun textSize() = Static.defaultPrefs.getString(Prefs.TEXT_SIZE, "14").toFloat()
+  fun textColor(theme: Resources.Theme) =
+      Static.defaultPrefs.getInt(Prefs.TEXT_COLOR, Static.res.getColor(R.color.textDefault, theme))
+  fun textFont() = Typeface.create(
+      Static.defaultPrefs.getString(Prefs.TEXT_FONT, "Roboto"), Typeface.NORMAL)
+  fun textAntiAlias() = Static.defaultPrefs.getBoolean(Prefs.TEXT_ANTIALIAS, true)
+
+  fun textPaint(theme: Resources.Theme): TextPaint {
+    val tp = TextPaint()
+    tp.color = textColor(theme)
+    tp.typeface = textFont()
+    tp.textSize =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textSize(), Static.res.displayMetrics)
+    tp.isAntiAlias = textAntiAlias()
+    return tp
+  }
 }

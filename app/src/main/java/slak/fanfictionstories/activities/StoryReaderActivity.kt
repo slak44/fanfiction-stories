@@ -2,16 +2,18 @@ package slak.fanfictionstories.activities
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.graphics.Canvas
-import android.graphics.Typeface
 import android.os.Bundle
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
-import android.text.*
+import android.text.Html
+import android.text.Layout
+import android.text.Spanned
+import android.text.StaticLayout
 import android.util.AttributeSet
 import android.util.Log
-import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -52,14 +54,7 @@ private class FastTextView : View {
     onTextChange = listener
   }
 
-  fun setText(s: Spanned) = async2(CommonPool) {
-    // FIXME hardcoded textpaint
-    val tp = TextPaint()
-    tp.color = resources.getColor(android.R.color.secondary_text_dark)
-    tp.typeface = Typeface.DEFAULT
-    tp.textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 14F, resources.displayMetrics)
-    tp.isAntiAlias = true
-
+  fun setText(s: Spanned, theme: Resources.Theme) = async2(CommonPool) {
     if (!ViewCompat.isLaidOut(this@FastTextView)) {
       Log.w(TAG, "Forcing layout, setText was called before we were laid out")
       async2(UI) {
@@ -67,7 +62,7 @@ private class FastTextView : View {
       }.await()
     }
 
-    staticLayout = StaticLayout(s, tp,
+    staticLayout = StaticLayout(s, Prefs.textPaint(theme),
         width, Layout.Alignment.ALIGN_NORMAL, 1F, 0F, false)
 
     async2(UI) {
@@ -192,7 +187,7 @@ class StoryReaderActivity : ActivityWithStatic() {
     val html = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY,
         null, HrSpan.tagHandlerFactory(chapterText.width))
 
-    chapterText.setText(html).await()
+    chapterText.setText(html, theme).await()
 
     updateUiAfterFetchingText(chapterToRead)
     database.updateInStory(model.storyIdRaw, "currentChapter" to chapterToRead)

@@ -1,11 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:tools="http://schemas.android.com/tools"
-                  xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:app="http://schemas.android.com/apk/res-auto"
+                  xmlns:tools="http://schemas.android.com/tools">
 
     <PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_updating"
         tools:ignore="UnusedAttribute">
 
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:singleLineTitle="true"
+        android:title="@string/category_text"
+        tools:ignore="UnusedAttribute">
+
+        <EditTextPreference
+            android:defaultValue="14"
+            android:key="font_option_size"
+            android:numeric="decimal"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/text_option_size"/>
+        <EditTextPreference
+            android:defaultValue="Roboto"
+            android:key="font_option_type"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/text_option_font"/>
+        <com.kizitonwose.colorpreference.ColorPreference
+            android:defaultValue="@color/textDefault"
+            android:key="font_option_color"
+            android:title="@string/text_option_color"
+            app:colorChoices="@array/textColors"/>
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="font_option_antialias"
+            android:title="@string/text_option_antialiasing"/>
     </PreferenceCategory>
 </PreferenceScreen>
