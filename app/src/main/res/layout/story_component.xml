@@ -53,13 +53,14 @@
                 android:layout_height="18dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
+                android:ellipsize="end"
                 android:textAppearance="@android:style/TextAppearance.Material.Small"
                 android:textStyle="italic"
                 app:layout_constraintBottom_toTopOf="@+id/storyProgress"
                 app:layout_constraintEnd_toStartOf="@+id/wordsText"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/authorText"
-                tools:text="in Test Canon"/>
+                tools:text="in Loooooooooooong Test Canon"/>
 
             <TextView
                 android:id="@+id/isCompletedText"
@@ -76,7 +77,7 @@
 
             <TextView
                 android:id="@+id/wordsText"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="18dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginEnd="8dp"
