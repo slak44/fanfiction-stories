@@ -17,7 +17,6 @@
             style="@style/AppTheme.Touchable"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -28,6 +27,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:textAppearance="@style/TextAppearance.AppCompat.Headline"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -93,7 +93,6 @@
                 style="@style/AppTheme.NotTouchable"
                 android:layout_width="match_parent"
                 android:layout_height="4dp"
-                android:layout_marginBottom="1dp"
                 android:max="100"
                 android:paddingEnd="0dp"
                 android:paddingStart="0dp"
