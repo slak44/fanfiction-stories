@@ -10,7 +10,7 @@
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/storyMainContent"
@@ -41,7 +41,6 @@
                 android:layout_marginStart="8dp"
                 android:textAppearance="@android:style/TextAppearance.Material.Small"
                 android:textStyle="italic"
-                app:layout_constraintBottom_toTopOf="@+id/canonText"
                 app:layout_constraintEnd_toStartOf="@+id/isCompletedText"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/titleText"
@@ -51,12 +50,10 @@
                 android:id="@+id/canonText"
                 android:layout_width="0dp"
                 android:layout_height="18dp"
-                android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
                 android:ellipsize="end"
                 android:textAppearance="@android:style/TextAppearance.Material.Small"
                 android:textStyle="italic"
-                app:layout_constraintBottom_toTopOf="@+id/storyProgress"
                 app:layout_constraintEnd_toStartOf="@+id/wordsText"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/authorText"
@@ -69,7 +66,6 @@
                 android:layout_marginEnd="8dp"
                 android:gravity="end"
                 android:text="@string/completed"
-                app:layout_constraintBottom_toTopOf="@+id/wordsText"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/authorText"
                 app:layout_constraintTop_toBottomOf="@+id/titleText"
@@ -79,10 +75,8 @@
                 android:id="@+id/wordsText"
                 android:layout_width="wrap_content"
                 android:layout_height="18dp"
-                android:layout_marginBottom="8dp"
                 android:layout_marginEnd="8dp"
                 android:gravity="end"
-                app:layout_constraintBottom_toTopOf="@+id/storyProgress"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/canonText"
                 app:layout_constraintTop_toBottomOf="@+id/isCompletedText"
@@ -93,6 +87,7 @@
                 style="@style/AppTheme.NotTouchable"
                 android:layout_width="match_parent"
                 android:layout_height="4dp"
+                android:layout_marginTop="8dp"
                 android:max="100"
                 android:paddingEnd="0dp"
                 android:paddingStart="0dp"
@@ -100,6 +95,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/canonText"
                 tools:progress="50"/>
 
         </android.support.constraint.ConstraintLayout>
@@ -108,7 +104,6 @@
             android:id="@+id/storyDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
