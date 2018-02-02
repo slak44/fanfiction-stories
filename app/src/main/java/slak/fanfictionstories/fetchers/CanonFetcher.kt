@@ -262,7 +262,7 @@ class CanonFetcher(val details: Details) : Parcelable {
           "author" to authorName,
           "title" to title,
           "chapterTitles" to ""
-      ), false)
+      ))
     }.collect(Collectors.toList())
 
     val centerElem = doc.select("#filters + center")

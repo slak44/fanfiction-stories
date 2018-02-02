@@ -100,7 +100,7 @@ private fun parseStoryElement(it: Element,
       "authorid" to if (a.isPresent) a.get().first else Fetcher.authorIdFromAuthor(it.children()[2]),
       "title" to it.select("a.stitle").first().textNodes().last().text(),
       "chapterTitles" to ""
-  ), fromDb = false)
+  ))
 }
 
 private fun fetchAuthorPage(authorId: Long, n: Notifications): Deferred<String> =

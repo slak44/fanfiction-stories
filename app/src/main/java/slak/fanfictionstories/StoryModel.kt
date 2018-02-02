@@ -47,10 +47,7 @@ enum class StoryStatus {
   }
 }
 
-class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable {
-  // DB primary key. Does not exist if story not from db
-  val _id: Optional<Long> = if (fromDb) (src["_id"] as Long).opt() else Optional.empty()
-
+class StoryModel(val src: MutableMap<String, Any>) : Parcelable {
   var status = StoryStatus.fromString(src["status"] as String)
     set(value) {
       field = value
@@ -139,7 +136,6 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     parcel.writeSerializable(HashMap(src))
-    parcel.writeInt(if (_id.isPresent) 1 else 0)
   }
 
   override fun describeContents(): Int = 0
@@ -149,8 +145,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
       override fun createFromParcel(parcel: Parcel): StoryModel {
         @Suppress("unchecked_cast")
         val map = parcel.readSerializable() as HashMap<String, Any>
-        val fromDb = parcel.readInt() == 1
-        return StoryModel(map, fromDb)
+        return StoryModel(map)
       }
 
       override fun newArray(size: Int): Array<StoryModel?> = arrayOfNulls(size)
@@ -159,7 +154,7 @@ class StoryModel(val src: MutableMap<String, Any>, fromDb: Boolean) : Parcelable
     val dbParser = object : MapRowParser<StoryModel> {
       override fun parseRow(columns: Map<String, Any?>) = StoryModel(
           // We are allowed to do this because nothing in the DB is null
-          columns.entries.map { it.key to it.value!! }.toMap().toMutableMap(), fromDb = true)
+          columns.entries.map { it.key to it.value!! }.toMap().toMutableMap())
     }
   }
 }

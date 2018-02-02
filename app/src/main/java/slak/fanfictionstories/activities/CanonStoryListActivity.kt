@@ -95,7 +95,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
       it.src["scrollProgress"] = model.src["scrollProgress"] as Double
       it.src["scrollAbsolute"] = model.src["scrollAbsolute"] as Double
       it.src["currentChapter"] = model.src["currentChapter"] as Long
-      return@map StoryModel(it.src, it._id.isPresent)
+      return@map StoryModel(it.src)
     }
     if (pageData.isEmpty()) return@launch
     adapter.addData(Right(resources.getString(R.string.page_x, page)))

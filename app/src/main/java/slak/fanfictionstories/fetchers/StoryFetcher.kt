@@ -57,7 +57,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     metadataChapter = parseChapter(html).opt()
     val meta = parseMetadata(html, storyId)
     metadata = meta.opt()
-    return@async2 StoryModel(metadata.get(), fromDb = false)
+    return@async2 StoryModel(metadata.get())
   }
 
   /**
@@ -77,7 +77,7 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
       meta["scrollAbsolute"] = oldModel.src["scrollAbsolute"] as Double
     }
     meta["status"] = oldModel.status.toString()
-    val newModel = StoryModel(meta, fromDb = false)
+    val newModel = StoryModel(meta)
     // Skip non-locals from global updates
     if (oldModel.status != StoryStatus.LOCAL) return@async2 false
     // Stories can't get un-updated

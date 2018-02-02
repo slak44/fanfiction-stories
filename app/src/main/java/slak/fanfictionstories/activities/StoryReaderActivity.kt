@@ -229,7 +229,7 @@ class StoryReaderActivity : ActivityWithStatic() {
     val text = fetcher!!.parseChapter(chapterHtmlText)
     target.printWriter().use { it.print(text) }
     if (model.status == StoryStatus.TRANSIENT) {
-      model = StoryModel(parseMetadata(chapterHtmlText, storyId), fromDb = false)
+      model = StoryModel(parseMetadata(chapterHtmlText, storyId))
       model.status = StoryStatus.REMOTE
       fetcher!!.setMetadata(model)
       database.use { insertOrThrow("stories", *model.toKvPairs()) }
