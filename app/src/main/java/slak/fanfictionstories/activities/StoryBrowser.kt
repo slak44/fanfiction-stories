@@ -49,7 +49,7 @@ class SelectCategoryActivity : ActivityWithStatic() {
   }
 }
 
-class BrowseCategoryActivity : ActivityWithStatic() {
+class BrowseCategoryActivity : LoadingActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_browse_category)
@@ -57,6 +57,7 @@ class BrowseCategoryActivity : ActivityWithStatic() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     val parentLink = intent.extras?.getParcelable<CategoryLink>(INTENT_LINK_DATA) ?: return
     title = parentLink.displayName
+    showLoading()
     launch(CommonPool) {
       val links = fetchCategoryData(this@BrowseCategoryActivity, parentLink.urlComponent).await()
       val adapter = ArrayAdapter<String>(
@@ -72,6 +73,7 @@ class BrowseCategoryActivity : ActivityWithStatic() {
           intent.putExtra(INTENT_LINK_DATA, links[idx] as Parcelable)
           startActivity(intent)
         }
+        hideLoading()
       }
     }
   }

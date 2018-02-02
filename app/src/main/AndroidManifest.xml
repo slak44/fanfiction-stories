@@ -100,6 +100,9 @@
             android:label="@string/title_activity_author"
             android:theme="@style/AppTheme">
         </activity>
+        <activity
+            android:name=".utility.LoadingActivity"
+            android:theme="@style/AppTheme"/>
     </application>
 
 </manifest>
