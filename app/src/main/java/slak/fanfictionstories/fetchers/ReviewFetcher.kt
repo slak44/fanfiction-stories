@@ -58,10 +58,16 @@ private fun parseReviewPage(storyId: Long, html: String): Pair<List<Review>, Int
   }
   val pageNav = doc.select("#content_wrapper_inner > center")
   if (pageNav.size == 0) return Pair(list, 1)
-  val navLinks = pageNav[0].select("a")
-  // The href is like: /r/9156000/0/245/, we want the page nr, which is the last nr
-  val lastPageNr = navLinks[navLinks.size - 2].attr("href")
-      .trim('/').split("/").last().toInt()
+  val navLinks = pageNav[0].children().filter {
+    !it.text().contains(Regex("Next|Prev"))
+  }
+  val lastPageNr = if (navLinks.last().`is`("a")) {
+    // The href is like: /r/9156000/0/245/, we want the page nr, which is the last nr
+    navLinks.last().attr("href").trim('/').split("/").last().toInt()
+  } else {
+    // If it's not a link, it's text
+    navLinks.last().text().toInt()
+  }
   return Pair(list, lastPageNr)
 }
 
