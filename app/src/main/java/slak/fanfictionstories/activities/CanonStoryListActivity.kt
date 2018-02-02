@@ -57,9 +57,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
       onRestoreInstanceState(savedInstanceState)
     }
 
-    StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ ->
-      this@CanonStoryListActivity.startActivity(intent)
-    })
+    StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ -> startActivity(intent) })
 
     infinitePageScroll(canonStoryListView, layoutManager) {
       addPage(++currentPage)
