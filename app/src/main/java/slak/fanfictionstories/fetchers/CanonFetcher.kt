@@ -12,6 +12,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import org.jsoup.nodes.TextNode
+import org.jsoup.parser.Parser
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.fetchers.Fetcher.TAG
@@ -212,7 +213,7 @@ class CanonFetcher(val details: Details) : Parcelable {
       // Looks like /s/12656819/1/For-the-Motherland, pick the id
       val storyId = it.child(0).attr("href").split('/')[2].toLong()
       // The one and only text node there is the title
-      val title = it.child(0).textNodes()[0].toString()
+      val title = Parser.unescapeEntities(it.child(0).text(), false)
 
       // The author 'a' element is the second last before the reviews
       val authorAnchor = it.select("a:not(.reviews)").last()
