@@ -23,7 +23,7 @@ import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 import java.util.*
 
-class CanonStoryListActivity : ActivityWithStatic() {
+class CanonStoryListActivity : LoadingActivity() {
   companion object {
     private const val CURRENT_PAGE_RESTORE = "current_page"
     private const val FETCHER_RESTORE = "canon_fetcher"
@@ -87,6 +87,8 @@ class CanonStoryListActivity : ActivityWithStatic() {
   }
 
   private fun addPage(page: Int) = launch(UI) {
+    // FIXME: make it more clear we're loading a new page
+    showLoading()
     if (!userStories.isPresent) userStories = database.getStories().await().opt()
     val pageData = fetcher.get(page, this@CanonStoryListActivity).await().map {
       val model = userStories.get().find { st -> st.storyIdRaw == it.storyIdRaw } ?: return@map it
@@ -99,6 +101,7 @@ class CanonStoryListActivity : ActivityWithStatic() {
     adapter.addData(Right(resources.getString(R.string.page_x, page)))
     adapter.addData(pageData.map { Left(it) })
     setAppbarText()
+    hideLoading()
   }
 
   private fun setAppbarText() {

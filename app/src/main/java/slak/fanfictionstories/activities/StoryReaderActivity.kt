@@ -25,7 +25,7 @@ import slak.fanfictionstories.fetchers.StoryFetcher
 import slak.fanfictionstories.utility.*
 import java.io.File
 
-class StoryReaderActivity : ActivityWithStatic() {
+class StoryReaderActivity : LoadingActivity() {
   companion object {
     const val INTENT_STORY_MODEL = "bundle"
     private const val RESTORE_STORY_MODEL = "story_model"
@@ -58,9 +58,11 @@ class StoryReaderActivity : ActivityWithStatic() {
       restoreScrollStatus()
     }
 
+    showLoading()
     launch(UI) {
       initText(currentChapter).await()
       restoreScrollStatus()
+      hideLoading()
     }
 
     prevChapterBtn.setOnClickListener {
@@ -223,7 +225,6 @@ class StoryReaderActivity : ActivityWithStatic() {
   private fun downloadChapter(storyId: Long,
                               chapter: Int, target: File): Deferred<String> = async2(CommonPool) {
     if (fetcher == null) fetcher = StoryFetcher(storyId, this@StoryReaderActivity)
-    // FIXME show loading thingy, this may not be fast
     val n = Notifications(this@StoryReaderActivity, Notifications.Kind.DOWNLOADING)
     val chapterHtmlText = fetcher!!.fetchChapter(chapter, n).await()
     val text = fetcher!!.parseChapter(chapterHtmlText)

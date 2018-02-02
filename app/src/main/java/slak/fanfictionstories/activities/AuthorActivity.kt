@@ -21,13 +21,10 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Author
 import slak.fanfictionstories.fetchers.getAuthor
-import slak.fanfictionstories.utility.HrSpan
-import slak.fanfictionstories.utility.iconTint
-import slak.fanfictionstories.utility.opt
-import slak.fanfictionstories.utility.orElseThrow
+import slak.fanfictionstories.utility.*
 import java.util.*
 
-class AuthorActivity : AppCompatActivity() {
+class AuthorActivity : LoadingActivity(1) {
   companion object {
     const val INTENT_AUTHOR_ID = "author_id_intent"
     const val INTENT_AUTHOR_NAME = "author_name_intent"
@@ -62,14 +59,15 @@ class AuthorActivity : AppCompatActivity() {
     container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
     tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
 
+    showLoading()
     launch(CommonPool) {
       val restoreAuthor = savedInstanceState?.getParcelable<Author>(RESTORE_AUTHOR)?.opt()
-      // FIXME: insert progress bar here
       author = restoreAuthor ?: getAuthor(this@AuthorActivity, authorId).await().opt()
       launch(UI) {
         if (menu.isPresent) onPrepareOptionsMenu(menu.get())
         sectionsPagerAdapter = SectionsPagerAdapter(supportFragmentManager)
         container.adapter = sectionsPagerAdapter
+        hideLoading()
       }
     }
   }

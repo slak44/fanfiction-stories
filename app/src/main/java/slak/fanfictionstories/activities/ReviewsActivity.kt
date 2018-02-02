@@ -18,12 +18,13 @@ import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.fetchers.Review
 import slak.fanfictionstories.fetchers.getReviews
 import slak.fanfictionstories.utility.ActivityWithStatic
+import slak.fanfictionstories.utility.LoadingActivity
 import slak.fanfictionstories.utility.iconTint
 import slak.fanfictionstories.utility.infinitePageScroll
 import java.text.SimpleDateFormat
 import java.util.*
 
-class ReviewsActivity : ActivityWithStatic() {
+class ReviewsActivity : LoadingActivity() {
   companion object {
     const val INTENT_STORY_MODEL = "story_model_extra"
     const val INTENT_TARGET_CHAPTER = "target_chapter_extra"
@@ -74,6 +75,7 @@ class ReviewsActivity : ActivityWithStatic() {
   }
 
   private fun addPage(page: Int) = launch(UI) {
+    showLoading()
     if (totalPages != 0 && page >= totalPages) return@launch
     val (list, pages) =
         getReviews(this@ReviewsActivity, model.storyIdRaw, chapter, page).await()
@@ -81,6 +83,7 @@ class ReviewsActivity : ActivityWithStatic() {
     if (pages == -1) noReviewsText.visibility = View.VISIBLE
     else noReviewsText.visibility = View.INVISIBLE
     adapter.addReviews(list)
+    hideLoading()
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
