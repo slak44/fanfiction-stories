@@ -145,6 +145,19 @@
     <string name="report">Report</string>
     <string name="guest">Guest</string>
     <string name="no_reviews">No reviews found</string>
+    <string name="dialog_report_abuse">Report Review for Abuse</string>
+    <string name="abuse_type">Abuse Type</string>
+    <string-array name="abuse_types_texts">
+        <item>Language: contains cursing or offensive phrases</item>
+        <item>Spam: not relevant to story</item>
+        <item>Other</item>
+    </string-array>
+    <string-array name="abuse_types_values" translatable="false">
+        <item>Language: contains cursing or offensive phrases.</item>
+        <item>Spam: not relevant to story.</item>
+        <item>Other.</item>
+    </string-array>
+    <string name="description">Description</string>
 
     <!-- Author page -->
     <string name="tab_author_bio">Bio</string>

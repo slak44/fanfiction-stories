@@ -9,6 +9,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
 import kotlinx.android.synthetic.main.activity_reviews.*
+import kotlinx.android.synthetic.main.dialog_report_review.view.*
 import kotlinx.android.synthetic.main.review_component.view.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
@@ -142,31 +143,51 @@ class ReviewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     return ReviewHolder(LayoutInflater.from(parent.context)
         .inflate(R.layout.review_component, parent, false) as CardView)
   }
-  override fun onBindViewHolder(holder: RecyclerView.ViewHolder, pos: Int) {
-    with((holder as ReviewHolder).view) {
-      reviewAuthor.text = reviews[pos].author
-      reviewChapter.text = resources.getString(R.string.chapter_x, reviews[pos].chapter)
+
+  private fun bindReviewProps(view: CardView, review: Review) {
+    with(view) {
+      reviewAuthor.text = review.author
+      reviewChapter.text = resources.getString(R.string.chapter_x, review.chapter)
       reviewDate.text = SimpleDateFormat.getDateInstance()
-          .format(Date(reviews[pos].unixTimeSeconds * 1000))
-      reviewContent.text = reviews[pos].content
+          .format(Date(review.unixTimeSeconds * 1000))
+      reviewContent.text = review.content
       viewAuthorBtn.setOnClickListener {
         val intent = Intent(context, AuthorActivity::class.java)
-        intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, reviews[pos].authorId)
-        intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, reviews[pos].author)
+        intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, review.authorId)
+        intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, review.author)
         startActivity(context, intent, null)
       }
-      replyBtn.setOnClickListener {
-        // FIXME: reply to review
-      }
-      reportBtn.setOnClickListener {
-        // FIXME: report review for abuse
-      }
-      if (reviews[pos].authorId == -1L) {
+      if (review.authorId == -1L) {
         viewAuthorBtn.visibility = View.GONE
         replyBtn.visibility = View.GONE
       } else {
         viewAuthorBtn.visibility = View.VISIBLE
         replyBtn.visibility = View.VISIBLE
+      }
+    }
+  }
+
+  override fun onBindViewHolder(holder: RecyclerView.ViewHolder, pos: Int) {
+    with((holder as ReviewHolder).view) {
+      bindReviewProps(this, reviews[pos])
+      replyBtn.setOnClickListener {
+        // FIXME: reply to review
+      }
+      reportBtn.setOnClickListener {
+        val layout = LayoutInflater.from(context)
+            .inflate(R.layout.dialog_report_review, null, false)
+        // We want the margin, so invisible
+        layout.offendingReview.divider.visibility = View.INVISIBLE
+        layout.offendingReview.btnBar.visibility = View.GONE
+        layout.offendingReview.elevation = 20F // FIXME magic arbitrary number
+        bindReviewProps(layout.offendingReview as CardView, reviews[pos])
+        AlertDialog.Builder(context)
+            .setTitle(R.string.dialog_report_abuse)
+            .setView(layout)
+            .setPositiveButton(R.string.report, { _, _ ->
+              // FIXME: send review
+            })
+            .show()
       }
       forceLayout()
     }
