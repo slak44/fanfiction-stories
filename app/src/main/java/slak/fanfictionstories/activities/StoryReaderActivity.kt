@@ -34,6 +34,9 @@ import slak.fanfictionstories.fetchers.StoryFetcher
 import slak.fanfictionstories.utility.*
 import java.io.File
 
+/**
+ * Like [TextView], but with faster, asynchronous layout creation for large blocks of static text.
+ */
 private class FastTextView : View {
   companion object {
     private const val TAG = "FastTextView"
@@ -43,6 +46,14 @@ private class FastTextView : View {
   constructor(ctx: Context, set: AttributeSet) : super(ctx, set)
   constructor(ctx: Context, set: AttributeSet, defStyle: Int) : super(ctx, set, defStyle)
 
+  /**
+   * This view's layout. Is null unless [setText] was called.
+   *
+   * Warning: accessing this property while [setText] runs is unwise, due to the possibility of a
+   * race condition.
+   * @see setText
+   * @see setOnTextChangeListener
+   */
   var staticLayout: StaticLayout? = null
     private set
 
@@ -54,6 +65,10 @@ private class FastTextView : View {
     onTextChange = listener
   }
 
+  /**
+   * Lays out the given [Spanned], and creates [staticLayout]. We use [async2] so that layout
+   * creation (the most expensive operation when there's lots of text) does not block the UI.
+   */
   fun setText(s: Spanned, theme: Resources.Theme) = async2(CommonPool) {
     if (!ViewCompat.isLaidOut(this@FastTextView)) {
       Log.w(TAG, "Forcing layout, setText was called before we were laid out")
