@@ -44,7 +44,7 @@
             android:textAppearance="@android:style/TextAppearance.Material.Small"
             tools:text="Chapter 5 of 12"/>
 
-        <slak.fanfictionstories.activities.FastTextView
+        <slak.fanfictionstories.utility.FastTextView
             android:id="@+id/chapterText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
