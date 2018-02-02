@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+    android:paddingBottom="8dp"
     tools:context="slak.fanfictionstories.activities.ReviewsActivity">
 
     <android.support.design.widget.AppBarLayout
@@ -29,10 +30,12 @@
         android:id="@+id/reviewList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="?attr/actionBarSize"
         android:layout_margin="4dp"
+        android:paddingBottom="?attr/actionBarSize"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appBar"
+        app:layout_constraintVertical_bias="0.0"
         tools:listitem="@layout/review_component">
 
     </android.support.v7.widget.RecyclerView>
