@@ -139,7 +139,7 @@
 
     <!-- Story reviews -->
     <string name="reviews_for">Reviews for %s</string>
-    <string name="chapter_x">For chapter %d</string>
+    <string name="chapter_x">For Chapter %d</string>
     <string name="all_chapters">All Chapters</string>
     <string name="reply">Reply</string>
     <string name="report">Report</string>
