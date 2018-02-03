@@ -45,7 +45,12 @@ enum class TimeRange(val ffnetValue: String) {
 enum class Language(val ffnetValue: String) {
   ALL(""), ENGLISH("1"), SPANISH("2"), FRENCH("3"), GERMAN("4"), CHINESE("5"), DUTCH("7"),
   PORTUGUESE("8"), RUSSIAN("10"), ITALIAN("11"), POLISH("13"), HUNGARIAN("14"), FINNISH("20"),
-  CZECH("31"), UKRAINIAN("44");
+  CZECH("31"), UKRAINIAN("44"), SWEDISH("17"), INDONESIAN("32"),
+  DANISH("19"), TURKISH("30"), NORWEGIAN("18"), HEBREW("15"), CATALAN("34"),
+  FILIPINO("21"), GREEK("26"), JAPANESE("6"), ROMANIAN("27"), BULGARIAN("12"),
+  KOREAN("36"), CROATIAN("33"), VIETNAMESE("37"), ARABIC("16"), LATIN("35"),
+  AFRIKAANS("45"), ESTONIAN("41"), MALAYSIAN("42"), ESPERANTO("22"), ALBANIAN("28"),
+  SLOVAK("43"), ICELANDIC("40"), SERBIAN("29"), PERSIAN("25"), HINDI("23");
 
   fun queryParam(): String = "lan=$ffnetValue"
 }
