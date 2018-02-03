@@ -291,7 +291,7 @@ fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage:
       val visibleItemCount = lm.childCount
       val totalItemCount = lm.itemCount
       val pastVisibleItems = lm.findFirstVisibleItemPosition()
-      if ((visibleItemCount + pastVisibleItems) >= totalItemCount) {
+      if ((visibleItemCount + pastVisibleItems) >= totalItemCount - 1) {
         // There are lots of scroll events, so use a lock to make sure we don't overdo it
         if (addPageLock.isLocked) return
         launch(CommonPool) {
