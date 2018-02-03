@@ -100,7 +100,9 @@ class StoryReaderActivity : LoadingActivity() {
   private fun showChapterSelectDialog() {
     AlertDialog.Builder(this@StoryReaderActivity)
         .setTitle(R.string.select_chapter)
-        .setItems(model.chapterTitles.toTypedArray(), { dialog, which: Int ->
+        .setItems(model.chapterTitles.mapIndexed {
+          idx, chapterTitle -> "${idx + 1}. $chapterTitle"
+        }.toTypedArray(), { dialog, which: Int ->
           dialog.dismiss()
           // This means 'go to same chapter', so do nothing
           if (currentChapter == which + 1) return@setItems

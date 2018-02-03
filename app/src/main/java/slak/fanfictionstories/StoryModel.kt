@@ -76,9 +76,7 @@ class StoryModel(val src: MutableMap<String, Any>) : Parcelable {
   val chapterTitlesRaw: String = src["chapterTitles"] as String
 
   // UI data
-  val chapterTitles = chapterTitlesRaw.split(CHAPTER_TITLE_SEPARATOR).mapIndexed {
-    idx, chapterTitle -> "${idx + 1}. $chapterTitle"
-  }
+  val chapterTitles = chapterTitlesRaw.split(CHAPTER_TITLE_SEPARATOR)
   val chapterCount: Int = (src["chapters"] as Long).toInt()
   val title = src["title"] as String
   val summary = src["summary"] as String
