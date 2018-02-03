@@ -111,7 +111,7 @@ class StoryReaderActivity : LoadingActivity() {
 
   private fun initText(chapterToRead: Int) = async2(CommonPool) {
     val text: String = readChapter(model.storyIdRaw, chapterToRead).await()
-    val chapterWordCount = autoSuffixNumber(text.split(Regex("\\w+")).size)
+    val chapterWordCount = autoSuffixNumber(text.split(" ").size)
 
     async2(UI) {
       chapterWordCountText.text = resources.getString(R.string.x_words, chapterWordCount)
