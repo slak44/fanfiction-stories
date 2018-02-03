@@ -336,7 +336,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     }
     clearData()
     val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
-    groupStories(toData, arrangement.groupStrategy).forEach {
+    groupStories(toData, arrangement.groupStrategy).toSortedMap().forEach {
       val ordered = orderStories(it.value, arrangement.orderStrategy, arrangement.orderDirection)
       addData(listOf(T2(it.key), *ordered.map { T1(it) }.toTypedArray()))
     }
