@@ -250,7 +250,7 @@ class CanonFetcher(val details: Details) : Parcelable {
 
       // There is only one such div
       val summaryMetaDiv = it.select("div.z-indent.z-padtop")[0]
-      val summary = summaryMetaDiv.textNodes()[0].toString()
+      val summary = Parser.unescapeEntities(summaryMetaDiv.textNodes()[0].toString(), false)
       val metaSection = summaryMetaDiv.child(0).html()
       val meta = parseStoryMetadata(metaSection)
       val isCompleted = metaSection.indexOf("Complete") > -1
