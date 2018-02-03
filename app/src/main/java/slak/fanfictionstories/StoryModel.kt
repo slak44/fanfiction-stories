@@ -130,7 +130,8 @@ class StoryModel(val src: MutableMap<String, Any>) : Parcelable {
         ?.split(TEMP_SEPARATOR)
         ?.map { Genre.fromString(it) }
         ?: throw IllegalStateException("There are no genres")
-
+  val characterList: List<String> get() =
+    charactersRaw.replace("[", "").split(", ", "] ")
 
   // Dates
   val publishDateSeconds: Long = src["publishDate"] as Long
