@@ -8,7 +8,9 @@ import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
 import android.widget.Switch
 import org.jetbrains.anko.db.MapRowParser
+import slak.fanfictionstories.fetchers.Fetcher
 import slak.fanfictionstories.fetchers.Fetcher.CHAPTER_TITLE_SEPARATOR
+import slak.fanfictionstories.fetchers.Genre
 import slak.fanfictionstories.utility.Prefs
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.autoSuffixNumber
@@ -47,6 +49,9 @@ enum class StoryStatus {
   }
 }
 
+private const val TEMP_SEPARATOR = "temporary_separator"
+
+@Suppress("MemberVisibilityCanPrivate")
 class StoryModel(val src: MutableMap<String, Any>) : Parcelable {
   var status = StoryStatus.fromString(src["status"] as String)
     set(value) {
@@ -63,12 +68,12 @@ class StoryModel(val src: MutableMap<String, Any>) : Parcelable {
   val authorRaw = src["author"] as String
   val authorIdRaw = src["authorid"] as Long
   val categoryRaw = src["category"] as String
-  private val canonRaw = src["canon"] as String
-  private val genresRaw = src["genres"] as String
-  private val charactersRaw = src["characters"] as String
-  private val ratingRaw = src["rating"] as String
-  private val scrollProgress: Double = src["scrollProgress"] as Double
-  private val chapterTitlesRaw: String = src["chapterTitles"] as String
+  val genresRaw = src["genres"] as String
+  val canonRaw = src["canon"] as String
+  val charactersRaw = src["characters"] as String
+  val ratingRaw = src["rating"] as String
+  val scrollProgress: Double = src["scrollProgress"] as Double
+  val chapterTitlesRaw: String = src["chapterTitles"] as String
 
   // UI data
   val chapterTitles = chapterTitlesRaw.split(CHAPTER_TITLE_SEPARATOR).mapIndexed {
@@ -117,11 +122,18 @@ class StoryModel(val src: MutableMap<String, Any>) : Parcelable {
     // Otherwise, list current chapter out of total
     else return Static.res.getString(R.string.chapter_progress, currentChapter, chapterCount)
   }
+  val genreList: List<Genre> get() =
+    (if (genresRaw == Static.res.getString(R.string.none)) null else genresRaw)
+        ?.replace("/", TEMP_SEPARATOR)
+        // Take special care of "Hurt/Comfort" since it contains a slash
+        ?.replace("Hurt${TEMP_SEPARATOR}Comfort", "Hurt/Comfort")
+        ?.split(TEMP_SEPARATOR)
+        ?.map { Genre.fromString(it) }
+        ?: throw IllegalStateException("There are no genres")
+
 
   // Dates
-  @Suppress("MemberVisibilityCanPrivate")
   val publishDateSeconds: Long = src["publishDate"] as Long
-  @Suppress("MemberVisibilityCanPrivate")
   val updateDateSeconds: Long = src["updateDate"] as Long
   private val publishDateFormatted: String
     get() = SimpleDateFormat.getDateInstance().format(Date(publishDateSeconds * 1000))
@@ -161,7 +173,7 @@ class StoryModel(val src: MutableMap<String, Any>) : Parcelable {
 
 enum class GroupStrategy {
   // Group by property
-  CANON, AUTHOR, CATEGORY, STATUS, RATING, LANGUAGE, COMPLETION,
+  CANON, AUTHOR, CATEGORY, STATUS, RATING, LANGUAGE, COMPLETION, GENRE,
   // Don't do grouping
   NONE;
 
@@ -173,6 +185,7 @@ enum class GroupStrategy {
     RATING -> R.string.group_rating
     LANGUAGE -> R.string.group_language
     COMPLETION -> R.string.group_completion
+    GENRE -> R.string.group_genre
     NONE -> R.string.group_none
   })
 
@@ -189,6 +202,16 @@ fun groupStories(stories: MutableList<StoryModel>,
                  strategy: GroupStrategy): Map<String, MutableList<StoryModel>> {
   if (strategy == GroupStrategy.NONE)
     return mapOf(Static.res.getString(R.string.all_stories) to stories)
+  if (strategy == GroupStrategy.GENRE) {
+    val map = hashMapOf<String, MutableList<StoryModel>>()
+    Genre.values().forEach { map[it.toUIString()] = mutableListOf() }
+    val none = Static.res.getString(R.string.none)
+    map[none] = stories.filter { it.genresRaw == none }.toMutableList()
+    stories.filter { it.genresRaw != none }
+        .forEach { story -> story.genreList.forEach { map[it.toUIString()]!!.add(story) } }
+    Genre.values().forEach { if (map[it.toUIString()]!!.isEmpty()) map.remove(it.toUIString()) }
+    return map
+  }
   val srcKey = when (strategy) {
     GroupStrategy.CANON -> "canon"
     GroupStrategy.AUTHOR -> "author"
@@ -197,6 +220,7 @@ fun groupStories(stories: MutableList<StoryModel>,
     GroupStrategy.RATING -> "rating"
     GroupStrategy.LANGUAGE -> "language"
     GroupStrategy.COMPLETION -> "isCompleted"
+    GroupStrategy.GENRE -> throw IllegalStateException("Unreachable code, fast-pathed above")
     GroupStrategy.NONE -> throw IllegalStateException("Unreachable code, fast-pathed above")
   }
   val map = hashMapOf<String, MutableList<StoryModel>>()

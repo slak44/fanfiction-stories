@@ -56,6 +56,35 @@ enum class Genre(val ffnetValue: String) {
   PARODY("9"), POETRY("5"), ROMANCE("2"), SCI_FI("13"), SPIRITUAL("15"), SUPERNATURAL("11"),
   SUSPENSE("12"), TRAGEDY("16"), WESTERN("17");
 
+  companion object {
+    fun fromString(s: String): Genre = when (s) {
+      "Adventure" -> ADVENTURE
+      "Angst" -> ANGST
+      "Crime" -> CRIME
+      "Drama" -> DRAMA
+      "Family" -> FAMILY
+      "Fantasy" -> FANTASY
+      "Friendship" -> FRIENDSHIP
+      "General" -> GENERAL
+      "Horror" -> HORROR
+      "Humor" -> HUMOR
+      "Hurt/Comfort" -> HURT_COMFORT
+      "Mystery" -> MYSTERY
+      "Parody" -> PARODY
+      "Poetry" -> POETRY
+      "Romance" -> ROMANCE
+      "Sci-Fi" -> SCI_FI
+      "Spiritual" -> SPIRITUAL
+      "Supernatural" -> SUPERNATURAL
+      "Suspense" -> SUSPENSE
+      "Tragedy" -> TRAGEDY
+      "Western" -> WESTERN
+      else -> throw IllegalArgumentException("No such genre $s")
+    }
+  }
+
+  fun toUIString(): String = Static.res.getStringArray(R.array.genres)[ordinal]
+
   fun queryParam(which: Int): String = "g$which=$ffnetValue"
 }
 
