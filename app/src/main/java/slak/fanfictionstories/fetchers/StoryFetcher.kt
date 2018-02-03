@@ -12,13 +12,11 @@ import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
-import slak.fanfictionstories.fetchers.Fetcher.STORAGE_WAIT_DELAY_SECONDS
 import slak.fanfictionstories.fetchers.Fetcher.TAG
 import slak.fanfictionstories.fetchers.Fetcher.parseMetadata
 import slak.fanfictionstories.fetchers.Fetcher.regexOpts
 import slak.fanfictionstories.utility.*
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 fun getFullStory(ctx: Context, storyId: Long,
                  n: Notifications): Deferred<Optional<StoryModel>> = async2(CommonPool) {
@@ -115,17 +113,6 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
       val isWriting = writeStory(ctx, storyId, chapters).await()
       if (!isWriting) return@async2 revertUpdate()
       return@async2 true
-    }
-    // At least one chapter has been changed/removed, redownload everything
-    var dir = storyDir(ctx, storyId)
-    // Keep trying if we can't get the story directory right now
-    var i = 0
-    while (!dir.isPresent) {
-      // Give up after 5 minutes
-      if (i == 60) return@async2 revertUpdate()
-      delay(STORAGE_WAIT_DELAY_SECONDS, TimeUnit.SECONDS)
-      dir = storyDir(ctx, storyId)
-      i++
     }
     val isWriting = writeStory(ctx, storyId, fetchChapters(n)).await()
     if (!isWriting) return@async2 revertUpdate()
