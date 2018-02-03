@@ -8,7 +8,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
-import kotlinx.android.synthetic.main.dialog_ffnet_filter.*
+import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
