@@ -7,18 +7,13 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import either.Either
-import either.Left
-import either.Right
-import either.fold
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.dialog_ffnet_filter.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import slak.fanfictionstories.R
-import slak.fanfictionstories.StoryAdapter
-import slak.fanfictionstories.StoryCardView
-import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 import java.util.*
@@ -52,7 +47,12 @@ class CanonStoryListActivity : LoadingActivity() {
     if (savedInstanceState == null) {
       setTitle(R.string.loading___)
       fetcher = CanonFetcher(CanonFetcher.Details(parentLink))
-      addPage(1)
+      launch(UI) {
+        showLoading()
+        adapter.addData(getPage(1).await())
+        setAppbarText()
+        hideLoading()
+      }
     } else {
       onRestoreInstanceState(savedInstanceState)
     }
@@ -60,7 +60,7 @@ class CanonStoryListActivity : LoadingActivity() {
     StoryCardView.createRightSwipeHelper(canonStoryListView, { intent, _ -> startActivity(intent) })
 
     infinitePageScroll(canonStoryListView, layoutManager) {
-      addPage(++currentPage)
+      adapter.addDeferredData(getPage(++currentPage))
     }
   }
 
@@ -68,9 +68,7 @@ class CanonStoryListActivity : LoadingActivity() {
     super.onSaveInstanceState(outState)
     outState.putInt(CURRENT_PAGE_RESTORE, currentPage)
     outState.putParcelable(FETCHER_RESTORE, fetcher)
-    outState.putParcelableArray(ADAPTER_DATA_RESTORE, adapter.getData().map {
-      it.fold({ EitherWrapper(it, null) }, { EitherWrapper(null, it) })
-    }.toTypedArray())
+    outState.putParcelableArray(ADAPTER_DATA_RESTORE, adapter.getData().toTypedArray())
   }
 
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -79,29 +77,23 @@ class CanonStoryListActivity : LoadingActivity() {
     fetcher = savedInstanceState.getParcelable(FETCHER_RESTORE)
     val data = savedInstanceState.getParcelableArray(ADAPTER_DATA_RESTORE)
     @Suppress("unchecked_cast")
-    adapter.addData(data.map {
-      it as EitherWrapper<StoryModel, String>
-      return@map if (it.l == null) Right(it.r) else Left(it.l)
-    } as List<Either<StoryModel, String>>)
+    adapter.addData((data as Array<StoryAdapterItem>).toList())
     setAppbarText()
+    hideLoading()
   }
 
-  private fun addPage(page: Int) = launch(UI) {
-    // FIXME: make it more clear we're loading a new page
-    showLoading()
+  private fun getPage(page: Int): Deferred<List<StoryAdapterItem>> = async2(CommonPool) {
     if (!userStories.isPresent) userStories = database.getStories().await().opt()
     val pageData = fetcher.get(page, this@CanonStoryListActivity).await().map {
-      val model = userStories.get().find { st -> st.storyIdRaw == it.storyIdRaw } ?: return@map it
+      val model = userStories.get().find { st -> st.storyIdRaw == it.storyIdRaw } ?: return@map T1(it)
       it.src["scrollProgress"] = model.src["scrollProgress"] as Double
       it.src["scrollAbsolute"] = model.src["scrollAbsolute"] as Double
       it.src["currentChapter"] = model.src["currentChapter"] as Long
-      return@map StoryModel(it.src)
+      return@map T1(StoryModel(it.src))
     }
-    if (pageData.isEmpty()) return@launch
-    adapter.addData(Right(resources.getString(R.string.page_x, page)))
-    adapter.addData(pageData.map { Left(it) })
-    setAppbarText()
-    hideLoading()
+    if (pageData.isEmpty()) return@async2 listOf<StoryAdapterItem>()
+    return@async2 listOf<StoryAdapterItem>(
+        T2(resources.getString(R.string.page_x, page)), *pageData.toTypedArray())
   }
 
   private fun setAppbarText() {
@@ -220,7 +212,11 @@ class CanonStoryListActivity : LoadingActivity() {
         .setPositiveButton(R.string.native_filter_btn, { dialog, _ ->
           adapter.clearData()
           currentPage = 1
-          addPage(1)
+          launch(UI) {
+            showLoading()
+            adapter.addData(getPage(1).await())
+            hideLoading()
+          }
           dialog.dismiss()
         })
         .setView(layout)

@@ -1,6 +1,7 @@
 package slak.fanfictionstories
 
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
@@ -13,13 +14,11 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
 import android.widget.TextView
-import either.Either
-import either.Left
-import either.Right
-import either.fold
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
@@ -27,7 +26,7 @@ import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.getFullStory
 import slak.fanfictionstories.utility.*
-import kotlin.Comparator
+import kotlin.coroutines.experimental.buildSequence
 
 class StoryCardView : CardView {
   constructor(context: Context) : super(context)
@@ -212,19 +211,30 @@ class StoryGroupTitle : TextView {
   }
 }
 
+private val counter = buildSequence {
+  var c = 0
+  while (true) yield(c++)
+}
+class Loading {
+  val id = counter.take(1).first()
+}
+typealias StoryAdapterItem = Either3<StoryModel, String, Loading>
 class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+  init { setHasStableIds(true) }
+
   class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
+  class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
 
   /**
    * Stores working data (stories and group titles).
    */
-  private val data: MutableList<Either<StoryModel, String>> = mutableListOf()
+  private val data: MutableList<StoryAdapterItem> = mutableListOf()
 
   /**
    * Get an immutable copy of [data], for serialization purposes.
    */
-  fun getData(): List<Either<StoryModel, String>> = data.toList()
+  fun getData(): List<StoryAdapterItem> = data.toList()
 
   /**
    * Clear adapter data, including any pending items.
@@ -239,18 +249,31 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     onSizeChange(0, 0)
   }
 
-  fun addData(storyOrTitle: Either<StoryModel, String>) {
-    data.add(storyOrTitle)
+  fun addData(item: StoryAdapterItem) {
+    data.add(item)
     notifyItemInserted(data.size - 1)
-    storyCount++
-    onSizeChange(storyCount, filteredCount)
+    if (item is T1) {
+      storyCount++
+      onSizeChange(storyCount, filteredCount)
+    }
   }
 
-  fun addData(storyOrTitleList: List<Either<StoryModel, String>>) {
-    data.addAll(storyOrTitleList)
-    notifyItemRangeInserted(data.size, storyOrTitleList.size)
-    storyCount += storyOrTitleList.size
-    onSizeChange(storyCount, filteredCount)
+  fun addData(items: List<StoryAdapterItem>) {
+    data.addAll(items)
+    notifyItemRangeInserted(data.size, items.size)
+    val newStories = items.count { it is T1 }
+    if (newStories > 0) {
+      storyCount += newStories
+      onSizeChange(storyCount, filteredCount)
+    }
+  }
+
+  fun addDeferredData(deferredList: Deferred<List<StoryAdapterItem>>) = launch(UI) {
+    addData(T3(Loading()))
+    val loaderIdx = data.size - 1
+    addData(deferredList.await())
+    data.removeAt(loaderIdx)
+    notifyItemRemoved(loaderIdx)
   }
 
   /**
@@ -266,7 +289,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    * @see undoHideStory
    */
   fun hideStory(position: Int, model: StoryModel) {
-    if (!data.contains(Left(model))) throw IllegalArgumentException("Model not part of the adapter")
+    if (!data.contains(T1(model))) throw IllegalArgumentException("Model not part of the adapter")
     pendingItems[model] = position
     data.removeAt(position)
     notifyItemRemoved(position)
@@ -282,7 +305,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    */
   fun undoHideStory(model: StoryModel) {
     val pos = pendingItems[model] ?: throw IllegalArgumentException("This model was never hidden")
-    data.add(pos, Left(model))
+    data.add(pos, T1(model))
     pendingItems.remove(model)
     notifyItemInserted(pos)
     storyCount++
@@ -315,7 +338,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
     groupStories(toData, arrangement.groupStrategy).forEach {
       val ordered = orderStories(it.value, arrangement.orderStrategy, arrangement.orderDirection)
-      addData(listOf(Right(it.key), *ordered.map { Left(it) }.toTypedArray()))
+      addData(listOf(T2(it.key), *ordered.map { T1(it) }.toTypedArray()))
     }
     filteredCount = storiesNotPending.size - toData.size
     storyCount = storiesNotPending.size
@@ -329,34 +352,37 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
           view.loadFromModel(model)
           view.setChildrenListeners(model, holder, this)
         },
-        { title -> (holder as TitleViewHolder).view.text = title }
+        { title -> (holder as TitleViewHolder).view.text = title },
+        { loading -> (holder as ProgressBarHolder).view.id = loading.id }
     )
   }
 
-  private var addedStory: Long = 0
-
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-    val view: View = if (viewType == 1) {
-      StoryGroupTitle(context)
-    } else {
-      // Only increase animation duration from stories
-      addedStory++
-      LayoutInflater.from(parent.context)
-          .inflate(R.layout.story_component, parent, false) as StoryCardView
+    val inflater = LayoutInflater.from(parent.context)
+    val view: View = when (viewType) {
+      0 -> inflater.inflate(R.layout.story_component, parent, false)
+      1 -> StoryGroupTitle(context)
+      2 -> inflater.inflate(R.layout.loading_circle_indeterminate, parent, false)
+      else -> throw IllegalStateException("getItemViewType out of sync with onCreateViewHolder")
     }
     view.alpha = 0F
     view.isDrawingCacheEnabled = true
     val fadeIn = ObjectAnimator.ofFloat(view, "alpha", 0.3F, 1F)
-    fadeIn.startDelay = Math.min(addedStory * 50, 250)
+    fadeIn.startDelay = 50
     fadeIn.start()
-    return if (viewType == 1) TitleViewHolder(view as StoryGroupTitle)
-    else StoryViewHolder(view as StoryCardView)
+    return when (viewType) {
+      0 -> StoryViewHolder(view as StoryCardView)
+      1 -> TitleViewHolder(view as StoryGroupTitle)
+      2 -> ProgressBarHolder(view as ProgressBar)
+      else -> throw IllegalStateException("getItemViewType out of sync with onCreateViewHolder")
+    }
   }
 
   override fun getItemCount(): Int = data.size
   override fun getItemId(position: Int): Long = data[position].fold(
-      { model -> model.storyIdRaw },
-      { title -> title.hashCode().toLong() }
+      { model -> model.storyIdRaw + (1 shl 15) },
+      { title -> title.hashCode().toLong() + (2 shl 15) },
+      { loading -> loading.id.toLong() + (3 shl 15) }
   )
-  override fun getItemViewType(position: Int): Int = data[position].fold({ return 0 }, { return 1 })
+  override fun getItemViewType(position: Int): Int = data[position].fold({ 0 }, { 1 }, { 2 })
 }

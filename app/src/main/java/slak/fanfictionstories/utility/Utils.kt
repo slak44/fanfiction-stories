@@ -235,8 +235,22 @@ fun autoSuffixNumber(value: Long): String {
  */
 fun autoSuffixNumber(value: Int): String = autoSuffixNumber(value.toLong())
 
+@Suppress("unused")
+sealed class Either3<out T1, out T2, out T3> : Parcelable
 @Parcelize @SuppressLint("ParcelCreator")
-data class EitherWrapper<out T1, out T2>(val l: @RawValue T1?, val r: @RawValue T2?) : Parcelable
+data class T1<out T>(val value: @RawValue T) : Either3<T, Nothing, Nothing>()
+@Parcelize @SuppressLint("ParcelCreator")
+data class T2<out T>(val value: @RawValue T) : Either3<Nothing, T, Nothing>()
+@Parcelize @SuppressLint("ParcelCreator")
+data class T3<out T>(val value: @RawValue T) : Either3<Nothing, Nothing, T>()
+
+inline fun <A1, A2, A3, R>
+    Either3<A1, A2, A3>.fold(t1: (A1) -> R, t2: (A2) -> R, t3: (A3) -> R): R =
+    when (this) {
+      is T1 -> t1(value)
+      is T2 -> t2(value)
+      is T3 -> t3(value)
+    }
 
 /**
  * Shorthand for `if (obj == null) Optional.empty() else Optional.of(obj)`
