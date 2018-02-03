@@ -36,7 +36,6 @@ val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMilli
 fun fetchCategoryData(ctx: Context, categoryUrlComponent: String): Deferred<Array<CategoryLink>>
     = async2(CommonPool) {
   categoryCache.hit(categoryUrlComponent).ifPresent2 { return@async2 it }
-  // FIXME be nice and show some spinny loady crap if we miss the cache
   val n = Notifications(ctx, Notifications.Kind.OTHER)
   val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/", n) {
     n.show(Static.res.getString(R.string.error_with_categories, categoryUrlComponent))
