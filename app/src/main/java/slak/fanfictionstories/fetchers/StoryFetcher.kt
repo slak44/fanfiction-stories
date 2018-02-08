@@ -39,6 +39,7 @@ fun getFullStory(ctx: Context, storyId: Long,
   return@async2 model.opt()
 }
 
+// FIXME this class is poorly designed. perhaps it should be just a bunch of stateless functions
 class StoryFetcher(private val storyId: Long, private val ctx: Context) {
   private var metadata: Optional<MutableMap<String, Any>> = Optional.empty()
   private var metadataChapter: Optional<String> = Optional.empty()
