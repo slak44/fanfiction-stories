@@ -7,6 +7,7 @@
 
     <color name="listDrawableTint">#FFFFFF</color>
     <color name="dividerColor">#C7C7C7</color>
+    <color name="textDisabled">#808080</color>
     <color name="textDefault">#BEBEBE</color>
 
     <array name="textColors">

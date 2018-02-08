@@ -110,9 +110,21 @@ class StoryReaderActivity : LoadingActivity() {
   }
 
   private fun initTextWithLoading(chapterToRead: Int) = launch(UI) {
+    // Show loading things and disable chapter switching
     showLoading()
+    btnBarLoader.visibility = View.VISIBLE
+    navButtons.visibility = View.GONE
+    prevChapterBtn.isEnabled = false
+    nextChapterBtn.isEnabled = false
+    selectChapterBtn.isEnabled = false
+    invalidateOptionsMenu()
+    // Load chapter
     initText(chapterToRead).await()
+    // Hide loading things
+    // Chapter switching is re-enabled by initText
     hideLoading()
+    btnBarLoader.visibility = View.GONE
+    navButtons.visibility = View.VISIBLE
   }
 
   private fun initText(chapterToRead: Int) = async2(CommonPool) {
@@ -140,26 +152,27 @@ class StoryReaderActivity : LoadingActivity() {
     database.updateInStory(model.storyIdRaw, "currentChapter" to chapterToRead)
   }
 
-  private fun getColorFor(textView: TextView): Int {
-    return if (textView.isEnabled) R.color.white
-    else android.R.color.tertiary_text_light
-  }
-
-  private fun updateUiAfterFetchingText(chapterToRead: Int) = launch(UI) {
+  private fun setChangeChapterButtonStates(chapterToRead: Int) {
     // Disable buttons if there is nowhere for them to go
     prevChapterBtn.isEnabled = chapterToRead != 1
     nextChapterBtn.isEnabled = chapterToRead != model.chapterCount
     selectChapterBtn.isEnabled = model.chapterCount > 1
 
-    // Tint button icons dark if the buttons are disabled, white if not
+    // Tint button icons grey if the buttons are disabled, white if not
+    fun getColorFor(view: View) = if (view.isEnabled) R.color.white else R.color.textDisabled
+
     prevChapterBtn.drawableTint(getColorFor(prevChapterBtn), theme, Direction.LEFT)
     nextChapterBtn.drawableTint(getColorFor(nextChapterBtn), theme, Direction.RIGHT)
     selectChapterBtn.drawableTint(getColorFor(selectChapterBtn), theme, Direction.LEFT)
 
-    // Handle the next/prev button states in the appbar
+    // Handle the next/prev button states/colors in the appbar
     invalidateOptionsMenu()
+  }
 
-    // Set chapter's title (chapters are 1-indexed)
+  private fun updateUiAfterFetchingText(chapterToRead: Int) = launch(UI) {
+    setChangeChapterButtonStates(chapterToRead)
+
+    // Set chapter's title (chapterToRead is 1-indexed)
     chapterTitleText.text = model.chapterTitles[chapterToRead - 1]
     // Don't show it if there is no title (otherwise there are leftover margins/padding)
     chapterTitleText.visibility =
