@@ -6,6 +6,7 @@ import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
+import android.net.NetworkInfo
 import android.os.Parcelable
 import android.support.annotation.ColorRes
 import android.support.annotation.StringRes
@@ -86,7 +87,7 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
       n.show(Static.res.getString(R.string.waiting_for_connection))
       Log.i("waitForNetwork", "No connection")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
-    } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
+    } else if (activeNetwork.isConnecting()) {
       // We're connecting; wait
       n.show(Static.res.getString(R.string.waiting_for_connection))
       Log.i("waitForNetwork", "Connecting...")
@@ -96,6 +97,8 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
     }
   }
 }
+
+fun NetworkInfo.isConnecting() = isConnectedOrConnecting && !isConnected
 
 private const val RATE_LIMIT_MS = 300L
 
