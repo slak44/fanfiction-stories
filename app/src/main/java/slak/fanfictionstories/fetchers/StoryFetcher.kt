@@ -30,7 +30,7 @@ fun getFullStory(ctx: Context, storyId: Long,
     errorDialog(R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
     return@async2 Optional.empty<StoryModel>()
   }
-  val isWriting: Boolean = writeStory(ctx, storyId, fetcher.fetchChapters(n)).await()
+  val isWriting: Boolean = writeChapters(ctx, storyId, fetcher.fetchChapters(n)).await()
   if (isWriting) {
     Notifications.downloadedStory(ctx, model.title)
   } else {
@@ -101,18 +101,18 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
       c.send(metadataChapter.get())
       c.close()
       n.show(ctx.resources.getString(R.string.fetching_chapter, 1, newModel.title))
-      val isWriting = writeStory(ctx, storyId, c).await()
+      val isWriting = writeChapters(ctx, storyId, c).await()
       if (!isWriting) return@async2 revertUpdate()
       return@async2 true
     }
     // Chapters have been added
     if (newModel.chapterCount > oldModel.chapterCount) {
       val chapters = fetchChapters(n, oldModel.chapterCount + 1, newModel.chapterCount)
-      val isWriting = writeStory(ctx, storyId, chapters).await()
+      val isWriting = writeChapters(ctx, storyId, chapters).await()
       if (!isWriting) return@async2 revertUpdate()
       return@async2 true
     }
-    val isWriting = writeStory(ctx, storyId, fetchChapters(n)).await()
+    val isWriting = writeChapters(ctx, storyId, fetchChapters(n)).await()
     if (!isWriting) return@async2 revertUpdate()
     return@async2 true
   }

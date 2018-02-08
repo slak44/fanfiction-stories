@@ -38,22 +38,20 @@ fun storyDir(ctx: Context, storyId: Long): Optional<File> {
  * Note that this function only suspends if it's actually writing; it immediately returns on failure
  * @returns true if we started writing data to disk, false otherwise
  */
-fun writeStory(ctx: Context, storyId: Long,
-               chapters: Channel<String>): Deferred<Boolean> = async2(CommonPool) {
+fun writeChapters(ctx: Context, storyId: Long,
+                  chapters: Channel<String>): Deferred<Boolean> = async2(CommonPool) {
   val targetDir = storyDir(ctx, storyId).orElse { return@async2 false }
   if (targetDir.exists()) {
-    // FIXME maybe ask the user if he wants to overwrite or legitimize this by getting the metadata
-    Log.e("StoryWriter", "targetDir exists")
-    errorDialog(R.string.storyid_already_exists, R.string.storyid_already_exists_tip)
-    return@async2 false
-  }
-  val madeDirs = targetDir.mkdirs()
-  if (!madeDirs) {
-    Log.e("StoryWriter", "can't make dirs")
-    errorDialog(
-        ctx.resources.getString(R.string.failed_making_dirs),
-        ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.absolutePath))
-    return@async2 false
+    Log.i("StoryWriter#writeChapters", "Target dir already exists")
+  } else {
+    val madeDirs = targetDir.mkdirs()
+    if (!madeDirs) {
+      Log.e("StoryWriter#writeChapters", "Can't make dirs")
+      errorDialog(
+          ctx.resources.getString(R.string.failed_making_dirs),
+          ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.absolutePath))
+      return@async2 false
+    }
   }
   innerAsync@ async2(CommonPool) {
     var idx = 1
