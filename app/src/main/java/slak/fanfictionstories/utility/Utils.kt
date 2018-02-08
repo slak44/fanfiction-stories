@@ -84,12 +84,12 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
     if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
       // No connection; wait
       n.show(Static.res.getString(R.string.waiting_for_connection))
-      Log.e("waitForNetwork", "No connection")
+      Log.i("waitForNetwork", "No connection")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
       // We're connecting; wait
       n.show(Static.res.getString(R.string.waiting_for_connection))
-      Log.e("waitForNetwork", "Connecting...")
+      Log.i("waitForNetwork", "Connecting...")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else {
       break
