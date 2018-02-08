@@ -141,7 +141,6 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     launch(CommonPool) {
       for (chapterNr in from..target) {
         n.show(ctx.resources.getString(R.string.fetching_chapter, chapterNr, storyName))
-        delay(RATE_LIMIT_MILLISECONDS)
         channel.send(parseChapter(fetchChapter(chapterNr, n).await()))
       }
       channel.close()
