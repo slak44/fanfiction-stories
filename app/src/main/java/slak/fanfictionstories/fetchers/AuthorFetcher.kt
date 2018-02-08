@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
+import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
@@ -21,7 +22,7 @@ data class Author(val name: String,
                   val joinedDateSeconds: Long,
                   val updatedDateSeconds: Long,
                   val countryName: String,
-                  val imageUrl: String,
+                  val imageUrl: @RawValue Optional<String>,
                   val bioHtml: String,
                   val userStories: List<StoryModel>,
                   val favoriteStories: List<StoryModel>,
@@ -60,7 +61,7 @@ fun getAuthor(context: Context, authorId: Long): Deferred<Author> = async2(Commo
       // Country name
       retardedTableCell.select("img").first().attr("title"),
       // Image url
-      doc.select("#bio > img").first().attr("src"),
+      doc.select("#bio > img").first()?.attr("src").opt(),
       // User bio (first child is image)
       Elements(doc.getElementById("bio").children().drop(1)).outerHtml(),
       stories,
