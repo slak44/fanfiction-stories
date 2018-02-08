@@ -7,7 +7,6 @@ import slak.fanfictionstories.utility.opt
 import java.util.*
 
 object Fetcher {
-  const val RATE_LIMIT_MILLISECONDS = 300L
   @JvmStatic
   val TAG = "Fetcher"
   @JvmStatic

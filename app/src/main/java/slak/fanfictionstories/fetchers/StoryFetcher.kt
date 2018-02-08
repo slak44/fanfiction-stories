@@ -6,12 +6,10 @@ import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
 import slak.fanfictionstories.*
-import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
 import slak.fanfictionstories.fetchers.Fetcher.TAG
 import slak.fanfictionstories.fetchers.Fetcher.parseMetadata
 import slak.fanfictionstories.fetchers.Fetcher.regexOpts

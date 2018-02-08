@@ -29,8 +29,6 @@ import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.sync.Mutex
 import slak.fanfictionstories.R
-import slak.fanfictionstories.fetchers.Fetcher
-import slak.fanfictionstories.fetchers.Fetcher.RATE_LIMIT_MILLISECONDS
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
@@ -101,11 +99,12 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
   }
 }
 
+private const val RATE_LIMIT_MS = 300L
+
 /**
  * Fetches the resource at the specified url, patiently.
  *
- * Waits for the network using [waitForNetwork].
- * Waits for the rate limit [Fetcher.RATE_LIMIT_MILLISECONDS].
+ * Waits for the network using [waitForNetwork], then waits for the rate limit [RATE_LIMIT_MS].
  *
  * If the download fails, call the error callback, wait for the rate limit again, and then call this
  * function recursively.
@@ -113,13 +112,13 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
 fun patientlyFetchURL(url: String, n: Notifications,
                       onError: (t: Throwable) -> Unit): Deferred<String> = async2(CommonPool) {
   waitForNetwork(n).await()
-  delay(RATE_LIMIT_MILLISECONDS)
+  delay(RATE_LIMIT_MS)
   return@async2 try {
     URL(url).readText()
   } catch (t: Throwable) {
     // Something happened; retry
     onError(t)
-    delay(RATE_LIMIT_MILLISECONDS)
+    delay(RATE_LIMIT_MS)
     patientlyFetchURL(url, n, onError).await()
   }
 }
