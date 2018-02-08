@@ -8,8 +8,6 @@ import java.util.*
 
 object Fetcher {
   const val RATE_LIMIT_MILLISECONDS = 300L
-  const val CONNECTION_WAIT_DELAY_SECONDS = 3L
-  const val CONNECTION_MISSING_DELAY_SECONDS = 5L
   @JvmStatic
   val TAG = "Fetcher"
   @JvmStatic

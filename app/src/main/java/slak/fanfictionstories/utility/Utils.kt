@@ -73,6 +73,8 @@ fun errorDialog(ctx: Context, @StringRes title: Int, @StringRes msg: Int) {
   errorDialog(ctx, ctx.resources.getString(title), ctx.resources.getString(msg))
 }
 
+private const val NETWORK_WAIT_DELAY_MS = 500L
+
 /**
  * Suspends until there is an active connection.
  *
@@ -86,13 +88,14 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
       // No connection; wait
       n.show(Static.res.getString(R.string.waiting_for_connection))
       Log.e("waitForNetwork", "No connection")
-      delay(Fetcher.CONNECTION_MISSING_DELAY_SECONDS, TimeUnit.SECONDS)
+      delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else if (activeNetwork.isConnectedOrConnecting && !activeNetwork.isConnected) {
       // We're connecting; wait
       n.show(Static.res.getString(R.string.waiting_for_connection))
       Log.e("waitForNetwork", "Connecting...")
-      delay(Fetcher.CONNECTION_WAIT_DELAY_SECONDS, TimeUnit.SECONDS)
+      delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else {
+      n.cancel()
       break
     }
   }
