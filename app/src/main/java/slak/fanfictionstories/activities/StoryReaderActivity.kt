@@ -58,20 +58,18 @@ class StoryReaderActivity : LoadingActivity() {
       restoreScrollStatus()
     }
 
-    showLoading()
     launch(UI) {
-      initText(currentChapter).await()
+      initTextWithLoading(currentChapter).join()
       restoreScrollStatus()
-      hideLoading()
     }
 
     prevChapterBtn.setOnClickListener {
       currentChapter--
-      initText(currentChapter)
+      initTextWithLoading(currentChapter)
     }
     nextChapterBtn.setOnClickListener {
       currentChapter++
-      initText(currentChapter)
+      initTextWithLoading(currentChapter)
     }
     selectChapterBtn.setOnClickListener { showChapterSelectDialog() }
   }
@@ -107,8 +105,14 @@ class StoryReaderActivity : LoadingActivity() {
           // This means 'go to same chapter', so do nothing
           if (currentChapter == which + 1) return@setItems
           currentChapter = which + 1
-          initText(currentChapter)
+          initTextWithLoading(currentChapter)
         }).show()
+  }
+
+  private fun initTextWithLoading(chapterToRead: Int) = launch(UI) {
+    showLoading()
+    initText(chapterToRead).await()
+    hideLoading()
   }
 
   private fun initText(chapterToRead: Int) = async2(CommonPool) {
