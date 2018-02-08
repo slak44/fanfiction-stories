@@ -93,7 +93,6 @@ fun waitForNetwork(n: Notifications) = async2(CommonPool) {
       Log.e("waitForNetwork", "Connecting...")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else {
-      n.cancel()
       break
     }
   }
