@@ -26,7 +26,7 @@ fun getStorageDir(ctx: Context): Optional<File> =
 fun storyDir(ctx: Context, storyId: Long): Optional<File> {
   val storage = getStorageDir(ctx).orElse {
     Log.e("StoryWriter#storyDir", "no ext storage")
-    errorDialog(ctx, R.string.ext_store_unavailable, R.string.ext_store_unavailable_tip)
+    errorDialog(R.string.ext_store_unavailable, R.string.ext_store_unavailable_tip)
     return Optional.empty()
   }
   val storiesDir = File(storage, "storiesData")
@@ -44,13 +44,13 @@ fun writeStory(ctx: Context, storyId: Long,
   if (targetDir.exists()) {
     // FIXME maybe ask the user if he wants to overwrite or legitimize this by getting the metadata
     Log.e("StoryWriter", "targetDir exists")
-    errorDialog(ctx, R.string.storyid_already_exists, R.string.storyid_already_exists_tip)
+    errorDialog(R.string.storyid_already_exists, R.string.storyid_already_exists_tip)
     return@async2 false
   }
   val madeDirs = targetDir.mkdirs()
   if (!madeDirs) {
     Log.e("StoryWriter", "can't make dirs")
-    errorDialog(ctx,
+    errorDialog(
         ctx.resources.getString(R.string.failed_making_dirs),
         ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.absolutePath))
     return@async2 false

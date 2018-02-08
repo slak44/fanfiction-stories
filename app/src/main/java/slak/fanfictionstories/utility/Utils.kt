@@ -2,7 +2,6 @@ package slak.fanfictionstories.utility
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.content.Context
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -54,8 +53,8 @@ fun <T> async2(
  * Create an error dialog with a title, message and a dismiss button.
  * @see AlertDialog
  */
-fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
-  AlertDialog.Builder(ctx)
+fun errorDialog(title: String, msg: String) = launch(UI) {
+  AlertDialog.Builder(Static.currentCtx)
       .setTitle(title)
       .setMessage(msg)
       .setPositiveButton(R.string.got_it, { dialogInterface, _ ->
@@ -67,8 +66,8 @@ fun errorDialog(ctx: Context, title: String, msg: String) = launch(UI) {
 /**
  * Same as [errorDialog], but with [StringRes] texts.
  */
-fun errorDialog(ctx: Context, @StringRes title: Int, @StringRes msg: Int) {
-  errorDialog(ctx, ctx.resources.getString(title), ctx.resources.getString(msg))
+fun errorDialog(@StringRes title: Int, @StringRes msg: Int) {
+  errorDialog(Static.res.getString(title), Static.res.getString(msg))
 }
 
 private const val NETWORK_WAIT_DELAY_MS = 500L

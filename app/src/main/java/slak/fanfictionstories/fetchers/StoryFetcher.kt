@@ -27,7 +27,7 @@ fun getFullStory(ctx: Context, storyId: Long,
     }
   } catch (ex: SQLiteConstraintException) {
     Log.e("getFullStory", "", ex)
-    errorDialog(ctx, R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
+    errorDialog(R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
     return@async2 Optional.empty<StoryModel>()
   }
   val isWriting: Boolean = writeStory(ctx, storyId, fetcher.fetchChapters(n)).await()

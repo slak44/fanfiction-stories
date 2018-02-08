@@ -1,5 +1,6 @@
 package slak.fanfictionstories.utility
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
@@ -8,10 +9,10 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import org.jetbrains.anko.defaultSharedPreferences
 import slak.fanfictionstories.fetchers.categoryCache
 import java.io.File
 
+@SuppressLint("StaticFieldLeak")
 /**
  * Provides static access to various resources in [ActivityWithStatic] activities. Using this class
  * when outside such an activity may or may not crash the app, but it will almost certainly break
@@ -28,6 +29,8 @@ object Static {
     private set
   var defaultPref: SharedPreferences? = null
     private set
+  var thisCtx: Context? = null
+    private set
 
   val prefs: SharedPreferences
     get() = sharedPref!!
@@ -39,6 +42,8 @@ object Static {
     get() = resProp!!
   val cm: ConnectivityManager
     get() = cmProp!!
+  val currentCtx: Context
+    get() = thisCtx!!
 
   fun init(context: Context) {
     if (resProp == null) resProp = context.applicationContext.resources
@@ -49,6 +54,7 @@ object Static {
         .getSharedPreferences(Prefs.PREFS_FILE, Context.MODE_PRIVATE)
     if (defaultPref == null)
       defaultPref = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
+    if (thisCtx == null) thisCtx = context
   }
 }
 

@@ -134,7 +134,7 @@ class StoryCardView : CardView {
       // Even though we have a model, fetch it from db to make sure there are no inconsistencies
       val dbModel = context.database.storyById(model.storyIdRaw)
       if (!dbModel.isPresent) {
-        errorDialog(context, R.string.storyid_does_not_exist, R.string.storyid_does_not_exist_tip)
+        errorDialog(R.string.storyid_does_not_exist, R.string.storyid_does_not_exist_tip)
         return@setOnClickListener
       }
       // Hide card
