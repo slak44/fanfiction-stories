@@ -17,10 +17,7 @@ import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.fetchers.Review
 import slak.fanfictionstories.fetchers.getReviews
-import slak.fanfictionstories.utility.ActivityWithStatic
-import slak.fanfictionstories.utility.LoadingActivity
-import slak.fanfictionstories.utility.iconTint
-import slak.fanfictionstories.utility.infinitePageScroll
+import slak.fanfictionstories.utility.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -48,7 +45,7 @@ class ReviewsActivity : LoadingActivity() {
     // 0 means reviews from all chapters
     chapter = intent.getIntExtra(INTENT_TARGET_CHAPTER, 0)
 
-    title = resources.getString(R.string.reviews_for, model.title)
+    title = str(R.string.reviews_for, model.title)
     setSubtitle()
 
     adapter = ReviewAdapter()
@@ -70,8 +67,8 @@ class ReviewsActivity : LoadingActivity() {
       return
     }
     toolbar.subtitle =
-        if (chapter == 0) resources.getString(R.string.all_chapters)
-        else resources.getString(R.string.chapter_x, chapter)
+        if (chapter == 0) str(R.string.all_chapters)
+        else str(R.string.chapter_x, chapter)
   }
 
   private fun addPage(page: Int) = launch(UI) {
@@ -101,7 +98,7 @@ class ReviewsActivity : LoadingActivity() {
     when (item.itemId) {
       R.id.selectReviewsFor -> {
         val items = listOf(
-            resources.getString(R.string.all_chapters),
+            str(R.string.all_chapters),
             *model.chapterTitles.toTypedArray()
         ).toTypedArray()
         AlertDialog.Builder(this)
@@ -149,7 +146,7 @@ class ReviewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   private fun bindReviewProps(view: CardView, review: Review) {
     with(view) {
       reviewAuthor.text = review.author
-      reviewChapter.text = resources.getString(R.string.chapter_x, review.chapter)
+      reviewChapter.text = str(R.string.chapter_x, review.chapter)
       reviewDate.text = SimpleDateFormat.getDateInstance()
           .format(Date(review.unixTimeSeconds * 1000))
       reviewContent.text = review.content

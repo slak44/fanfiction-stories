@@ -8,7 +8,6 @@ import android.text.Html
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.content_story_reader.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -132,9 +131,8 @@ class StoryReaderActivity : LoadingActivity() {
     val chapterWordCount = autoSuffixNumber(text.split(" ").size)
 
     async2(UI) {
-      chapterWordCountText.text = resources.getString(R.string.x_words, chapterWordCount)
-      currentChapterText.text = resources.getString(
-          R.string.chapter_progress, chapterToRead, model.chapterCount)
+      chapterWordCountText.text = str(R.string.x_words, chapterWordCount)
+      currentChapterText.text = str(R.string.chapter_progress, chapterToRead, model.chapterCount)
       // This data is more or less useless with only one chapter, so we hide it
       val extraDataVisibility = if (model.chapterCount == 1) View.GONE else View.VISIBLE
       chapterWordCountText.visibility = extraDataVisibility

@@ -47,9 +47,8 @@ fun writeChapters(ctx: Context, storyId: Long,
     val madeDirs = targetDir.mkdirs()
     if (!madeDirs) {
       Log.e("StoryWriter#writeChapters", "Can't make dirs")
-      errorDialog(
-          ctx.resources.getString(R.string.failed_making_dirs),
-          ctx.resources.getString(R.string.failed_making_dirs_tip, targetDir.absolutePath))
+      errorDialog(str(R.string.failed_making_dirs),
+          str(R.string.failed_making_dirs_tip, targetDir.absolutePath))
       return@async2 false
     }
   }

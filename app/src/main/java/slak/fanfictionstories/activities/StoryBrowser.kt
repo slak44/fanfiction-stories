@@ -86,7 +86,7 @@ class BrowseCategoryActivity : LoadingActivity() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.clearCache -> {
-        undoableAction(contentView!!, getString(R.string.cleared_from_cache)) {
+        undoableAction(contentView!!, str(R.string.cleared_from_cache)) {
           categoryCache.clear()
         }
       }

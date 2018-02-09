@@ -44,7 +44,7 @@ private fun parseReviewPage(storyId: Long, html: String): Pair<List<Review>, Int
     val author: String
     val authorId: Long
     if (maybeAuthor.isEmpty()) {
-      author = Static.res.getString(R.string.guest)
+      author = str(R.string.guest)
       authorId = -1L
     } else {
       author = maybeAuthor[0].text().trim()

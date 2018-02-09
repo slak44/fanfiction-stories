@@ -8,7 +8,6 @@ import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.support.annotation.StringRes
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import slak.fanfictionstories.fetchers.categoryCache

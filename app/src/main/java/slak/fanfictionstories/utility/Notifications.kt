@@ -56,7 +56,7 @@ object Notifications {
         .setGroup(NOTIFICATIONS_DOWNLOADED_STORIES_GROUP))
     // Show actual download notif
     val notif = create(Kind.DONE_DOWNLOADING, titleOfStory)
-        .setContentTitle(Static.res.getString(R.string.downloaded_story))
+        .setContentTitle(str(R.string.downloaded_story))
         .setGroup(NOTIFICATIONS_DOWNLOADED_STORIES_GROUP)
         .build()
     Static.notifManager.notify(downloadedIds++, notif)
@@ -66,14 +66,14 @@ object Notifications {
   fun updatedStories(titles: List<String>) {
     if (titles.isEmpty()) return
     // Show group
-    show(Kind.DONE_UPDATING, create(Kind.DONE_UPDATING,
-        Static.res.getString(R.string.x_stories_updated, titles.size))
+    show(Kind.DONE_UPDATING,
+        create(Kind.DONE_UPDATING, str(R.string.x_stories_updated, titles.size))
         .setGroupSummary(true)
         .setGroup(NOTIFICATIONS_UPDATED_STORIES_GROUP))
     // Show actual title notifs
     titles.forEach {
       val notif = create(Kind.DONE_UPDATING, it)
-          .setContentTitle(Static.res.getString(R.string.updated_story))
+          .setContentTitle(str(R.string.updated_story))
           .setGroup(NOTIFICATIONS_UPDATED_STORIES_GROUP)
           .build()
       Static.notifManager.notify(updatedIds++, notif)
@@ -84,9 +84,10 @@ object Notifications {
   init {
     @SuppressLint("NewAPI")
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      val title = Static.res.getString(R.string.download_notification_channel)
-      val channel =
-          NotificationChannel(DOWNLOAD_CHANNEL, title, NotificationManager.IMPORTANCE_DEFAULT)
+      val channel = NotificationChannel(
+          DOWNLOAD_CHANNEL,
+          str(R.string.download_notification_channel),
+          NotificationManager.IMPORTANCE_DEFAULT)
       Static.notifManager.createNotificationChannel(channel)
     }
   }
@@ -94,7 +95,7 @@ object Notifications {
   fun create(kind: Kind, content: String): NotificationCompat.Builder {
     val builder = NotificationCompat.Builder(Static.currentCtx, DOWNLOAD_CHANNEL)
         .setSmallIcon(kind.icon)
-        .setContentTitle(Static.res.getString(kind.titleStringId))
+        .setContentTitle(str(kind.titleStringId))
         .setContentText(content)
         .setSortKey(kind.sortKey)
         .setOngoing(kind.duration == Duration.ONGOING)
@@ -114,11 +115,11 @@ object Notifications {
   }
 
   fun show(kind: Kind, @StringRes id: Int) {
-    Static.notifManager.notify(kind.reqId, create(kind, Static.res.getString(id)).build())
+    Static.notifManager.notify(kind.reqId, create(kind, str(id)).build())
   }
 
   fun show(kind: Kind, @StringRes id: Int, vararg format: Any) {
-    Static.notifManager.notify(kind.reqId, create(kind, Static.res.getString(id, *format)).build())
+    Static.notifManager.notify(kind.reqId, create(kind, str(id, *format)).build())
   }
 
   fun show(kind: Kind, b: NotificationCompat.Builder) {

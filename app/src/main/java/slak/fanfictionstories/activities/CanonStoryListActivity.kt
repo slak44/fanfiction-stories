@@ -92,14 +92,12 @@ class CanonStoryListActivity : LoadingActivity() {
       return@map T1(StoryModel(it.src))
     }
     if (pageData.isEmpty()) return@async2 listOf<StoryAdapterItem>()
-    return@async2 listOf<StoryAdapterItem>(
-        T2(resources.getString(R.string.page_x, page)), *pageData.toTypedArray())
+    return@async2 listOf(T2(str(R.string.page_x, page)), *pageData.toTypedArray())
   }
 
   private fun setAppbarText() {
     title = fetcher.canonTitle.get()
-    supportActionBar?.subtitle =
-        resources.getString(R.string.x_stories, fetcher.unfilteredStories.get())
+    supportActionBar?.subtitle = str(R.string.x_stories, fetcher.unfilteredStories.get())
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
@@ -123,8 +121,8 @@ class CanonStoryListActivity : LoadingActivity() {
     val layout = LayoutInflater.from(this)
         .inflate(R.layout.dialog_ffnet_filter, null, false)
 
-    val strNone = resources.getString(R.string.none)
-    val strAny = resources.getString(R.string.any)
+    val strNone = str(R.string.none)
+    val strAny = str(R.string.any)
 
     with(layout) {
       val genresEdit = resources.getStringArray(R.array.genres).toMutableList()

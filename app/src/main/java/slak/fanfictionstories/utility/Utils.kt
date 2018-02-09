@@ -68,7 +68,7 @@ fun errorDialog(title: String, msg: String) = launch(UI) {
  * Same as [errorDialog], but with [StringRes] texts.
  */
 fun errorDialog(@StringRes title: Int, @StringRes msg: Int) {
-  errorDialog(Static.res.getString(title), Static.res.getString(msg))
+  errorDialog(str(title), str(msg))
 }
 
 private const val NETWORK_WAIT_DELAY_MS = 500L
@@ -338,7 +338,7 @@ fun undoableAction(view: View, snackText: String,
  */
 fun undoableAction(view: View, @StringRes snackText: Int,
                    onUndo: (View) -> Unit = {}, action: suspend () -> Unit): Snackbar {
-  return undoableAction(view, Static.res.getString(snackText), onUndo, action)
+  return undoableAction(view, str(snackText), onUndo, action)
 }
 
 /**
@@ -347,3 +347,12 @@ fun undoableAction(view: View, @StringRes snackText: Int,
 operator fun SparseBooleanArray.set(key: Int, value: Boolean) {
   put(key, value)
 }
+
+/**
+ * Sugar for [Static]'s [Resources.getString].
+ */
+fun str(@StringRes i: Int): String = Static.res.getString(i)
+/**
+ * Sugar for [Static]'s [Resources.getString] with a format string.
+ */
+fun str(@StringRes i: Int, vararg format: Any?): String = Static.res.getString(i, *format)

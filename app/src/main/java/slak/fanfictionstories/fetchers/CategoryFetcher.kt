@@ -1,7 +1,6 @@
 package slak.fanfictionstories.fetchers
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
@@ -28,7 +27,7 @@ data class CategoryLink(val text: String,
     return false
   }
   val displayName: String
-    get() = if (isTargetCrossover()) Static.res.getString(R.string.title_crossover, text) else text
+    get() = if (isTargetCrossover()) str(R.string.title_crossover, text) else text
 }
 
 val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMillis(7))

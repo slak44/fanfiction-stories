@@ -8,7 +8,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
-import either.Left
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -34,8 +33,7 @@ class StoryListActivity : ActivityWithStatic() {
     StoryCardView.createRightSwipeHelper(storyListView, { intent, _ -> startActivity(intent) })
     adapter = StoryAdapter(this@StoryListActivity)
     adapter.onSizeChange = { storyCount, filteredCount ->
-      toolbar.subtitle =
-          resources.getString(R.string.x_stories_y_filtered, storyCount, filteredCount)
+      toolbar.subtitle = str(R.string.x_stories_y_filtered, storyCount, filteredCount)
     }
     storyListView.adapter = adapter
     initializeAdapter()
@@ -105,7 +103,7 @@ class StoryListActivity : ActivityWithStatic() {
     }
     AlertDialog.Builder(this)
         .setTitle(R.string.statistics)
-        .setMessage(resources.getString(
+        .setMessage(str(
             R.string.statistics_template,
             totalWords,
             passedApprox,

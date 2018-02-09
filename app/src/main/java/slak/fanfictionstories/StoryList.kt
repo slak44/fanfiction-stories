@@ -149,7 +149,7 @@ class StoryCardView : CardView {
     }
     addBtn.setOnClickListener {
       addBtn.isEnabled = false
-      addBtn.text = context.resources.getString(R.string.adding___)
+      addBtn.text = str(R.string.adding___)
       launch(UI) {
         val newModel = getFullStory(this@StoryCardView.context, model.storyIdRaw).await()
         if (newModel.isPresent) {
@@ -157,7 +157,7 @@ class StoryCardView : CardView {
         } else {
           addBtn.visibility = View.VISIBLE
           addBtn.isEnabled = true
-          addBtn.text = resources.getString(R.string.add)
+          addBtn.text = str(R.string.add)
         }
       }
     }
