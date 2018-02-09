@@ -157,7 +157,7 @@ class StoryCardView : CardView {
         } else {
           addBtn.visibility = View.VISIBLE
           addBtn.isEnabled = true
-          addBtn.text = str(R.string.add)
+          addBtn.text = str(R.string.download)
         }
       }
     }
