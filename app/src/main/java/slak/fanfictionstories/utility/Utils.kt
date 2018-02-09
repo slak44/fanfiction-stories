@@ -93,6 +93,8 @@ fun waitForNetwork() = async2(CommonPool) {
       Log.i("waitForNetwork", "Connecting...")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else {
+      // We're connected!
+      Notifications.cancel(Notifications.Kind.OTHER)
       break
     }
   }
