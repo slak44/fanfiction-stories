@@ -59,7 +59,7 @@ class BrowseCategoryActivity : LoadingActivity() {
     title = parentLink.displayName
     showLoading()
     launch(CommonPool) {
-      val links = fetchCategoryData(this@BrowseCategoryActivity, parentLink.urlComponent).await()
+      val links = fetchCategoryData(parentLink.urlComponent).await()
       val adapter = ArrayAdapter<String>(
           this@BrowseCategoryActivity, android.R.layout.simple_list_item_1)
       adapter.addAll(links.map { "${it.text} - ${it.storyCount}" })

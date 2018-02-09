@@ -244,8 +244,7 @@ class StoryReaderActivity : LoadingActivity() {
   private fun downloadChapter(storyId: Long,
                               chapter: Int, target: File): Deferred<String> = async2(CommonPool) {
     if (fetcher == null) fetcher = StoryFetcher(storyId, this@StoryReaderActivity)
-    val n = Notifications(this@StoryReaderActivity, Notifications.Kind.DOWNLOADING)
-    val chapterHtmlText = fetcher!!.fetchChapter(chapter, n).await()
+    val chapterHtmlText = fetcher!!.fetchChapter(chapter).await()
     val text = fetcher!!.parseChapter(chapterHtmlText)
     target.printWriter().use { it.print(text) }
     if (model.status == StoryStatus.TRANSIENT) {

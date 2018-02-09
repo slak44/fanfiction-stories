@@ -150,19 +150,15 @@ class StoryCardView : CardView {
     addBtn.setOnClickListener {
       addBtn.isEnabled = false
       addBtn.text = context.resources.getString(R.string.adding___)
-      val n = Notifications(this@StoryCardView.context, Notifications.Kind.DOWNLOADING)
-      launch(CommonPool) {
-        val newModel = getFullStory(this@StoryCardView.context, model.storyIdRaw, n).await()
-        launch(UI) {
-          if (newModel.isPresent) {
-            addBtn.visibility = View.GONE
-          } else {
-            addBtn.visibility = View.VISIBLE
-            addBtn.isEnabled = true
-            addBtn.text = resources.getString(R.string.add)
-          }
+      launch(UI) {
+        val newModel = getFullStory(this@StoryCardView.context, model.storyIdRaw).await()
+        if (newModel.isPresent) {
+          addBtn.visibility = View.GONE
+        } else {
+          addBtn.visibility = View.VISIBLE
+          addBtn.isEnabled = true
+          addBtn.text = resources.getString(R.string.add)
         }
-        n.cancel()
       }
     }
     authorBtn.setOnClickListener {

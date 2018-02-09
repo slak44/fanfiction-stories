@@ -1,7 +1,6 @@
 package slak.fanfictionstories.fetchers
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.Log
@@ -187,13 +186,7 @@ class CanonFetcher(val details: Details) : Parcelable {
     }
   }
 
-  fun get(page: Int, context: Context): Deferred<List<StoryModel>> = async2(CommonPool) {
-    val n = Notifications(context, Notifications.Kind.OTHER)
-    val html = fetchPage(page, n).await()
-    return@async2 parseHtml(html)
-  }
-
-  private fun fetchPage(page: Int, n: Notifications): Deferred<String> = async2(CommonPool) {
+  fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
     val queryParams = listOf(
         details.sort.queryParam(),
         details.timeRange.queryParam(),
@@ -214,11 +207,13 @@ class CanonFetcher(val details: Details) : Parcelable {
         if (details.char2Without != null) "_c2=${details.char2Without}" else ""
     ).joinToString("&")
 
-    return@async2 patientlyFetchURL(
-        "https://www.fanfiction.net/${details.parentLink.urlComponent}/?p=$page&$queryParams", n) {
-      n.show(Static.res.getString(R.string.error_with_canon_stories, details.parentLink.displayName))
+    val html = patientlyFetchURL(
+        "https://www.fanfiction.net/${details.parentLink.urlComponent}/?p=$page&$queryParams") {
+      Notifications.show(Notifications.Kind.OTHER,
+          R.string.error_with_canon_stories, details.parentLink.displayName)
       Log.e(TAG, "CanonFetcher: retry", it)
     }.await()
+    return@async2 parseHtml(html)
   }
 
   private fun parseHtml(html: String): List<StoryModel> {

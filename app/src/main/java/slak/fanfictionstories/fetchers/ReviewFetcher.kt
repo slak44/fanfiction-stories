@@ -1,7 +1,6 @@
 package slak.fanfictionstories.fetchers
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
@@ -24,13 +23,16 @@ data class Review(
 
 /**
  * Get a particular page of reviews for the specified story, for the specified chapter.
- * @returns the reviews, and how many pages of reviews there are in total, or an empty list and -1 if
- * there are no reviews
+ * @returns the reviews, and how many pages of reviews there are in total, or an empty list and -1
+ * if there are no reviews
  */
-fun getReviews(context: Context, storyId: Long,
+fun getReviews(storyId: Long,
                chapter: Int, page: Int): Deferred<Pair<List<Review>, Int>> = async2(CommonPool) {
-  val n = Notifications(context, Notifications.Kind.OTHER)
-  val html = fetchReviewPage(storyId, chapter, page, n).await()
+  val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
+    Notifications.show(Notifications.Kind.OTHER,
+        R.string.error_fetching_review_data, storyId.toString())
+    Log.e(Fetcher.TAG, "fetchReviewPage", it)
+  }.await()
   return@async2 parseReviewPage(storyId, html)
 }
 
@@ -69,11 +71,4 @@ private fun parseReviewPage(storyId: Long, html: String): Pair<List<Review>, Int
     navLinks.last().text().toInt()
   }
   return Pair(list, lastPageNr)
-}
-
-private fun fetchReviewPage(storyId: Long,
-                            chapter: Int, page: Int, n: Notifications): Deferred<String> =
-    patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/", n) {
-  n.show(Static.res.getString(R.string.error_fetching_review_data, storyId.toString()))
-  Log.e(Fetcher.TAG, "fetchReviewPage", it)
 }

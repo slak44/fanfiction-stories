@@ -44,24 +44,23 @@ class BootBroadcastReceiver : BroadcastReceiver() {
 class StoryUpdateReceiver : BroadcastReceiver() {
   private var updatedStories: MutableList<StoryModel> = mutableListOf()
   override fun onReceive(context: Context, intent: Intent) {
-    val n = Notifications(context, Notifications.Kind.UPDATING)
     launch(CommonPool) {
-      update(context, n).await()
-      n.cancel()
-      Notifications.updatedStories(context, updatedStories.map { it.title })
+      update(context).await()
+      Notifications.updatedStories(updatedStories.map { it.title })
     }
   }
 
-  private fun update(context: Context, n: Notifications) = async2(CommonPool) {
+  private fun update(context: Context) = async2(CommonPool) {
     Log.i("StoryUpdateReceiver", "Updating")
     updatedStories = mutableListOf()
     val storyModels = context.database.getLocalStories().await()
     storyModels.forEach { model ->
       val fetcher = StoryFetcher(model.storyIdRaw, context)
-      fetcher.fetchMetadata(n).await()
-      val updated = fetcher.update(model, n).await()
+      fetcher.fetchMetadata().await()
+      val updated = fetcher.update(model).await()
       if (updated) updatedStories.add(model)
     }
+    Notifications.cancel(Notifications.Kind.UPDATING)
   }
 
 }

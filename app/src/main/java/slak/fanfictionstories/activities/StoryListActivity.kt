@@ -80,10 +80,8 @@ class StoryListActivity : ActivityWithStatic() {
           val editText = (dialog as AlertDialog).findViewById<EditText>(R.id.dialogStoryId)!!
           val id = editText.text.toString().toLong()
           dialog.dismiss()
-          val n = Notifications(this@StoryListActivity, Notifications.Kind.DOWNLOADING)
           launch(CommonPool) {
-            val model = getFullStory(this@StoryListActivity, id, n).await()
-            n.cancel()
+            val model = getFullStory(this@StoryListActivity, id).await()
             model.ifPresent { initializeAdapter() }
           }
         })

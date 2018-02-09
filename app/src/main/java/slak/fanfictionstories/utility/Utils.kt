@@ -78,18 +78,18 @@ private const val NETWORK_WAIT_DELAY_MS = 500L
  *
  * Shows notifications about connection status.
  */
-fun waitForNetwork(n: Notifications) = async2(CommonPool) {
+fun waitForNetwork() = async2(CommonPool) {
   while (true) {
     val activeNetwork = Static.cm.activeNetworkInfo
     // FIXME figure out network status even when app is not focused
     if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
       // No connection; wait
-      n.show(Static.res.getString(R.string.waiting_for_connection))
+      Notifications.show(Notifications.Kind.OTHER, R.string.waiting_for_connection)
       Log.i("waitForNetwork", "No connection")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else if (activeNetwork.isConnecting()) {
       // We're connecting; wait
-      n.show(Static.res.getString(R.string.waiting_for_connection))
+      Notifications.show(Notifications.Kind.OTHER, R.string.connecting)
       Log.i("waitForNetwork", "Connecting...")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else {
@@ -110,9 +110,9 @@ private const val RATE_LIMIT_MS = 300L
  * If the download fails, call the error callback, wait for the rate limit again, and then call this
  * function recursively.
  */
-fun patientlyFetchURL(url: String, n: Notifications,
+fun patientlyFetchURL(url: String,
                       onError: (t: Throwable) -> Unit): Deferred<String> = async2(CommonPool) {
-  waitForNetwork(n).await()
+  waitForNetwork().await()
   delay(RATE_LIMIT_MS)
   return@async2 try {
     URL(url).readText()
@@ -120,7 +120,7 @@ fun patientlyFetchURL(url: String, n: Notifications,
     // Something happened; retry
     onError(t)
     delay(RATE_LIMIT_MS)
-    patientlyFetchURL(url, n, onError).await()
+    patientlyFetchURL(url, onError).await()
   }
 }
 

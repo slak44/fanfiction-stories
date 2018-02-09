@@ -1,12 +1,14 @@
 package slak.fanfictionstories.utility
 
 import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.support.annotation.StringRes
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import slak.fanfictionstories.fetchers.categoryCache
@@ -31,6 +33,8 @@ object Static {
     private set
   var thisCtx: Context? = null
     private set
+  var notificationManager: NotificationManager? = null
+    private set
 
   val prefs: SharedPreferences
     get() = sharedPref!!
@@ -44,6 +48,8 @@ object Static {
     get() = cmProp!!
   val currentCtx: Context
     get() = thisCtx!!
+  val notifManager: NotificationManager
+    get() = notificationManager!!
 
   fun init(context: Context) {
     if (resProp == null) resProp = context.applicationContext.resources
@@ -55,6 +61,8 @@ object Static {
     if (defaultPref == null)
       defaultPref = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
     if (thisCtx == null) thisCtx = context
+    if (notificationManager == null) notificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
   }
 }
 

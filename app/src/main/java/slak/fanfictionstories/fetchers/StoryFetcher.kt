@@ -9,17 +9,19 @@ import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
-import slak.fanfictionstories.*
+import slak.fanfictionstories.R
+import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.fetchers.Fetcher.TAG
 import slak.fanfictionstories.fetchers.Fetcher.parseMetadata
 import slak.fanfictionstories.fetchers.Fetcher.regexOpts
 import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.writeChapters
 import java.util.*
 
-fun getFullStory(ctx: Context, storyId: Long,
-                 n: Notifications): Deferred<Optional<StoryModel>> = async2(CommonPool) {
+fun getFullStory(ctx: Context, storyId: Long): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val fetcher = StoryFetcher(storyId, ctx)
-  val model = fetcher.fetchMetadata(n).await()
+  val model = fetcher.fetchMetadata().await()
   model.status = StoryStatus.LOCAL
   try {
     ctx.database.use {
@@ -30,9 +32,11 @@ fun getFullStory(ctx: Context, storyId: Long,
     errorDialog(R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
     return@async2 Optional.empty<StoryModel>()
   }
-  val isWriting: Boolean = writeChapters(ctx, storyId, fetcher.fetchChapters(n)).await()
+  val isWriting: Boolean =
+      writeChapters(ctx, storyId, fetcher.fetchChapters(Notifications.Kind.DOWNLOADING)).await()
   if (isWriting) {
-    Notifications.downloadedStory(ctx, model.title)
+    Notifications.downloadedStory(model.title)
+    Notifications.cancel(Notifications.Kind.DOWNLOADING)
   } else {
     ctx.database.updateInStory(storyId, "status" to "remote")
   }
@@ -49,8 +53,8 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     metadata = model.src.opt()
   }
 
-  fun fetchMetadata(n: Notifications): Deferred<StoryModel> = async2(CommonPool) {
-    val html = fetchChapter(1, n).await()
+  fun fetchMetadata(): Deferred<StoryModel> = async2(CommonPool) {
+    val html = fetchChapter(1).await()
     metadataChapter = parseChapter(html).opt()
     val meta = parseMetadata(html, storyId)
     metadata = meta.opt()
@@ -60,9 +64,9 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
   /**
    * @returns whether or not the update was done
    */
-  fun update(oldModel: StoryModel, n: Notifications): Deferred<Boolean> = async2(CommonPool) {
+  fun update(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
     val meta = metadata.orElseThrow(IllegalStateException("Cannot update before fetching metadata"))
-    n.show(ctx.resources.getString(R.string.checking_story, oldModel.title))
+    Notifications.show(Notifications.Kind.UPDATING, R.string.checking_story, oldModel.title)
     val newChapterCount = metadata.get()["chapters"] as Long
     if (oldModel.currentChapter > newChapterCount) {
       meta["currentChapter"] = newChapterCount
@@ -101,28 +105,31 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
       val c = Channel<String>(1)
       c.send(metadataChapter.get())
       c.close()
-      n.show(ctx.resources.getString(R.string.fetching_chapter, 1, newModel.title))
+      Notifications.show(Notifications.Kind.UPDATING, R.string.fetching_chapter, 1, newModel.title)
       val isWriting = writeChapters(ctx, storyId, c).await()
       if (!isWriting) return@async2 revertUpdate()
       return@async2 true
     }
     // Chapters have been added
     if (newModel.chapterCount > oldModel.chapterCount) {
-      val chapters = fetchChapters(n, oldModel.chapterCount + 1, newModel.chapterCount)
+      val chapters = fetchChapters(
+          Notifications.Kind.UPDATING, oldModel.chapterCount + 1, newModel.chapterCount)
       val isWriting = writeChapters(ctx, storyId, chapters).await()
       if (!isWriting) return@async2 revertUpdate()
       return@async2 true
     }
-    val isWriting = writeChapters(ctx, storyId, fetchChapters(n)).await()
+    val isWriting = writeChapters(ctx, storyId, fetchChapters(Notifications.Kind.UPDATING)).await()
     if (!isWriting) return@async2 revertUpdate()
+    Notifications.cancel(Notifications.Kind.UPDATING)
     return@async2 true
   }
 
-  fun fetchChapter(chapter: Int, n: Notifications): Deferred<String> =
-      patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/", n) {
-    n.show(ctx.resources.getString(R.string.error_fetching_story_data, storyId.toString()))
-    Log.e(TAG, "fetchChapter", it)
-  }
+  fun fetchChapter(chapter: Int): Deferred<String> =
+      patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
+        Notifications.show(Notifications.Kind.OTHER,
+            R.string.error_fetching_story_data, storyId.toString())
+        Log.e(TAG, "fetchChapter", it)
+      }
 
   fun parseChapter(fromHtml: String): String {
     val story = Regex("id='storytext'>(.*?)</div>", regexOpts).find(fromHtml) ?:
@@ -130,20 +137,19 @@ class StoryFetcher(private val storyId: Long, private val ctx: Context) {
     return story.groupValues[1]
   }
 
-  fun fetchChapters(n: Notifications, from: Int = 1, to: Int = -1): Channel<String>  {
+  fun fetchChapters(kind: Notifications.Kind, from: Int = 1, to: Int = -1): Channel<String>  {
     if (!metadata.isPresent && to == -1)
       throw IllegalArgumentException("Specify 'to' chapter if metadata is missing")
     val target = if (to == -1) (metadata.get()["chapters"] as Long).toInt() else to
-    val storyName = if (metadata.isPresent) metadata.get()["title"] else ""
+    val storyName = if (metadata.isPresent) metadata.get()["title"]!! else ""
     // The buffer size is completely arbitrary
     val channel = Channel<String>(10)
     launch(CommonPool) {
       for (chapterNr in from..target) {
-        n.show(ctx.resources.getString(R.string.fetching_chapter, chapterNr, storyName))
-        channel.send(parseChapter(fetchChapter(chapterNr, n).await()))
+        Notifications.show(kind, R.string.fetching_chapter, chapterNr, storyName)
+        channel.send(parseChapter(fetchChapter(chapterNr).await()))
       }
       channel.close()
-      n.show(ctx.resources.getString(R.string.done_story, storyName))
     }
     return channel
   }

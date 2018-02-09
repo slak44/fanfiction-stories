@@ -77,8 +77,7 @@ class ReviewsActivity : LoadingActivity() {
   private fun addPage(page: Int) = launch(UI) {
     if (totalPages != 0 && page >= totalPages) return@launch
     showLoading()
-    val (list, pages) =
-        getReviews(this@ReviewsActivity, model.storyIdRaw, chapter, page).await()
+    val (list, pages) = getReviews(model.storyIdRaw, chapter, page).await()
     if (totalPages == 0) totalPages = pages
     if (pages == -1) noReviewsText.visibility = View.VISIBLE
     else noReviewsText.visibility = View.INVISIBLE

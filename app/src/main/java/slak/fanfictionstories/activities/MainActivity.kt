@@ -1,5 +1,6 @@
 package slak.fanfictionstories.activities
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.text.Html
@@ -52,11 +53,9 @@ class MainActivity : ActivityWithStatic() {
         Log.i(TAG, "REINITED STORIES TABLE")
       }
       addStoryBtn.setOnClickListener { launch(CommonPool) {
-        val notifs = Notifications(this@MainActivity, Notifications.Kind.DOWNLOADING)
-        getFullStory(this@MainActivity, 12129863L, notifs).await()
-        getFullStory(this@MainActivity, 11953822L, notifs).await()
-        getFullStory(this@MainActivity, 12295826L, notifs).await()
-        notifs.cancel()
+        getFullStory(this@MainActivity, 12129863L).await()
+        getFullStory(this@MainActivity, 11953822L).await()
+        getFullStory(this@MainActivity, 12295826L).await()
       } }
       wipeDiskDataBtn.setOnClickListener {
         val deleted = File(getStorageDir(this@MainActivity).get(), "storiesData")
@@ -65,12 +64,15 @@ class MainActivity : ActivityWithStatic() {
         else Log.e(TAG, "DELETE FAILED")
       }
       downloadNotifBtn.setOnClickListener {
-        val notifs = Notifications(this, Notifications.Kind.DOWNLOADING)
-        notifs.show(resources.getString(R.string.waiting_for_connection))
-        launch(UI) {
-          delay(2500)
-          notifs.cancel()
-        }
+        AlertDialog.Builder(this).setItems(
+            Notifications.Kind.values().map { it.toString() }.toTypedArray(), { _, which ->
+              val picked = Notifications.Kind.values()[which]
+              Notifications.show(picked, "TEST")
+              launch(UI) {
+                delay(2500)
+                Notifications.cancel(picked)
+              }
+            }).create().show()
       }
       updateStoriesBtn.setOnClickListener { launch(CommonPool) {
         delay(3, TimeUnit.SECONDS)

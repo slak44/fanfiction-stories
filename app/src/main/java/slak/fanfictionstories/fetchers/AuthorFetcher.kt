@@ -33,8 +33,7 @@ data class Author(val name: String,
  * @see Author
  */
 fun getAuthor(context: Context, authorId: Long): Deferred<Author> = async2(CommonPool) {
-  val n = Notifications(context, Notifications.Kind.OTHER)
-  val html = fetchAuthorPage(authorId, n).await()
+  val html = fetchAuthorPage(authorId).await()
   val doc = Jsoup.parse(html)
   // USING TABLES FOR ALIGNMENT IN 2018 GOD DAMMIT
   val retardedTableCell =
@@ -104,8 +103,9 @@ private fun parseStoryElement(it: Element,
   ))
 }
 
-private fun fetchAuthorPage(authorId: Long, n: Notifications): Deferred<String> =
-    patientlyFetchURL("https://www.fanfiction.net/u/$authorId/", n) {
-      n.show(Static.res.getString(R.string.error_fetching_author_data, authorId.toString()))
+private fun fetchAuthorPage(authorId: Long): Deferred<String> =
+    patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
+      Notifications.show(Notifications.Kind.OTHER,
+          R.string.error_fetching_author_data, authorId.toString())
       Log.e(Fetcher.TAG, "fetchAuthorPage", it)
     }

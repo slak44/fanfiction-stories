@@ -84,7 +84,7 @@ class CanonStoryListActivity : LoadingActivity() {
 
   private fun getPage(page: Int): Deferred<List<StoryAdapterItem>> = async2(CommonPool) {
     if (!userStories.isPresent) userStories = database.getStories().await().opt()
-    val pageData = fetcher.get(page, this@CanonStoryListActivity).await().map {
+    val pageData = fetcher.get(page).await().map {
       val model = userStories.get().find { st -> st.storyIdRaw == it.storyIdRaw } ?: return@map T1(it)
       it.src["scrollProgress"] = model.src["scrollProgress"] as Double
       it.src["scrollAbsolute"] = model.src["scrollAbsolute"] as Double

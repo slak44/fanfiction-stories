@@ -33,12 +33,12 @@ data class CategoryLink(val text: String,
 
 val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMillis(7))
 
-fun fetchCategoryData(ctx: Context, categoryUrlComponent: String): Deferred<Array<CategoryLink>>
+fun fetchCategoryData(categoryUrlComponent: String): Deferred<Array<CategoryLink>>
     = async2(CommonPool) {
   categoryCache.hit(categoryUrlComponent).ifPresent2 { return@async2 it }
-  val n = Notifications(ctx, Notifications.Kind.OTHER)
-  val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/", n) {
-    n.show(Static.res.getString(R.string.error_with_categories, categoryUrlComponent))
+  val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
+    Notifications.show(Notifications.Kind.OTHER,
+        R.string.error_with_categories, categoryUrlComponent)
     Log.e(TAG, "Category fetch fail: $categoryUrlComponent", it)
   }.await()
   val doc = Jsoup.parse(html)
