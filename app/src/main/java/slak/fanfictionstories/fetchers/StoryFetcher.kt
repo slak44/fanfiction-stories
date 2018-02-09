@@ -20,6 +20,7 @@ import slak.fanfictionstories.utility.Notifications.defaultIntent
 import slak.fanfictionstories.utility.Notifications.readerIntent
 import slak.fanfictionstories.writeChapters
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * Download metadata and every chapter, then store them in the database and on disk.
@@ -49,16 +50,28 @@ fun fetchAndWriteStory(storyId: Long): Deferred<Optional<StoryModel>> = async2(C
   return@async2 model.opt()
 }
 
-fun fetchChapter(storyId: Long, chapter: Int): Deferred<String> {
-  return patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
+// It is unlikely that an update would invalidate the cache within 15 minutes
+val storyCache = Cache<String>("StoryChapter", TimeUnit.MINUTES.toMillis(15))
+
+/**
+ * Fetch the html for a story's chapter.
+ * @param storyId what story
+ * @param chapter what chapter
+ */
+fun fetchChapter(storyId: Long, chapter: Int): Deferred<String> = async2(CommonPool) {
+  val cacheKey = "id$storyId-ch$chapter"
+  storyCache.hit(cacheKey).ifPresent2 { return@async2 it }
+  val html = patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
     Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
         R.string.error_fetching_story_data, storyId.toString())
     Log.e(TAG, "fetchChapter", it)
-  }
+  }.await()
+  storyCache.update(cacheKey, html)
+  return@async2 html
 }
 
 fun extractChapterText(doc: Document): String {
-  return doc.getElementById("storytext")?.text()
+  return doc.getElementById("storytext")?.html()
       ?: throw IllegalArgumentException("No story text in given document")
 }
 

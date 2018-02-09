@@ -11,6 +11,7 @@ import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import slak.fanfictionstories.fetchers.categoryCache
+import slak.fanfictionstories.fetchers.storyCache
 import java.io.File
 
 @SuppressLint("StaticFieldLeak")
@@ -75,6 +76,7 @@ abstract class ActivityWithStatic : AppCompatActivity() {
     Static.init(this)
     if (!hasCache) {
       categoryCache.deserialize()
+      storyCache.deserialize()
       hasCache = true
     }
     if (!hasExHandler) {
