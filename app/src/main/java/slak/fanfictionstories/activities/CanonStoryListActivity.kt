@@ -214,6 +214,7 @@ class CanonStoryListActivity : LoadingActivity() {
           launch(UI) {
             showLoading()
             adapter.addData(getPage(1).await())
+            setAppbarText()
             hideLoading()
           }
           dialog.dismiss()
