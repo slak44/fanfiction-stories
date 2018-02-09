@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import slak.fanfictionstories.fetchers.canonListCache
 import slak.fanfictionstories.fetchers.categoryCache
 import slak.fanfictionstories.fetchers.storyCache
 import java.io.File
@@ -77,6 +78,7 @@ abstract class ActivityWithStatic : AppCompatActivity() {
     if (!hasCache) {
       categoryCache.deserialize()
       storyCache.deserialize()
+      canonListCache.deserialize()
       hasCache = true
     }
     if (!hasExHandler) {

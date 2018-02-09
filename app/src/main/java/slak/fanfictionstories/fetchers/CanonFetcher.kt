@@ -22,6 +22,7 @@ import slak.fanfictionstories.fetchers.FetcherUtils.updatedTimeStoryMeta
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.util.*
+import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
 
 enum class Sort(val ffnetValue: String) {
@@ -113,6 +114,9 @@ enum class WordCount(val ffnetValue: String) {
 
   fun queryParam(): String = "len=$ffnetValue"
 }
+
+// It is unlikely that an update would invalidate the cache within 15 minutes
+val canonListCache = Cache<String>("CanonPage", TimeUnit.MINUTES.toMillis(15))
 
 @Parcelize @SuppressLint("ParcelCreator")
 class CanonFetcher(val details: Details) : Parcelable {
@@ -208,12 +212,14 @@ class CanonFetcher(val details: Details) : Parcelable {
         if (details.char2Without != null) "_c2=${details.char2Without}" else ""
     ).joinToString("&")
 
-    val html = patientlyFetchURL(
-        "https://www.fanfiction.net/${details.parentLink.urlComponent}/?p=$page&$queryParams") {
+    val pathAndQuery = "${details.parentLink.urlComponent}/?p=$page&$queryParams"
+    canonListCache.hit(pathAndQuery).ifPresent2 { return@async2 parseHtml(it) }
+    val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {
       Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
           R.string.error_with_canon_stories, details.parentLink.displayName)
       Log.e(TAG, "CanonFetcher: retry", it)
     }.await()
+    canonListCache.update(pathAndQuery, html)
     return@async2 parseHtml(html)
   }
 
