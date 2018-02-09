@@ -10,6 +10,7 @@ import org.jsoup.Jsoup
 import slak.fanfictionstories.R
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Notifications.defaultIntent
 
 @Parcelize @SuppressLint("ParcelCreator")
 data class Review(
@@ -29,7 +30,7 @@ data class Review(
 fun getReviews(storyId: Long,
                chapter: Int, page: Int): Deferred<Pair<List<Review>, Int>> = async2(CommonPool) {
   val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
-    Notifications.show(Notifications.Kind.OTHER,
+    Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
         R.string.error_fetching_review_data, storyId.toString())
     Log.e(FetcherUtils.TAG, "fetchReviewPage", it)
   }.await()

@@ -17,6 +17,7 @@ import org.jetbrains.anko.db.dropTable
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -67,7 +68,7 @@ class MainActivity : ActivityWithStatic() {
         AlertDialog.Builder(this).setItems(
             Notifications.Kind.values().map { it.toString() }.toTypedArray(), { _, which ->
               val picked = Notifications.Kind.values()[which]
-              Notifications.show(picked, "TEST")
+              Notifications.show(picked, defaultIntent(), "TEST")
               launch(UI) {
                 delay(2500)
                 Notifications.cancel(picked)

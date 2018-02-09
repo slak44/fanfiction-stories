@@ -20,6 +20,7 @@ import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
 import slak.fanfictionstories.fetchers.FetcherUtils.publishedTimeStoryMeta
 import slak.fanfictionstories.fetchers.FetcherUtils.updatedTimeStoryMeta
 import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.util.*
 import java.util.stream.Collectors
 
@@ -209,7 +210,7 @@ class CanonFetcher(val details: Details) : Parcelable {
 
     val html = patientlyFetchURL(
         "https://www.fanfiction.net/${details.parentLink.urlComponent}/?p=$page&$queryParams") {
-      Notifications.show(Notifications.Kind.OTHER,
+      Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
           R.string.error_with_canon_stories, details.parentLink.displayName)
       Log.e(TAG, "CanonFetcher: retry", it)
     }.await()

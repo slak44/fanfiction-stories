@@ -29,6 +29,7 @@ import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.sync.Mutex
 import slak.fanfictionstories.R
+import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
@@ -84,12 +85,12 @@ fun waitForNetwork() = async2(CommonPool) {
     // FIXME figure out network status even when app is not focused
     if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
       // No connection; wait
-      Notifications.show(Notifications.Kind.OTHER, R.string.waiting_for_connection)
+      Notifications.show(Notifications.Kind.OTHER, defaultIntent(), R.string.waiting_for_connection)
       Log.i("waitForNetwork", "No connection")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else if (activeNetwork.isConnecting()) {
       // We're connecting; wait
-      Notifications.show(Notifications.Kind.OTHER, R.string.connecting)
+      Notifications.show(Notifications.Kind.OTHER, defaultIntent(), R.string.connecting)
       Log.i("waitForNetwork", "Connecting...")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else {

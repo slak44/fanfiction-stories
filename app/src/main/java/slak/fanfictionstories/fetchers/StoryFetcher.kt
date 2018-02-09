@@ -16,6 +16,8 @@ import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.fetchers.FetcherUtils.TAG
 import slak.fanfictionstories.fetchers.FetcherUtils.parseMetadata
 import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Notifications.defaultIntent
+import slak.fanfictionstories.utility.Notifications.readerIntent
 import slak.fanfictionstories.writeChapters
 import java.util.*
 
@@ -38,7 +40,7 @@ fun fetchAndWriteStory(storyId: Long): Deferred<Optional<StoryModel>> = async2(C
   val isWriting: Boolean =
       writeChapters(storyId, fetchChapterRange(Notifications.Kind.DOWNLOADING, model)).await()
   if (isWriting) {
-    Notifications.downloadedStory(model.title)
+    Notifications.downloadedStory(model.title, model.storyIdRaw)
     Notifications.cancel(Notifications.Kind.DOWNLOADING)
   } else {
     // FIXME show something saying we failed
@@ -49,7 +51,7 @@ fun fetchAndWriteStory(storyId: Long): Deferred<Optional<StoryModel>> = async2(C
 
 fun fetchChapter(storyId: Long, chapter: Int): Deferred<String> {
   return patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
-    Notifications.show(Notifications.Kind.OTHER,
+    Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
         R.string.error_fetching_story_data, storyId.toString())
     Log.e(TAG, "fetchChapter", it)
   }
@@ -79,7 +81,8 @@ fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
   val channel = Channel<String>(10)
   launch(CommonPool) {
     for (chapterNr in from..target) {
-      Notifications.show(kind, R.string.fetching_chapter, chapterNr, model.title)
+      Notifications.show(
+          kind, readerIntent(model.storyIdRaw), R.string.fetching_chapter, chapterNr, model.title)
       val chapterHtml = fetchChapter(model.storyIdRaw, chapterNr).await()
       channel.send(extractChapterText(Jsoup.parse(chapterHtml)))
     }
@@ -93,7 +96,8 @@ fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
  * @returns whether or not the update was done
  */
 fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
-  Notifications.show(Notifications.Kind.UPDATING, R.string.checking_story, oldModel.title)
+  Notifications.show(
+      Notifications.Kind.UPDATING, defaultIntent(), R.string.checking_story, oldModel.title)
   var newModel = fetchStoryModel(oldModel.storyIdRaw).await()
 
   // Skip non-locals from updates, since the operation does not make sense for them
@@ -127,7 +131,8 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
   val channel: Channel<String> = when {
   // Special case when there is only one chapter
     newModel.chapterCount == 1 -> {
-      Notifications.show(Notifications.Kind.UPDATING, R.string.fetching_chapter, 1, newModel.title)
+      Notifications.show(Notifications.Kind.UPDATING,
+          defaultIntent(), R.string.fetching_chapter, 1, newModel.title)
       val channel = Channel<String>(1)
       channel.send(fetchChapter(newModel.storyIdRaw, 1).await())
       channel.close()

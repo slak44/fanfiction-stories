@@ -13,6 +13,7 @@ import org.jsoup.select.Elements
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.util.*
 
 @Parcelize @SuppressLint("ParcelCreator")
@@ -104,7 +105,7 @@ private fun parseStoryElement(it: Element,
 
 private fun fetchAuthorPage(authorId: Long): Deferred<String> =
     patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
-      Notifications.show(Notifications.Kind.OTHER,
+      Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
           R.string.error_fetching_author_data, authorId.toString())
       Log.e(FetcherUtils.TAG, "fetchAuthorPage", it)
     }

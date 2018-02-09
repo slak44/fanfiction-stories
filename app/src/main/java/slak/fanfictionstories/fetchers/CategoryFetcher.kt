@@ -11,6 +11,7 @@ import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categoryUrl
 import slak.fanfictionstories.fetchers.FetcherUtils.TAG
 import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
 
@@ -36,7 +37,7 @@ fun fetchCategoryData(categoryUrlComponent: String): Deferred<Array<CategoryLink
     = async2(CommonPool) {
   categoryCache.hit(categoryUrlComponent).ifPresent2 { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
-    Notifications.show(Notifications.Kind.OTHER,
+    Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
         R.string.error_with_categories, categoryUrlComponent)
     Log.e(TAG, "Category fetch fail: $categoryUrlComponent", it)
   }.await()

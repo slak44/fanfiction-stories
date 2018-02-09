@@ -48,7 +48,7 @@ class StoryUpdateReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     launch(CommonPool) {
       update(context).await()
-      Notifications.updatedStories(updatedStories.map { it.title })
+      Notifications.updatedStories(updatedStories.map { Pair(it.storyIdRaw, it.title) })
     }
   }
 
