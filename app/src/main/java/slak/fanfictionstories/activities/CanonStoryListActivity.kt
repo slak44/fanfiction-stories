@@ -89,6 +89,7 @@ class CanonStoryListActivity : LoadingActivity() {
       it.src["scrollProgress"] = model.src["scrollProgress"] as Double
       it.src["scrollAbsolute"] = model.src["scrollAbsolute"] as Double
       it.src["currentChapter"] = model.src["currentChapter"] as Long
+      it.status = model.status
       return@map T1(StoryModel(it.src))
     }
     if (pageData.isEmpty()) return@async2 listOf<StoryAdapterItem>()
