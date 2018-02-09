@@ -150,7 +150,7 @@ object Fetcher {
         "canon" to categories[1].text(),
         "category" to categories[0].text(),
         "summary" to summary,
-        "authorid" to authorIdFromAuthor(author),
+        "authorId" to authorIdFromAuthor(author),
         "author" to author.text(),
         "title" to title,
         "chapterTitles" to chapterTitles.orElse("")

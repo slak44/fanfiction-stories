@@ -62,7 +62,7 @@ class StoryModel(val src: MutableMap<String, Any>) : Parcelable {
   val favoritesCount: Int = (src["favorites"] as Long).toInt()
   val followsCount: Int = (src["follows"] as Long).toInt()
   val authorRaw = src["author"] as String
-  val authorIdRaw = src["authorid"] as Long
+  val authorIdRaw = src["authorId"] as Long
   val categoryRaw = src["category"] as String
   val genresRaw = src["genres"] as String
   val canonRaw = src["canon"] as String

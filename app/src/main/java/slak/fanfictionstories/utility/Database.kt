@@ -26,7 +26,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         _id INTEGER PRIMARY KEY UNIQUE,
         title TEXT NOT NULL,
         author TEXT NOT NULL,
-        authorid INTEGER NOT NULL,
+        authorId INTEGER NOT NULL,
         summary TEXT NOT NULL,
         category TEXT NOT NULL,
         canon TEXT NOT NULL,

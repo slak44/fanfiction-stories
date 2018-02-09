@@ -269,7 +269,7 @@ class CanonFetcher(val details: Details) : Parcelable {
 
       return@map StoryModel(mutableMapOf(
           "storyId" to storyId,
-          "authorid" to authorIdFromAuthor(authorAnchor),
+          "authorId" to authorIdFromAuthor(authorAnchor),
           "rating" to meta["rating"]!!,
           "language" to meta["language"]!!,
           "genres" to meta["genres"]!!,

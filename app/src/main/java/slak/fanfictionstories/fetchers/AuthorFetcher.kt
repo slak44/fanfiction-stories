@@ -97,7 +97,7 @@ private fun parseStoryElement(it: Element,
       "category" to "",
       "summary" to it.children().last().textNodes().first().text(),
       "author" to if (a.isPresent) a.get().second else it.children()[2].text(),
-      "authorid" to if (a.isPresent) a.get().first else Fetcher.authorIdFromAuthor(it.children()[2]),
+      "authorId" to if (a.isPresent) a.get().first else Fetcher.authorIdFromAuthor(it.children()[2]),
       "title" to it.select("a.stitle").first().textNodes().last().text(),
       "chapterTitles" to ""
   ))
