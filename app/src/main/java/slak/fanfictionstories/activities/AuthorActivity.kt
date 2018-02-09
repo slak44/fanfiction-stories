@@ -62,7 +62,7 @@ class AuthorActivity : LoadingActivity(1) {
     showLoading()
     launch(CommonPool) {
       val restoreAuthor = savedInstanceState?.getParcelable<Author>(RESTORE_AUTHOR)?.opt()
-      author = restoreAuthor ?: getAuthor(this@AuthorActivity, authorId).await().opt()
+      author = restoreAuthor ?: getAuthor(authorId).await().opt()
       launch(UI) {
         if (menu.isPresent) onPrepareOptionsMenu(menu.get())
         sectionsPagerAdapter = SectionsPagerAdapter(supportFragmentManager)

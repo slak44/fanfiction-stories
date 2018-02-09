@@ -32,7 +32,7 @@ data class Author(val name: String,
  * Get author data for specified id.
  * @see Author
  */
-fun getAuthor(context: Context, authorId: Long): Deferred<Author> = async2(CommonPool) {
+fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
   val html = fetchAuthorPage(authorId).await()
   val doc = Jsoup.parse(html)
   // USING TABLES FOR ALIGNMENT IN 2018 GOD DAMMIT
