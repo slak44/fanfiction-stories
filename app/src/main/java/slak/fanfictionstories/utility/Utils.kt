@@ -119,7 +119,6 @@ fun patientlyFetchURL(url: String,
   } catch (t: Throwable) {
     // Something happened; retry
     onError(t)
-    delay(RATE_LIMIT_MS)
     patientlyFetchURL(url, onError).await()
   }
 }
