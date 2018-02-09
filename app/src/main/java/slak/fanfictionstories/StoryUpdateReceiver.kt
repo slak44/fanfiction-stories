@@ -9,11 +9,13 @@ import android.icu.util.Calendar
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
-import slak.fanfictionstories.fetchers.StoryFetcher
+import slak.fanfictionstories.fetchers.fetchStoryModel
+import slak.fanfictionstories.fetchers.updateStory
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.database
-import slak.fanfictionstories.utility.waitForNetwork
+
+// FIXME: this entire file needs to be rethought and refactored
 
 const val UPDATE_ALARM_PENDING_INTENT_REQ_CODE = 0xA1A12
 
@@ -55,9 +57,7 @@ class StoryUpdateReceiver : BroadcastReceiver() {
     updatedStories = mutableListOf()
     val storyModels = context.database.getLocalStories().await()
     storyModels.forEach { model ->
-      val fetcher = StoryFetcher(model.storyIdRaw, context)
-      fetcher.fetchMetadata().await()
-      val updated = fetcher.update(model).await()
+      val updated = updateStory(fetchStoryModel(model.storyIdRaw).await()).await()
       if (updated) updatedStories.add(model)
     }
     Notifications.cancel(Notifications.Kind.UPDATING)

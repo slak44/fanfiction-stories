@@ -18,9 +18,11 @@ import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.select
+import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.FetcherUtils.parseMetadata
-import slak.fanfictionstories.fetchers.StoryFetcher
+import slak.fanfictionstories.fetchers.extractChapterText
+import slak.fanfictionstories.fetchers.fetchChapter
 import slak.fanfictionstories.utility.*
 import java.io.File
 
@@ -238,17 +240,14 @@ class StoryReaderActivity : LoadingActivity() {
     return true
   }
 
-  private var fetcher: StoryFetcher? = null
   private fun downloadChapter(storyId: Long,
                               chapter: Int, target: File): Deferred<String> = async2(CommonPool) {
-    if (fetcher == null) fetcher = StoryFetcher(storyId, this@StoryReaderActivity)
-    val chapterHtmlText = fetcher!!.fetchChapter(chapter).await()
-    val text = fetcher!!.parseChapter(chapterHtmlText)
+    val chapterHtmlText = fetchChapter(storyId, chapter).await()
+    val text = extractChapterText(Jsoup.parse(chapterHtmlText))
     target.printWriter().use { it.print(text) }
     if (model.status == StoryStatus.TRANSIENT) {
       model = StoryModel(parseMetadata(chapterHtmlText, storyId))
       model.status = StoryStatus.REMOTE
-      fetcher!!.setMetadata(model)
       database.use { insertOrThrow("stories", *model.toKvPairs()) }
     }
     return@async2 text

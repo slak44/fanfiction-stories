@@ -1,7 +1,6 @@
 package slak.fanfictionstories
 
 import android.animation.ObjectAnimator
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
@@ -17,14 +16,13 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import kotlinx.android.synthetic.main.story_component.view.*
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
-import slak.fanfictionstories.fetchers.getFullStory
+import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 import kotlin.coroutines.experimental.buildSequence
 
@@ -151,7 +149,7 @@ class StoryCardView : CardView {
       addBtn.isEnabled = false
       addBtn.text = str(R.string.adding___)
       launch(UI) {
-        val newModel = getFullStory(this@StoryCardView.context, model.storyIdRaw).await()
+        val newModel = fetchAndWriteStory(model.storyIdRaw).await()
         if (newModel.isPresent) {
           addBtn.visibility = View.GONE
         } else {

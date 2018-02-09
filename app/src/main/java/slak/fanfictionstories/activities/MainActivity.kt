@@ -15,7 +15,7 @@ import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.dropTable
 import slak.fanfictionstories.*
-import slak.fanfictionstories.fetchers.getFullStory
+import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -53,9 +53,9 @@ class MainActivity : ActivityWithStatic() {
         Log.i(TAG, "REINITED STORIES TABLE")
       }
       addStoryBtn.setOnClickListener { launch(CommonPool) {
-        getFullStory(this@MainActivity, 12129863L).await()
-        getFullStory(this@MainActivity, 11953822L).await()
-        getFullStory(this@MainActivity, 12295826L).await()
+        fetchAndWriteStory(12129863L).await()
+        fetchAndWriteStory(11953822L).await()
+        fetchAndWriteStory(12295826L).await()
       } }
       wipeDiskDataBtn.setOnClickListener {
         val deleted = File(getStorageDir(this@MainActivity).get(), "storiesData")

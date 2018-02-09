@@ -14,7 +14,7 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.*
-import slak.fanfictionstories.fetchers.getFullStory
+import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 
 class StoryListActivity : ActivityWithStatic() {
@@ -79,7 +79,7 @@ class StoryListActivity : ActivityWithStatic() {
           val id = editText.text.toString().toLong()
           dialog.dismiss()
           launch(CommonPool) {
-            val model = getFullStory(this@StoryListActivity, id).await()
+            val model = fetchAndWriteStory(id).await()
             model.ifPresent { initializeAdapter() }
           }
         })

@@ -38,9 +38,9 @@ fun storyDir(ctx: Context, storyId: Long): Optional<File> {
  * Note that this function only suspends if it's actually writing; it immediately returns on failure
  * @returns true if we started writing data to disk, false otherwise
  */
-fun writeChapters(ctx: Context, storyId: Long,
+fun writeChapters(storyId: Long,
                   chapters: Channel<String>): Deferred<Boolean> = async2(CommonPool) {
-  val targetDir = storyDir(ctx, storyId).orElse { return@async2 false }
+  val targetDir = storyDir(Static.currentCtx, storyId).orElse { return@async2 false }
   if (targetDir.exists()) {
     Log.i("StoryWriter#writeChapters", "Target dir already exists")
   } else {
