@@ -6,7 +6,7 @@ import org.jsoup.nodes.Element
 import slak.fanfictionstories.utility.opt
 import java.util.*
 
-object Fetcher {
+object FetcherUtils {
   @JvmStatic
   val TAG = "Fetcher"
   @JvmStatic

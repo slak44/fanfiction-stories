@@ -9,7 +9,7 @@ import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categoryUrl
-import slak.fanfictionstories.fetchers.Fetcher.TAG
+import slak.fanfictionstories.fetchers.FetcherUtils.TAG
 import slak.fanfictionstories.utility.*
 import java.io.Serializable
 import java.util.concurrent.TimeUnit

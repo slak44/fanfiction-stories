@@ -1,7 +1,6 @@
 package slak.fanfictionstories.fetchers
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
@@ -48,7 +47,7 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
   } ?: listOf()
   val favAuthors = doc.getElementById("fa").select("dl").map {
     val authorElement = it.select("a").first()
-    return@map Pair(Fetcher.authorIdFromAuthor(authorElement), authorElement.text())
+    return@map Pair(FetcherUtils.authorIdFromAuthor(authorElement), authorElement.text())
   }
   return@async2 Author(
       authorName,
@@ -72,7 +71,7 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
 private fun parseStoryElement(it: Element,
                               a: Optional<Pair<Long, String>> = Optional.empty()): StoryModel {
   val metaHtml = it.children().last().children().last().html()
-  val meta = Fetcher.parseStoryMetadata(metaHtml)
+  val meta = FetcherUtils.parseStoryMetadata(metaHtml)
   return StoryModel(mutableMapOf(
       "storyId" to it.attr("data-storyid").toLong(),
       "rating" to meta["rating"]!!,
@@ -84,9 +83,9 @@ private fun parseStoryElement(it: Element,
       "reviews" to if (meta["reviews"] != null) meta["reviews"]!!.toLong() else 0L,
       "favorites" to if (meta["favs"] != null) meta["favs"]!!.toLong() else 0L,
       "follows" to if (meta["follows"] != null) meta["follows"]!!.toLong() else 0L,
-      "publishDate" to (Fetcher.publishedTimeStoryMeta(metaHtml)?.toLong() ?: 0L),
-      "updateDate" to (Fetcher.updatedTimeStoryMeta(metaHtml)?.toLong() ?: 0L),
-      "isCompleted" to Fetcher.isComplete(metaHtml),
+      "publishDate" to (FetcherUtils.publishedTimeStoryMeta(metaHtml)?.toLong() ?: 0L),
+      "updateDate" to (FetcherUtils.updatedTimeStoryMeta(metaHtml)?.toLong() ?: 0L),
+      "isCompleted" to FetcherUtils.isComplete(metaHtml),
       "scrollProgress" to 0.0,
       "scrollAbsolute" to 0L,
       "currentChapter" to 0L,
@@ -97,7 +96,7 @@ private fun parseStoryElement(it: Element,
       "category" to "",
       "summary" to it.children().last().textNodes().first().text(),
       "author" to if (a.isPresent) a.get().second else it.children()[2].text(),
-      "authorId" to if (a.isPresent) a.get().first else Fetcher.authorIdFromAuthor(it.children()[2]),
+      "authorId" to if (a.isPresent) a.get().first else FetcherUtils.authorIdFromAuthor(it.children()[2]),
       "title" to it.select("a.stitle").first().textNodes().last().text(),
       "chapterTitles" to ""
   ))
@@ -107,5 +106,5 @@ private fun fetchAuthorPage(authorId: Long): Deferred<String> =
     patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
       Notifications.show(Notifications.Kind.OTHER,
           R.string.error_fetching_author_data, authorId.toString())
-      Log.e(Fetcher.TAG, "fetchAuthorPage", it)
+      Log.e(FetcherUtils.TAG, "fetchAuthorPage", it)
     }

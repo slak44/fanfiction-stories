@@ -8,7 +8,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import slak.fanfictionstories.R
-import slak.fanfictionstories.fetchers.Fetcher.authorIdFromAuthor
+import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.utility.*
 
 @Parcelize @SuppressLint("ParcelCreator")
@@ -31,7 +31,7 @@ fun getReviews(storyId: Long,
   val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
     Notifications.show(Notifications.Kind.OTHER,
         R.string.error_fetching_review_data, storyId.toString())
-    Log.e(Fetcher.TAG, "fetchReviewPage", it)
+    Log.e(FetcherUtils.TAG, "fetchReviewPage", it)
   }.await()
   return@async2 parseReviewPage(storyId, html)
 }

@@ -12,9 +12,9 @@ import org.jetbrains.anko.db.replaceOrThrow
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.StoryStatus
-import slak.fanfictionstories.fetchers.Fetcher.TAG
-import slak.fanfictionstories.fetchers.Fetcher.parseMetadata
-import slak.fanfictionstories.fetchers.Fetcher.regexOpts
+import slak.fanfictionstories.fetchers.FetcherUtils.TAG
+import slak.fanfictionstories.fetchers.FetcherUtils.parseMetadata
+import slak.fanfictionstories.fetchers.FetcherUtils.regexOpts
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.writeChapters
 import java.util.*

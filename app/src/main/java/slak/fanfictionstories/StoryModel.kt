@@ -8,7 +8,7 @@ import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
 import android.widget.Switch
 import org.jetbrains.anko.db.MapRowParser
-import slak.fanfictionstories.fetchers.Fetcher.CHAPTER_TITLE_SEPARATOR
+import slak.fanfictionstories.fetchers.FetcherUtils.CHAPTER_TITLE_SEPARATOR
 import slak.fanfictionstories.fetchers.Genre
 import slak.fanfictionstories.utility.*
 import java.text.SimpleDateFormat

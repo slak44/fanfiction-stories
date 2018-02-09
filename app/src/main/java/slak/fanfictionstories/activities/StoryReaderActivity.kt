@@ -19,7 +19,7 @@ import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.select
 import slak.fanfictionstories.*
-import slak.fanfictionstories.fetchers.Fetcher.parseMetadata
+import slak.fanfictionstories.fetchers.FetcherUtils.parseMetadata
 import slak.fanfictionstories.fetchers.StoryFetcher
 import slak.fanfictionstories.utility.*
 import java.io.File

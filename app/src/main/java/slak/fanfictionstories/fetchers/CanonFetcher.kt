@@ -14,11 +14,11 @@ import org.jsoup.nodes.TextNode
 import org.jsoup.parser.Parser
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
-import slak.fanfictionstories.fetchers.Fetcher.TAG
-import slak.fanfictionstories.fetchers.Fetcher.authorIdFromAuthor
-import slak.fanfictionstories.fetchers.Fetcher.parseStoryMetadata
-import slak.fanfictionstories.fetchers.Fetcher.publishedTimeStoryMeta
-import slak.fanfictionstories.fetchers.Fetcher.updatedTimeStoryMeta
+import slak.fanfictionstories.fetchers.FetcherUtils.TAG
+import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
+import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
+import slak.fanfictionstories.fetchers.FetcherUtils.publishedTimeStoryMeta
+import slak.fanfictionstories.fetchers.FetcherUtils.updatedTimeStoryMeta
 import slak.fanfictionstories.utility.*
 import java.util.*
 import java.util.stream.Collectors
