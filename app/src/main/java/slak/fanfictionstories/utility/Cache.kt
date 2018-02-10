@@ -8,7 +8,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 typealias ExpirationEpoch = Long
-typealias CacheMap<T> = ConcurrentHashMap<String, Pair<T, ExpirationEpoch>?>
+typealias CacheMap<T> = ConcurrentHashMap<String, Pair<T, ExpirationEpoch>>
 
 class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch) {
   private var cache = CacheMap<T>()
@@ -53,7 +53,7 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
     if (System.currentTimeMillis() > cache[key]!!.second) {
       // Cache expired; remove and return nothing
       Log.d(TAG, "Cache expired: $key")
-      cache[key] = null
+      cache.remove(key)
       serialize()
       return Optional.empty()
     }
