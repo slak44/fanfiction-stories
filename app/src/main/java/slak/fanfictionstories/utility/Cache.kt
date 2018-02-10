@@ -5,9 +5,10 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
 import java.io.*
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 typealias ExpirationEpoch = Long
-typealias CacheMap<T> = HashMap<String, Pair<T, ExpirationEpoch>?>
+typealias CacheMap<T> = ConcurrentHashMap<String, Pair<T, ExpirationEpoch>?>
 
 class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch) {
   private var cache = CacheMap<T>()
