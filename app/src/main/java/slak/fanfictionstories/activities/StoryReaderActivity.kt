@@ -2,6 +2,7 @@ package slak.fanfictionstories.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Parcelable
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
 import android.text.Html
@@ -219,7 +220,7 @@ class StoryReaderActivity : LoadingActivity() {
       R.id.prevChapter -> prevChapterBtn.callOnClick()
       R.id.storyReviews -> {
         val intent = Intent(this, ReviewsActivity::class.java)
-        intent.putExtra(ReviewsActivity.INTENT_STORY_MODEL, model)
+        intent.putExtra(ReviewsActivity.INTENT_STORY_MODEL, model as Parcelable)
         intent.putExtra(ReviewsActivity.INTENT_TARGET_CHAPTER, currentChapter)
         startActivity(intent)
       }

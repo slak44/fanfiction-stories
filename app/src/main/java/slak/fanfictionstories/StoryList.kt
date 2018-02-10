@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.os.Parcelable
 import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
@@ -51,7 +52,8 @@ class StoryCardView : CardView {
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
           val intent = Intent(recyclerView.context, StoryReaderActivity::class.java)
           val cardView = viewHolder.itemView as StoryCardView
-          intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, cardView.currentModel!!)
+          intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL,
+              cardView.currentModel!! as Parcelable)
           openStoryReader(intent, cardView.currentModel!!.storyId)
           // After the reader was opened, reset the translation by reattaching
           // We do this because we might go back from the reader to this activity and

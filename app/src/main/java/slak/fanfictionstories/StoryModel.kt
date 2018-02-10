@@ -11,6 +11,7 @@ import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.fetchers.FetcherUtils.CHAPTER_TITLE_SEPARATOR
 import slak.fanfictionstories.fetchers.Genre
 import slak.fanfictionstories.utility.str
+import java.io.Serializable
 import java.util.*
 import kotlin.collections.List
 import kotlin.collections.Map
@@ -72,7 +73,7 @@ data class StoryModelFragment(val rating: String,
                               val characters: String,
                               val publishTime: Long,
                               val updateTime: Long,
-                              val isComplete: Long) : Parcelable
+                              val isComplete: Long) : Parcelable, Serializable
 
 /**
  * Stores the progress made in a story.
@@ -80,7 +81,7 @@ data class StoryModelFragment(val rating: String,
 @Parcelize @SuppressLint("ParcelCreator")
 data class StoryProgress(val scrollProgress: Double = 0.0,
                          val scrollAbsolute: Double = 0.0,
-                         val currentChapter: Long = 0L) : Parcelable
+                         val currentChapter: Long = 0L) : Parcelable, Serializable
 
 @Parcelize @SuppressLint("ParcelCreator")
 data class StoryModel(val storyId: Long,
@@ -93,7 +94,7 @@ data class StoryModel(val storyId: Long,
                       val author: String,
                       val authorId: Long,
                       val title: String,
-                      val serializedChapterTitles: String?) : Parcelable {
+                      val serializedChapterTitles: String?) : Parcelable, Serializable {
   fun wordsProgressedApprox(): Long {
     if (progress.currentChapter == 0L) return 0L
     // If this is too inaccurate, we might have to store each chapter's word count, then compute

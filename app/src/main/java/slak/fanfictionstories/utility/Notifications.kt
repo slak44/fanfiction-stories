@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
+import android.os.Parcelable
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.support.v4.app.NotificationCompat
@@ -99,7 +100,7 @@ object Notifications {
     val model = Static.currentCtx.database.storyById(storyId)
         .orElseThrow(IllegalStateException("Story not found in db"))
     val intent = Intent(Static.currentCtx, StoryReaderActivity::class.java)
-    intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, model)
+    intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, model as Parcelable)
     return intent
   }
 

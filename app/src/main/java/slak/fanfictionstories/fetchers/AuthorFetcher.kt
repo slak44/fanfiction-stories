@@ -15,12 +15,11 @@ import slak.fanfictionstories.StoryProgress
 import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
-import slak.fanfictionstories.utility.Notifications
+import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
-import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.opt
-import slak.fanfictionstories.utility.patientlyFetchURL
-import java.util.*
+import java.util.concurrent.TimeUnit
+
+val authorCache = Cache<Author>("Author", TimeUnit.DAYS.toMillis(1))
 
 @Parcelize @SuppressLint("ParcelCreator")
 data class Author(val name: String,
@@ -32,13 +31,14 @@ data class Author(val name: String,
                   val bioHtml: String,
                   val userStories: List<StoryModel>,
                   val favoriteStories: List<StoryModel>,
-                  val favoriteAuthors: List<Pair<Long, String>>) : Parcelable
+                  val favoriteAuthors: List<Pair<Long, String>>) : Parcelable, java.io.Serializable
 
 /**
  * Get author data for specified id.
  * @see Author
  */
 fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
+  authorCache.hit(authorId.toString()).ifPresent2 { return@async2 it }
   val html = fetchAuthorPage(authorId).await()
   val doc = Jsoup.parse(html)
   // USING TABLES FOR ALIGNMENT IN 2018 GOD DAMMIT
@@ -56,7 +56,7 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
     val authorElement = it.select("a").first()
     return@map Pair(FetcherUtils.authorIdFromAuthor(authorElement), authorElement.text())
   }
-  return@async2 Author(
+  val author = Author(
       authorName,
       authorId,
       // Joined date, seconds
@@ -73,6 +73,8 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
       favStories,
       favAuthors
   )
+  authorCache.update(authorId.toString(), author)
+  return@async2 author
 }
 
 private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?): StoryModel {
@@ -87,8 +89,8 @@ private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?)
       // Category info is unavailable here!
       category = null,
       summary = it.children().last().textNodes().first().text(),
-      author = authorName ?: it.children()[2].text(),
-      authorId = authorId ?: authorIdFromAuthor(it.children()[2]),
+      author = authorName ?: it.select("a").last().text(),
+      authorId = authorId ?: authorIdFromAuthor(it.select("a").last()),
       title = it.select("a.stitle").first().textNodes().last().text(),
       serializedChapterTitles = null
   )

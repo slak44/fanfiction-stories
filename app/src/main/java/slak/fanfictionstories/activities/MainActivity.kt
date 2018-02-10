@@ -3,6 +3,7 @@ package slak.fanfictionstories.activities
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.os.Parcelable
 import android.text.Html
 import android.util.Log
 import android.view.Menu
@@ -101,7 +102,7 @@ class MainActivity : ActivityWithStatic() {
     resumeButton.drawableTint(R.color.white, theme, Direction.LEFT)
     resumeButton.setOnClickListener {
       val intent = Intent(this@MainActivity, StoryReaderActivity::class.java)
-      intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, model)
+      intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, model as Parcelable)
       startActivity(intent)
     }
   }
