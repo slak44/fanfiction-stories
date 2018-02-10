@@ -25,7 +25,7 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
       @Suppress("Unchecked_Cast")
       val array = objIn.readObject() as CacheMap<T>
       cache = array
-    } catch (ex: IOException) {
+    } catch (ex: Throwable) {
       // Ignore errors with the cache; don't crash the app because of it
       cacheMapFile.delete()
       Log.d(TAG, "Cache load error, deleting cache")
