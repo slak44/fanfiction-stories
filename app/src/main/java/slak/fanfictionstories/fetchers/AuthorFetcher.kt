@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
-import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
@@ -12,8 +11,11 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
-import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.Notifications.defaultIntent
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.opt
+import slak.fanfictionstories.utility.patientlyFetchURL
 import java.util.*
 
 @Parcelize @SuppressLint("ParcelCreator")
@@ -22,7 +24,7 @@ data class Author(val name: String,
                   val joinedDateSeconds: Long,
                   val updatedDateSeconds: Long,
                   val countryName: String,
-                  val imageUrl: @RawValue Optional<String>,
+                  val imageUrl: String?,
                   val bioHtml: String,
                   val userStories: List<StoryModel>,
                   val favoriteStories: List<StoryModel>,
@@ -60,7 +62,7 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
       // Country name
       retardedTableCell.select("img").first().attr("title"),
       // Image url
-      doc.select("#bio > img").first()?.attr("src").opt(),
+      doc.select("#bio > img").first()?.attr("src"),
       // User bio (first child is image)
       Elements(doc.getElementById("bio").children().drop(1)).outerHtml(),
       stories,
