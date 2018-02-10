@@ -2,18 +2,30 @@ package slak.fanfictionstories
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Parcel
 import android.os.Parcelable
 import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
 import android.widget.Switch
+import kotlinx.android.parcel.Parcelize
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.fetchers.FetcherUtils.CHAPTER_TITLE_SEPARATOR
 import slak.fanfictionstories.fetchers.Genre
-import slak.fanfictionstories.utility.*
-import java.text.SimpleDateFormat
+import slak.fanfictionstories.utility.str
 import java.util.*
-import kotlin.collections.HashMap
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.MutableList
+import kotlin.collections.emptyList
+import kotlin.collections.filter
+import kotlin.collections.forEach
+import kotlin.collections.hashMapOf
+import kotlin.collections.map
+import kotlin.collections.mapOf
+import kotlin.collections.mutableListOf
+import kotlin.collections.set
+import kotlin.collections.sortWith
+import kotlin.collections.toMutableList
+import kotlin.collections.toTypedArray
 
 enum class StoryStatus {
   // Incomplete metadata, will be set to remote if user wants to read it
@@ -45,123 +57,147 @@ enum class StoryStatus {
   }
 }
 
-private const val TEMP_SEPARATOR = "temporary_separator"
+/**
+ * The story data that can be extracted from the text div.
+ */
+@Parcelize @SuppressLint("ParcelCreator")
+data class StoryModelFragment(val rating: String,
+                              val language: String,
+                              val wordCount: Long,
+                              val chapterCount: Long,
+                              val favorites: Long,
+                              val follows: Long,
+                              val reviews: Long,
+                              val genres: String,
+                              val characters: String,
+                              val publishTime: Long,
+                              val updateTime: Long,
+                              val isComplete: Long) : Parcelable
 
-@Suppress("MemberVisibilityCanPrivate")
-class StoryModel(val src: MutableMap<String, Any>) : Parcelable {
-  var status = StoryStatus.fromString(src["status"] as String)
-    set(value) {
-      field = value
-      src["status"] = value.toString()
-    }
+/**
+ * Stores the progress made in a story.
+ */
+@Parcelize @SuppressLint("ParcelCreator")
+data class StoryProgress(val scrollProgress: Double = 0.0,
+                         val scrollAbsolute: Double = 0.0,
+                         val currentChapter: Long = 0L) : Parcelable
 
-  // Raw data
-  val storyIdRaw: Long = src["storyId"] as Long
-  val wordCount: Int = (src["wordCount"] as Long).toInt()
-  val reviewsCount: Int = (src["reviews"] as Long).toInt()
-  val favoritesCount: Int = (src["favorites"] as Long).toInt()
-  val followsCount: Int = (src["follows"] as Long).toInt()
-  val authorRaw = src["author"] as String
-  val authorIdRaw = src["authorId"] as Long
-  val categoryRaw = src["category"] as String
-  val genresRaw = src["genres"] as String
-  val canonRaw = src["canon"] as String
-  val charactersRaw = src["characters"] as String
-  val ratingRaw = src["rating"] as String
-  val scrollProgress: Double = src["scrollProgress"] as Double
-  val chapterTitlesRaw: String = src["chapterTitles"] as String
-
-  // UI data
-  val chapterTitles = chapterTitlesRaw.split(CHAPTER_TITLE_SEPARATOR)
-  val chapterCount: Int = (src["chapters"] as Long).toInt()
-  val title = src["title"] as String
-  val summary = src["summary"] as String
-  val category: String get() = str(R.string.in_category, categoryRaw)
-  val language = src["language"] as String
-  val currentChapter: Int = (src["currentChapter"] as Long).toInt()
-  val storyId: String get() = str(R.string.storyid_x, storyIdRaw)
-  val isCompleted: Boolean get() = src["isCompleted"] as Long == 1L
-  val author: String get() = str(R.string.by_author, authorRaw)
-  val canon: String get() = str(R.string.in_canon, canonRaw)
-  val words: String get() = str(R.string.x_words, autoSuffixNumber(wordCount))
-  val rating: String get() = str(R.string.rated_x, ratingRaw)
-  val genres: String get() = str(R.string.about_genres, genresRaw)
-  val characters: String get() = str(R.string.with_characters, charactersRaw)
-  val reviews: String get() = str(R.string.x_reviews, reviewsCount)
-  val favorites: String get() = str(R.string.x_favorites, favoritesCount)
-  val follows: String get() = str(R.string.x_follows, followsCount)
-  val wordsProgressedApprox: Int get() {
-    if (currentChapter == 0) return 0
+@Parcelize @SuppressLint("ParcelCreator")
+data class StoryModel(val storyId: Long,
+                      var status: StoryStatus,
+                      var progress: StoryProgress,
+                      val fragment: StoryModelFragment,
+                      val canon: String,
+                      val category: String?,
+                      val summary: String,
+                      val author: String,
+                      val authorId: Long,
+                      val title: String,
+                      val serializedChapterTitles: String?) : Parcelable {
+  fun wordsProgressedApprox(): Long {
+    if (progress.currentChapter == 0L) return 0L
     // If this is too inaccurate, we might have to store each chapter's word count, then compute
     // how far along we are
-    val avgWordCount: Float = wordCount.toFloat() / chapterCount
+    val avgWordCount: Double = fragment.wordCount.toDouble() / fragment.chapterCount
     // amount of words before current chapter + amount of words scrolled through in current chapter
     val wordsPassedEstimate: Double =
-        (currentChapter - 1) * avgWordCount + scrollProgress / 100 * avgWordCount
-    return wordsPassedEstimate.toInt()
+        (progress.currentChapter - 1) * avgWordCount + progress.scrollProgress / 100 * avgWordCount
+    return wordsPassedEstimate.toLong()
   }
-  val progress: Double get() {
-    if (chapterCount == 1) return scrollProgress
+
+  fun progressAsPercentage(): Double {
+    if (fragment.chapterCount == 1L) return progress.scrollProgress
     // Return percentage
-    return wordsProgressedApprox * 100.0 / wordCount
+    return wordsProgressedApprox() * 100.0 / fragment.wordCount
   }
-  @Suppress("LiftReturnOrAssignment")
-  val chapters: String get() {
-    // If we didn't start reading the thing, show total chapter count
-    if (currentChapter == 0) {
-      // Special-case one chapter
-      if (chapterCount == 1) return str(R.string.one_chapter)
-      else return str(R.string.x_chapters, chapterCount)
-    }
-    // Otherwise, list current chapter out of total
-    else return str(R.string.chapter_progress, currentChapter, chapterCount)
-  }
-  val genreList: List<Genre> get() =
-    (if (genresRaw == str(R.string.none)) null else genresRaw)
-        ?.replace("/", TEMP_SEPARATOR)
+
+  fun isComplete(): Boolean = fragment.isComplete == 1L
+
+  fun genreList(): List<Genre> {
+    if (fragment.genres == str(R.string.none)) return emptyList()
+    return fragment.genres
+        .replace("/", TEMP_SEPARATOR)
         // Take special care of "Hurt/Comfort" since it contains a slash
-        ?.replace("Hurt${TEMP_SEPARATOR}Comfort", "Hurt/Comfort")
-        ?.split(TEMP_SEPARATOR)
-        ?.map { Genre.fromString(it) }
-        ?: throw IllegalStateException("There are no genres")
-  val characterList: List<String> get() =
-    charactersRaw.replace("[", "").split(", ", "] ")
-
-  // Dates
-  val publishDateSeconds: Long = src["publishDate"] as Long
-  val updateDateSeconds: Long = src["updateDate"] as Long
-  private val publishDateFormatted: String
-    get() = SimpleDateFormat.getDateInstance().format(Date(publishDateSeconds * 1000))
-  private val updateDateFormatted: String
-    get() = SimpleDateFormat.getDateInstance().format(Date(updateDateSeconds * 1000))
-  val publishDate: String
-    get() = str(R.string.published_on, publishDateFormatted)
-  val updateDate: String
-    get() = str(R.string.updated_on, updateDateFormatted)
-
-  fun toKvPairs(): Array<Pair<String, Any>> = src.entries.map { it.key to it.value }.toTypedArray()
-
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeSerializable(HashMap(src))
+        .replace("Hurt${TEMP_SEPARATOR}Comfort", "Hurt/Comfort")
+        .split(TEMP_SEPARATOR)
+        .map { Genre.fromString(it) }
   }
 
-  override fun describeContents(): Int = 0
-  companion object {
-    @JvmField @Suppress("unused")
-    val CREATOR = object : Parcelable.Creator<StoryModel> {
-      override fun createFromParcel(parcel: Parcel): StoryModel {
-        @Suppress("unchecked_cast")
-        val map = parcel.readSerializable() as HashMap<String, Any>
-        return StoryModel(map)
-      }
+  fun characterList(): List<String> = fragment.characters.replace("[", "").split(", ", "] ")
 
-      override fun newArray(size: Int): Array<StoryModel?> = arrayOfNulls(size)
+  fun chapterTitles(): List<String> =
+      serializedChapterTitles?.split(CHAPTER_TITLE_SEPARATOR) ?: emptyList()
+
+  fun toMap(): Map<String, Any?> = mapOf(
+      "storyId" to storyId,
+      "status" to status.toString(),
+      "scrollProgress" to progress.scrollProgress,
+      "scrollAbsolute" to progress.scrollAbsolute,
+      "currentChapter" to progress.currentChapter,
+      "rating" to fragment.rating,
+      "language" to fragment.language,
+      "wordCount" to fragment.wordCount,
+      "chapterCount" to fragment.chapterCount,
+      "favorites" to fragment.favorites,
+      "follows" to fragment.follows,
+      "reviews" to fragment.reviews,
+      "genres" to fragment.genres,
+      "characters" to fragment.characters,
+      "updateTime" to fragment.updateTime,
+      "publishTime" to fragment.publishTime,
+      "isComplete" to fragment.isComplete,
+      "title" to title,
+      "summary" to summary,
+      "author" to author,
+      "authorId" to authorId,
+      "category" to (category ?: ""),
+      "canon" to canon,
+      "chapterTitles" to serializedChapterTitles
+  )
+
+  fun toPairs(): Array<Pair<String, Any?>> =
+      toMap().entries.map { it.key to it.value }.toTypedArray()
+
+  companion object {
+    private const val TEMP_SEPARATOR = "temporary_separator"
+
+    fun fromPairs(pairs: List<Pair<String, Any?>>): StoryModel {
+      val map = pairs.toMap()
+      return StoryModel(
+          storyId = map["storyId"]!! as Long,
+          fragment = StoryModelFragment(
+              rating = map["rating"]!! as String,
+              language = map["language"]!! as String,
+              wordCount = map["wordCount"]!! as Long,
+              chapterCount = map["chapterCount"]!! as Long,
+              favorites = map["favorites"]!! as Long,
+              follows = map["follows"]!! as Long,
+              reviews = map["reviews"]!! as Long,
+              genres = map["genres"]!! as String,
+              characters = map["characters"]!! as String,
+              publishTime = map["publishTime"]!! as Long,
+              updateTime = map["updateTime"]!! as Long,
+              isComplete = map["isComplete"]!! as Long
+          ),
+          progress = StoryProgress(
+              scrollProgress = map["scrollProgress"]!! as Double,
+              scrollAbsolute = map["scrollAbsolute"]!! as Double,
+              currentChapter = map["currentChapter"]!! as Long
+          ),
+          status = StoryStatus.fromString(map["status"]!! as String),
+          canon = map["canon"]!! as String,
+          category = map["category"]!! as String,
+          summary = map["summary"]!! as String,
+          author = map["author"]!! as String,
+          authorId = map["authorId"]!! as Long,
+          title = map["title"]!! as String,
+          serializedChapterTitles = map["chapterTitles"]!! as String
+      )
     }
 
     val dbParser = object : MapRowParser<StoryModel> {
-      override fun parseRow(columns: Map<String, Any?>) = StoryModel(
-          // We are allowed to do this because nothing in the DB is null
-          columns.entries.map { it.key to it.value!! }.toMap().toMutableMap())
+      override fun parseRow(columns: Map<String, Any?>) =
+          StoryModel.fromPairs(columns.entries.map { it.key to it.value })
     }
   }
 }
@@ -191,7 +227,7 @@ enum class GroupStrategy {
 }
 
 /**
- * @returns a map that maps titles to grouped stories, according to the given GroupStrategy
+ * @returns a map that maps titles to grouped stories, according to the given [GroupStrategy]
  */
 fun groupStories(stories: MutableList<StoryModel>,
                  strategy: GroupStrategy): Map<String, MutableList<StoryModel>> {
@@ -201,31 +237,25 @@ fun groupStories(stories: MutableList<StoryModel>,
     val map = hashMapOf<String, MutableList<StoryModel>>()
     Genre.values().forEach { map[it.toUIString()] = mutableListOf() }
     val none = str(R.string.none)
-    map[none] = stories.filter { it.genresRaw == none }.toMutableList()
-    stories.filter { it.genresRaw != none }
-        .forEach { story -> story.genreList.forEach { map[it.toUIString()]!!.add(story) } }
+    map[none] = stories.filter { it.fragment.genres == none }.toMutableList()
+    stories.filter { it.fragment.genres != none }
+        .forEach { story -> story.genreList().forEach { map[it.toUIString()]!!.add(story) } }
     Genre.values().forEach { if (map[it.toUIString()]!!.isEmpty()) map.remove(it.toUIString()) }
     return map
-  }
-  val srcKey = when (strategy) {
-    GroupStrategy.CANON -> "canon"
-    GroupStrategy.AUTHOR -> "author"
-    GroupStrategy.CATEGORY -> "category"
-    GroupStrategy.STATUS -> "status"
-    GroupStrategy.RATING -> "rating"
-    GroupStrategy.LANGUAGE -> "language"
-    GroupStrategy.COMPLETION -> "isCompleted"
-    GroupStrategy.GENRE -> throw IllegalStateException("Unreachable code, fast-pathed above")
-    GroupStrategy.NONE -> throw IllegalStateException("Unreachable code, fast-pathed above")
   }
   val map = hashMapOf<String, MutableList<StoryModel>>()
   stories.forEach {
     val value: String = when (strategy) {
-      GroupStrategy.STATUS -> StoryStatus.fromString(it.src[srcKey] as String).toUIString()
+      GroupStrategy.STATUS -> it.status.toUIString()
       GroupStrategy.COMPLETION ->
-        if (it.src[srcKey] as Long == 1L) str(R.string.completed)
-        else str(R.string.in_progress)
-      else -> it.src[srcKey] as String
+        if (it.isComplete()) str(R.string.completed) else str(R.string.in_progress)
+      GroupStrategy.CANON -> it.canon
+      GroupStrategy.AUTHOR -> it.author
+      GroupStrategy.CATEGORY -> it.category ?: str(R.string.no_category)
+      GroupStrategy.RATING -> str(R.string.rated_x, it.fragment.rating)
+      GroupStrategy.LANGUAGE -> it.fragment.language
+      GroupStrategy.GENRE,
+      GroupStrategy.NONE -> throw IllegalStateException("Unreachable code, fast-pathed above")
     }
     if (map[value] == null) map[value] = mutableListOf()
     map[value]!!.add(it)
@@ -263,22 +293,27 @@ fun orderByDialog(context: Context,
       .show()
 }
 
-private val progress = Comparator<StoryModel>
-{ m1, m2 -> Math.signum(m1.progress - m2.progress).toInt() }
-private val wordCount = Comparator<StoryModel> { m1, m2 -> m1.wordCount - m2.wordCount }
-private val reviewCount = Comparator<StoryModel> { m1, m2 -> m1.reviewsCount - m2.reviewsCount }
-private val followCount = Comparator<StoryModel> { m1, m2 -> m1.followsCount - m2.followsCount }
-private val favsCount = Comparator<StoryModel> { m1, m2 -> m1.favoritesCount - m2.favoritesCount }
-private val chapterCount = Comparator<StoryModel> { m1, m2 -> m1.chapterCount - m2.chapterCount }
+private val progress = Comparator<StoryModel> { m1, m2 ->
+  Math.signum(m1.progressAsPercentage() - m2.progressAsPercentage()).toInt() }
+private val wordCount = Comparator<StoryModel> { m1, m2 ->
+  (m1.fragment.wordCount - m2.fragment.wordCount).toInt() }
+private val reviewCount = Comparator<StoryModel> { m1, m2 ->
+  (m1.fragment.reviews - m2.fragment.reviews).toInt() }
+private val followCount = Comparator<StoryModel> { m1, m2 ->
+  (m1.fragment.follows - m2.fragment.follows).toInt() }
+private val favoritesCount = Comparator<StoryModel> { m1, m2 ->
+  (m1.fragment.favorites - m2.fragment.favorites).toInt() }
+private val chapterCount = Comparator<StoryModel> { m1, m2 ->
+  (m1.fragment.chapterCount - m2.fragment.chapterCount).toInt() }
 
 // These give most recent of the dates
 private val publish = Comparator<StoryModel> { m1, m2 ->
-  if (m1.publishDateSeconds == m2.publishDateSeconds ) return@Comparator 0
-  return@Comparator if (m1.publishDateSeconds - m2.publishDateSeconds > 0) 1 else -1
+  if (m1.fragment.publishTime == m2.fragment.publishTime ) return@Comparator 0
+  return@Comparator if (m1.fragment.publishTime - m2.fragment.publishTime > 0) 1 else -1
 }
 private val update = Comparator<StoryModel> { m1, m2 ->
-  if (m1.updateDateSeconds == m2.updateDateSeconds ) return@Comparator 0
-  return@Comparator if (m1.updateDateSeconds - m2.updateDateSeconds > 0) 1 else -1
+  if (m1.fragment.updateTime == m2.fragment.updateTime ) return@Comparator 0
+  return@Comparator if (m1.fragment.updateTime - m2.fragment.updateTime > 0) 1 else -1
 }
 
 // Lexicographic comparison of titles
@@ -298,7 +333,7 @@ enum class OrderDirection {
 enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
   // Numeric orderings
   WORD_COUNT(wordCount), PROGRESS(progress), REVIEW_COUNT(reviewCount),
-  FOLLOWS(followCount), FAVORITES(favsCount), CHAPTER_COUNT(chapterCount),
+  FOLLOWS(followCount), FAVORITES(favoritesCount), CHAPTER_COUNT(chapterCount),
   // Date orderings
   PUBLISH_DATE(publish), UPDATE_DATE(update),
   // Other

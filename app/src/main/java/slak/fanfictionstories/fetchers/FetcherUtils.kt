@@ -3,6 +3,11 @@ package slak.fanfictionstories.fetchers
 import android.util.Log
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import org.jsoup.nodes.TextNode
+import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.StoryModelFragment
+import slak.fanfictionstories.StoryProgress
+import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.utility.opt
 import java.util.*
 
@@ -23,9 +28,9 @@ object FetcherUtils {
       res?.groupValues?.get(1)?.replace(",", "")?.trim()
 
   /**
-   * Parses story metadata from the metadata div.
+   * Parses just the story metadata from the metadata div text.
    */
-  fun parseStoryMetadata(metadata: String): Map<String, String?> {
+  fun parseStoryMetadata(metadata: String, element: Element): StoryModelFragment {
     val ratingLang = Regex("Rated: (?:<a .*?>Fiction[ ]+?)?(.*?)(?:</a>)? - (.*?) -", regexOpts)
         .find(metadata) ?: {
       val ex = IllegalStateException("Can't match rating/language")
@@ -57,29 +62,37 @@ object FetcherUtils {
     }
     val thingsAfterCharacters =
         Regex("Words|Chapters|Reviews|Favs|Follows|Published|Updated", regexOpts)
-    val characters = if (split[2].contains(thingsAfterCharacters)) "None" else split[2]
+    var characters = if (split[2].contains(thingsAfterCharacters)) "None" else split[2]
 
-    return mapOf(
-        "rating" to ratingLang.groupValues[1],
-        "language" to ratingLang.groupValues[2],
-        "words" to words.groupValues[1],
-        "chapters" to cleanNrMatch(chapters),
-        "favs" to cleanNrMatch(favs),
-        "follows" to cleanNrMatch(follows),
-        "reviews" to cleanNrMatch(reviews),
-        "genres" to genres,
-        "characters" to characters.trim()
+    val lastNode = element.childNodes().last()
+    if (lastNode is TextNode) {
+      val stripStuff = lastNode.text()
+          .replace(" - Complete", "")
+          .replace(Regex(" - id: \\d+ "), "")
+      if (stripStuff.isNotBlank()) {
+        characters = stripStuff.trimStart(' ', '-')
+      }
+    }
+
+    val publishTime = Regex("Published:[\\s]+<span data-xutime=['\"]([0-9]+)['\"]>", regexOpts)
+        .find(metadata)?.groupValues?.get(1)?.toLong() ?: 0L
+    val updateTime = Regex("Updated:[\\s]+<span data-xutime=['\"]([0-9]+)['\"]>", regexOpts)
+        .find(metadata)?.groupValues?.get(1)?.toLong() ?: 0L
+
+    return StoryModelFragment(
+        rating = ratingLang.groupValues[1],
+        language = ratingLang.groupValues[2],
+        wordCount = words.groupValues[1].replace(",", "").toLong(),
+        chapterCount = cleanNrMatch(chapters)?.toLong() ?: 1L,
+        favorites = cleanNrMatch(favs)?.toLong() ?: 0L,
+        follows = cleanNrMatch(follows)?.toLong() ?: 0L,
+        reviews = cleanNrMatch(reviews)?.toLong() ?: 0L,
+        genres = genres,
+        characters = characters.trim(),
+        publishTime = publishTime,
+        updateTime = updateTime,
+        isComplete = if (metadata.indexOf("Complete") > -1) 1L else 0L
     )
-  }
-
-  fun publishedTimeStoryMeta(html: String): String? {
-    val time = Regex("Published: <span data-xutime='([0-9]+)'>", regexOpts).find(html)
-    return if (time == null) null else time.groupValues[1]
-  }
-
-  fun updatedTimeStoryMeta(html: String): String? {
-    val time = Regex("Updated: <span data-xutime='([0-9]+)'>", regexOpts).find(html)
-    return if (time == null) null else time.groupValues[1]
   }
 
   fun authorIdFromAuthor(author: Element): Long {
@@ -87,13 +100,11 @@ object FetcherUtils {
     return author.attr("href").split("/")[2].toLong()
   }
 
-  fun isComplete(metaString: String): Long = if (metaString.indexOf("Complete") > -1) 1L else 0L
-
   /**
    * Parses all required metadata for a [StoryModel].
    * @param html html string of any chapter of the story
    */
-  fun parseMetadata(html: String, storyId: Long): MutableMap<String, Any> {
+  fun parseStoryModel(html: String, storyId: Long): StoryModel {
     // The raw html is completely insane
     // I mean really, using ' for attributes?
     // Sometimes not using any quotes at all?
@@ -110,51 +121,32 @@ object FetcherUtils {
     val title = doc.select("#profile_top > b.xcontrast_txt")[0].text()
     val summary = doc.select("#profile_top > div.xcontrast_txt")[0].text()
     val categories = doc.select("#pre_story_links > span.lc-left > a.xcontrast_txt")
-    val metaString = doc.select("#profile_top > span.xgray").html()
-    val meta = parseStoryMetadata(metaString)
-
-    val chapters = if (meta["chapters"] != null) meta["chapters"]!!.toLong() else 1L
+    val metaElem = doc.select("#profile_top > span.xgray")[0]
+    val meta = parseStoryMetadata(metaElem.html(), metaElem)
 
     // Parse chapter titles only if there are any chapters to name
-    val chapterTitles: Optional<String> = if (meta["chapters"] == null) {
-      Optional.empty()
+    val chapterTitles: String? = if (meta.chapterCount == 1L) {
+      null
     } else {
-      doc.select("#chap_select > option").slice(0..(chapters - 1).toInt())
+      doc.select("#chap_select > option").slice(0..(meta.chapterCount - 1).toInt())
           .joinToString(CHAPTER_TITLE_SEPARATOR) {
         // The actual chapter title is preceded by the chapter nr, a dot, and a space:
         it.text().replace(Regex("\\d+\\. ", regexOpts), "")
-      }.opt()
+      }
     }
 
-    val publishTime = publishedTimeStoryMeta(html)
-    val updateTime = updatedTimeStoryMeta(html)
-
-    return mutableMapOf(
-        "storyId" to storyId,
-        "rating" to meta["rating"]!!,
-        "language" to meta["language"]!!,
-        "genres" to meta["genres"]!!,
-        "characters" to meta["characters"]!!,
-        "chapters" to chapters,
-        "wordCount" to meta["words"]!!.replace(",", "").toLong(),
-        "reviews" to if (meta["reviews"] != null) meta["reviews"]!!.toLong() else 0L,
-        "favorites" to if (meta["favs"] != null) meta["favs"]!!.toLong() else 0L,
-        "follows" to if (meta["follows"] != null) meta["follows"]!!.toLong() else 0L,
-        "publishDate" to (publishTime?.toLong() ?: 0L),
-        "updateDate" to (updateTime?.toLong() ?: 0L),
-        "isCompleted" to isComplete(metaString),
-        "scrollProgress" to 0.0,
-        "scrollAbsolute" to 0L,
-        "currentChapter" to 0L,
-        "status" to "remote",
-        "canon" to categories[1].text(),
-        "category" to categories[0].text(),
-        "summary" to summary,
-        "authorId" to authorIdFromAuthor(author),
-        "author" to author.text(),
-        "title" to title,
-        "chapterTitles" to chapterTitles.orElse("")
+    return StoryModel(
+        storyId = storyId,
+        fragment = meta,
+        progress = StoryProgress(),
+        status = StoryStatus.REMOTE,
+        canon = categories[1].text(),
+        category = categories[0].text(),
+        summary = summary,
+        author = author.text(),
+        authorId = authorIdFromAuthor(author),
+        title = title,
+        serializedChapterTitles = chapterTitles
     )
   }
-  // TODO: consider a general cache for all fetchers (with different cache times obv)
 }

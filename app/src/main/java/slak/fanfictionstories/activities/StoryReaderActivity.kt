@@ -20,7 +20,7 @@ import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.select
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
-import slak.fanfictionstories.fetchers.FetcherUtils.parseMetadata
+import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.fetchers.extractChapterText
 import slak.fanfictionstories.fetchers.fetchChapter
 import slak.fanfictionstories.utility.*
@@ -34,7 +34,7 @@ class StoryReaderActivity : LoadingActivity() {
   }
 
   private lateinit var model: StoryModel
-  private var currentChapter: Int = 0
+  private var currentChapter: Long = 0
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -45,15 +45,15 @@ class StoryReaderActivity : LoadingActivity() {
     model = intent.getParcelableExtra(INTENT_STORY_MODEL) ?: return
     if (model.status == StoryStatus.TRANSIENT) {
       // If it's in the db, use it, else set keep the transient one
-      model = database.storyById(model.storyIdRaw).orElse(model)
+      model = database.storyById(model.storyId).orElse(model)
     }
 
     // Save story for the resume button, but not for transient stories
     if (model.status != StoryStatus.TRANSIENT)
-      Prefs.use { it.putLong(Prefs.RESUME_STORY_ID, model.storyIdRaw) }
+      Prefs.use { it.putLong(Prefs.RESUME_STORY_ID, model.storyId) }
 
     title = model.title
-    currentChapter = if (model.currentChapter == 0) 1 else model.currentChapter
+    currentChapter = if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
 
     chapterText.setOnTextChangeListener {
       restoreScrollStatus()
@@ -78,18 +78,18 @@ class StoryReaderActivity : LoadingActivity() {
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
     outState.putParcelable(RESTORE_STORY_MODEL, model)
-    outState.putInt(RESTORE_CURRENT_CHAPTER, currentChapter)
+    outState.putLong(RESTORE_CURRENT_CHAPTER, currentChapter)
   }
 
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
     super.onRestoreInstanceState(savedInstanceState)
     model = savedInstanceState.getParcelable(RESTORE_STORY_MODEL)
-    currentChapter = savedInstanceState.getInt(RESTORE_CURRENT_CHAPTER)
+    currentChapter = savedInstanceState.getLong(RESTORE_CURRENT_CHAPTER)
   }
 
   private fun restoreScrollStatus() = launch(UI) {
     val absoluteScroll = database.readableDatabase.select("stories", "scrollAbsolute")
-        .whereSimple("storyId = ?", model.storyIdRaw.toString())
+        .whereSimple("storyId = ?", model.storyId.toString())
         .parseOpt(DoubleParser) ?: return@launch
     val y = chapterText.scrollYFromScrollState(absoluteScroll)
     if (y > resources.getDimensionPixelSize(R.dimen.app_bar_height)) appBar.setExpanded(false)
@@ -99,18 +99,18 @@ class StoryReaderActivity : LoadingActivity() {
   private fun showChapterSelectDialog() {
     AlertDialog.Builder(this@StoryReaderActivity)
         .setTitle(R.string.select_chapter)
-        .setItems(model.chapterTitles.mapIndexed {
+        .setItems(model.chapterTitles().mapIndexed {
           idx, chapterTitle -> "${idx + 1}. $chapterTitle"
         }.toTypedArray(), { dialog, which: Int ->
           dialog.dismiss()
           // This means 'go to same chapter', so do nothing
-          if (currentChapter == which + 1) return@setItems
-          currentChapter = which + 1
+          if (currentChapter == which + 1L) return@setItems
+          currentChapter = which + 1L
           initTextWithLoading(currentChapter)
         }).show()
   }
 
-  private fun initTextWithLoading(chapterToRead: Int) = launch(UI) {
+  private fun initTextWithLoading(chapterToRead: Long) = launch(UI) {
     // Show loading things and disable chapter switching
     showLoading()
     btnBarLoader.visibility = View.VISIBLE
@@ -128,15 +128,15 @@ class StoryReaderActivity : LoadingActivity() {
     navButtons.visibility = View.VISIBLE
   }
 
-  private fun initText(chapterToRead: Int) = async2(CommonPool) {
-    val text: String = readChapter(model.storyIdRaw, chapterToRead).await()
+  private fun initText(chapterToRead: Long) = async2(CommonPool) {
+    val text: String = readChapter(model.storyId, chapterToRead).await()
     val chapterWordCount = autoSuffixNumber(text.split(" ").size)
 
     async2(UI) {
       chapterWordCountText.text = str(R.string.x_words, chapterWordCount)
-      currentChapterText.text = str(R.string.chapter_progress, chapterToRead, model.chapterCount)
+      currentChapterText.text = str(R.string.chapter_progress, chapterToRead, model.fragment.chapterCount)
       // This data is more or less useless with only one chapter, so we hide it
-      val extraDataVisibility = if (model.chapterCount == 1) View.GONE else View.VISIBLE
+      val extraDataVisibility = if (model.fragment.chapterCount == 1L) View.GONE else View.VISIBLE
       chapterWordCountText.visibility = extraDataVisibility
       currentChapterText.visibility = extraDataVisibility
 
@@ -149,14 +149,14 @@ class StoryReaderActivity : LoadingActivity() {
     chapterText.setText(html, theme).await()
 
     updateUiAfterFetchingText(chapterToRead)
-    database.updateInStory(model.storyIdRaw, "currentChapter" to chapterToRead)
+    database.updateInStory(model.storyId, "currentChapter" to chapterToRead)
   }
 
-  private fun setChangeChapterButtonStates(chapterToRead: Int) {
+  private fun setChangeChapterButtonStates(chapterToRead: Long) {
     // Disable buttons if there is nowhere for them to go
-    prevChapterBtn.isEnabled = chapterToRead != 1
-    nextChapterBtn.isEnabled = chapterToRead != model.chapterCount
-    selectChapterBtn.isEnabled = model.chapterCount > 1
+    prevChapterBtn.isEnabled = chapterToRead != 1L
+    nextChapterBtn.isEnabled = chapterToRead != model.fragment.chapterCount
+    selectChapterBtn.isEnabled = model.fragment.chapterCount > 1L
 
     // Tint button icons grey if the buttons are disabled, white if not
     fun getColorFor(view: View) = if (view.isEnabled) R.color.white else R.color.textDisabled
@@ -169,14 +169,14 @@ class StoryReaderActivity : LoadingActivity() {
     invalidateOptionsMenu()
   }
 
-  private fun updateUiAfterFetchingText(chapterToRead: Int) = launch(UI) {
+  private fun updateUiAfterFetchingText(chapterToRead: Long) = launch(UI) {
     setChangeChapterButtonStates(chapterToRead)
 
     // Set chapter's title (chapterToRead is 1-indexed)
-    chapterTitleText.text = model.chapterTitles[chapterToRead - 1]
+    chapterTitleText.text = model.chapterTitles()[chapterToRead.toInt() - 1]
     // Don't show it if there is no title (otherwise there are leftover margins/padding)
     chapterTitleText.visibility =
-        if (model.chapterTitles[chapterToRead - 1] == "") View.GONE else View.VISIBLE
+        if (model.chapterTitles()[chapterToRead.toInt() - 1] == "") View.GONE else View.VISIBLE
 
     // Start at the top, regardless of where we were when we ran this function
     nestedScroller.scrollTo(0, 0)
@@ -187,7 +187,7 @@ class StoryReaderActivity : LoadingActivity() {
       // Make sure that values >100 get clamped to 100
       val percentageScrolled = Math.min(rawPercentage, 100.0)
 
-      database.updateInStory(model.storyIdRaw,
+      database.updateInStory(model.storyId,
           "scrollProgress" to percentageScrolled,
           "scrollAbsolute" to chapterText.scrollStateFromScrollY(scrollY))
     }
@@ -225,13 +225,13 @@ class StoryReaderActivity : LoadingActivity() {
       }
       R.id.viewAuthor -> {
         val intent = Intent(this, AuthorActivity::class.java)
-        intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, model.authorIdRaw)
-        intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, model.authorRaw)
+        intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, model.authorId)
+        intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, model.author)
         startActivity(intent)
       }
       R.id.deleteLocal -> undoableAction(contentView!!, R.string.data_deleted) {
-        deleteLocalStory(this@StoryReaderActivity, model.storyIdRaw)
-        database.updateInStory(model.storyIdRaw, "status" to "remote")
+        deleteLocalStory(this, model.storyId)
+        database.updateInStory(model.storyId, "status" to "remote")
         model.status = StoryStatus.REMOTE
       }
       android.R.id.home -> onBackPressed()
@@ -241,18 +241,17 @@ class StoryReaderActivity : LoadingActivity() {
   }
 
   private fun downloadChapter(storyId: Long,
-                              chapter: Int, target: File): Deferred<String> = async2(CommonPool) {
+                              chapter: Long, target: File): Deferred<String> = async2(CommonPool) {
     val chapterHtmlText = fetchChapter(storyId, chapter).await()
     val text = extractChapterText(Jsoup.parse(chapterHtmlText))
     target.printWriter().use { it.print(text) }
     if (model.status == StoryStatus.TRANSIENT) {
-      model = StoryModel(parseMetadata(chapterHtmlText, storyId))
-      model.status = StoryStatus.REMOTE
-      database.use { insertOrThrow("stories", *model.toKvPairs()) }
+      model = parseStoryModel(chapterHtmlText, storyId)
+      database.use { insertOrThrow("stories", *model.toPairs()) }
     }
     return@async2 text
   }
-  private fun readChapter(storyId: Long, chapter: Int): Deferred<String> = async2(CommonPool) {
+  private fun readChapter(storyId: Long, chapter: Long): Deferred<String> = async2(CommonPool) {
     val storyDir = storyDir(this@StoryReaderActivity, storyId)
         .orElseThrow(IllegalStateException("Cannot read $storyId dir"))
     if (!storyDir.exists()) storyDir.mkdirs()
@@ -261,7 +260,7 @@ class StoryReaderActivity : LoadingActivity() {
       val text = downloadChapter(storyId, chapter, chapterFile).await()
       launch(CommonPool) {
         // If all chapters are on disk, set to local
-        if (storyDir.list().size == model.chapterCount) {
+        if (storyDir.list().size == model.fragment.chapterCount.toInt()) {
           model.status = StoryStatus.LOCAL
           database.updateInStory(storyId, "status" to "local")
         }

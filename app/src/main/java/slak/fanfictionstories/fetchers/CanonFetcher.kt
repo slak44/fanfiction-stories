@@ -14,11 +14,11 @@ import org.jsoup.nodes.TextNode
 import org.jsoup.parser.Parser
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.StoryProgress
+import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.fetchers.FetcherUtils.TAG
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
-import slak.fanfictionstories.fetchers.FetcherUtils.publishedTimeStoryMeta
-import slak.fanfictionstories.fetchers.FetcherUtils.updatedTimeStoryMeta
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.util.*
@@ -258,48 +258,22 @@ class CanonFetcher(val details: Details) : Parcelable {
       // There is only one such div
       val summaryMetaDiv = it.select("div.z-indent.z-padtop")[0]
       val summary = Parser.unescapeEntities(summaryMetaDiv.textNodes()[0].toString(), false)
-      val metaSection = summaryMetaDiv.child(0).html()
-      val meta = parseStoryMetadata(metaSection)
-      val isCompleted = metaSection.indexOf("Complete") > -1
+      val metaStuff = summaryMetaDiv.child(0)
+      val meta = parseStoryMetadata(metaStuff.html(), metaStuff)
 
-      val publishTime = publishedTimeStoryMeta(html)
-      val updateTime = updatedTimeStoryMeta(html)
-
-      var characters = meta["characters"]!!
-      val lastNode = summaryMetaDiv.child(0).childNodes().last()
-      if (lastNode is TextNode) {
-        val stripStatus = lastNode.text().replace(" - Complete", "")
-        if (stripStatus.isNotBlank()) {
-          characters = stripStatus.trimStart(' ', '-')
-        }
-      }
-
-      return@map StoryModel(mutableMapOf(
-          "storyId" to storyId,
-          "authorId" to authorIdFromAuthor(authorAnchor),
-          "rating" to meta["rating"]!!,
-          "language" to meta["language"]!!,
-          "genres" to meta["genres"]!!,
-          "characters" to characters,
-          "chapters" to if (meta["chapters"] != null) meta["chapters"]!!.toLong() else 1L,
-          "wordCount" to meta["words"]!!.replace(",", "").toLong(),
-          "reviews" to if (meta["reviews"] != null) meta["reviews"]!!.toLong() else 0L,
-          "favorites" to if (meta["favs"] != null) meta["favs"]!!.toLong() else 0L,
-          "follows" to if (meta["follows"] != null) meta["follows"]!!.toLong() else 0L,
-          "publishDate" to (publishTime?.toLong() ?: 0L),
-          "updateDate" to (updateTime?.toLong() ?: 0L),
-          "isCompleted" to if (isCompleted) 1L else 0L,
-          "scrollProgress" to 0.0,
-          "scrollAbsolute" to 0L,
-          "currentChapter" to 0L,
-          "status" to "transient",
-          "canon" to canonTitle.get(),
-          "category" to categoryTitle,
-          "summary" to summary,
-          "author" to authorName,
-          "title" to title,
-          "chapterTitles" to ""
-      ))
+      return@map StoryModel(
+          storyId = storyId,
+          fragment = meta,
+          progress = StoryProgress(),
+          authorId = authorIdFromAuthor(authorAnchor),
+          author = authorName,
+          status = StoryStatus.TRANSIENT,
+          canon = canonTitle.get(),
+          category = categoryTitle,
+          summary = summary,
+          title = title,
+          serializedChapterTitles = null
+      )
     }.collect(Collectors.toList())
 
     val centerElem = doc.select("#filters + center")

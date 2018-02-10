@@ -24,6 +24,8 @@ import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.coroutines.experimental.buildSequence
 
 class StoryCardView : CardView {
@@ -50,7 +52,7 @@ class StoryCardView : CardView {
           val intent = Intent(recyclerView.context, StoryReaderActivity::class.java)
           val cardView = viewHolder.itemView as StoryCardView
           intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, cardView.currentModel!!)
-          openStoryReader(intent, cardView.currentModel!!.storyIdRaw)
+          openStoryReader(intent, cardView.currentModel!!.storyId)
           // After the reader was opened, reset the translation by reattaching
           // We do this because we might go back from the reader to this activity and
           // it has to look properly
@@ -73,32 +75,42 @@ class StoryCardView : CardView {
     currentModel = model
     // Unexpanded view
     titleText.text = model.title
-    authorText.text = model.author
-    canonText.text = model.canon
-    wordsText.text = model.words
-    storyProgress.progress = Math.round(model.progress).toInt()
-    isCompletedText.visibility = if (model.isCompleted) View.VISIBLE else View.INVISIBLE
+    authorText.text = str(R.string.by_author, model.author)
+    canonText.text = str(R.string.in_canon, model.canon)
+    wordsText.text = str(R.string.x_words, autoSuffixNumber(model.fragment.wordCount))
+    storyProgress.progress = Math.round(model.progressAsPercentage()).toInt()
+    isCompletedText.visibility = if (model.isComplete()) View.VISIBLE else View.INVISIBLE
     // Detail view
-    languageText.text = model.language
-    ratingText.text = model.rating
+    languageText.text = model.fragment.language
+    ratingText.text = str(R.string.rated_x, model.fragment.rating)
     summaryText.text = model.summary
-    chaptersText.text = model.chapters
-    genresText.text = model.genres
-    charactersText.text = model.characters
-    categoryText.text = model.category
-    categoryText.visibility = if (model.categoryRaw.isEmpty()) View.GONE else View.VISIBLE
-    updateDateText.text = model.updateDate
-    if (model.updateDateSeconds == 0L) {
+    chaptersText.text = if (model.progress.currentChapter == 0L) {
+      // If we didn't start reading the thing, show total chapter count
+      // Special-case one chapter
+      if (model.fragment.chapterCount == 1L) str(R.string.one_chapter)
+      else str(R.string.x_chapters, model.fragment.chapterCount)
+    } else {
+      // Otherwise, list current chapter out of total
+      str(R.string.chapter_progress, model.progress.currentChapter, model.fragment.chapterCount)
+    }
+    genresText.text = str(R.string.about_genres, model.fragment.genres)
+    charactersText.text = str(R.string.with_characters, model.fragment.characters)
+    categoryText.text = str(R.string.in_category, model.category)
+    categoryText.visibility = if (model.category == null) View.GONE else View.VISIBLE
+    updateDateText.text = str(R.string.updated_on,
+        SimpleDateFormat.getDateInstance().format(Date(model.fragment.updateTime * 1000)))
+    if (model.fragment.updateTime == 0L) {
       // Do this instead of View.GONE or View.INVISIBLE because we want
       // its margins, but not its height
       updateDateText.height = 0
       updateDateText.requestLayout()
     }
-    publishDateText.text = model.publishDate
-    reviewsText.text = model.reviews
-    favoritesText.text = model.favorites
-    followsText.text = model.follows
-    storyIdText.text = model.storyId
+    publishDateText.text = str(R.string.published_on,
+        SimpleDateFormat.getDateInstance().format(Date(model.fragment.publishTime * 1000)))
+    reviewsText.text = str(R.string.x_reviews, model.fragment.reviews)
+    favoritesText.text = str(R.string.x_favorites, model.fragment.favorites)
+    followsText.text = str(R.string.x_follows, model.fragment.follows)
+    storyIdText.text = str(R.string.storyid_x, model.storyId)
 
     if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.GONE
     if (model.status == StoryStatus.TRANSIENT) removeBtn.visibility = View.GONE
@@ -130,7 +142,7 @@ class StoryCardView : CardView {
     }
     removeBtn.setOnClickListener {
       // Even though we have a model, fetch it from db to make sure there are no inconsistencies
-      val dbModel = context.database.storyById(model.storyIdRaw)
+      val dbModel = context.database.storyById(model.storyId)
       if (!dbModel.isPresent) {
         errorDialog(R.string.storyid_does_not_exist, R.string.storyid_does_not_exist_tip)
         return@setOnClickListener
@@ -140,16 +152,16 @@ class StoryCardView : CardView {
       undoableAction(holder.itemView, R.string.removed_story, {
         adapter.undoHideStory(model)
       }) {
-        deleteLocalStory(context, model.storyIdRaw).join()
+        deleteLocalStory(context, model.storyId).join()
         context.database.writableDatabase
-            .delete("stories", "storyId = ?", arrayOf(model.storyIdRaw.toString()))
+            .delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
       }
     }
     addBtn.setOnClickListener {
       addBtn.isEnabled = false
       addBtn.text = str(R.string.adding___)
       launch(UI) {
-        val newModel = fetchAndWriteStory(model.storyIdRaw).await()
+        val newModel = fetchAndWriteStory(model.storyId).await()
         if (newModel.isPresent) {
           addBtn.visibility = View.GONE
         } else {
@@ -161,8 +173,8 @@ class StoryCardView : CardView {
     }
     authorBtn.setOnClickListener {
       val intent = Intent(context, AuthorActivity::class.java)
-      intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, model.authorIdRaw)
-      intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, model.authorRaw)
+      intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, model.authorId)
+      intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, model.author)
       startActivity(context, intent, null)
     }
   }
@@ -326,7 +338,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) {
     // Ignore currently pending stories, the user might have rearranged before the db was updated
     val storiesNotPending = stories.filter { story ->
-      pendingItems.keys.find { it.storyIdRaw == story.storyIdRaw } == null
+      pendingItems.keys.find { it.storyId == story.storyId } == null
     }
     clearData()
     val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
@@ -374,7 +386,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
 
   override fun getItemCount(): Int = data.size
   override fun getItemId(position: Int): Long = data[position].fold(
-      { model -> model.storyIdRaw + (1 shl 15) },
+      { model -> model.storyId + (1 shl 15) },
       { title -> title.hashCode().toLong() + (2 shl 15) },
       { loading -> loading.id.toLong() + (3 shl 15) }
   )

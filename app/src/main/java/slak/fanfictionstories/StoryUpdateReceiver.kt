@@ -48,7 +48,7 @@ class StoryUpdateReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     launch(CommonPool) {
       update(context).await()
-      Notifications.updatedStories(updatedStories.map { Pair(it.storyIdRaw, it.title) })
+      Notifications.updatedStories(updatedStories.map { Pair(it.storyId, it.title) })
     }
   }
 
@@ -57,7 +57,7 @@ class StoryUpdateReceiver : BroadcastReceiver() {
     updatedStories = mutableListOf()
     val storyModels = context.database.getLocalStories().await()
     storyModels.forEach { model ->
-      val updated = updateStory(fetchStoryModel(model.storyIdRaw).await()).await()
+      val updated = updateStory(fetchStoryModel(model.storyId).await()).await()
       if (updated) updatedStories.add(model)
     }
     Notifications.cancel(Notifications.Kind.UPDATING)

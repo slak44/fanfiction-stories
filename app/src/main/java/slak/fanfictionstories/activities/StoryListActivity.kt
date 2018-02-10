@@ -98,17 +98,17 @@ class StoryListActivity : ActivityWithStatic() {
 
   private fun statisticsDialog() {
     val stories = runBlocking { database.getStories().await() }
-    var totalWords = 0
-    var passedApprox = 0
+    var totalWords = 0L
+    var passedApprox = 0L
     val totalStories = stories.size
     var storiesRead = 0
     var storiesNotStarted = 0
     stories.forEach {
-      totalWords += it.wordCount
-      passedApprox += it.wordsProgressedApprox
+      totalWords += it.fragment.wordCount
+      passedApprox += it.wordsProgressedApprox()
       when {
-        it.progress > 98.0 -> storiesRead++
-        it.progress < 2.0 -> storiesNotStarted++
+        it.progressAsPercentage() > 98.0 -> storiesRead++
+        it.progressAsPercentage() < 2.0 -> storiesNotStarted++
       }
     }
     AlertDialog.Builder(this)

@@ -95,8 +95,8 @@ class MainActivity : ActivityWithStatic() {
       return
     }
     val model = database.storyById(storyId).orElse { return@onResume }
-    resumeButton.text = Html.fromHtml(str(R.string.resume_story, model.title,
-        model.authorRaw, model.currentChapter, model.chapterCount), Html.FROM_HTML_MODE_COMPACT)
+    resumeButton.text = Html.fromHtml(str(R.string.resume_story, model.title, model.author,
+        model.progress.currentChapter, model.fragment.chapterCount), Html.FROM_HTML_MODE_COMPACT)
     resumeButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_restore_black_24dp, 0, 0, 0)
     resumeButton.drawableTint(R.color.white, theme, Direction.LEFT)
     resumeButton.setOnClickListener {

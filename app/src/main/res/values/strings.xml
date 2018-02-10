@@ -49,6 +49,7 @@
     <string name="group_language">Language</string>
     <string name="group_completion">Completion Status</string>
     <string name="group_genre">Genre</string>
+    <string name="no_category">No Category</string>
 
     <!-- Order strategies -->
     <string name="order_word_count">Word Count</string>

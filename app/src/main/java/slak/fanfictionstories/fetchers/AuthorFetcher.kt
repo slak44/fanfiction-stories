@@ -11,6 +11,10 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.StoryProgress
+import slak.fanfictionstories.StoryStatus
+import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
+import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 import slak.fanfictionstories.utility.async2
@@ -42,11 +46,11 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
       doc.select("#content_wrapper_inner > table[cellpadding=\"4\"] td[colspan=\"2\"]")
   val authorName = doc.select("#content_wrapper_inner > span").first().text()
   val stories = doc.getElementById("st_inside").children().map {
-    parseStoryElement(it, Pair(authorId, authorName).opt())
+    parseStoryElement(it, authorName, authorId)
   }
   // Drop a COMPLETELY FUCKING RANDOM SCRIPT TAG
   val favStories = doc.getElementById("fs_inside")?.children()?.drop(1)?.map {
-    parseStoryElement(it)
+    parseStoryElement(it, null, null)
   } ?: listOf()
   val favAuthors = doc.getElementById("fa").select("dl").map {
     val authorElement = it.select("a").first()
@@ -71,38 +75,23 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
   )
 }
 
-private fun parseStoryElement(it: Element,
-                              a: Optional<Pair<Long, String>> = Optional.empty()): StoryModel {
-  val metaHtml = it.children().last().children().last().html()
-  val meta = FetcherUtils.parseStoryMetadata(metaHtml)
-  return StoryModel(mutableMapOf(
-      "storyId" to it.attr("data-storyid").toLong(),
-      "rating" to meta["rating"]!!,
-      "language" to meta["language"]!!,
-      "genres" to meta["genres"]!!,
-      "characters" to meta["characters"]!!,
-      "chapters" to if (meta["chapters"] != null) meta["chapters"]!!.toLong() else 1L,
-      "wordCount" to meta["words"]!!.replace(",", "").toLong(),
-      "reviews" to if (meta["reviews"] != null) meta["reviews"]!!.toLong() else 0L,
-      "favorites" to if (meta["favs"] != null) meta["favs"]!!.toLong() else 0L,
-      "follows" to if (meta["follows"] != null) meta["follows"]!!.toLong() else 0L,
-      "publishDate" to (FetcherUtils.publishedTimeStoryMeta(metaHtml)?.toLong() ?: 0L),
-      "updateDate" to (FetcherUtils.updatedTimeStoryMeta(metaHtml)?.toLong() ?: 0L),
-      "isCompleted" to FetcherUtils.isComplete(metaHtml),
-      "scrollProgress" to 0.0,
-      "scrollAbsolute" to 0L,
-      "currentChapter" to 0L,
-      "status" to "transient",
+private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?): StoryModel {
+  val meta = it.children().last().children().last()
+  return StoryModel(
+      storyId = it.attr("data-storyid").toLong(),
+      fragment = parseStoryMetadata(meta.html(), meta),
+      progress = StoryProgress(),
+      status = StoryStatus.TRANSIENT,
       // FFnet category is our canon
-      "canon" to it.attr("data-category"),
+      canon = it.attr("data-category"),
       // Category info is unavailable here!
-      "category" to "",
-      "summary" to it.children().last().textNodes().first().text(),
-      "author" to if (a.isPresent) a.get().second else it.children()[2].text(),
-      "authorId" to if (a.isPresent) a.get().first else FetcherUtils.authorIdFromAuthor(it.children()[2]),
-      "title" to it.select("a.stitle").first().textNodes().last().text(),
-      "chapterTitles" to ""
-  ))
+      category = null,
+      summary = it.children().last().textNodes().first().text(),
+      author = authorName ?: it.children()[2].text(),
+      authorId = authorId ?: authorIdFromAuthor(it.children()[2]),
+      title = it.select("a.stitle").first().textNodes().last().text(),
+      serializedChapterTitles = null
+  )
 }
 
 private fun fetchAuthorPage(authorId: Long): Deferred<String> =

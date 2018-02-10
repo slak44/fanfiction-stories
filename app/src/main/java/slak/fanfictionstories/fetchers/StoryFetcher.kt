@@ -10,15 +10,12 @@ import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import slak.fanfictionstories.R
-import slak.fanfictionstories.StoryModel
-import slak.fanfictionstories.StoryStatus
+import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.FetcherUtils.TAG
-import slak.fanfictionstories.fetchers.FetcherUtils.parseMetadata
+import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 import slak.fanfictionstories.utility.Notifications.readerIntent
-import slak.fanfictionstories.writeChapters
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -31,7 +28,7 @@ fun fetchAndWriteStory(storyId: Long): Deferred<Optional<StoryModel>> = async2(C
   model.status = StoryStatus.LOCAL
   try {
     Static.currentCtx.database.use {
-      insertOrThrow("stories", *model.toKvPairs())
+      insertOrThrow("stories", *model.toPairs())
     }
   } catch (ex: SQLiteConstraintException) {
     Log.e("fetchAndWriteStory", "", ex)
@@ -41,7 +38,7 @@ fun fetchAndWriteStory(storyId: Long): Deferred<Optional<StoryModel>> = async2(C
   val isWriting: Boolean =
       writeChapters(storyId, fetchChapterRange(Notifications.Kind.DOWNLOADING, model)).await()
   if (isWriting) {
-    Notifications.downloadedStory(model.title, model.storyIdRaw)
+    Notifications.downloadedStory(model.title, model.storyId)
     Notifications.cancel(Notifications.Kind.DOWNLOADING)
   } else {
     // FIXME show something saying we failed
@@ -58,7 +55,7 @@ val storyCache = Cache<String>("StoryChapter", TimeUnit.MINUTES.toMillis(15))
  * @param storyId what story
  * @param chapter what chapter
  */
-fun fetchChapter(storyId: Long, chapter: Int): Deferred<String> = async2(CommonPool) {
+fun fetchChapter(storyId: Long, chapter: Long): Deferred<String> = async2(CommonPool) {
   val cacheKey = "id$storyId-ch$chapter"
   storyCache.hit(cacheKey).ifPresent2 { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
@@ -77,7 +74,7 @@ fun extractChapterText(doc: Document): String {
 
 fun fetchStoryModel(storyId: Long): Deferred<StoryModel> = async2(CommonPool) {
   val chapterHtml = fetchChapter(storyId, 1).await()
-  return@async2 StoryModel(parseMetadata(chapterHtml, storyId))
+  return@async2 parseStoryModel(chapterHtml, storyId)
 }
 
 /**
@@ -88,15 +85,15 @@ fun fetchStoryModel(storyId: Long): Deferred<StoryModel> = async2(CommonPool) {
  * @returns a [Channel] that supplies the html text
  */
 fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
-                      from: Int = 1, to: Int = -1): Channel<String> {
-  val target = if (to != -1) to else model.chapterCount
+                      from: Long = 1, to: Long = -1): Channel<String> {
+  val target = if (to != -1L) to else model.fragment.chapterCount
   // The buffer size is completely arbitrary
   val channel = Channel<String>(10)
   launch(CommonPool) {
     for (chapterNr in from..target) {
       Notifications.show(
-          kind, readerIntent(model.storyIdRaw), R.string.fetching_chapter, chapterNr, model.title)
-      val chapterHtml = fetchChapter(model.storyIdRaw, chapterNr).await()
+          kind, readerIntent(model.storyId), R.string.fetching_chapter, chapterNr, model.title)
+      val chapterHtml = fetchChapter(model.storyId, chapterNr).await()
       channel.send(extractChapterText(Jsoup.parse(chapterHtml)))
     }
     channel.close()
@@ -111,58 +108,50 @@ fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
 fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
   Notifications.show(
       Notifications.Kind.UPDATING, defaultIntent(), R.string.checking_story, oldModel.title)
-  var newModel = fetchStoryModel(oldModel.storyIdRaw).await()
+  val newModel = fetchStoryModel(oldModel.storyId).await()
 
   // Skip non-locals from updates, since the operation does not make sense for them
   if (oldModel.status != StoryStatus.LOCAL) return@async2 false
   // Stories can't get un-updated
-  if (oldModel.updateDateSeconds != 0L && newModel.updateDateSeconds == 0L)
+  if (oldModel.fragment.updateTime != 0L && newModel.fragment.updateTime == 0L)
     throw IllegalStateException("The old model had updates; the new one doesn't")
   // Story has never received an update, our job here is done
-  if (newModel.updateDateSeconds == 0L) return@async2 false
+  if (newModel.fragment.updateTime == 0L) return@async2 false
   // Update time is identical, nothing to do again
-  if (oldModel.updateDateSeconds == newModel.updateDateSeconds) return@async2 false
+  if (oldModel.fragment.updateTime == newModel.fragment.updateTime) return@async2 false
 
-  // Copy story progress from oldModel
-  val meta = newModel.src
-  if (oldModel.currentChapter > newModel.chapterCount) {
-    meta["currentChapter"] = newModel.chapterCount
-    meta["scrollProgress"] = 0.0
-    meta["scrollAbsolute"] = 0.0
+  newModel.progress = if (oldModel.progress.currentChapter > newModel.fragment.chapterCount) {
+    StoryProgress(currentChapter = newModel.fragment.chapterCount)
   } else {
-    meta["currentChapter"] = oldModel.currentChapter.toLong()
-    meta["scrollProgress"] = oldModel.src["scrollProgress"] as Double
-    meta["scrollAbsolute"] = oldModel.src["scrollAbsolute"] as Double
+    oldModel.progress
   }
-  // Update model after copying
-  newModel = StoryModel(meta)
 
   Static.currentCtx.database.use {
-    replaceOrThrow("stories", *newModel.toKvPairs())
+    replaceOrThrow("stories", *newModel.toPairs())
   }
 
   val channel: Channel<String> = when {
   // Special case when there is only one chapter
-    newModel.chapterCount == 1 -> {
+    newModel.fragment.chapterCount == 1L -> {
       Notifications.show(Notifications.Kind.UPDATING,
           defaultIntent(), R.string.fetching_chapter, 1, newModel.title)
       val channel = Channel<String>(1)
-      channel.send(fetchChapter(newModel.storyIdRaw, 1).await())
+      channel.send(fetchChapter(newModel.storyId, 1).await())
       channel.close()
       channel
     }
     // Try being smart, and only download delta when chapters were added
-    newModel.chapterCount > oldModel.chapterCount ->
+    newModel.fragment.chapterCount > oldModel.fragment.chapterCount ->
       fetchChapterRange(Notifications.Kind.UPDATING, oldModel,
-        oldModel.chapterCount + 1, newModel.chapterCount)
+        oldModel.fragment.chapterCount + 1, newModel.fragment.chapterCount)
     // If nothing else, just re-download everything
     else -> fetchChapterRange(Notifications.Kind.UPDATING, oldModel)
   }
-  val isWriting = writeChapters(newModel.storyIdRaw, channel).await()
+  val isWriting = writeChapters(newModel.storyId, channel).await()
   if (!isWriting) {
     // Revert model to old values
-    Static.currentCtx.database.use { replaceOrThrow("stories", *oldModel.toKvPairs()) }
-    Log.e(TAG, "Had to revert update to ${oldModel.storyIdRaw}")
+    Static.currentCtx.database.use { replaceOrThrow("stories", *oldModel.toPairs()) }
+    Log.e(TAG, "Had to revert update to ${oldModel.storyId}")
     return@async2 false
   }
   Notifications.cancel(Notifications.Kind.UPDATING)

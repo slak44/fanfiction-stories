@@ -62,7 +62,7 @@ class ReviewsActivity : LoadingActivity() {
 
   private fun setSubtitle() {
     // No need for a subtitle saying which chapter it is when there is only one
-    if (model.chapterCount == 1) {
+    if (model.fragment.chapterCount == 1L) {
       toolbar.subtitle = ""
       return
     }
@@ -74,7 +74,7 @@ class ReviewsActivity : LoadingActivity() {
   private fun addPage(page: Int) = launch(UI) {
     if (totalPages != 0 && page >= totalPages) return@launch
     showLoading()
-    val (list, pages) = getReviews(model.storyIdRaw, chapter, page).await()
+    val (list, pages) = getReviews(model.storyId, chapter, page).await()
     if (totalPages == 0) totalPages = pages
     if (pages == -1) noReviewsText.visibility = View.VISIBLE
     else noReviewsText.visibility = View.INVISIBLE
@@ -89,7 +89,7 @@ class ReviewsActivity : LoadingActivity() {
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
     // Don't show a chapter selection menu if there is only one chapter
-    if (model.chapterCount == 1) return false
+    if (model.fragment.chapterCount == 1L) return false
     menuInflater.inflate(R.menu.menu_reviews, menu)
     return true
   }
@@ -99,7 +99,7 @@ class ReviewsActivity : LoadingActivity() {
       R.id.selectReviewsFor -> {
         val items = listOf(
             str(R.string.all_chapters),
-            *model.chapterTitles.toTypedArray()
+            *model.chapterTitles().toTypedArray()
         ).toTypedArray()
         AlertDialog.Builder(this)
             .setTitle(R.string.select_chapter)
