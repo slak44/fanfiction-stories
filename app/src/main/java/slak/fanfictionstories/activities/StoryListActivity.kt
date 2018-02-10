@@ -2,6 +2,7 @@ package slak.fanfictionstories.activities
 
 import android.os.Bundle
 import android.os.Parcelable
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.view.Menu
@@ -76,11 +77,20 @@ class StoryListActivity : ActivityWithStatic() {
         .setView(R.layout.dialog_add_story_view)
         .setPositiveButton(R.string.add, { dialog, _ ->
           val editText = (dialog as AlertDialog).findViewById<EditText>(R.id.dialogStoryId)!!
-          val id = editText.text.toString().toLong()
+          val idText = editText.text.toString()
+          val list = idText.split(",").map {
+            try {
+              it.toLong()
+            } catch (nfe: NumberFormatException) {
+              Snackbar.make(storyListView, str(R.string.text_is_not_id, it), Snackbar.LENGTH_LONG)
+              -1L
+            }
+          }.filter { it != -1L }
           dialog.dismiss()
           launch(CommonPool) {
-            val model = fetchAndWriteStory(id).await()
-            model.ifPresent { initializeAdapter() }
+            val models = list.map { fetchAndWriteStory(it).await() }
+            val modelsFetched = models.count { it.isPresent }
+            if (modelsFetched > 0) initializeAdapter()
           }
         })
         .show()

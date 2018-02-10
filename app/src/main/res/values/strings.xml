@@ -105,6 +105,7 @@
     <string name="filter_by">Filter by…</string>
     <string name="add_by_ffid">Add by FF.net ID</string>
     <string name="story_by_id_title">Add Story by ID</string>
+    <string name="text_is_not_id">"%s" is not a valid story ID</string>
     <string name="all_stories">All</string>
     <string name="x_stories_y_filtered">%d stories (%d filtered)</string>
     <string name="removed_story">Story removed</string>

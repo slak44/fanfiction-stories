@@ -11,6 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/dialog_view_margin"
         android:ems="10"
+        android:digits="0123456789,"
         android:inputType="number"
         tools:ignore="LabelFor"/>
 </LinearLayout>
