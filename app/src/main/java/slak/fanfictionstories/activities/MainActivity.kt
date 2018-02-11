@@ -78,8 +78,7 @@ class MainActivity : ActivityWithStatic() {
       }
       updateStoriesBtn.setOnClickListener { launch(CommonPool) {
         delay(3, TimeUnit.SECONDS)
-        val intent = Intent()
-        intent.action = "slak.fanfictionstories.StoryUpdateReceiver"
+        val intent = Intent(this@MainActivity, StoryUpdateReceiver::class.java)
         sendBroadcast(intent)
       } }
       wipeSettings.setOnClickListener {
