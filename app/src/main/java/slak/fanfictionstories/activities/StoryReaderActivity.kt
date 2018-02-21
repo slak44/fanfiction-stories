@@ -23,6 +23,7 @@ import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.fetchers.extractChapterText
+import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.fetchers.fetchChapter
 import slak.fanfictionstories.utility.*
 import java.io.File
@@ -203,6 +204,9 @@ class StoryReaderActivity : LoadingActivity() {
     menu.findItem(R.id.nextChapter).isEnabled = nextChapterBtn.isEnabled
     menu.findItem(R.id.prevChapter).isEnabled = prevChapterBtn.isEnabled
     menu.findItem(R.id.selectChapter).isEnabled = selectChapterBtn.isEnabled
+    val isNotLocal = model.status != StoryStatus.LOCAL
+    menu.findItem(R.id.downloadLocal).isVisible = isNotLocal
+    menu.findItem(R.id.downloadLocal).isEnabled = isNotLocal
     return super.onPrepareOptionsMenu(menu)
   }
 
@@ -229,6 +233,9 @@ class StoryReaderActivity : LoadingActivity() {
         intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, model.authorId)
         intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, model.author)
         startActivity(intent)
+      }
+      R.id.downloadLocal -> launch(CommonPool) {
+        model = fetchAndWriteStory(model.storyId).await().orElse(model)
       }
       R.id.deleteLocal -> undoableAction(contentView!!, R.string.data_deleted) {
         deleteLocalStory(this, model.storyId)
