@@ -67,7 +67,10 @@ object Notifications {
 
   private var updatedIds = UPDATED_STORIES_ID_BEGIN
   fun updatedStories(stories: List<Pair<Long, String>>) {
-    if (stories.isEmpty()) return
+    if (stories.isEmpty()) {
+      show(Kind.DONE_UPDATING, defaultIntent(), R.string.no_updates_found)
+      return
+    }
     // Show group
     show(Kind.DONE_UPDATING,
         create(Kind.DONE_UPDATING, str(R.string.x_stories_updated, stories.size), defaultIntent())

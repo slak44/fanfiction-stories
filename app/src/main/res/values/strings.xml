@@ -99,6 +99,7 @@
     <string name="x_stories_updated">%d stories updated</string>
     <string name="accessing_data">Accessing Data</string>
     <string name="error_with_categories">Can\'t access %s data; Retrying…</string>
+    <string name="no_updates_found">No updates found</string>
 
     <!-- Story list -->
     <string name="story_list">Story List</string>
