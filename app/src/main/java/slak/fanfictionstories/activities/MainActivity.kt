@@ -20,7 +20,6 @@ import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 class MainActivity : ActivityWithStatic() {
   companion object {
@@ -31,9 +30,6 @@ class MainActivity : ActivityWithStatic() {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
     setSupportActionBar(toolbar)
-
-    // Update alarm
-    initAlarm(this)
 
     storyListButton.setOnClickListener {
       val intent = Intent(this, StoryListActivity::class.java)
@@ -76,11 +72,6 @@ class MainActivity : ActivityWithStatic() {
               }
             }).create().show()
       }
-      updateStoriesBtn.setOnClickListener { launch(CommonPool) {
-        delay(3, TimeUnit.SECONDS)
-        val intent = Intent(this@MainActivity, StoryUpdateReceiver::class.java)
-        sendBroadcast(intent)
-      } }
       wipeSettings.setOnClickListener {
         Prefs.useImmediate { it.clear() }
       }

@@ -95,12 +95,6 @@
                 android:text="@string/test_notif"/>
 
             <Button
-                android:id="@+id/updateStoriesBtn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/update_stories"/>
-
-            <Button
                 android:id="@+id/wipeSettings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
