@@ -95,6 +95,14 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
       }
     }
   }
+
+  fun replaceStory(model: StoryModel) {
+    if (!model.isPersistable()) {
+      Log.e("replaceStory", model.toString())
+      throw IllegalArgumentException("This model is unfit for the database")
+    }
+    writableDatabase.replaceOrThrow("stories", *model.toPairs())
+  }
 }
 
 /**
