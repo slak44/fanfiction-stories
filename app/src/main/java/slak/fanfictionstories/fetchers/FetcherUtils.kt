@@ -65,7 +65,10 @@ object FetcherUtils {
     val lastNode = element.childNodes().last()
     if (lastNode is TextNode) {
       val stripStuff = lastNode.text()
+          // This text is in lists of stories
           .replace(" - Complete", "")
+          // These texts are in the story view itself
+          .replace(" - Status: Complete", "")
           .replace(Regex(" - id: \\d+ "), "")
       if (stripStuff.isNotBlank()) {
         characters = stripStuff.trimStart(' ', '-')
