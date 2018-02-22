@@ -95,6 +95,19 @@ data class StoryModel(val storyId: Long,
                       val authorId: Long,
                       val title: String,
                       val serializedChapterTitles: String?) : Parcelable, Serializable {
+  /**
+   * Checks if this model is suitable for being written into the database.
+   * FIXME: some of these and more are actually coherency checks, which should be checked at compile time using proper types
+   */
+  fun isPersistable(): Boolean = when {
+    storyId <= 0L -> false
+    authorId <= 0L -> false
+    fragment.publishTime <= 0L -> false
+    category == null -> false
+    serializedChapterTitles == null -> false
+    else -> true
+  }
+
   fun wordsProgressedApprox(): Long {
     if (progress.currentChapter == 0L) return 0L
     // If this is too inaccurate, we might have to store each chapter's word count, then compute
