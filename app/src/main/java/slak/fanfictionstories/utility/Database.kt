@@ -213,4 +213,10 @@ fun SQLiteConstraintException.errCode(): SQLiteResultCode {
  * Access property for [Context].
  */
 val Context.database: DatabaseHelper
-  get() = DatabaseHelper.getInstance(this.applicationContext)
+  get() = DatabaseHelper.getInstance(applicationContext)
+
+/**
+ * Access property for [Static].
+ */
+val Static.database: DatabaseHelper
+  get() = DatabaseHelper.getInstance(currentCtx.applicationContext)
