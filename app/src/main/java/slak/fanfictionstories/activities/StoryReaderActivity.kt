@@ -17,7 +17,6 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
-import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.select
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
@@ -255,7 +254,7 @@ class StoryReaderActivity : LoadingActivity() {
     target.printWriter().use { it.print(text) }
     if (model.status == StoryStatus.TRANSIENT) {
       model = parseStoryModel(chapterHtmlText, storyId)
-      database.use { insertOrThrow("stories", *model.toPairs()) }
+      database.upsertStory(model)
     }
     return@async2 text
   }

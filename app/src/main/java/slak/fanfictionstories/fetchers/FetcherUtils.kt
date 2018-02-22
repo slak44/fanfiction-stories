@@ -130,7 +130,7 @@ object FetcherUtils {
 
     // Parse chapter titles only if there are any chapters to name
     val chapterTitles: String? = if (meta.chapterCount == 1L) {
-      null
+      ""
     } else {
       doc.select("#chap_select > option").slice(0..(meta.chapterCount - 1).toInt())
           .joinToString(CHAPTER_TITLE_SEPARATOR) {

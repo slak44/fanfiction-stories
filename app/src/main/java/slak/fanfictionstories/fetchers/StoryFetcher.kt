@@ -1,12 +1,10 @@
 package slak.fanfictionstories.fetchers
 
-import android.database.sqlite.SQLiteConstraintException
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
-import org.jetbrains.anko.db.insertOrThrow
 import org.jetbrains.anko.db.replaceOrThrow
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -26,15 +24,7 @@ import java.util.concurrent.TimeUnit
 fun fetchAndWriteStory(storyId: Long): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val model = fetchStoryModel(storyId).await()
   model.status = StoryStatus.LOCAL
-  try {
-    Static.currentCtx.database.use {
-      insertOrThrow("stories", *model.toPairs())
-    }
-  } catch (ex: SQLiteConstraintException) {
-    Log.e("fetchAndWriteStory", "", ex)
-    errorDialog(R.string.unique_constraint_violated, R.string.unique_constraint_violated_tip)
-    return@async2 Optional.empty<StoryModel>()
-  }
+  Static.currentCtx.database.upsertStory(model)
   val isWriting: Boolean =
       writeChapters(storyId, fetchChapterRange(Notifications.Kind.DOWNLOADING, model)).await()
   if (isWriting) {
