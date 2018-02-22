@@ -4,11 +4,9 @@ import android.util.Log
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
-import slak.fanfictionstories.StoryModel
-import slak.fanfictionstories.StoryModelFragment
-import slak.fanfictionstories.StoryProgress
-import slak.fanfictionstories.StoryStatus
+import slak.fanfictionstories.*
 import slak.fanfictionstories.utility.opt
+import slak.fanfictionstories.utility.str
 import java.util.*
 
 object FetcherUtils {
@@ -120,7 +118,13 @@ object FetcherUtils {
     val author = doc.select("#profile_top > a.xcontrast_txt")[0]
     val title = doc.select("#profile_top > b.xcontrast_txt")[0].text()
     val summary = doc.select("#profile_top > div.xcontrast_txt")[0].text()
-    val categories = doc.select("#pre_story_links > span.lc-left > a.xcontrast_txt")
+
+    val navLinks = doc.select("#pre_story_links > span.lc-left > a.xcontrast_txt")
+    val canon = navLinks.last().text()
+    val category =
+        if (navLinks.size == 1) str(R.string.crossovers)
+        else navLinks.dropLast(1).last().text()
+
     val metaElem = doc.select("#profile_top > span.xgray")[0]
     val meta = parseStoryMetadata(metaElem.html(), metaElem)
 
@@ -140,8 +144,8 @@ object FetcherUtils {
         fragment = meta,
         progress = StoryProgress(),
         status = StoryStatus.REMOTE,
-        canon = categories[1].text(),
-        category = categories[0].text(),
+        canon = canon,
+        category = category,
         summary = summary,
         author = author.text(),
         authorId = authorIdFromAuthor(author),
