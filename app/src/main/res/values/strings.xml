@@ -129,7 +129,7 @@
     <string name="x_reviews">%d reviews</string>
     <string name="x_favorites">%d favorites</string>
     <string name="x_follows">%d follows</string>
-    <string name="adding...">Adding…</string>
+    <string name="adding...">Downloading…</string>
 
     <!-- Story reader -->
     <string name="go_to_top">Go to Top</string>
