@@ -83,6 +83,7 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
 
 private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?): StoryModel {
   val meta = it.children().last().children().last()
+  val authorAnchor = it.select("a:not(.reviews)").last()
   return StoryModel(
       storyId = it.attr("data-storyid").toLong(),
       fragment = parseStoryMetadata(meta.html(), meta),
@@ -93,8 +94,8 @@ private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?)
       // Category info is unavailable here!
       category = null,
       summary = it.children().last().textNodes().first().text(),
-      author = authorName ?: it.select("a").last().text(),
-      authorId = authorId ?: authorIdFromAuthor(it.select("a").last()),
+      author = authorName ?: authorAnchor.text(),
+      authorId = authorId ?: authorIdFromAuthor(authorAnchor),
       title = it.select("a.stitle").first().textNodes().last().text(),
       serializedChapterTitles = null
   )
