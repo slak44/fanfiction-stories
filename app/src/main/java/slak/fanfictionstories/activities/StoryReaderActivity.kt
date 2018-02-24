@@ -50,8 +50,9 @@ class StoryReaderActivity : LoadingActivity() {
     }
 
     // Save story for the resume button, but not for transient stories
-    if (model.status != StoryStatus.TRANSIENT)
+    if (model.status != StoryStatus.TRANSIENT) {
       Prefs.use { it.putLong(Prefs.RESUME_STORY_ID, model.storyId) }
+    }
 
     title = model.title
     currentChapter = if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
