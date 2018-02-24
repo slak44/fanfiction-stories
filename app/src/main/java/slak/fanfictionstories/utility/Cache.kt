@@ -25,6 +25,7 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
       @Suppress("Unchecked_Cast")
       val array = objIn.readObject() as CacheMap<T>
       cache = array
+      purge()
     } catch (ex: Throwable) {
       // Ignore errors with the cache; don't crash the app because of it
       cacheMapFile.delete()
@@ -32,6 +33,10 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
     } finally {
       objIn.close()
     }
+  }
+
+  fun purge() = launch(CommonPool) {
+    cache.entries.removeIf { isExpired(it.value.second) }
   }
 
   fun serialize() = launch(CommonPool) {
@@ -45,12 +50,14 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
     serialize()
   }
 
+  fun isExpired(date: ExpirationEpoch): Boolean = System.currentTimeMillis() > date
+
   fun hit(key: String): Optional<T> {
     if (cache[key] == null) {
       Log.d(TAG, "Cache missed: $key")
       return Optional.empty()
     }
-    if (System.currentTimeMillis() > cache[key]!!.second) {
+    if (isExpired(cache[key]!!.second)) {
       // Cache expired; remove and return nothing
       Log.d(TAG, "Cache expired: $key")
       cache.remove(key)
