@@ -12,6 +12,9 @@ import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
 import java.io.File
 
+// We don't leak anything here; the 2 static fields stored here are kept always up to date
+// That means we can only store a reference to things that are currently in use anyway
+// And the moment these change, so should this class
 @SuppressLint("StaticFieldLeak")
 /**
  * Provides static access to various resources in [ActivityWithStatic] activities. Using this class
@@ -19,6 +22,8 @@ import java.io.File
  * instant run.
  */
 object Static {
+  var currentActivity: ActivityWithStatic? = null
+
   private var resProp: Resources? = null
   private var cmProp: ConnectivityManager? = null
   private var cacheDirProp: File? = null
@@ -37,7 +42,8 @@ object Static {
   val notifManager: NotificationManager get() = notificationManager!!
   val jobScheduler: JobScheduler get() = jobSchedulerProp!!
 
-  fun init(context: Context) {
+  fun init(context: Context, contextActivity: ActivityWithStatic? = null) {
+    currentActivity = contextActivity
     thisCtx = context
     if (resProp == null) resProp = context.applicationContext.resources
     if (cmProp == null) cmProp = context.applicationContext
@@ -55,11 +61,11 @@ object Static {
 }
 
 /**
- * Helper base class for use with [Static]. Also runs various static initializers.
+ * Helper base class for use with [Static].
  */
 abstract class ActivityWithStatic : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
-    Static.init(this)
+    Static.init(this, this)
     super.onCreate(savedInstanceState)
   }
 }
