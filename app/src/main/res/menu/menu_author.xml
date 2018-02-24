@@ -7,19 +7,23 @@
         android:icon="@drawable/ic_favorite_black_24dp"
         android:orderInCategory="5"
         android:title="@string/favorite"
+        android:enabled="false"
         app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/followAuthor"
+        android:enabled="false"
         android:orderInCategory="5"
         android:title="@string/follow"
         app:showAsAction="never"/>
     <item
         android:id="@+id/privateMessage"
+        android:enabled="false"
         android:orderInCategory="10"
         android:title="@string/action_pm"
         app:showAsAction="never"/>
     <item
         android:id="@+id/favoritedAuthors"
+        android:enabled="false"
         android:orderInCategory="20"
         android:title="@string/favorite_authors"
         app:showAsAction="never"/>

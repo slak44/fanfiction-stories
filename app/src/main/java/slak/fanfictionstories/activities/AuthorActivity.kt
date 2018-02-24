@@ -91,6 +91,12 @@ class AuthorActivity : LoadingActivity(1) {
     if (author.isPresent && author.get().favoriteAuthors.isEmpty()) {
       menu.findItem(R.id.favoritedAuthors).isVisible = false
     }
+    if (author.isPresent) {
+      menu.findItem(R.id.favoriteAuthor).isEnabled = true
+      menu.findItem(R.id.followAuthor).isEnabled = true
+      menu.findItem(R.id.privateMessage).isEnabled = true
+      menu.findItem(R.id.favoritedAuthors).isEnabled = true
+    }
     return super.onPrepareOptionsMenu(menu)
   }
 
