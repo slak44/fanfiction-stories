@@ -34,7 +34,7 @@ object Prefs {
   fun arrangement() = Arrangement(orderStrategy, orderDirection, groupStrategy)
 
   fun textSize() = Static.defaultPrefs.getString(
-      str(R.string.key_option_font), str(R.string.option_font_default)).toFloat()
+      str(R.string.key_option_size), str(R.string.option_font_default)).toFloat()
   fun textColor(theme: Resources.Theme) = Static.defaultPrefs.getInt(
       str(R.string.key_option_color), Static.res.getColor(R.color.textDefault, theme))
   fun textFont() = Typeface.create(Static.defaultPrefs.getString(
