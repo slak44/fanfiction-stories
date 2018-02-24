@@ -15,6 +15,8 @@
     <string name="group_by">Group by…</string>
     <string name="loading...">Loading…</string>
     <string name="crossovers">Crossovers</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 
     <!-- Canon story list -->
     <string name="error_with_canon_stories">Can\'t access %s stories; Retrying…</string>
@@ -77,6 +79,20 @@
     <string name="text_option_size">Font Size (sp)</string>
     <string name="text_option_color">Text Color</string>
     <string name="text_option_antialiasing">Enable Anti-Aliasing</string>
+    <string name="network_type_title">Required network status</string>
+    <string name="network_type_summary">Avoid updating on limited networks</string>
+    <string-array name="network_types">
+        <item>Don\'t update on roaming networks</item>
+        <item>Don\'t update on metered networks</item>
+        <item>Update on any network</item>
+    </string-array>
+    <string-array name="network_types_values">
+        <item>not_roaming</item>
+        <item>not_metered</item>
+        <item>any</item>
+    </string-array>
+    <string name="update_time_title">Daily auto-update time</string>
+    <string name="update_time_summary">At what hour every day to update</string>
 
     <!-- Notifications -->
     <string name="download_notification_channel">Download Notifications</string>

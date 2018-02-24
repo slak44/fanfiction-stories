@@ -13,12 +13,12 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.launch
 import org.threeten.bp.Duration
-import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import slak.fanfictionstories.fetchers.fetchStoryModel
 import slak.fanfictionstories.fetchers.updateStory
 import slak.fanfictionstories.utility.Notifications
+import slak.fanfictionstories.utility.Prefs
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.database
 import java.util.concurrent.TimeUnit
@@ -42,21 +42,47 @@ enum class JobSchedulerResult {
   }
 }
 
+enum class NetworkType(val jobInfoVal: Int) {
+  ANY(JobInfo.NETWORK_TYPE_ANY),
+  METERED(JobInfo.NETWORK_TYPE_METERED),
+  NONE(JobInfo.NETWORK_TYPE_NONE),
+  NOT_ROAMING(JobInfo.NETWORK_TYPE_NOT_ROAMING),
+  UNMETERED(JobInfo.NETWORK_TYPE_UNMETERED);
+}
+
+/**
+ * Convenience extension to use the [NetworkType] enum instead of named ints.
+ */
+fun JobInfo.Builder.setRequiredNetworkType(type: NetworkType): JobInfo.Builder {
+  return this.setRequiredNetworkType(type.jobInfoVal)
+}
+
+enum class BackoffPolicy(val jobInfoVal: Int) {
+  LINEAR(JobInfo.BACKOFF_POLICY_LINEAR), EXPONENTIAL(JobInfo.BACKOFF_POLICY_EXPONENTIAL)
+}
+
+/**
+ * Convenience extension to use the [BackoffPolicy] enum instead of named ints.
+ */
+fun JobInfo.Builder.setBackoffCriteria(initialBackoffMillis: Long,
+                                       policy: BackoffPolicy): JobInfo.Builder {
+  return this.setBackoffCriteria(initialBackoffMillis, policy.jobInfoVal)
+}
+
 /**
  * Schedule a job that waits until the specified update time, so it can do the update and launch the
  * periodic update job.
  */
 fun scheduleInitialUpdateJob(): JobSchedulerResult {
   val now = ZonedDateTime.now(ZoneId.systemDefault())
-  // FIXME: make this configurable
-  val target = ZonedDateTime.of(now.toLocalDate(), LocalTime.of(23, 0), ZoneId.systemDefault())
+  val target = Prefs.autoUpdateMoment()
   // If it's negative, we're past that moment today, so schedule it for tomorrow
   if (Duration.between(now, target).isNegative) target.plusDays(1)
   val builder = JobInfo.Builder(UPDATE_INIT_DELAY_JOB_INFO_ID, updateComponent)
       .setMinimumLatency(Duration.between(now, target).toMillis())
       .setOverrideDeadline(Duration.between(now, target).toMillis() + 1)
-      .setBackoffCriteria(1000, JobInfo.BACKOFF_POLICY_LINEAR)
-      .setRequiredNetworkType(JobInfo.NETWORK_TYPE_NOT_ROAMING)
+      .setBackoffCriteria(1000, BackoffPolicy.LINEAR)
+      .setRequiredNetworkType(Prefs.autoUpdateReqNetType())
       .setPersisted(true)
   return JobSchedulerResult.from(Static.jobScheduler.schedule(builder.build()))
 }
@@ -65,11 +91,10 @@ fun scheduleInitialUpdateJob(): JobSchedulerResult {
  * Schedule the periodic update job.
  */
 fun schedulePeriodicUpdateJob(): JobSchedulerResult {
-  // FIXME: make this configurable
   val builder = JobInfo.Builder(UPDATE_JOB_INFO_ID, updateComponent)
       .setPeriodic(TimeUnit.DAYS.toMillis(1), TimeUnit.MINUTES.toMillis(100))
-      .setBackoffCriteria(1000, JobInfo.BACKOFF_POLICY_LINEAR)
-      .setRequiredNetworkType(JobInfo.NETWORK_TYPE_NOT_ROAMING)
+      .setBackoffCriteria(1000, BackoffPolicy.LINEAR)
+      .setRequiredNetworkType(Prefs.autoUpdateReqNetType())
       .setPersisted(true)
 
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

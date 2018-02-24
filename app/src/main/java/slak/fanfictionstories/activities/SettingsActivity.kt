@@ -1,29 +1,23 @@
 package slak.fanfictionstories.activities
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
 import kotlinx.android.synthetic.main.activity_settings.*
 import slak.fanfictionstories.R
-import android.preference.PreferenceFragment
+import slak.fanfictionstories.utility.ActivityWithStatic
 
-class SettingsActivity : AppCompatActivity() {
-
+class SettingsActivity : ActivityWithStatic() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_settings)
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
-    fragmentManager.beginTransaction().replace(R.id.prefFragment, MainSettingsFragment()).commit()
+    supportFragmentManager.beginTransaction().replace(R.id.prefFragment, MainSettingsFragment()).commit()
   }
 }
 
-class MainSettingsFragment : PreferenceFragment() {
-  companion object {
-    private const val TAG = "MainSettingsFragment"
-  }
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
+class MainSettingsFragment : PreferenceFragmentCompat() {
+  override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {
     addPreferencesFromResource(R.xml.settings_main)
   }
 }

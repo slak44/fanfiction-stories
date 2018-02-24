@@ -1,40 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:app="http://schemas.android.com/apk/res-auto"
-                  xmlns:tools="http://schemas.android.com/tools">
+<android.support.v7.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <PreferenceCategory
+    <android.support.v7.preference.PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_updating"
         tools:ignore="UnusedAttribute">
 
-    </PreferenceCategory>
-    <PreferenceCategory
+        <ListPreference
+            android:defaultValue="not_roaming"
+            android:entries="@array/network_types"
+            android:entryValues="@array/network_types_values"
+            android:key="auto_updates_network_type"
+            android:summary="@string/network_type_summary"
+            android:title="@string/network_type_title"/>
+        <com.takisoft.fix.support.v7.preference.TimePickerPreference
+            android:defaultValue="23:00"
+            android:key="auto_updates_time"
+            android:summary="@string/update_time_summary"
+            android:title="@string/update_time_title"
+            app:pref_hourFormat="h24"
+            app:pref_pickerTime="23:00"/>
+
+    </android.support.v7.preference.PreferenceCategory>
+    <android.support.v7.preference.PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_text"
         tools:ignore="UnusedAttribute">
 
-        <EditTextPreference
+        <slak.fanfictionstories.utility.AutoSummaryEditTextPreference
             android:defaultValue="14"
             android:key="font_option_size"
             android:numeric="decimal"
             android:selectAllOnFocus="true"
-            android:singleLine="true"
             android:title="@string/text_option_size"/>
-        <EditTextPreference
+        <slak.fanfictionstories.utility.AutoSummaryEditTextPreference
             android:defaultValue="Roboto"
             android:key="font_option_type"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/text_option_font"/>
-        <com.kizitonwose.colorpreference.ColorPreference
+        <com.takisoft.fix.support.v7.preference.ColorPickerPreference
             android:defaultValue="@color/textDefault"
             android:key="font_option_color"
             android:title="@string/text_option_color"
-            app:colorChoices="@array/textColors"/>
+            app:pref_colors="@array/textColors"/>
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="font_option_antialias"
             android:title="@string/text_option_antialiasing"/>
-    </PreferenceCategory>
-</PreferenceScreen>
+    </android.support.v7.preference.PreferenceCategory>
+</android.support.v7.preference.PreferenceScreen>

@@ -6,6 +6,9 @@ import android.content.res.Resources
 import android.graphics.Typeface
 import android.text.TextPaint
 import android.util.TypedValue
+import org.threeten.bp.LocalTime
+import org.threeten.bp.ZoneId
+import org.threeten.bp.ZonedDateTime
 import slak.fanfictionstories.*
 
 object Prefs {
@@ -50,6 +53,25 @@ object Prefs {
         TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textSize(), Static.res.displayMetrics)
     tp.isAntiAlias = textAntiAlias()
     return tp
+  }
+
+  const val AUTO_UPDATE_NET_TYPE = "auto_updates_network_type"
+  const val AUTO_UPDATE_DAILY_TIME = "auto_updates_time"
+
+  fun autoUpdateReqNetType(): NetworkType {
+    return when (Static.defaultPrefs.getString(AUTO_UPDATE_NET_TYPE, "not_roaming")) {
+      "not_roaming" -> NetworkType.NOT_ROAMING
+      "not_metered" -> NetworkType.UNMETERED
+      "any" -> NetworkType.ANY
+      else -> throw IllegalStateException("The string values are out of sync with this function")
+    }
+  }
+
+  fun autoUpdateMoment(): ZonedDateTime {
+    val updateTime: String = Static.defaultPrefs.getString(AUTO_UPDATE_DAILY_TIME, "23:00")
+    val (hour, minute) = updateTime.split(":").map { it.toInt() }
+    val now = ZonedDateTime.now(ZoneId.systemDefault())
+    return ZonedDateTime.of(now.toLocalDate(), LocalTime.of(hour, minute), ZoneId.systemDefault())
   }
 
   /**
