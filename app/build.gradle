@@ -29,6 +29,7 @@ def kotlin_coroutines_version = "0.16"
 def android_appcompat_version = "27.0.2"
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'net.opacapp:multiline-collapsingtoolbar:1.6.0'
     implementation "com.takisoft.fix:preference-v7-colorpicker:$android_appcompat_version.0"
     implementation "com.takisoft.fix:preference-v7-datetimepicker:$android_appcompat_version.0"
     implementation "com.takisoft.fix:preference-v7:$android_appcompat_version.0"
