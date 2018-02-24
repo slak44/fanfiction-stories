@@ -85,17 +85,17 @@ fun waitForNetwork() = async2(CommonPool) {
     // FIXME figure out network status even when app is not focused
     if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
       // No connection; wait
-      Notifications.show(Notifications.Kind.OTHER, defaultIntent(), R.string.waiting_for_connection)
+      Notifications.show(Notifications.Kind.NETWORK, defaultIntent(), R.string.waiting_for_connection)
       Log.i("waitForNetwork", "No connection")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else if (activeNetwork.isConnecting()) {
       // We're connecting; wait
-      Notifications.show(Notifications.Kind.OTHER, defaultIntent(), R.string.connecting)
+      Notifications.show(Notifications.Kind.NETWORK, defaultIntent(), R.string.connecting)
       Log.i("waitForNetwork", "Connecting...")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else {
       // We're connected!
-      Notifications.cancel(Notifications.Kind.OTHER)
+      Notifications.cancel(Notifications.Kind.NETWORK)
       break
     }
   }
@@ -118,7 +118,9 @@ fun patientlyFetchURL(url: String,
   waitForNetwork().await()
   delay(RATE_LIMIT_MS)
   return@async2 try {
-    URL(url).readText()
+    val text = URL(url).readText()
+    Notifications.cancel(Notifications.Kind.ERROR)
+    text
   } catch (t: Throwable) {
     // Something happened; retry
     onError(t)

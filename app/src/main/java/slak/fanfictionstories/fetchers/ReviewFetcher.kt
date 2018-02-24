@@ -30,7 +30,7 @@ data class Review(
 fun getReviews(storyId: Long,
                chapter: Int, page: Int): Deferred<Pair<List<Review>, Int>> = async2(CommonPool) {
   val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
-    Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
+    Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_fetching_review_data, storyId.toString())
     Log.e(FetcherUtils.TAG, "fetchReviewPage", it)
   }.await()

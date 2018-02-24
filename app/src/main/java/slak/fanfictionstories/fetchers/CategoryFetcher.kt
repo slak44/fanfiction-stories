@@ -37,7 +37,7 @@ fun fetchCategoryData(categoryUrlComponent: String): Deferred<Array<CategoryLink
     = async2(CommonPool) {
   categoryCache.hit(categoryUrlComponent).ifPresent2 { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
-    Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
+    Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_with_categories, categoryUrlComponent)
     Log.e(TAG, "Category fetch fail: $categoryUrlComponent", it)
   }.await()

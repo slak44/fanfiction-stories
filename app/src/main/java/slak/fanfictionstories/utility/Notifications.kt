@@ -19,11 +19,12 @@ import slak.fanfictionstories.activities.StoryReaderActivity
 object Notifications {
   const val DOWNLOAD_CHANNEL = "download_channel"
 
-  const val OTHER_NOTIFICATION_ID = 1
+  const val ERROR_NOTIFICATION_ID = 1
   const val DOWNLOAD_NOTIFICATION_ID = 2
   const val UPDATE_NOTIFICATION_ID = 3
   const val DONE_UPDATING_NOTIFICATION_ID = 4
   const val DONE_DOWNLOADING_NOTIFICATION_ID = 5
+  const val NETWORK_NOTIFICATION_ID = 6
 
   const val DOWNLOADED_STORIES_ID_BEGIN = 0xA000000
   const val UPDATED_STORIES_ID_BEGIN = 0xB000000
@@ -46,8 +47,10 @@ object Notifications {
         R.drawable.ic_done_all_black_24dp, DONE_UPDATING_NOTIFICATION_ID, "D"),
     DONE_DOWNLOADING(Duration.TRANSIENT, R.string.downloaded_stories,
         R.drawable.ic_done_all_black_24dp, DONE_DOWNLOADING_NOTIFICATION_ID, "C"),
-    OTHER(Duration.ONGOING, R.string.accessing_data,
-        R.drawable.ic_cloud_download_black_24dp, OTHER_NOTIFICATION_ID, "E")
+    NETWORK(Duration.ONGOING, R.string.network_not_available,
+        R.drawable.ic_signal_wifi_off_black_24dp, NETWORK_NOTIFICATION_ID, "E"),
+    ERROR(Duration.ONGOING, R.string.accessing_data,
+        R.drawable.ic_cloud_download_black_24dp, ERROR_NOTIFICATION_ID, "F")
   }
 
   private var downloadedIds = DOWNLOADED_STORIES_ID_BEGIN

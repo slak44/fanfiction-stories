@@ -10,7 +10,6 @@ import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
-import org.jsoup.nodes.TextNode
 import org.jsoup.parser.Parser
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
@@ -215,7 +214,7 @@ class CanonFetcher(val details: Details) : Parcelable {
     val pathAndQuery = "${details.parentLink.urlComponent}/?p=$page&$queryParams"
     canonListCache.hit(pathAndQuery).ifPresent2 { return@async2 parseHtml(it) }
     val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {
-      Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
+      Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
           R.string.error_with_canon_stories, details.parentLink.displayName)
       Log.e(TAG, "CanonFetcher: retry", it)
     }.await()

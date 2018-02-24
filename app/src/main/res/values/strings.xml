@@ -115,6 +115,7 @@
     <string name="updating_story">Updating Story</string>
     <string name="waiting_for_connection">Waiting for connection…</string>
     <string name="connecting">Connecting…</string>
+    <string name="network_not_available">Network Not Available</string>
     <string name="error_fetching_story_data">Couldn\'t fetch story data (id %s); Retrying…</string>
     <string name="error_fetching_review_data">Couldn\'t fetch reviews (id %s); Retrying…</string>
     <string name="error_fetching_author_data">Couldn\'t fetch author data (id %s); Retrying…</string>

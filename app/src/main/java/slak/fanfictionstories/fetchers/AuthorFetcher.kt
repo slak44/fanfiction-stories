@@ -40,7 +40,7 @@ data class Author(val name: String,
 fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
   authorCache.hit(authorId.toString()).ifPresent2 { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
-    Notifications.show(Notifications.Kind.OTHER, defaultIntent(),
+    Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_fetching_author_data, authorId.toString())
     Log.e(FetcherUtils.TAG, "fetchAuthorPage", it)
   }.await()
