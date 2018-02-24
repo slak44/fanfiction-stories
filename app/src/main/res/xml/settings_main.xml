@@ -10,19 +10,19 @@
         tools:ignore="UnusedAttribute">
 
         <ListPreference
-            android:defaultValue="not_roaming"
+            android:defaultValue="@string/option_net_type_default"
             android:entries="@array/network_types"
             android:entryValues="@array/network_types_values"
-            android:key="auto_updates_network_type"
+            android:key="@string/key_option_net_type"
             android:summary="@string/network_type_summary"
             android:title="@string/network_type_title"/>
         <com.takisoft.fix.support.v7.preference.TimePickerPreference
-            android:defaultValue="23:00"
-            android:key="auto_updates_time"
+            android:defaultValue="@string/option_update_time_default"
+            android:key="@string/key_option_update_time"
             android:summary="@string/update_time_summary"
             android:title="@string/update_time_title"
             app:pref_hourFormat="h24"
-            app:pref_pickerTime="23:00"/>
+            app:pref_pickerTime="@string/option_update_time_default"/>
 
     </android.support.v7.preference.PreferenceCategory>
     <android.support.v7.preference.PreferenceCategory
@@ -31,25 +31,25 @@
         tools:ignore="UnusedAttribute">
 
         <slak.fanfictionstories.utility.AutoSummaryEditTextPreference
-            android:defaultValue="14"
-            android:key="font_option_size"
+            android:defaultValue="@string/option_size_default"
+            android:key="@string/key_option_size"
             android:numeric="decimal"
             android:selectAllOnFocus="true"
             android:title="@string/text_option_size"/>
         <slak.fanfictionstories.utility.AutoSummaryEditTextPreference
-            android:defaultValue="Roboto"
-            android:key="font_option_type"
+            android:defaultValue="@string/option_font_default"
+            android:key="@string/key_option_font"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/text_option_font"/>
         <com.takisoft.fix.support.v7.preference.ColorPickerPreference
             android:defaultValue="@color/textDefault"
-            android:key="font_option_color"
+            android:key="@string/key_option_color"
             android:title="@string/text_option_color"
             app:pref_colors="@array/textColors"/>
         <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="font_option_antialias"
+            android:defaultValue="@string/option_antialias_default"
+            android:key="@string/key_option_antialias"
             android:title="@string/text_option_antialiasing"/>
     </android.support.v7.preference.PreferenceCategory>
 </android.support.v7.preference.PreferenceScreen>

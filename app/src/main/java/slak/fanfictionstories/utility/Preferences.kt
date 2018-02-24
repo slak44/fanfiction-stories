@@ -33,17 +33,14 @@ object Prefs {
 
   fun arrangement() = Arrangement(orderStrategy, orderDirection, groupStrategy)
 
-  const val TEXT_SIZE = "font_option_size"
-  const val TEXT_FONT = "font_option_type"
-  const val TEXT_COLOR = "font_option_color"
-  const val TEXT_ANTIALIAS = "font_option_antialias"
-
-  fun textSize() = Static.defaultPrefs.getString(Prefs.TEXT_SIZE, "14").toFloat()
-  fun textColor(theme: Resources.Theme) =
-      Static.defaultPrefs.getInt(Prefs.TEXT_COLOR, Static.res.getColor(R.color.textDefault, theme))
-  fun textFont() = Typeface.create(
-      Static.defaultPrefs.getString(Prefs.TEXT_FONT, "Roboto"), Typeface.NORMAL)
-  fun textAntiAlias() = Static.defaultPrefs.getBoolean(Prefs.TEXT_ANTIALIAS, true)
+  fun textSize() = Static.defaultPrefs.getString(
+      str(R.string.key_option_font), str(R.string.option_font_default)).toFloat()
+  fun textColor(theme: Resources.Theme) = Static.defaultPrefs.getInt(
+      str(R.string.key_option_color), Static.res.getColor(R.color.textDefault, theme))
+  fun textFont() = Typeface.create(Static.defaultPrefs.getString(
+      str(R.string.key_option_font), str(R.string.option_font_default)), Typeface.NORMAL)
+  fun textAntiAlias() = Static.defaultPrefs.getBoolean(
+      str(R.string.key_option_antialias), str(R.string.option_antialias_default).toBoolean())
 
   fun textPaint(theme: Resources.Theme): TextPaint {
     val tp = TextPaint()
@@ -55,20 +52,17 @@ object Prefs {
     return tp
   }
 
-  const val AUTO_UPDATE_NET_TYPE = "auto_updates_network_type"
-  const val AUTO_UPDATE_DAILY_TIME = "auto_updates_time"
-
-  fun autoUpdateReqNetType(): NetworkType {
-    return when (Static.defaultPrefs.getString(AUTO_UPDATE_NET_TYPE, "not_roaming")) {
-      "not_roaming" -> NetworkType.NOT_ROAMING
-      "not_metered" -> NetworkType.UNMETERED
-      "any" -> NetworkType.ANY
-      else -> throw IllegalStateException("The string values are out of sync with this function")
-    }
+  fun autoUpdateReqNetType(): NetworkType = when (Static.defaultPrefs.getString(
+      str(R.string.key_option_net_type), str(R.string.option_net_type_default))) {
+    "not_roaming" -> NetworkType.NOT_ROAMING
+    "not_metered" -> NetworkType.UNMETERED
+    "any" -> NetworkType.ANY
+    else -> throw IllegalStateException("The string values are out of sync with this function")
   }
 
   fun autoUpdateMoment(): ZonedDateTime {
-    val updateTime: String = Static.defaultPrefs.getString(AUTO_UPDATE_DAILY_TIME, "23:00")
+    val updateTime: String = Static.defaultPrefs.getString(
+        str(R.string.key_option_update_time), str(R.string.option_update_time_default))
     val (hour, minute) = updateTime.split(":").map { it.toInt() }
     val now = ZonedDateTime.now(ZoneId.systemDefault())
     return ZonedDateTime.of(now.toLocalDate(), LocalTime.of(hour, minute), ZoneId.systemDefault())

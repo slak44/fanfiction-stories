@@ -7,12 +7,12 @@ import kotlinx.android.synthetic.main.activity_settings.*
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoriesApplication
 import slak.fanfictionstories.utility.ActivityWithStatic
-import slak.fanfictionstories.utility.Prefs
 import slak.fanfictionstories.utility.Static
+import slak.fanfictionstories.utility.str
 
 class SettingsActivity : ActivityWithStatic(), SharedPreferences.OnSharedPreferenceChangeListener {
   override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-    if (key != Prefs.AUTO_UPDATE_DAILY_TIME) return
+    if (key != str(R.string.key_option_update_time)) return
     Static.jobScheduler.cancelAll()
     StoriesApplication.scheduleInitUpdate()
   }
