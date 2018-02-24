@@ -70,6 +70,9 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
 
   fun clear() {
     cache = CacheMap()
-    serialize()
+    val deleted = cacheMapFile.delete()
+    if (!deleted) {
+      Log.wtf(TAG, "Failed to clear disk cache; memory and disk caches are now inconsistent")
+    }
   }
 }
