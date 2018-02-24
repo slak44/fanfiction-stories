@@ -19,6 +19,15 @@ import java.util.concurrent.TimeUnit
 class StoriesApplication : Application() {
   companion object {
     private const val TAG = "StoriesApplication"
+    fun scheduleInitUpdate(): Job = launch(CommonPool) {
+      val areJobsPending = Static.jobScheduler.allPendingJobs.size > 0
+      if (areJobsPending) return@launch
+      if (scheduleInitialUpdateJob() == ScheduleResult.FAILURE) {
+        Log.e(TAG, "Failed to schedule initial job")
+        delay(5, TimeUnit.MINUTES)
+        scheduleInitUpdate()
+      }
+    }
   }
 
   override fun onCreate() {
@@ -39,15 +48,5 @@ class StoriesApplication : Application() {
     authorCache.deserialize()
     // Schedule initial update job if no update job exists
     scheduleInitUpdate()
-  }
-
-  private fun scheduleInitUpdate(): Job = launch(CommonPool) {
-    val areJobsPending = Static.jobScheduler.allPendingJobs.size > 0
-    if (areJobsPending) return@launch
-    if (scheduleInitialUpdateJob() == ScheduleResult.FAILURE) {
-      Log.e(TAG, "Failed to schedule initial job")
-      delay(5, TimeUnit.MINUTES)
-      scheduleInitUpdate()
-    }
   }
 }
