@@ -11,6 +11,7 @@ import slak.fanfictionstories.fetchers.authorCache
 import slak.fanfictionstories.fetchers.canonListCache
 import slak.fanfictionstories.fetchers.categoryCache
 import slak.fanfictionstories.fetchers.storyCache
+import slak.fanfictionstories.utility.ScheduleResult
 import slak.fanfictionstories.utility.Static
 import java.util.concurrent.TimeUnit
 
@@ -43,7 +44,7 @@ class StoriesApplication : Application() {
   private fun scheduleInitUpdate(): Job = launch(CommonPool) {
     val areJobsPending = Static.jobScheduler.allPendingJobs.size > 0
     if (areJobsPending) return@launch
-    if (scheduleInitialUpdateJob() == JobSchedulerResult.FAILURE) {
+    if (scheduleInitialUpdateJob() == ScheduleResult.FAILURE) {
       Log.e(TAG, "Failed to schedule initial job")
       delay(5, TimeUnit.MINUTES)
       scheduleInitUpdate()

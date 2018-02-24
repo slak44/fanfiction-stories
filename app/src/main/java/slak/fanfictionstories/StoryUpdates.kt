@@ -3,7 +3,6 @@ package slak.fanfictionstories
 import android.app.Service
 import android.app.job.JobInfo
 import android.app.job.JobParameters
-import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Intent
@@ -17,10 +16,7 @@ import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import slak.fanfictionstories.fetchers.fetchStoryModel
 import slak.fanfictionstories.fetchers.updateStory
-import slak.fanfictionstories.utility.Notifications
-import slak.fanfictionstories.utility.Prefs
-import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.database
+import slak.fanfictionstories.utility.*
 import java.util.concurrent.TimeUnit
 
 // Updates can be forced via adb for testing:
@@ -31,49 +27,11 @@ private const val UPDATE_INIT_DELAY_JOB_INFO_ID = 0xDE1A1
 private const val UPDATE_JOB_INFO_ID = 0xA1A13
 private val updateComponent = ComponentName(Static.currentCtx, UpdateService::class.java)
 
-enum class JobSchedulerResult {
-  SUCCESS, FAILURE;
-  companion object {
-    fun from(intResult: Int): JobSchedulerResult = when (intResult) {
-      JobScheduler.RESULT_SUCCESS -> SUCCESS
-      JobScheduler.RESULT_FAILURE -> FAILURE
-      else -> throw IllegalArgumentException("No such JobScheduler result type")
-    }
-  }
-}
-
-enum class NetworkType(val jobInfoVal: Int) {
-  ANY(JobInfo.NETWORK_TYPE_ANY),
-  METERED(JobInfo.NETWORK_TYPE_METERED),
-  NONE(JobInfo.NETWORK_TYPE_NONE),
-  NOT_ROAMING(JobInfo.NETWORK_TYPE_NOT_ROAMING),
-  UNMETERED(JobInfo.NETWORK_TYPE_UNMETERED);
-}
-
-/**
- * Convenience extension to use the [NetworkType] enum instead of named ints.
- */
-fun JobInfo.Builder.setRequiredNetworkType(type: NetworkType): JobInfo.Builder {
-  return this.setRequiredNetworkType(type.jobInfoVal)
-}
-
-enum class BackoffPolicy(val jobInfoVal: Int) {
-  LINEAR(JobInfo.BACKOFF_POLICY_LINEAR), EXPONENTIAL(JobInfo.BACKOFF_POLICY_EXPONENTIAL)
-}
-
-/**
- * Convenience extension to use the [BackoffPolicy] enum instead of named ints.
- */
-fun JobInfo.Builder.setBackoffCriteria(initialBackoffMillis: Long,
-                                       policy: BackoffPolicy): JobInfo.Builder {
-  return this.setBackoffCriteria(initialBackoffMillis, policy.jobInfoVal)
-}
-
 /**
  * Schedule a job that waits until the specified update time, so it can do the update and launch the
  * periodic update job.
  */
-fun scheduleInitialUpdateJob(): JobSchedulerResult {
+fun scheduleInitialUpdateJob(): ScheduleResult {
   val now = ZonedDateTime.now(ZoneId.systemDefault())
   val target = Prefs.autoUpdateMoment()
   // If it's negative, we're past that moment today, so schedule it for tomorrow
@@ -84,13 +42,13 @@ fun scheduleInitialUpdateJob(): JobSchedulerResult {
       .setBackoffCriteria(1000, BackoffPolicy.LINEAR)
       .setRequiredNetworkType(Prefs.autoUpdateReqNetType())
       .setPersisted(true)
-  return JobSchedulerResult.from(Static.jobScheduler.schedule(builder.build()))
+  return ScheduleResult.from(Static.jobScheduler.schedule(builder.build()))
 }
 
 /**
  * Schedule the periodic update job.
  */
-fun schedulePeriodicUpdateJob(): JobSchedulerResult {
+fun schedulePeriodicUpdateJob(): ScheduleResult {
   val builder = JobInfo.Builder(UPDATE_JOB_INFO_ID, updateComponent)
       .setPeriodic(TimeUnit.DAYS.toMillis(1), TimeUnit.MINUTES.toMillis(100))
       .setBackoffCriteria(1000, BackoffPolicy.LINEAR)
@@ -100,7 +58,7 @@ fun schedulePeriodicUpdateJob(): JobSchedulerResult {
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
     builder.setRequiresBatteryNotLow(true)
   }
-  return JobSchedulerResult.from(Static.jobScheduler.schedule(builder.build()))
+  return ScheduleResult.from(Static.jobScheduler.schedule(builder.build()))
 }
 
 class UpdateService : JobService() {
@@ -116,7 +74,7 @@ class UpdateService : JobService() {
 
   override fun onStartJob(params: JobParameters): Boolean {
     if (params.jobId == UPDATE_INIT_DELAY_JOB_INFO_ID) {
-      if (schedulePeriodicUpdateJob() == JobSchedulerResult.FAILURE) {
+      if (schedulePeriodicUpdateJob() == ScheduleResult.FAILURE) {
         Log.e(TAG, "Failed to schedule repeating job")
       }
     }
