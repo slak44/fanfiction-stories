@@ -137,10 +137,15 @@ class StoryReaderActivity : LoadingActivity() {
     async2(UI) {
       chapterWordCountText.text = str(R.string.x_words, chapterWordCount)
       currentChapterText.text = str(R.string.chapter_progress, chapterToRead, model.fragment.chapterCount)
+      val avgWordCount: Double = model.fragment.wordCount.toDouble() / model.fragment.chapterCount
+      val wordsPassedEstimate: Double = (chapterToRead - 1) * avgWordCount
+      approxWordCountRemainText.text = str(R.string.approx_x_words_left,
+          autoSuffixNumber(model.fragment.wordCount - wordsPassedEstimate.toLong()))
       // This data is more or less useless with only one chapter, so we hide it
       val extraDataVisibility = if (model.fragment.chapterCount == 1L) View.GONE else View.VISIBLE
       chapterWordCountText.visibility = extraDataVisibility
       currentChapterText.visibility = extraDataVisibility
+      approxWordCountRemainText.visibility = extraDataVisibility
 
       chapterText.forceLayout()
     }.await()

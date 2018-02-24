@@ -173,6 +173,7 @@
     <string name="data_deleted">Story data deleted</string>
     <string name="next">Next</string>
     <string name="prev">Prev</string>
+    <string name="approx_x_words_left">Approx. %s words left</string>
 
     <!-- Story reviews -->
     <string name="reviews_for">Reviews for %s</string>
