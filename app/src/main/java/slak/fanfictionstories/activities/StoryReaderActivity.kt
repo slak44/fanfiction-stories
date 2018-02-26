@@ -48,6 +48,7 @@ class StoryReaderActivity : LoadingActivity() {
       // If it's in the db, use it, else set keep the transient one
       model = database.storyById(model.storyId).orElse(model)
     }
+    if (model.status == StoryStatus.LOCAL) hideLoading()
 
     // Save story for the resume button, but not for transient stories
     if (model.status != StoryStatus.TRANSIENT) {
@@ -114,7 +115,7 @@ class StoryReaderActivity : LoadingActivity() {
 
   private fun initTextWithLoading(chapterToRead: Long) = launch(UI) {
     // Show loading things and disable chapter switching
-    showLoading()
+    if (model.status != StoryStatus.LOCAL) showLoading()
     btnBarLoader.visibility = View.VISIBLE
     navButtons.visibility = View.GONE
     prevChapterBtn.isEnabled = false
@@ -147,8 +148,13 @@ class StoryReaderActivity : LoadingActivity() {
       currentChapterText.visibility = extraDataVisibility
       approxWordCountRemainText.visibility = extraDataVisibility
 
-      chapterText.forceLayout()
-    }.await()
+      // Set chapter's title (chapterToRead is 1-indexed)
+      chapterTitleText.text = model.chapterTitles()[chapterToRead.toInt() - 1]
+      // Don't show it if there is no title (otherwise there are leftover margins/padding)
+      chapterTitleText.visibility =
+          if (model.chapterTitles()[chapterToRead.toInt() - 1] == "") View.GONE else View.VISIBLE
+
+    }
 
     val html = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY,
         null, HrSpan.tagHandlerFactory(chapterText.width))
@@ -178,12 +184,6 @@ class StoryReaderActivity : LoadingActivity() {
 
   private fun updateUiAfterFetchingText(chapterToRead: Long) = launch(UI) {
     setChangeChapterButtonStates(chapterToRead)
-
-    // Set chapter's title (chapterToRead is 1-indexed)
-    chapterTitleText.text = model.chapterTitles()[chapterToRead.toInt() - 1]
-    // Don't show it if there is no title (otherwise there are leftover margins/padding)
-    chapterTitleText.visibility =
-        if (model.chapterTitles()[chapterToRead.toInt() - 1] == "") View.GONE else View.VISIBLE
 
     // Start at the top, regardless of where we were when we ran this function
     nestedScroller.scrollTo(0, 0)
