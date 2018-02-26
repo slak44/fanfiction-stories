@@ -5,7 +5,6 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
 import slak.fanfictionstories.*
-import slak.fanfictionstories.utility.opt
 import slak.fanfictionstories.utility.str
 import java.util.*
 
@@ -155,5 +154,19 @@ object FetcherUtils {
         title = title,
         serializedChapterTitles = chapterTitles
     )
+  }
+
+  fun getPageCountFromNav(nav: Element): Int {
+    val navLinks = nav.children().filter {
+      !it.text().contains(Regex("Next|Prev"))
+    }
+    return if (navLinks.last().`is`("a")) {
+      // For reviews: /r/9156000/0/245/, we want the page nr, which is the last nr
+      // For story lists: /game/Mass-Effect/?&srt=1&r=103&p=2, page nr is last nr as well
+      navLinks.last().attr("href").trim('/').split("/", "p=").last().toInt()
+    } else {
+      // If it's not a link, it's text
+      navLinks.last().text().toInt()
+    }
   }
 }

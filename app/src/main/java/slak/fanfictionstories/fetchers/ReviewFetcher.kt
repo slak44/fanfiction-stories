@@ -9,6 +9,7 @@ import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import slak.fanfictionstories.R
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
+import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 
@@ -61,15 +62,6 @@ private fun parseReviewPage(storyId: Long, html: String): Pair<List<Review>, Int
   }
   val pageNav = doc.select("#content_wrapper_inner > center")
   if (pageNav.size == 0) return Pair(list, 1)
-  val navLinks = pageNav[0].children().filter {
-    !it.text().contains(Regex("Next|Prev"))
-  }
-  val lastPageNr = if (navLinks.last().`is`("a")) {
-    // The href is like: /r/9156000/0/245/, we want the page nr, which is the last nr
-    navLinks.last().attr("href").trim('/').split("/").last().toInt()
-  } else {
-    // If it's not a link, it's text
-    navLinks.last().text().toInt()
-  }
-  return Pair(list, lastPageNr)
+  val pageCount = getPageCountFromNav(pageNav[0])
+  return Pair(list, pageCount)
 }

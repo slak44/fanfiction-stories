@@ -17,6 +17,7 @@ import slak.fanfictionstories.StoryProgress
 import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.fetchers.FetcherUtils.TAG
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
+import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
@@ -160,6 +161,9 @@ class CanonFetcher(val details: Details) : Parcelable {
   @IgnoredOnParcel
   var canonTitle: Optional<String> = Optional.empty()
     private set
+  @IgnoredOnParcel
+  var pageCount: Optional<Int> = Optional.empty()
+    private set
 
   companion object : Parceler<CanonFetcher> {
     override fun create(parcel: Parcel): CanonFetcher {
@@ -178,6 +182,9 @@ class CanonFetcher(val details: Details) : Parcelable {
       val title = parcel.readString()
       c.canonTitle = title?.opt() ?: Optional.empty()
 
+      val pageCount = parcel.readInt()
+      c.pageCount = if (pageCount == -1) Optional.empty() else pageCount.opt()
+
       return c
     }
 
@@ -187,10 +194,12 @@ class CanonFetcher(val details: Details) : Parcelable {
       parcel.writeArray(charList.toTypedArray())
       parcel.writeString(unfilteredStories.orElse(null))
       parcel.writeString(canonTitle.orElse(null))
+      parcel.writeInt(pageCount.orElse(-1))
     }
   }
 
   fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
+    if (pageCount.isPresent && page > pageCount.get()) return@async2 emptyList<StoryModel>()
     val queryParams = listOf(
         details.sort.queryParam(),
         details.timeRange.queryParam(),
@@ -286,6 +295,9 @@ class CanonFetcher(val details: Details) : Parcelable {
       if (text[0].isDigit()) text.opt()
       else "0".opt()
     }
+
+    val pageNav = doc.select("#content_wrapper_inner > center").last()
+    pageCount = if (pageNav != null) getPageCountFromNav(pageNav).opt() else 1.opt()
 
     return list
   }
