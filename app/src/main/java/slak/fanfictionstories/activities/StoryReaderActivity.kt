@@ -78,6 +78,11 @@ class StoryReaderActivity : LoadingActivity() {
     selectChapterBtn.setOnClickListener { showChapterSelectDialog() }
   }
 
+  override fun onResume() {
+    super.onResume()
+    restoreScrollStatus()
+  }
+
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
     outState.putParcelable(RESTORE_STORY_MODEL, model)
