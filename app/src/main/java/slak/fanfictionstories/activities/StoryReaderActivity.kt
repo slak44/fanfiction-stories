@@ -62,10 +62,7 @@ class StoryReaderActivity : LoadingActivity() {
       restoreScrollStatus()
     }
 
-    launch(UI) {
-      initTextWithLoading(currentChapter).join()
-      restoreScrollStatus()
-    }
+    initTextWithLoading(currentChapter).invokeOnCompletion { restoreScrollStatus() }
 
     prevChapterBtn.setOnClickListener {
       currentChapter--
