@@ -204,7 +204,7 @@ class AuthorActivity : LoadingActivity(1) {
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
       stories = arguments!!.getParcelableArrayList(ARG_STORIES)
       rootView.stories.layoutManager = LinearLayoutManager(context)
-      StoryCardView.createRightSwipeHelper(rootView.stories, { intent, _ -> startActivity(intent) })
+      rootView.stories.createStorySwipeHelper()
       adapter = StoryAdapter(context!!)
       rootView.stories.adapter = adapter
       if (stories.isEmpty()) {

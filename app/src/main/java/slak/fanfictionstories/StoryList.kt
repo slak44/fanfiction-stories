@@ -29,49 +29,49 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.coroutines.experimental.buildSequence
 
+fun RecyclerView.createStorySwipeHelper(): ItemTouchHelper {
+  // Use a `lateinit var` because the coroutine inside cannot access
+  // the `this` that is the ItemTouchHelper.Callback
+  lateinit var swipeStory: ItemTouchHelper
+  swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
+    override fun getMovementFlags(recycler: RecyclerView, vh: RecyclerView.ViewHolder): Int
+        = if (vh is StoryAdapter.StoryViewHolder) makeMovementFlags(0, ItemTouchHelper.RIGHT) else 0
+
+    override fun onMove(recycler: RecyclerView, viewHolder: RecyclerView.ViewHolder,
+                        target: RecyclerView.ViewHolder): Boolean = false
+
+    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+      if (viewHolder !is StoryAdapter.StoryViewHolder) return
+      val intent = Intent(context, StoryReaderActivity::class.java)
+      val cardView = viewHolder.itemView as StoryCardView
+      intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL,
+          cardView.currentModel!! as Parcelable)
+      startActivity(context, intent, null)
+      // After the reader was opened, reset the translation by reattaching
+      // We do this because we might go back from the reader to this activity and
+      // it has to look properly
+      launch(UI) {
+        delay(500)
+        swipeStory.attachToRecyclerView(null)
+        swipeStory.attachToRecyclerView(this@createStorySwipeHelper)
+      }
+    }
+  })
+  swipeStory.attachToRecyclerView(this)
+  return swipeStory
+}
+
 class StoryCardView : CardView {
   constructor(context: Context) : super(context)
   constructor(context: Context, set: AttributeSet) : super(context, set)
   constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
 
-  var currentModel: StoryModel? = null
-
   companion object {
-    fun createRightSwipeHelper(
-        recyclerView: RecyclerView,
-        openStoryReader: (intent: Intent, id: Long) -> Unit
-    ): ItemTouchHelper {
-      lateinit var swipeStory: ItemTouchHelper
-      swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
-        override fun getMovementFlags(recycler: RecyclerView?, vh: RecyclerView.ViewHolder?): Int
-            = makeMovementFlags(0, ItemTouchHelper.RIGHT)
-
-        override fun onMove(recycler: RecyclerView?, viewHolder: RecyclerView.ViewHolder?,
-                            target: RecyclerView.ViewHolder?): Boolean = false
-
-        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-          val intent = Intent(recyclerView.context, StoryReaderActivity::class.java)
-          val cardView = viewHolder.itemView as StoryCardView
-          intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL,
-              cardView.currentModel!! as Parcelable)
-          openStoryReader(intent, cardView.currentModel!!.storyId)
-          // After the reader was opened, reset the translation by reattaching
-          // We do this because we might go back from the reader to this activity and
-          // it has to look properly
-          launch(UI) {
-            delay(500)
-            swipeStory.attachToRecyclerView(null)
-            swipeStory.attachToRecyclerView(recyclerView)
-          }
-        }
-      })
-      swipeStory.attachToRecyclerView(recyclerView)
-      return swipeStory
-    }
-
     const val DEFAULT_ELEVATION = 7F
     const val CLICK_ELEVATION = 20F
   }
+
+  var currentModel: StoryModel? = null
 
   fun loadFromModel(model: StoryModel) {
     currentModel = model

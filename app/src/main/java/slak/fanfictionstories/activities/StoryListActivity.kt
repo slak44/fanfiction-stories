@@ -31,7 +31,7 @@ class StoryListActivity : ActivityWithStatic() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     storyListView.layoutManager = LinearLayoutManager(this)
-    StoryCardView.createRightSwipeHelper(storyListView, { intent, _ -> startActivity(intent) })
+    storyListView.createStorySwipeHelper()
     adapter = StoryAdapter(this@StoryListActivity)
     adapter.onSizeChange = { storyCount, filteredCount ->
       toolbar.subtitle = str(R.string.x_stories_y_filtered, storyCount, filteredCount)
