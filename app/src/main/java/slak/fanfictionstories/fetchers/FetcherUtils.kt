@@ -160,13 +160,17 @@ object FetcherUtils {
     val navLinks = nav.children().filter {
       !it.text().contains(Regex("Next|Prev"))
     }
-    return if (navLinks.last().`is`("a")) {
-      // For reviews: /r/9156000/0/245/, we want the page nr, which is the last nr
-      // For story lists: /game/Mass-Effect/?&srt=1&r=103&p=2, page nr is last nr as well
-      navLinks.last().attr("href").trim('/').split("/", "p=").last().toInt()
-    } else {
-      // If it's not a link, it's text
-      navLinks.last().text().toInt()
+
+    return when {
+      // No nav, no pages
+      navLinks.isEmpty() -> 0
+      navLinks.last().`is`("a") ->
+        // For reviews: /r/9156000/0/245/, we want the page nr, which is the last nr
+        // For story lists: /game/Mass-Effect/?&srt=1&r=103&p=2, page nr is last nr as well
+        navLinks.last().attr("href").trim('/').split("/", "p=").last().toInt()
+      else ->
+        // If it's not a link, we are on the last page and the nr is the text
+        navLinks.last().text().toInt()
     }
   }
 }
