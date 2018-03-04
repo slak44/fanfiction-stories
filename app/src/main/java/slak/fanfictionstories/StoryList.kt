@@ -73,6 +73,31 @@ class StoryCardView : CardView {
 
   var currentModel: StoryModel? = null
 
+  /**
+   * Whether or not the details layout is visible.
+   */
+  var isExtended: Boolean = false
+    set(value) {
+      if (value) {
+        cardElevation = CLICK_ELEVATION
+        storyDetails.visibility = View.VISIBLE
+        divider.visibility = View.VISIBLE
+        btnBar.visibility = View.VISIBLE
+      } else {
+        cardElevation = DEFAULT_ELEVATION
+        storyDetails.visibility = View.GONE
+        divider.visibility = View.GONE
+        btnBar.visibility = View.GONE
+      }
+      field = value
+      onExtendedStateChange(value)
+    }
+
+  /**
+   * Called when the view is extended/unextended.
+   */
+  var onExtendedStateChange: (Boolean) -> Unit = {}
+
   fun loadFromModel(model: StoryModel) {
     currentModel = model
     // Unexpanded view
@@ -118,10 +143,6 @@ class StoryCardView : CardView {
     if (model.status == StoryStatus.TRANSIENT) removeBtn.visibility = View.GONE
 
     // Reset card UI (including the measured size) to default
-    storyDetails.visibility = View.GONE
-    divider.visibility = View.GONE
-    btnBar.visibility = View.GONE
-    cardElevation = DEFAULT_ELEVATION
     addBtn.isEnabled = true
     val unspec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
     measure(unspec, unspec)
@@ -130,18 +151,8 @@ class StoryCardView : CardView {
   fun setChildrenListeners(model: StoryModel, holder: RecyclerView.ViewHolder, adapter: StoryAdapter) {
     // Disable touching on the progress seek bar
     storyProgress.setOnTouchListener { _, _ -> true }
-    storyMainContent.setOnClickListener {
-      cardElevation = if (cardElevation == DEFAULT_ELEVATION) CLICK_ELEVATION else DEFAULT_ELEVATION
-      if (storyDetails.visibility == View.GONE) {
-        storyDetails.visibility = View.VISIBLE
-        divider.visibility = View.VISIBLE
-        btnBar.visibility = View.VISIBLE
-      } else {
-        storyDetails.visibility = View.GONE
-        divider.visibility = View.GONE
-        btnBar.visibility = View.GONE
-      }
-    }
+    // Show/hide details layout when pressing content
+    storyMainContent.setOnClickListener { isExtended = !isExtended }
     removeBtn.setOnClickListener {
       // Even though we have a model, fetch it from db to make sure there are no inconsistencies
       val dbModel = context.database.storyById(model.storyId)
@@ -219,14 +230,14 @@ class StoryGroupTitle : TextView {
   }
 }
 
-private val counter = buildSequence {
-  var c = 0
-  while (true) yield(c++)
-}
 class Loading {
-  val id = counter.take(1).first()
+  companion object {
+    private var counter: Int = 0
+  }
+  val id = counter++
 }
-typealias StoryAdapterItem = Either3<StoryModel, String, Loading>
+data class StoryCardData(var model: StoryModel, var isExtended: Boolean = false)
+typealias StoryAdapterItem = Either3<StoryCardData, String, Loading>
 class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   init { setHasStableIds(true) }
 
@@ -297,7 +308,8 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    * @see undoHideStory
    */
   fun hideStory(position: Int, model: StoryModel) {
-    if (!data.contains(T1(model))) throw IllegalArgumentException("Model not part of the adapter")
+    if (data.find { it is T1 && it.value.model == model } == null)
+      throw IllegalArgumentException("Model not part of the adapter")
     pendingItems[model] = position
     data.removeAt(position)
     notifyItemRemoved(position)
@@ -313,7 +325,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    */
   fun undoHideStory(model: StoryModel) {
     val pos = pendingItems[model] ?: throw IllegalArgumentException("This model was never hidden")
-    data.add(pos, T1(model))
+    data.add(pos, T1(StoryCardData(model)))
     pendingItems.remove(model)
     notifyItemInserted(pos)
     storyCount++
@@ -346,7 +358,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
     groupStories(toData, arrangement.groupStrategy).toSortedMap().forEach {
       val ordered = orderStories(it.value, arrangement.orderStrategy, arrangement.orderDirection)
-      addData(listOf(T2(it.key), *ordered.map { T1(it) }.toTypedArray()))
+      addData(listOf(T2(it.key), *ordered.map { T1(StoryCardData(it)) }.toTypedArray()))
     }
     filteredCount = storiesNotPending.size - toData.size
     storyCount = storiesNotPending.size
@@ -355,10 +367,12 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
 
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
     data[position].fold(
-        { model ->
+        { cardData ->
           val view = (holder as StoryViewHolder).view
-          view.loadFromModel(model)
-          view.setChildrenListeners(model, holder, this)
+          view.onExtendedStateChange = { data[position] = T1(StoryCardData(cardData.model, it)) }
+          view.isExtended = cardData.isExtended
+          view.loadFromModel(cardData.model)
+          view.setChildrenListeners(cardData.model, holder, this)
         },
         { title -> (holder as TitleViewHolder).view.text = title },
         { loading -> (holder as ProgressBarHolder).view.id = loading.id }
@@ -388,7 +402,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
 
   override fun getItemCount(): Int = data.size
   override fun getItemId(position: Int): Long = data[position].fold(
-      { model -> model.storyId + (1 shl 15) },
+      { cardData -> cardData.model.storyId + (1 shl 15) },
       { title -> title.hashCode().toLong() + (2 shl 15) },
       { loading -> loading.id.toLong() + (3 shl 15) }
   )

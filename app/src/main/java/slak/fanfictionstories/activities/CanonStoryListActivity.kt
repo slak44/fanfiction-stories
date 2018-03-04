@@ -83,10 +83,10 @@ class CanonStoryListActivity : LoadingActivity() {
 
   private fun getPage(page: Int): Deferred<List<StoryAdapterItem>> = async2(CommonPool) {
     val pageData = fetcher.get(page).await().map {
-      val model = database.storyById(it.storyId).orElse(null) ?: return@map T1(it)
+      val model = database.storyById(it.storyId).orElse(null) ?: return@map T1(StoryCardData(it))
       it.progress = model.progress
       it.status = model.status
-      return@map T1(it)
+      return@map T1(StoryCardData(it))
     }
     if (pageData.isEmpty()) return@async2 listOf<StoryAdapterItem>()
     return@async2 listOf(T2(str(R.string.page_x, page)), *pageData.toTypedArray())
