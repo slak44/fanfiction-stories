@@ -211,8 +211,8 @@ enum class SQLiteResultCode(val code: Int) {
 fun SQLiteConstraintException.errCode(): SQLiteResultCode {
   val msg = message ?: return SQLiteResultCode.OTHER
   val target = "(code "
-  val startIdx = msg.indexOf(target)
-  var idx = startIdx + target.length - 1
+  val startIdx = msg.indexOf(target) + target.length
+  var idx = startIdx
   while (msg[++idx].isDigit());
   return SQLiteResultCode.fromCode(msg.slice(startIdx until idx).toInt())
 }
