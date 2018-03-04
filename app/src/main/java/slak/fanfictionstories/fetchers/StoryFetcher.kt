@@ -80,8 +80,8 @@ fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
   val channel = Channel<String>(10)
   launch(CommonPool) {
     for (chapterNr in from..target) {
-      Notifications.show(
-          kind, readerIntent(model.storyId), R.string.fetching_chapter, chapterNr, model.title)
+      Notifications.show(kind, readerIntent(model.storyId),
+          R.string.fetching_chapter, chapterNr, model.fragment.chapterCount, model.title)
       val chapterHtml = fetchChapter(model.storyId, chapterNr).await()
       channel.send(extractChapterText(Jsoup.parse(chapterHtml)))
     }
@@ -121,7 +121,7 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
   // Special case when there is only one chapter
     newModel.fragment.chapterCount == 1L -> {
       Notifications.show(Notifications.Kind.UPDATING,
-          defaultIntent(), R.string.fetching_chapter, 1, newModel.title)
+          defaultIntent(), R.string.fetching_chapter, 1, 1, newModel.title)
       val channel = Channel<String>(1)
       channel.send(fetchChapter(newModel.storyId, 1).await())
       channel.close()
