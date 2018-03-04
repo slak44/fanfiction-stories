@@ -191,7 +191,7 @@ class AuthorActivity : LoadingActivity(1) {
     }
 
     private lateinit var adapter: StoryAdapter
-    private lateinit var stories: ArrayList<StoryModel>
+    private lateinit var stories: List<StoryModel>
 
     private var arrangement = Arrangement(
         OrderStrategy.TITLE_ALPHABETIC,
@@ -202,7 +202,12 @@ class AuthorActivity : LoadingActivity(1) {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
-      stories = arguments!!.getParcelableArrayList(ARG_STORIES)
+      stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES).map {
+        val model = Static.database.storyById(it.storyId).orElse(null) ?: return@map it
+        it.progress = model.progress
+        it.status = model.status
+        return@map it
+      }
       rootView.stories.layoutManager = LinearLayoutManager(context)
       rootView.stories.createStorySwipeHelper()
       adapter = StoryAdapter(context!!)

@@ -29,8 +29,6 @@ class CanonStoryListActivity : LoadingActivity() {
   private lateinit var fetcher: CanonFetcher
   private var currentPage = 1
 
-  private var userStories: Optional<List<StoryModel>> = Optional.empty()
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_canon_story_list)
@@ -84,9 +82,8 @@ class CanonStoryListActivity : LoadingActivity() {
   }
 
   private fun getPage(page: Int): Deferred<List<StoryAdapterItem>> = async2(CommonPool) {
-    if (!userStories.isPresent) userStories = database.getStories().await().opt()
     val pageData = fetcher.get(page).await().map {
-      val model = userStories.get().find { st -> st.storyId == it.storyId } ?: return@map T1(it)
+      val model = database.storyById(it.storyId).orElse(null) ?: return@map T1(it)
       it.progress = model.progress
       it.status = model.status
       return@map T1(it)
