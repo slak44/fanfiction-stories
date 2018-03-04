@@ -27,6 +27,16 @@
     </android.support.v7.preference.PreferenceCategory>
     <android.support.v7.preference.PreferenceCategory
         android:singleLineTitle="true"
+        android:title="@string/category_browser"
+        tools:ignore="UnusedAttribute">
+
+        <CheckBoxPreference
+            android:defaultValue="@string/option_lang_mem_default"
+            android:key="@string/key_option_lang_mem"
+            android:title="@string/browser_remember_language"/>
+    </android.support.v7.preference.PreferenceCategory>
+    <android.support.v7.preference.PreferenceCategory
+        android:singleLineTitle="true"
         android:title="@string/category_text"
         tools:ignore="UnusedAttribute">
 

@@ -10,11 +10,13 @@ import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import slak.fanfictionstories.*
+import slak.fanfictionstories.fetchers.Language
 
 object Prefs {
   const val PREFS_FILE = "slak.fanfictionstories.SHARED_PREFERENCES"
 
   const val RESUME_STORY_ID = "resume_story_id"
+  const val REMEMBER_LANG_ID = "remember_lang_id"
   const val LIST_GROUP_STRATEGY = "list_group_strategy"
   const val LIST_ORDER_STRATEGY = "list_order_strategy"
   const val LIST_ORDER_IS_REVERSE = "list_order_strategy_rev"
@@ -67,6 +69,9 @@ object Prefs {
     val now = ZonedDateTime.now(ZoneId.systemDefault())
     return ZonedDateTime.of(now.toLocalDate(), LocalTime.of(hour, minute), ZoneId.systemDefault())
   }
+
+  fun filterLanguage(): Language =
+      Language.values()[Static.prefs.getInt(REMEMBER_LANG_ID, Language.ALL.ordinal)]
 
   /**
    * Like [use], but uses [SharedPreferences.Editor.commit] instead of apply.

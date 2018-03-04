@@ -47,6 +47,7 @@ class CanonStoryListActivity : LoadingActivity() {
     if (savedInstanceState == null) {
       setTitle(R.string.loading___)
       fetcher = CanonFetcher(CanonFetcher.Details(parentLink))
+      fetcher.details.lang = Prefs.filterLanguage()
       launch(UI) {
         showLoading()
         adapter.addData(getPage(1).await())
@@ -143,7 +144,6 @@ class CanonStoryListActivity : LoadingActivity() {
       genre1.onSelect { _, pos -> fetcher.details.genre1 = Genre.values()[pos] }
       genre2.onSelect { _, pos -> fetcher.details.genre2 = Genre.values()[pos] }
       rating.onSelect { _, pos -> fetcher.details.rating = Rating.values()[pos] }
-      language.onSelect { _, pos -> fetcher.details.lang = Language.values()[pos] }
       status.onSelect { _, pos -> fetcher.details.status = Status.values()[pos] }
       length.onSelect { _, pos -> fetcher.details.wordCount = WordCount.values()[pos] }
       char1.onSelect { _, pos -> fetcher.details.char1Id = fetcher.charList[pos].id }
@@ -153,6 +153,10 @@ class CanonStoryListActivity : LoadingActivity() {
       notChar1.onSelect { _, pos -> fetcher.details.char1Without = fetcher.charList[pos].id }
       notChar2.onSelect { _, pos -> fetcher.details.char2Without = fetcher.charList[pos].id }
       notGenre.onSelect { _, pos -> fetcher.details.genreWithout = Genre.values()[pos] }
+      language.onSelect { _, pos ->
+        fetcher.details.lang = Language.values()[pos]
+        Prefs.use { it.putInt(Prefs.REMEMBER_LANG_ID, pos) }
+      }
 
       sort.setSelection(Sort.values().indexOf(fetcher.details.sort))
       timeRange.setSelection(TimeRange.values().indexOf(fetcher.details.timeRange))
