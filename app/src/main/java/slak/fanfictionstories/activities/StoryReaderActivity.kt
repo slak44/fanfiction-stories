@@ -51,9 +51,10 @@ class StoryReaderActivity : LoadingActivity() {
     }
     if (model.status == StoryStatus.LOCAL) hideLoading()
 
-    // Save story for the resume button, but not for transient stories
+    // Save story for the resume button, but not for transient stories, because those aren't in db
     if (model.status != StoryStatus.TRANSIENT) {
       Prefs.use { it.putLong(Prefs.RESUME_STORY_ID, model.storyId) }
+      database.updateInStory(model.storyId, "lastReadTime" to System.currentTimeMillis())
     }
 
     // Long titles require _even more_ space than CollapsibleToolbar already gives
