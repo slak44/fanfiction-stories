@@ -67,6 +67,8 @@ Untouched Stories: %d (%.2f%%)"
     <string name="order_chapter_count">Chapter Count</string>
     <string name="order_publish_date">Most Recently Published</string>
     <string name="order_update_date">Most Recently Updated</string>
+    <string name="order_added_date">Most Recently Added</string>
+    <string name="order_last_read_date">Most Recently Read</string>
     <string name="order_title_alphabetic">Alphabetic (Title)</string>
     <string name="reverse_order">Reverse</string>
 

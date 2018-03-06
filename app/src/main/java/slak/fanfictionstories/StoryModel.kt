@@ -337,6 +337,14 @@ private val update = Comparator<StoryModel> { m1, m2 ->
   if (m1.fragment.updateTime == m2.fragment.updateTime ) return@Comparator 0
   return@Comparator if (m1.fragment.updateTime - m2.fragment.updateTime > 0) 1 else -1
 }
+private val added = Comparator<StoryModel> { m1, m2 ->
+  if (m1.addedTime == m2.addedTime ) return@Comparator 0
+  return@Comparator if (m1.addedTime!! - m2.addedTime!! > 0) 1 else -1
+}
+private val lastRead = Comparator<StoryModel> { m1, m2 ->
+  if (m1.lastReadTime == m2.lastReadTime ) return@Comparator 0
+  return@Comparator if (m1.lastReadTime!! - m2.lastReadTime!! > 0) 1 else -1
+}
 
 // Lexicographic comparison of titles
 private val titleAlphabetic = Comparator<StoryModel> { m1, m2 ->
@@ -357,7 +365,7 @@ enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
   WORD_COUNT(wordCount), PROGRESS(progress), REVIEW_COUNT(reviewCount),
   FOLLOWS(followCount), FAVORITES(favoritesCount), CHAPTER_COUNT(chapterCount),
   // Date orderings
-  PUBLISH_DATE(publish), UPDATE_DATE(update),
+  PUBLISH_DATE(publish), UPDATE_DATE(update), ADDED_DATE(added), LAST_READ_DATE(lastRead),
   // Other
   TITLE_ALPHABETIC(titleAlphabetic);
 
@@ -370,6 +378,8 @@ enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
     CHAPTER_COUNT -> R.string.order_chapter_count
     PUBLISH_DATE -> R.string.order_publish_date
     UPDATE_DATE -> R.string.order_update_date
+    ADDED_DATE -> R.string.order_added_date
+    LAST_READ_DATE -> R.string.order_last_read_date
     TITLE_ALPHABETIC -> R.string.order_title_alphabetic
   })
 
