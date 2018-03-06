@@ -217,6 +217,9 @@ Untouched Stories: %d (%.2f%%)"
     <string name="follow">Follow</string>
     <string name="favorite">Favorite</string>
     <string name="no_stories_here">There are no stories here</string>
+    <string name="bio_joined">Joined: %s</string>
+    <string name="bio_profile_update">Profile Updated: %s</string>
+    <string name="bio_author_id">Author ID: %d</string>
 
     <!-- Error dialogs -->
     <string name="got_it">Got it</string>

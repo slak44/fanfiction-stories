@@ -21,6 +21,7 @@ import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Author
 import slak.fanfictionstories.fetchers.getAuthor
 import slak.fanfictionstories.utility.*
+import java.text.SimpleDateFormat
 import java.util.*
 
 class AuthorActivity : LoadingActivity(1) {
@@ -150,7 +151,23 @@ class AuthorActivity : LoadingActivity(1) {
    */
   inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
     override fun getItem(position: Int): Fragment = when (position) {
-      0 -> HtmlFragment.newInstance(author.get().bioHtml)
+      0 -> {
+        val joined = SimpleDateFormat.getDateInstance().format(
+            Date(author.get().joinedDateSeconds * 1000))
+        val updated = SimpleDateFormat.getDateInstance().format(
+            Date(author.get().updatedDateSeconds * 1000))
+        val html = """
+          <p>${str(R.string.bio_joined, joined)}</p>
+          <p>${
+            if (author.get().updatedDateSeconds != 0L) str(R.string.bio_profile_update, updated)
+            else ""
+          }</p>
+          <p>${str(R.string.bio_author_id, author.get().id)}</p>
+          <hr>
+          ${author.get().bioHtml}
+        """.trimIndent()
+        HtmlFragment.newInstance(html)
+      }
       1 -> StoryListFragment.newInstance(ArrayList(author.get().userStories))
       2 -> StoryListFragment.newInstance(ArrayList(author.get().favoriteStories))
       else -> throw IllegalStateException("getCount returned too many tabs")
