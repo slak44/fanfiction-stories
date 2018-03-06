@@ -77,7 +77,9 @@ class StoryReaderActivity : LoadingActivity() {
 
   override fun onResume() {
     super.onResume()
-    restoreScrollStatus()
+    // onResume gets called before onCreate when the activity is first instantiated
+    // Which means we would NPE when the text is inevitably not there
+    if (chapterText.staticLayout != null) restoreScrollStatus()
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
