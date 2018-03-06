@@ -16,7 +16,8 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
-import java.util.*
+import slak.fanfictionstories.StoryAdapterItem.StoryCardData
+import slak.fanfictionstories.StoryAdapterItem.GroupTitle
 
 class CanonStoryListActivity : LoadingActivity() {
   companion object {
@@ -83,13 +84,13 @@ class CanonStoryListActivity : LoadingActivity() {
 
   private fun getPage(page: Int): Deferred<List<StoryAdapterItem>> = async2(CommonPool) {
     val pageData = fetcher.get(page).await().map {
-      val model = database.storyById(it.storyId).orElse(null) ?: return@map T1(StoryCardData(it))
+      val model = database.storyById(it.storyId).orElse(null) ?: return@map StoryCardData(it)
       it.progress = model.progress
       it.status = model.status
-      return@map T1(StoryCardData(it))
+      return@map StoryCardData(it)
     }
     if (pageData.isEmpty()) return@async2 listOf<StoryAdapterItem>()
-    return@async2 listOf(T2(str(R.string.page_x, page)), *pageData.toTypedArray())
+    return@async2 listOf(GroupTitle(str(R.string.page_x, page)), *pageData.toTypedArray())
   }
 
   private fun setAppbarText() {

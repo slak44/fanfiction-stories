@@ -16,18 +16,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
+import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
+import slak.fanfictionstories.StoryAdapterItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.coroutines.experimental.buildSequence
 
 fun RecyclerView.createStorySwipeHelper(): ItemTouchHelper {
   // Use a `lateinit var` because the coroutine inside cannot access
@@ -229,15 +230,14 @@ class StoryGroupTitle : TextView {
     canvas.drawLine(0F, measuredHeight.toFloat(), width, measuredHeight.toFloat(), border)
   }
 }
-
-class Loading {
-  companion object {
-    private var counter: Int = 0
-  }
-  val id = counter++
+@SuppressWarnings("ParcelCreator")
+sealed class StoryAdapterItem : Parcelable {
+  @Parcelize data class StoryCardData(var model: StoryModel,
+                                      var isExtended: Boolean = false) : StoryAdapterItem()
+  @Parcelize data class GroupTitle(val title: String) : StoryAdapterItem()
+  @Parcelize data class LoadingItem(val id: Int = ++counter) : StoryAdapterItem()
+  companion object { private var counter: Int = 0xF000000 }
 }
-data class StoryCardData(var model: StoryModel, var isExtended: Boolean = false)
-typealias StoryAdapterItem = Either3<StoryCardData, String, Loading>
 class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   init { setHasStableIds(true) }
 
@@ -271,7 +271,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   fun addData(item: StoryAdapterItem) {
     data.add(item)
     notifyItemInserted(data.size - 1)
-    if (item is T1) {
+    if (item is StoryCardData) {
       storyCount++
       onSizeChange(storyCount, filteredCount)
     }
@@ -280,7 +280,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   fun addData(items: List<StoryAdapterItem>) {
     data.addAll(items)
     notifyItemRangeInserted(data.size, items.size)
-    val newStories = items.count { it is T1 }
+    val newStories = items.count { it is StoryCardData }
     if (newStories > 0) {
       storyCount += newStories
       onSizeChange(storyCount, filteredCount)
@@ -288,7 +288,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   }
 
   fun addDeferredData(deferredList: Deferred<List<StoryAdapterItem>>) = launch(UI) {
-    addData(T3(Loading()))
+    addData(LoadingItem())
     val loaderIdx = data.size - 1
     addData(deferredList.await())
     data.removeAt(loaderIdx)
@@ -308,7 +308,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    * @see undoHideStory
    */
   fun hideStory(position: Int, model: StoryModel) {
-    if (data.find { it is T1 && it.value.model == model } == null)
+    if (data.find { it is StoryCardData && it.model == model } == null)
       throw IllegalArgumentException("Model not part of the adapter")
     pendingItems[model] = position
     data.removeAt(position)
@@ -325,7 +325,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    */
   fun undoHideStory(model: StoryModel) {
     val pos = pendingItems[model] ?: throw IllegalArgumentException("This model was never hidden")
-    data.add(pos, T1(StoryCardData(model)))
+    data.add(pos, StoryCardData(model))
     pendingItems.remove(model)
     notifyItemInserted(pos)
     storyCount++
@@ -358,7 +358,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
     groupStories(toData, arrangement.groupStrategy).toSortedMap().forEach {
       val ordered = orderStories(it.value, arrangement.orderStrategy, arrangement.orderDirection)
-      addData(listOf(T2(it.key), *ordered.map { T1(StoryCardData(it)) }.toTypedArray()))
+      addData(listOf(GroupTitle(it.key), *ordered.map { StoryCardData(it) }.toTypedArray()))
     }
     filteredCount = storiesNotPending.size - toData.size
     storyCount = storiesNotPending.size
@@ -366,17 +366,18 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   }
 
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-    data[position].fold(
-        { cardData ->
-          val view = (holder as StoryViewHolder).view
-          view.onExtendedStateChange = { data[position] = T1(StoryCardData(cardData.model, it)) }
-          view.isExtended = cardData.isExtended
-          view.loadFromModel(cardData.model)
-          view.setChildrenListeners(cardData.model, holder, this)
-        },
-        { title -> (holder as TitleViewHolder).view.text = title },
-        { loading -> (holder as ProgressBarHolder).view.id = loading.id }
-    )
+    val item = data[position]
+    when (item) {
+      is StoryCardData -> {
+        val view = (holder as StoryViewHolder).view
+        view.onExtendedStateChange = { data[position] = StoryCardData(item.model, it) }
+        view.isExtended = item.isExtended
+        view.loadFromModel(item.model)
+        view.setChildrenListeners(item.model, holder, this)
+      }
+      is GroupTitle -> (holder as TitleViewHolder).view.text = item.title
+      is LoadingItem -> (holder as ProgressBarHolder).view.id = item.id
+    }
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -401,10 +402,17 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   }
 
   override fun getItemCount(): Int = data.size
-  override fun getItemId(position: Int): Long = data[position].fold(
-      { cardData -> cardData.model.storyId + (1 shl 15) },
-      { title -> title.hashCode().toLong() + (2 shl 15) },
-      { loading -> loading.id.toLong() + (3 shl 15) }
-  )
-  override fun getItemViewType(position: Int): Int = data[position].fold({ 0 }, { 1 }, { 2 })
+  override fun getItemId(position: Int): Long {
+    val item = data[position]
+    return when (item) {
+      is StoryCardData -> item.model.storyId + (1 shl 15)
+      is GroupTitle -> item.title.hashCode().toLong() + (2 shl 15)
+      is LoadingItem -> item.id.toLong() + (3 shl 15)
+    }
+  }
+  override fun getItemViewType(position: Int): Int = when (data[position]) {
+    is StoryCardData -> 0
+    is GroupTitle -> 1
+    is LoadingItem -> 2
+  }
 }
