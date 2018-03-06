@@ -416,6 +416,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="test_notif">Test notification</string>
     <string name="update_stories">Update in 3 seconds</string>
     <string name="wipe_settings">Wipe Settings</string>
+    <string name="dump_db">Dump stories table to stdout</string>
     <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"

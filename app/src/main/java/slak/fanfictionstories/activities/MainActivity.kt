@@ -14,7 +14,10 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
+import org.jetbrains.anko.db.MapRowParser
+import org.jetbrains.anko.db.RowParser
 import org.jetbrains.anko.db.dropTable
+import org.jetbrains.anko.db.select
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
@@ -74,6 +77,13 @@ class MainActivity : ActivityWithStatic() {
       }
       wipeSettings.setOnClickListener {
         Prefs.useImmediate { it.clear() }
+      }
+      dumpDb.setOnClickListener {
+        println(database.readableDatabase.select("stories").parseList(object : MapRowParser<String> {
+          override fun parseRow(columns: Map<String, Any?>): String {
+            return columns.entries.joinToString(", ") { "(${it.key}) ${it.value.toString()}" }
+          }
+        }).joinToString("\n"))
       }
     }
   }

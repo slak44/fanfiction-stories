@@ -9,7 +9,7 @@ import org.jetbrains.anko.db.*
 import slak.fanfictionstories.StoryModel
 import java.util.*
 
-class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 1) {
+class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 2) {
   companion object {
     private var instance: DatabaseHelper? = null
 
@@ -49,13 +49,18 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         wordCount INTEGER CHECK(wordCount > 0) NOT NULL,
         publishTime INTEGER NOT NULL,
         updateTime INTEGER NOT NULL,
-        storyId INTEGER UNIQUE NOT NULL
+        storyId INTEGER UNIQUE NOT NULL,
+        addedTime INTEGER NOT NULL,
+        lastReadTime INTEGER NOT NULL
       );
     """)
   }
 
-  override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-    // Empty for now, there is only one version
+  override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+    if (oldVersion == 1 && newVersion == 2) {
+      db.execSQL("ALTER TABLE stories ADD COLUMN addedTime INTEGER NOT NULL DEFAULT 0;")
+      db.execSQL("ALTER TABLE stories ADD COLUMN lastReadTime INTEGER NOT NULL DEFAULT 0;")
+    }
   }
 
   fun getLocalStories() : Deferred<List<StoryModel>> = async2(CommonPool) {

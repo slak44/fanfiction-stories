@@ -99,6 +99,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/wipe_settings"/>
+
+            <Button
+                android:id="@+id/dumpDb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/dump_db"/>
         </LinearLayout>
 
     </LinearLayout>
