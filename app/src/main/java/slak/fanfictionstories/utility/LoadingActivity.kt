@@ -6,6 +6,11 @@ import android.view.ViewGroup
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import slak.fanfictionstories.R
 
+/**
+ * This activity adds a horizontal indeterminate progress bar to the bottom of the action bar.
+ * @param idxInToolbarLayout certain implementations may have other views around here, so this
+ * parameter is provided to choose where to insert the loader ([ViewGroup.addView]'s index arg)
+ */
 open class LoadingActivity(private val idxInToolbarLayout: Int = -1) : ActivityWithStatic() {
   override fun setSupportActionBar(toolbar: Toolbar?) {
     super.setSupportActionBar(toolbar)
@@ -13,10 +18,18 @@ open class LoadingActivity(private val idxInToolbarLayout: Int = -1) : ActivityW
         R.layout.loading_activity_indeterminate, toolbar!!.parent as ViewGroup, false)
     (toolbar.parent as ViewGroup).addView(progress, idxInToolbarLayout)
   }
-  fun showLoading() {
+
+  /**
+   * Make the loading bar visible.
+   */
+  open fun showLoading() {
     activityProgressBar.visibility = View.VISIBLE
   }
-  fun hideLoading() {
+
+  /**
+   * Hide the loading bar.
+   */
+  open fun hideLoading() {
     activityProgressBar.visibility = View.GONE
   }
 }

@@ -35,7 +35,7 @@ class AuthorActivity : LoadingActivity(1) {
   /**
    * The [android.support.v4.view.PagerAdapter] that will provide
    * fragments for each of the sections. We use a
-   * {@link FragmentPagerAdapter} derivative, which will keep every
+   * [FragmentPagerAdapter] derivative, which will keep every
    * loaded fragment in memory. If this becomes too memory intensive, it
    * may be best to switch to a [android.support.v4.app.FragmentStatePagerAdapter].
    */
@@ -69,6 +69,22 @@ class AuthorActivity : LoadingActivity(1) {
         hideLoading()
       }
     }
+  }
+
+  /**
+   * Ensure the [tabs] are gone when the loading bar is there.
+   */
+  override fun showLoading() {
+    super.showLoading()
+    tabs.visibility = View.GONE
+  }
+
+  /**
+   * Ensure the [tabs] are come back when the loading bar goes away.
+   */
+  override fun hideLoading() {
+    super.hideLoading()
+    tabs.visibility = View.VISIBLE
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
