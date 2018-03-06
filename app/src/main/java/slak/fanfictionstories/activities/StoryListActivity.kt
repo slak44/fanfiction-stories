@@ -111,16 +111,17 @@ class StoryListActivity : ActivityWithStatic() {
         it.progressAsPercentage() < 2.0 -> storiesNotStarted++
       }
     }
+    val storiesInProgress = totalStories - storiesRead - storiesNotStarted
     AlertDialog.Builder(this)
         .setTitle(R.string.statistics)
         .setMessage(str(
             R.string.statistics_template,
-            totalWords,
-            passedApprox,
+            autoSuffixNumber(totalWords),
+            autoSuffixNumber(passedApprox), passedApprox * 100.0 / totalWords,
             totalStories,
-            storiesRead,
-            totalStories - storiesRead - storiesNotStarted,
-            storiesNotStarted
+            storiesRead, storiesRead * 100.0 / totalStories,
+            storiesInProgress, storiesInProgress * 100.0 / totalStories,
+            storiesNotStarted, storiesNotStarted * 100.0 / totalStories
         ))
         .show()
   }
