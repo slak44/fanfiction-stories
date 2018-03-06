@@ -26,7 +26,7 @@ data class Author(val name: String,
                   val id: Long,
                   val joinedDateSeconds: Long,
                   val updatedDateSeconds: Long,
-                  val countryName: String,
+                  val countryName: String?,
                   val imageUrl: String?,
                   val bioHtml: String,
                   val userStories: List<StoryModel>,
@@ -45,9 +45,6 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
     Log.e(FetcherUtils.TAG, "fetchAuthorPage", it)
   }.await()
   val doc = Jsoup.parse(html)
-  // USING TABLES FOR ALIGNMENT IN 2018 GOD DAMMIT
-  val retardedTableCell =
-      doc.select("#content_wrapper_inner > table[cellpadding=\"4\"] td[colspan=\"2\"]")
   val authorName = doc.select("#content_wrapper_inner > span").first().text()
   val stories = doc.getElementById("st_inside").children().map {
     parseStoryElement(it, authorName, authorId)
@@ -60,15 +57,19 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
     val authorElement = it.select("a").first()
     return@map Pair(FetcherUtils.authorIdFromAuthor(authorElement), authorElement.text())
   }
+  // USING TABLES FOR ALIGNMENT IN 2018 GOD DAMMIT
+  val retardedTableCell =
+      doc.select("#content_wrapper_inner > table table[cellpadding=\"4\"] td[colspan=\"2\"]").last()
+  val timeSpans = retardedTableCell.select("span")
   val author = Author(
       authorName,
       authorId,
       // Joined date, seconds
-      retardedTableCell.select("span")[0].attr("data-xutime").toLong(),
+      timeSpans[0].attr("data-xutime").toLong(),
       // Updated date, seconds
-      retardedTableCell.select("span")[1].attr("data-xutime").toLong(),
+      if (timeSpans.size > 1) timeSpans[1].attr("data-xutime").toLong() else 0,
       // Country name
-      retardedTableCell.select("img").first().attr("title"),
+      retardedTableCell.select("img").first()?.attr("title"),
       // Image url
       doc.select("#bio > img").first()?.attr("src"),
       // User bio (first child is image)
