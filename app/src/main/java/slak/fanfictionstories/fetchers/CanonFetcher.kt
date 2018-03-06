@@ -297,7 +297,9 @@ class CanonFetcher(val details: Details) : Parcelable {
     }
 
     val pageNav = doc.select("#content_wrapper_inner > center").last()
-    pageCount = if (pageNav != null) getPageCountFromNav(pageNav).opt() else 1.opt()
+    pageCount =
+        if (pageNav != null && pageNav.text() != "Filters") getPageCountFromNav(pageNav).opt()
+        else 1.opt()
 
     return list
   }
