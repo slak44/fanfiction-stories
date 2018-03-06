@@ -4,8 +4,9 @@
     <dimen name="app_bar_large_height">180dp</dimen>
     <dimen name="reader_nav_button_height">48dp</dimen>
     <dimen name="app_bar_height">180dp</dimen>
-    <dimen name="text_margin">16dp</dimen>
+    <dimen name="app_bar_large_text_height">220dp</dimen>
 
+    <dimen name="text_margin">16dp</dimen>
     <dimen name="dialog_view_margin">16dp</dimen>
 
     <dimen name="story_list_title_underline_margin">2dip</dimen>

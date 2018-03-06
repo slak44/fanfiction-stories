@@ -9,6 +9,7 @@ import android.text.Html
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.content_story_reader.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -53,6 +54,13 @@ class StoryReaderActivity : LoadingActivity() {
     // Save story for the resume button, but not for transient stories
     if (model.status != StoryStatus.TRANSIENT) {
       Prefs.use { it.putLong(Prefs.RESUME_STORY_ID, model.storyId) }
+    }
+
+    // Long titles require _even more_ space than CollapsibleToolbar already gives
+    // The 35 character limit is completely arbitrary
+    if (model.title.length > 35) {
+      appBar.layoutParams.height =
+          resources.getDimensionPixelSize(R.dimen.app_bar_large_text_height)
     }
 
     title = model.title
