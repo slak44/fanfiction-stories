@@ -280,7 +280,9 @@ class CanonFetcher(val details: Details) : Parcelable {
           category = categoryTitle,
           summary = summary,
           title = title,
-          serializedChapterTitles = null
+          serializedChapterTitles = null,
+          addedTime = null,
+          lastReadTime = null
       )
     }.collect(Collectors.toList())
 

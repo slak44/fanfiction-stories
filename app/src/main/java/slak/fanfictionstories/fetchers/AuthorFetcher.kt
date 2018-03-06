@@ -97,6 +97,8 @@ private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?)
       author = authorName ?: authorAnchor.text(),
       authorId = authorId ?: authorIdFromAuthor(authorAnchor),
       title = it.select("a.stitle").first().textNodes().last().text(),
-      serializedChapterTitles = null
+      serializedChapterTitles = null,
+      addedTime = null,
+      lastReadTime = null
   )
 }

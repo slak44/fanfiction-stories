@@ -152,7 +152,9 @@ object FetcherUtils {
         author = author.text(),
         authorId = authorIdFromAuthor(author),
         title = title,
-        serializedChapterTitles = chapterTitles
+        serializedChapterTitles = chapterTitles,
+        addedTime = System.currentTimeMillis(),
+        lastReadTime = 0
     )
   }
 

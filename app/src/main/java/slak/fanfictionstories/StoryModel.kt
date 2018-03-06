@@ -41,7 +41,7 @@ enum class StoryStatus {
       "transient" -> TRANSIENT
       "remote" -> REMOTE
       "local" -> LOCAL
-      else -> throw IllegalArgumentException("Invalid arg: " + s)
+      else -> throw IllegalArgumentException("Invalid arg: $s")
     }
   }
 
@@ -88,6 +88,8 @@ data class StoryModel(val storyId: Long,
                       var status: StoryStatus,
                       var progress: StoryProgress,
                       val fragment: StoryModelFragment,
+                      val addedTime: Long?,
+                      val lastReadTime: Long?,
                       val canon: String,
                       val category: String?,
                       val summary: String,
@@ -105,6 +107,8 @@ data class StoryModel(val storyId: Long,
     fragment.publishTime <= 0L -> false
     category == null -> false
     serializedChapterTitles == null -> false
+    addedTime == null -> false
+    lastReadTime == null -> false
     else -> true
   }
 
@@ -166,7 +170,9 @@ data class StoryModel(val storyId: Long,
       "authorId" to authorId,
       "category" to (category ?: ""),
       "canon" to canon,
-      "chapterTitles" to serializedChapterTitles
+      "chapterTitles" to serializedChapterTitles,
+      "addedTime" to addedTime,
+      "lastReadTime" to lastReadTime
   )
 
   fun toPairs(): Array<Pair<String, Any?>> =
@@ -198,6 +204,8 @@ data class StoryModel(val storyId: Long,
               scrollAbsolute = map["scrollAbsolute"]!! as Double,
               currentChapter = map["currentChapter"]!! as Long
           ),
+          addedTime = map["addedTime"]!! as Long,
+          lastReadTime = map["lastReadTime"]!! as Long,
           status = StoryStatus.fromString(map["status"]!! as String),
           canon = map["canon"]!! as String,
           category = map["category"]!! as String,
