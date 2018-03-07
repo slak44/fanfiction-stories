@@ -131,7 +131,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="error_fetching_review_data">Couldn\'t fetch reviews (id %s); Retrying…</string>
     <string name="error_fetching_author_data">Couldn\'t fetch author data (id %s); Retrying…</string>
     <string name="checking_story">Checking %s for updates</string>
-    <string name="fetching_chapter">Fetching chapter %d of %d for story %s</string>
+    <string name="fetching_chapter">Fetching chapter %d of %d (%.2f%%) for story %s</string>
     <string name="done_story">Done fetching story %s</string>
     <string name="update_failed">Update failed for story %s</string>
     <string name="updated_stories">Updated Stories</string>
