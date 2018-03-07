@@ -1,10 +1,12 @@
 package slak.fanfictionstories.fetchers
 
+import android.support.design.widget.Snackbar
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
+import org.jetbrains.anko.contentView
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import slak.fanfictionstories.*
@@ -21,7 +23,7 @@ import java.util.concurrent.TimeUnit
  * @returns the model we just fetched, or an empty optional if the story already exists
  */
 fun fetchAndWriteStory(storyId: Long): Deferred<Optional<StoryModel>> = async2(CommonPool) {
-  val model = fetchStoryModel(storyId).await()
+  val model = fetchStoryModel(storyId).await().orElse { return@async2 Optional.empty<StoryModel>() }
   model.status = StoryStatus.LOCAL
   Static.database.upsertStory(model)
   val isWriting: Boolean =
@@ -61,9 +63,10 @@ fun extractChapterText(doc: Document): String {
       ?: throw IllegalArgumentException("No story text in given document")
 }
 
-fun fetchStoryModel(storyId: Long): Deferred<StoryModel> = async2(CommonPool) {
+fun fetchStoryModel(storyId: Long): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val chapterHtml = fetchChapter(storyId, 1).await()
-  return@async2 parseStoryModel(chapterHtml, storyId)
+  if (chapterHtml.contains("Story Not Found")) return@async2 Optional.empty<StoryModel>()
+  return@async2 parseStoryModel(chapterHtml, storyId).opt()
 }
 
 /**
@@ -98,8 +101,7 @@ fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
 fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
   Notifications.show(
       Notifications.Kind.UPDATING, defaultIntent(), R.string.checking_story, oldModel.title)
-  val newModel = fetchStoryModel(oldModel.storyId).await()
-
+  val newModel = fetchStoryModel(oldModel.storyId).await().orElse { return@async2 false }
   // Skip non-locals from updates, since the operation does not make sense for them
   if (oldModel.status != StoryStatus.LOCAL) return@async2 false
   // Stories can't get un-updated

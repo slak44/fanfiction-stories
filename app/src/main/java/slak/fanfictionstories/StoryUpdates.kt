@@ -83,7 +83,8 @@ class UpdateService : JobService() {
       val updatedStories = mutableListOf<StoryModel>()
       val storyModels = applicationContext.database.getLocalStories().await()
       storyModels.forEach { model ->
-        val updated = updateStory(fetchStoryModel(model.storyId).await()).await()
+        val sModel = fetchStoryModel(model.storyId).await().orElse { return@forEach }
+        val updated = updateStory(sModel).await()
         if (updated) updatedStories.add(model)
       }
       Notifications.cancel(Notifications.Kind.UPDATING)
