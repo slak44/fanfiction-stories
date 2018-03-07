@@ -195,9 +195,11 @@ class AuthorActivity : LoadingActivity(1) {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
       val rootView = inflater.inflate(R.layout.fragment_author_bio, container, false)
-      rootView.html.text = Html.fromHtml(arguments!!.getString(ARG_HTML_TEXT),
-          Html.FROM_HTML_MODE_LEGACY, null, HrSpan.tagHandlerFactory(rootView.width))
-      rootView.html.movementMethod = LinkMovementMethod.getInstance()
+      rootView.post {
+        rootView.html.text = Html.fromHtml(arguments!!.getString(ARG_HTML_TEXT),
+            Html.FROM_HTML_MODE_LEGACY, null, HrSpan.tagHandlerFactory(rootView.width))
+        rootView.html.movementMethod = LinkMovementMethod.getInstance()
+      }
       return rootView
     }
   }
