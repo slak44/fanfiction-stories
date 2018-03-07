@@ -1,13 +1,11 @@
 package slak.fanfictionstories.utility
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.net.NetworkInfo
-import android.os.Parcelable
 import android.support.annotation.ColorRes
 import android.support.annotation.StringRes
 import android.support.design.widget.Snackbar
@@ -23,8 +21,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
-import kotlinx.android.parcel.Parcelize
-import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.sync.Mutex
@@ -46,7 +42,7 @@ fun <T> async2(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> T
 ): Deferred<T> {
-  val c = async(context, start, block)
+  val c = async(context, start, null, block)
   c.invokeOnCompletion { e -> if (e != null) throw e }
   return c
 }
