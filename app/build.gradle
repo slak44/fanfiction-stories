@@ -24,7 +24,7 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
-def anko_version = "0.10.1"
+def anko_version = "0.10.4"
 def kotlin_coroutines_version = "0.22.5"
 def android_appcompat_version = "27.1.0"
 dependencies {
