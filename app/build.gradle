@@ -26,7 +26,7 @@ android {
 }
 def anko_version = "0.10.1"
 def kotlin_coroutines_version = "0.16"
-def android_appcompat_version = "27.0.2"
+def android_appcompat_version = "27.1.0"
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'net.opacapp:multiline-collapsingtoolbar:1.6.0'
