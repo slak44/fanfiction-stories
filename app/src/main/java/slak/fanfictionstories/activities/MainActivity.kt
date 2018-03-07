@@ -15,9 +15,9 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.MapRowParser
-import org.jetbrains.anko.db.RowParser
 import org.jetbrains.anko.db.dropTable
 import org.jetbrains.anko.db.select
+import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
@@ -34,15 +34,8 @@ class MainActivity : ActivityWithStatic() {
     setContentView(R.layout.activity_main)
     setSupportActionBar(toolbar)
 
-    storyListButton.setOnClickListener {
-      val intent = Intent(this, StoryListActivity::class.java)
-      startActivity(intent)
-    }
-
-    storyBrowseButton.setOnClickListener {
-      val intent = Intent(this, SelectCategoryActivity::class.java)
-      startActivity(intent)
-    }
+    storyListButton.setOnClickListener { startActivity<StoryListActivity>() }
+    storyBrowseButton.setOnClickListener { startActivity<SelectCategoryActivity>() }
 
     // Debug menu
     if (BuildConfig.DEBUG) {
@@ -101,9 +94,8 @@ class MainActivity : ActivityWithStatic() {
     resumeButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_restore_black_24dp, 0, 0, 0)
     resumeButton.drawableTint(R.color.white, theme, Direction.LEFT)
     resumeButton.setOnClickListener {
-      val intent = Intent(this@MainActivity, StoryReaderActivity::class.java)
-      intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, model as Parcelable)
-      startActivity(intent)
+      startActivity<StoryReaderActivity>(
+          StoryReaderActivity.INTENT_STORY_MODEL to model as Parcelable)
     }
   }
 
@@ -114,7 +106,7 @@ class MainActivity : ActivityWithStatic() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
-      R.id.action_settings -> startActivity(Intent(this, SettingsActivity::class.java))
+      R.id.action_settings -> startActivity<SettingsActivity>()
       else -> return super.onOptionsItemSelected(item)
     }
     return true

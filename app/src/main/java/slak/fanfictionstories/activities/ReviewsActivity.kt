@@ -1,8 +1,6 @@
 package slak.fanfictionstories.activities
 
-import android.content.Intent
 import android.os.Bundle
-import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
@@ -151,10 +149,9 @@ class ReviewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
           .format(Date(review.unixTimeSeconds * 1000))
       reviewContent.text = review.content
       viewAuthorBtn.setOnClickListener {
-        val intent = Intent(context, AuthorActivity::class.java)
-        intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, review.authorId)
-        intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, review.author)
-        startActivity(context, intent, null)
+        startActivity<AuthorActivity>(
+            AuthorActivity.INTENT_AUTHOR_ID to review.authorId,
+            AuthorActivity.INTENT_AUTHOR_NAME to review.author)
       }
       if (review.authorId == -1L) {
         viewAuthorBtn.visibility = View.GONE

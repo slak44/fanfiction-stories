@@ -2,11 +2,9 @@ package slak.fanfictionstories
 
 import android.animation.ObjectAnimator
 import android.content.Context
-import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Parcelable
-import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -43,11 +41,9 @@ fun RecyclerView.createStorySwipeHelper(): ItemTouchHelper {
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
       if (viewHolder !is StoryAdapter.StoryViewHolder) return
-      val intent = Intent(context, StoryReaderActivity::class.java)
       val cardView = viewHolder.itemView as StoryCardView
-      intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL,
-          cardView.currentModel!! as Parcelable)
-      startActivity(context, intent, null)
+      startActivity<StoryReaderActivity>(
+          StoryReaderActivity.INTENT_STORY_MODEL to cardView.currentModel!! as Parcelable)
       // After the reader was opened, reset the translation by reattaching
       // We do this because we might go back from the reader to this activity and
       // it has to look properly
@@ -186,10 +182,9 @@ class StoryCardView : CardView {
       }
     }
     authorBtn.setOnClickListener {
-      val intent = Intent(context, AuthorActivity::class.java)
-      intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, model.authorId)
-      intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, model.author)
-      startActivity(context, intent, null)
+      startActivity<AuthorActivity>(
+          AuthorActivity.INTENT_AUTHOR_ID to model.authorId,
+          AuthorActivity.INTENT_AUTHOR_NAME to model.author)
     }
   }
 }

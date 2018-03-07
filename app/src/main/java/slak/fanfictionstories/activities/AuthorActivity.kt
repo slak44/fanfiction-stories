@@ -134,10 +134,9 @@ class AuthorActivity : LoadingActivity(1) {
             .setTitle(R.string.favorite_authors)
             .setItems(author.favoriteAuthors.map { it.second }.toTypedArray(), { d, which ->
               d.dismiss()
-              val intent = Intent(this, AuthorActivity::class.java)
-              intent.putExtra(INTENT_AUTHOR_NAME, author.favoriteAuthors[which].second)
-              intent.putExtra(INTENT_AUTHOR_ID, author.favoriteAuthors[which].first)
-              startActivity(intent)
+              startActivity<AuthorActivity>(
+                  INTENT_AUTHOR_NAME to author.favoriteAuthors[which].second,
+                  INTENT_AUTHOR_ID to author.favoriteAuthors[which].first)
             }).show()
       }
       android.R.id.home -> onBackPressed()

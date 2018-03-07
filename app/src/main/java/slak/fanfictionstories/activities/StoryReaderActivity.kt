@@ -241,16 +241,14 @@ class StoryReaderActivity : LoadingActivity() {
       R.id.nextChapter -> nextChapterBtn.callOnClick()
       R.id.prevChapter -> prevChapterBtn.callOnClick()
       R.id.storyReviews -> {
-        val intent = Intent(this, ReviewsActivity::class.java)
-        intent.putExtra(ReviewsActivity.INTENT_STORY_MODEL, model as Parcelable)
-        intent.putExtra(ReviewsActivity.INTENT_TARGET_CHAPTER, currentChapter)
-        startActivity(intent)
+        startActivity<ReviewsActivity>(
+            ReviewsActivity.INTENT_STORY_MODEL to model as Parcelable,
+            ReviewsActivity.INTENT_TARGET_CHAPTER to currentChapter.toInt())
       }
       R.id.viewAuthor -> {
-        val intent = Intent(this, AuthorActivity::class.java)
-        intent.putExtra(AuthorActivity.INTENT_AUTHOR_ID, model.authorId)
-        intent.putExtra(AuthorActivity.INTENT_AUTHOR_NAME, model.author)
-        startActivity(intent)
+        startActivity<AuthorActivity>(
+            AuthorActivity.INTENT_AUTHOR_ID to model.authorId,
+            AuthorActivity.INTENT_AUTHOR_NAME to model.author)
       }
       R.id.downloadLocal -> launch(CommonPool) {
         model = fetchAndWriteStory(model.storyId).await().orElse(model)

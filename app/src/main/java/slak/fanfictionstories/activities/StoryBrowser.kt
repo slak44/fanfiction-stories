@@ -34,9 +34,8 @@ class SelectCategoryActivity : ActivityWithStatic() {
     categoriesList.adapter = adapter
     categoriesList.setOnItemClickListener { _, _, idx: Int, _ ->
       val urlComponent = (if (useCrossover.isChecked) "crossovers/" else "") + categoryUrl[idx] + "/"
-      val intent = Intent(this, BrowseCategoryActivity::class.java)
-      intent.putExtra(INTENT_LINK_DATA, CategoryLink(categories[idx], urlComponent, "") as Parcelable)
-      startActivity(intent)
+      startActivity<BrowseCategoryActivity>(
+          INTENT_LINK_DATA to CategoryLink(categories[idx], urlComponent, "") as Parcelable)
     }
   }
 

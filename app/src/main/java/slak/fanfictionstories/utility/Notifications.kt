@@ -12,6 +12,7 @@ import android.support.annotation.StringRes
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.TaskStackBuilder
 import android.util.Log
+import org.jetbrains.anko.intentFor
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.StoryListActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
@@ -101,13 +102,12 @@ object Notifications {
     }
   }
 
-  fun defaultIntent() = Intent(Static.currentCtx, StoryListActivity::class.java)
+  fun defaultIntent() = Static.currentCtx.intentFor<StoryListActivity>()
   fun readerIntent(storyId: Long): Intent {
     val model = Static.database.storyById(storyId)
         .orElseThrow(IllegalStateException("Story not found in db"))
-    val intent = Intent(Static.currentCtx, StoryReaderActivity::class.java)
-    intent.putExtra(StoryReaderActivity.INTENT_STORY_MODEL, model as Parcelable)
-    return intent
+    return intentFor<StoryReaderActivity>(
+        StoryReaderActivity.INTENT_STORY_MODEL to model as Parcelable)
   }
 
   private var reqIdCounter = PENDING_INTENT_ID_BEGIN

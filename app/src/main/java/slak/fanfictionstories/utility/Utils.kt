@@ -1,6 +1,9 @@
 package slak.fanfictionstories.utility
 
+import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -24,6 +27,8 @@ import android.widget.TextView
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.sync.Mutex
+import org.jetbrains.anko.intentFor
+import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.R
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.File
@@ -339,3 +344,18 @@ fun str(@StringRes i: Int): String = Static.res.getString(i)
  * Sugar for [Static]'s [Resources.getString] with a format string.
  */
 fun str(@StringRes i: Int, vararg format: Any?): String = Static.res.getString(i, *format)
+
+/**
+ * Call [org.jetbrains.anko.startActivity] from anywhere using [Static.currentActivity].
+ */
+inline fun <reified T: Activity> startActivity(vararg params: Pair<String, Any?>) {
+  Static.currentActivity!!.startActivity<T>(*params)
+}
+
+/**
+ * Call [org.jetbrains.anko.intentFor] from anywhere using [Static.currentCtx].
+ */
+inline fun <reified T: Any> intentFor(vararg params: Pair<String, Any?>): Intent {
+  return Static.currentCtx.intentFor<T>(*params)
+}
+
