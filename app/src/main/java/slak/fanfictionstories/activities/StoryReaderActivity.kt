@@ -1,6 +1,5 @@
 package slak.fanfictionstories.activities
 
-import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
 import android.support.v4.widget.NestedScrollView
@@ -9,7 +8,6 @@ import android.text.Html
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.content_story_reader.*
 import kotlinx.coroutines.experimental.CommonPool
