@@ -1,12 +1,10 @@
 package slak.fanfictionstories.fetchers
 
-import android.support.design.widget.Snackbar
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
-import org.jetbrains.anko.contentView
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import slak.fanfictionstories.*
