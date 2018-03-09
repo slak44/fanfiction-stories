@@ -82,9 +82,7 @@ class StoryReaderActivity : LoadingActivity() {
 
   override fun onResume() {
     super.onResume()
-    // onResume gets called before onCreate when the activity is first instantiated
-    // Which means we would NPE when the text is inevitably not there
-    if (chapterText.staticLayout != null) restoreScrollStatus()
+    restoreScrollStatus()
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
@@ -100,6 +98,10 @@ class StoryReaderActivity : LoadingActivity() {
   }
 
   private fun restoreScrollStatus() = launch(UI) {
+    // onResume and others get called before onCreate when the activity is first instantiated
+    // Which means we would NPE when the text is inevitably not there
+    // The status gets restored in onCreate after text creation in that case, so we just return here
+    if (chapterText.staticLayout == null) return@launch
     val scrollAbs = database.useAsync {
       select("stories", "scrollAbsolute")
           .whereSimple("storyId = ?", model.storyId.toString())
