@@ -58,8 +58,7 @@ class StoryReaderActivity : LoadingActivity() {
     // Long titles require _even more_ space than CollapsibleToolbar already gives
     // The 35 character limit is completely arbitrary
     if (model.title.length > 35) {
-      appBar.layoutParams.height =
-          resources.getDimensionPixelSize(R.dimen.app_bar_large_text_height)
+      appBar.layoutParams.height = resources.px(R.dimen.app_bar_large_text_height)
     }
 
     title = model.title
@@ -106,7 +105,7 @@ class StoryReaderActivity : LoadingActivity() {
         .whereSimple("storyId = ?", model.storyId.toString())
         .parseOpt(DoubleParser) ?: return@launch
     val y = chapterText.scrollYFromScrollState(absoluteScroll)
-    if (y > resources.getDimensionPixelSize(R.dimen.app_bar_height)) appBar.setExpanded(false)
+    if (y > resources.px(R.dimen.app_bar_height)) appBar.setExpanded(false)
     nestedScroller.scrollTo(0, y)
   }
 

@@ -10,6 +10,7 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.net.NetworkInfo
 import android.support.annotation.ColorRes
+import android.support.annotation.DimenRes
 import android.support.annotation.StringRes
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
@@ -344,6 +345,11 @@ fun str(@StringRes i: Int): String = Static.res.getString(i)
  * Sugar for [Static]'s [Resources.getString] with a format string.
  */
 fun str(@StringRes i: Int, vararg format: Any?): String = Static.res.getString(i, *format)
+
+/**
+ * Sugar for [Resources.getDimensionPixelSize].
+ */
+fun Resources.px(@DimenRes d: Int): Int = getDimensionPixelSize(d)
 
 /**
  * Call [org.jetbrains.anko.startActivity] from anywhere using [Static.currentActivity].

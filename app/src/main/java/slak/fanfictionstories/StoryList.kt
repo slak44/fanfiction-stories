@@ -195,14 +195,12 @@ class StoryGroupTitle : TextView {
   constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
 
   companion object {
-    private val borderHeight =
-        Static.res.getDimensionPixelSize(R.dimen.story_list_title_divider_height)
-    private val bottomMargin = Static.res.getDimensionPixelSize(R.dimen.story_list_margin)
+    private val borderHeight = Static.res.px(R.dimen.story_list_title_divider_height)
+    private val bottomMargin = Static.res.px(R.dimen.story_list_margin)
   }
 
   init {
-    setPadding(0, 0, 0,
-        resources.getDimensionPixelSize(R.dimen.story_list_title_underline_margin))
+    setPadding(0, 0, 0, resources.px(R.dimen.story_list_title_underline_margin))
   }
 
   private val border: Paint by lazy {
