@@ -2,7 +2,6 @@ package slak.fanfictionstories.utility
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Canvas
@@ -364,4 +363,3 @@ inline fun <reified T: Activity> startActivity(vararg params: Pair<String, Any?>
 inline fun <reified T: Any> intentFor(vararg params: Pair<String, Any?>): Intent {
   return Static.currentCtx.intentFor<T>(*params)
 }
-

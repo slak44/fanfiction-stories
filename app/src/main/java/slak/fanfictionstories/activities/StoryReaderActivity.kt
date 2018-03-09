@@ -42,14 +42,23 @@ class StoryReaderActivity : LoadingActivity() {
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    model = intent.getParcelableExtra(INTENT_STORY_MODEL) ?: return
-    if (model.status == StoryStatus.TRANSIENT) {
-      // If it's in the db, use it, else set keep the transient one
-      model = database.storyById(model.storyId).orElse(model)
+    if (savedInstanceState != null) {
+      onRestoreInstanceState(savedInstanceState)
+      restoreScrollStatus()
+    } else {
+      model = intent.getParcelableExtra(INTENT_STORY_MODEL) ?: return
+      if (model.status == StoryStatus.TRANSIENT) {
+        // If it's in the db, use it, else keep the transient one
+        model = database.storyById(model.storyId).orElse(model)
+      }
+      // Local stories load fast enough that we do not need this loader
+      if (model.status == StoryStatus.LOCAL) hideLoading()
+      currentChapter =
+          if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
     }
-    if (model.status == StoryStatus.LOCAL) hideLoading()
 
     // Save story for the resume button, but not for transient stories, because those aren't in db
+    // Also update last time the story was read
     if (model.status != StoryStatus.TRANSIENT) {
       Prefs.use { it.putLong(Prefs.RESUME_STORY_ID, model.storyId) }
       database.updateInStory(model.storyId, "lastReadTime" to System.currentTimeMillis())
@@ -62,22 +71,11 @@ class StoryReaderActivity : LoadingActivity() {
     }
 
     title = model.title
-    currentChapter = if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
 
-    chapterText.setOnTextChangeListener {
-      restoreScrollStatus()
-    }
-
+    chapterText.setOnTextChangeListener { restoreScrollStatus() }
     initTextWithLoading(currentChapter).invokeOnCompletion { restoreScrollStatus() }
-
-    prevChapterBtn.setOnClickListener {
-      currentChapter--
-      initTextWithLoading(currentChapter)
-    }
-    nextChapterBtn.setOnClickListener {
-      currentChapter++
-      initTextWithLoading(currentChapter)
-    }
+    prevChapterBtn.setOnClickListener { initTextWithLoading(--currentChapter) }
+    nextChapterBtn.setOnClickListener { initTextWithLoading(++currentChapter) }
     selectChapterBtn.setOnClickListener { showChapterSelectDialog() }
   }
 
@@ -100,13 +98,17 @@ class StoryReaderActivity : LoadingActivity() {
     currentChapter = savedInstanceState.getLong(RESTORE_CURRENT_CHAPTER)
   }
 
-  private fun restoreScrollStatus() = launch(UI) {
-    val absoluteScroll = database.readableDatabase.select("stories", "scrollAbsolute")
-        .whereSimple("storyId = ?", model.storyId.toString())
-        .parseOpt(DoubleParser) ?: return@launch
-    val y = chapterText.scrollYFromScrollState(absoluteScroll)
-    if (y > resources.px(R.dimen.app_bar_height)) appBar.setExpanded(false)
-    nestedScroller.scrollTo(0, y)
+  private fun restoreScrollStatus() = launch(CommonPool) {
+    val scrollAbs = database.use {
+      select("stories", "scrollAbsolute")
+          .whereSimple("storyId = ?", model.storyId.toString())
+          .parseOpt(DoubleParser)
+    } ?: return@launch
+    launch(UI) {
+      val y = chapterText.scrollYFromScrollState(scrollAbs)
+      if (y > resources.px(R.dimen.app_bar_height)) appBar.setExpanded(false)
+      nestedScroller.scrollTo(0, y)
+    }
   }
 
   private fun showChapterSelectDialog() {
@@ -145,7 +147,7 @@ class StoryReaderActivity : LoadingActivity() {
     val text: String = readChapter(model.storyId, chapterToRead).await()
     val chapterWordCount = autoSuffixNumber(text.split(" ").size)
 
-    async2(UI) {
+    launch(UI) {
       chapterWordCountText.text = str(R.string.x_words, chapterWordCount)
       currentChapterText.text = str(R.string.chapter_progress, chapterToRead, model.fragment.chapterCount)
       val avgWordCount: Double = model.fragment.wordCount.toDouble() / model.fragment.chapterCount
@@ -163,7 +165,6 @@ class StoryReaderActivity : LoadingActivity() {
       // Don't show it if there is no title (otherwise there are leftover margins/padding)
       chapterTitleText.visibility =
           if (model.chapterTitles()[chapterToRead.toInt() - 1] == "") View.GONE else View.VISIBLE
-
     }
 
     val html = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY,
