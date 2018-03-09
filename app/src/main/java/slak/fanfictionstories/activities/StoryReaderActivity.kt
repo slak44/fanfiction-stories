@@ -14,9 +14,11 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
+import org.jetbrains.anko.db.update
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
@@ -49,7 +51,7 @@ class StoryReaderActivity : LoadingActivity() {
       model = intent.getParcelableExtra(INTENT_STORY_MODEL) ?: return
       if (model.status == StoryStatus.TRANSIENT) {
         // If it's in the db, use it, else keep the transient one
-        model = database.storyById(model.storyId).orElse(model)
+        model = runBlocking { database.storyById(model.storyId).await() }.orElse(model)
       }
       // Local stories load fast enough that we do not need this loader
       if (model.status == StoryStatus.LOCAL) hideLoading()
@@ -72,7 +74,6 @@ class StoryReaderActivity : LoadingActivity() {
 
     title = model.title
 
-    chapterText.setOnTextChangeListener { restoreScrollStatus() }
     initTextWithLoading(currentChapter).invokeOnCompletion { restoreScrollStatus() }
     prevChapterBtn.setOnClickListener { initTextWithLoading(--currentChapter) }
     nextChapterBtn.setOnClickListener { initTextWithLoading(++currentChapter) }
@@ -98,17 +99,15 @@ class StoryReaderActivity : LoadingActivity() {
     currentChapter = savedInstanceState.getLong(RESTORE_CURRENT_CHAPTER)
   }
 
-  private fun restoreScrollStatus() = launch(CommonPool) {
-    val scrollAbs = database.use {
+  private fun restoreScrollStatus() = launch(UI) {
+    val scrollAbs = database.useAsync {
       select("stories", "scrollAbsolute")
           .whereSimple("storyId = ?", model.storyId.toString())
           .parseOpt(DoubleParser)
-    } ?: return@launch
-    launch(UI) {
-      val y = chapterText.scrollYFromScrollState(scrollAbs)
-      if (y > resources.px(R.dimen.app_bar_height)) appBar.setExpanded(false)
-      nestedScroller.scrollTo(0, y)
-    }
+    }.await() ?: return@launch
+    val y = chapterText.scrollYFromScrollState(scrollAbs)
+    if (y > resources.px(R.dimen.app_bar_height)) appBar.setExpanded(false)
+    nestedScroller.scrollTo(0, y)
   }
 
   private fun showChapterSelectDialog() {
@@ -173,7 +172,7 @@ class StoryReaderActivity : LoadingActivity() {
     chapterText.setText(html, theme).await()
 
     updateUiAfterFetchingText(chapterToRead)
-    database.updateInStory(model.storyId, "currentChapter" to chapterToRead)
+    database.updateInStory(model.storyId, "currentChapter" to chapterToRead).await()
   }
 
   private fun setChangeChapterButtonStates(chapterToRead: Long) {
@@ -204,10 +203,9 @@ class StoryReaderActivity : LoadingActivity() {
       val rawPercentage = scrollY * 100.0 / (scrollingLayout.measuredHeight - scroller.bottom)
       // Make sure that values >100 get clamped to 100
       val percentageScrolled = Math.min(rawPercentage, 100.0)
-
-      database.updateInStory(model.storyId,
-          "scrollProgress" to percentageScrolled,
-          "scrollAbsolute" to chapterText.scrollStateFromScrollY(scrollY))
+      val scrollAbs = chapterText.scrollStateFromScrollY(scrollY)
+      runBlocking { database.updateInStory(model.storyId,
+          "scrollProgress" to percentageScrolled, "scrollAbsolute" to scrollAbs).await() }
     }
   }
 
@@ -269,7 +267,7 @@ class StoryReaderActivity : LoadingActivity() {
     target.printWriter().use { it.print(text) }
     if (model.status == StoryStatus.TRANSIENT) {
       model = parseStoryModel(chapterHtmlText, storyId)
-      database.upsertStory(model)
+      database.upsertStory(model).await()
     }
     return@async2 text
   }

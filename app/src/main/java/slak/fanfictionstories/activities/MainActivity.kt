@@ -14,6 +14,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.db.MapRowParser
 import org.jetbrains.anko.db.dropTable
 import org.jetbrains.anko.db.select
@@ -88,7 +89,7 @@ class MainActivity : ActivityWithStatic() {
       resumeButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
       return
     }
-    val model = database.storyById(storyId).orElse { return@onResume }
+    val model = runBlocking { database.storyById(storyId).await() }.orElse { return@onResume }
     resumeButton.text = Html.fromHtml(str(R.string.resume_story, model.title, model.author,
         model.progress.currentChapter, model.fragment.chapterCount), Html.FROM_HTML_MODE_COMPACT)
     resumeButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_restore_black_24dp, 0, 0, 0)

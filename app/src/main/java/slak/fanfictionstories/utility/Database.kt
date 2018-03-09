@@ -63,32 +63,29 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     }
   }
 
-  fun getLocalStories() : Deferred<List<StoryModel>> = async2(CommonPool) {
-    readableDatabase.select(tableName = "stories")
-        .whereSimple("status = ?", "local").parseList(StoryModel.dbParser)
+  fun getLocalStories() : Deferred<List<StoryModel>> = useAsync {
+    select("stories").whereSimple("status = ?", "local").parseList(StoryModel.dbParser)
   }
 
-  fun getStories() : Deferred<List<StoryModel>> = async2(CommonPool) {
-    readableDatabase.select(tableName = "stories").parseList(StoryModel.dbParser)
+  fun getStories() : Deferred<List<StoryModel>> = useAsync {
+    select(tableName = "stories").parseList(StoryModel.dbParser)
   }
 
-  fun storyById(storyId: Long): Optional<StoryModel> {
-    return readableDatabase.select("stories")
-        .whereSimple("storyId = ?", storyId.toString())
+  fun storyById(storyId: Long): Deferred<Optional<StoryModel>> = useAsync {
+    select("stories").whereSimple("storyId = ?", storyId.toString())
         .parseOpt(StoryModel.dbParser).opt()
   }
 
-  fun updateInStory(storyId: Long, vararg pairs: Pair<String, Any>) {
-    writableDatabase.update("stories", *pairs)
-        .whereSimple("storyId = ?", storyId.toString()).exec()
+  fun updateInStory(storyId: Long, vararg pairs: Pair<String, Any>): Deferred<Int> = useAsync {
+    update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
   }
 
-  fun upsertStory(model: StoryModel) {
+  fun upsertStory(model: StoryModel) = useAsync {
     if (!model.isPersistable()) {
       Log.e("upsertStory", model.toString())
       throw IllegalArgumentException("This model is unfit for the database")
     }
-    writableDatabase.transaction {
+    transaction {
       try {
         insertOrThrow("stories", *model.toPairs())
       } catch (err: SQLiteConstraintException) {
@@ -101,12 +98,12 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     }
   }
 
-  fun replaceStory(model: StoryModel) {
+  fun replaceStory(model: StoryModel): Deferred<Long> = useAsync {
     if (!model.isPersistable()) {
       Log.e("replaceStory", model.toString())
       throw IllegalArgumentException("This model is unfit for the database")
     }
-    writableDatabase.replaceOrThrow("stories", *model.toPairs())
+    replaceOrThrow("stories", *model.toPairs())
   }
 }
 
@@ -233,3 +230,9 @@ val Context.database: DatabaseHelper
  */
 val Static.database: DatabaseHelper
   get() = DatabaseHelper.getInstance(currentCtx.applicationContext)
+
+/**
+ * Like [ManagedSQLiteOpenHelper.use], but using [async2] and [CommonPool].
+ */
+fun <T> ManagedSQLiteOpenHelper.useAsync(f: SQLiteDatabase.() -> T): Deferred<T> =
+    async2(CommonPool) { this@useAsync.use(f) }

@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 fun fetchAndWriteStory(storyId: Long): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val model = fetchStoryModel(storyId).await().orElse { return@async2 Optional.empty<StoryModel>() }
   model.status = StoryStatus.LOCAL
-  Static.database.upsertStory(model)
+  Static.database.upsertStory(model).await()
   val isWriting: Boolean =
       writeChapters(storyId, fetchChapterRange(Notifications.Kind.DOWNLOADING, model)).await()
   if (isWriting) {
@@ -31,7 +31,7 @@ fun fetchAndWriteStory(storyId: Long): Deferred<Optional<StoryModel>> = async2(C
     Notifications.cancel(Notifications.Kind.DOWNLOADING)
   } else {
     // FIXME show something saying we failed
-    Static.database.updateInStory(storyId, "status" to "remote")
+    Static.database.updateInStory(storyId, "status" to "remote").await()
   }
   return@async2 model.opt()
 }
@@ -116,7 +116,7 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
     oldModel.progress
   }
 
-  Static.database.replaceStory(newModel)
+  Static.database.replaceStory(newModel).await()
 
   val channel: Channel<String> = when {
   // Special case when there is only one chapter
@@ -138,7 +138,7 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
   val isWriting = writeChapters(newModel.storyId, channel).await()
   if (!isWriting) {
     // Revert model to old values
-    Static.database.replaceStory(oldModel)
+    Static.database.replaceStory(oldModel).await()
     Log.e(TAG, "Had to revert update to ${oldModel.storyId}")
     return@async2 false
   }

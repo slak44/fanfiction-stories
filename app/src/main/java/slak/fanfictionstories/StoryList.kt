@@ -20,6 +20,7 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.StoryAdapterItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
@@ -152,7 +153,7 @@ class StoryCardView : CardView {
     storyMainContent.setOnClickListener { isExtended = !isExtended }
     removeBtn.setOnClickListener {
       // Even though we have a model, fetch it from db to make sure there are no inconsistencies
-      val dbModel = context.database.storyById(model.storyId)
+      val dbModel = runBlocking { Static.database.storyById(model.storyId).await() }
       if (!dbModel.isPresent) {
         errorDialog(R.string.storyid_does_not_exist, R.string.storyid_does_not_exist_tip)
         return@setOnClickListener
@@ -163,8 +164,9 @@ class StoryCardView : CardView {
         adapter.undoHideStory(model)
       }) {
         deleteLocalStory(context, model.storyId).join()
-        context.database.writableDatabase
-            .delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
+        context.database.useAsync {
+          delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
+        }.await()
       }
     }
     addBtn.setOnClickListener {

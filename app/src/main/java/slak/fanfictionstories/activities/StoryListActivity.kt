@@ -96,8 +96,8 @@ class StoryListActivity : ActivityWithStatic() {
         .show()
   }
 
-  private fun statisticsDialog() {
-    val stories = runBlocking { database.getStories().await() }
+  private fun statisticsDialog() = launch(UI) {
+    val stories = database.getStories().await()
     var totalWords = 0L
     var passedApprox = 0L
     val totalStories = stories.size
@@ -112,7 +112,7 @@ class StoryListActivity : ActivityWithStatic() {
       }
     }
     val storiesInProgress = totalStories - storiesRead - storiesNotStarted
-    AlertDialog.Builder(this)
+    AlertDialog.Builder(this@StoryListActivity)
         .setTitle(R.string.statistics)
         .setMessage(str(
             R.string.statistics_template,

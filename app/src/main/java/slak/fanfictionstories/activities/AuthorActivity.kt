@@ -16,6 +16,7 @@ import kotlinx.android.synthetic.main.fragment_author_stories.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Author
 import slak.fanfictionstories.fetchers.getAuthor
@@ -236,7 +237,8 @@ class AuthorActivity : LoadingActivity(1) {
                               savedInstanceState: Bundle?): View? {
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
       stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES).map {
-        val model = Static.database.storyById(it.storyId).orElse(null) ?: return@map it
+        val model = runBlocking { Static.database.storyById(it.storyId).await() }
+            .orElse(null) ?: return@map it
         it.progress = model.progress
         it.status = model.status
         return@map it
