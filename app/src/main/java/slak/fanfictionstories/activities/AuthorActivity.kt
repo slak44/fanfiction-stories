@@ -226,12 +226,22 @@ class AuthorActivity : LoadingActivity(1) {
 
     private lateinit var adapter: StoryAdapter
     private lateinit var stories: List<StoryModel>
+    private var lastStoryId = -1L
 
     private var arrangement = Arrangement(
         OrderStrategy.TITLE_ALPHABETIC,
         OrderDirection.DESC,
         GroupStrategy.NONE
     )
+
+    override fun onResume() {
+      super.onResume()
+      if (lastStoryId != -1L) runBlocking {
+        Static.database.storyById(lastStoryId).await()
+      }.ifPresent {
+        adapter.updateStoryModel(it)
+      }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -244,7 +254,7 @@ class AuthorActivity : LoadingActivity(1) {
         return@map it
       }
       rootView.stories.layoutManager = LinearLayoutManager(context)
-      rootView.stories.createStorySwipeHelper()
+      rootView.stories.createStorySwipeHelper { lastStoryId = it.storyId }
       adapter = StoryAdapter(context!!)
       rootView.stories.adapter = adapter
       if (stories.isEmpty()) {
