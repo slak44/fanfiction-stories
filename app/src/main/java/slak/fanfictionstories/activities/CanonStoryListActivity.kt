@@ -13,16 +13,14 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.StoryAdapterItem.StoryCardData
 import slak.fanfictionstories.StoryAdapterItem.GroupTitle
 
-class CanonStoryListActivity : LoadingActivity() {
+class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResumer() {
   companion object {
-    private const val STORY_ENTERED_RESTORE = "story_last_id"
     private const val CURRENT_PAGE_RESTORE = "current_page"
     private const val FETCHER_RESTORE = "canon_fetcher"
     private const val ADAPTER_DATA_RESTORE = "adapter_data"
@@ -31,7 +29,6 @@ class CanonStoryListActivity : LoadingActivity() {
   private lateinit var adapter: StoryAdapter
   private lateinit var fetcher: CanonFetcher
   private var currentPage = 1
-  private var lastStoryId = -1L
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -60,7 +57,7 @@ class CanonStoryListActivity : LoadingActivity() {
       onRestoreInstanceState(savedInstanceState)
     }
 
-    canonStoryListView.createStorySwipeHelper { lastStoryId = it.storyId }
+    canonStoryListView.createStorySwipeHelper { enteredReader(it.storyId) }
 
     infinitePageScroll(canonStoryListView, layoutManager) {
       adapter.addDeferredData(getPage(++currentPage))
@@ -69,25 +66,21 @@ class CanonStoryListActivity : LoadingActivity() {
 
   override fun onResume() {
     super.onResume()
-    if (lastStoryId != -1L) runBlocking {
-      database.storyById(lastStoryId).await()
-    }.ifPresent {
-      adapter.updateStoryModel(it)
-    }
+    updateOnResume(adapter)
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
+    saveInstanceState(outState)
     outState.putInt(CURRENT_PAGE_RESTORE, currentPage)
-    outState.putLong(STORY_ENTERED_RESTORE, lastStoryId)
     outState.putParcelable(FETCHER_RESTORE, fetcher)
     outState.putParcelableArray(ADAPTER_DATA_RESTORE, adapter.getData().toTypedArray())
   }
 
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
     super.onRestoreInstanceState(savedInstanceState)
+    restoreInstanceState(savedInstanceState)
     currentPage = savedInstanceState.getInt(CURRENT_PAGE_RESTORE)
-    lastStoryId = savedInstanceState.getLong(STORY_ENTERED_RESTORE)
     fetcher = savedInstanceState.getParcelable(FETCHER_RESTORE)
     val data = savedInstanceState.getParcelableArray(ADAPTER_DATA_RESTORE)
     @Suppress("unchecked_cast")

@@ -208,7 +208,7 @@ class AuthorActivity : LoadingActivity(1) {
   /**
    * Fragment that lists stories using a [android.support.v7.widget.RecyclerView] and [StoryAdapter].
    */
-  internal class StoryListFragment : Fragment() {
+  internal class StoryListFragment : Fragment(), ReaderResumable by ReaderResumer() {
     companion object {
       private const val ARG_STORIES = "stories"
 
@@ -226,7 +226,6 @@ class AuthorActivity : LoadingActivity(1) {
 
     private lateinit var adapter: StoryAdapter
     private lateinit var stories: List<StoryModel>
-    private var lastStoryId = -1L
 
     private var arrangement = Arrangement(
         OrderStrategy.TITLE_ALPHABETIC,
@@ -236,11 +235,17 @@ class AuthorActivity : LoadingActivity(1) {
 
     override fun onResume() {
       super.onResume()
-      if (lastStoryId != -1L) runBlocking {
-        Static.database.storyById(lastStoryId).await()
-      }.ifPresent {
-        adapter.updateStoryModel(it)
-      }
+      updateOnResume(adapter)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+      super.onSaveInstanceState(outState)
+      saveInstanceState(outState)
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+      super.onActivityCreated(savedInstanceState)
+      if (savedInstanceState != null) restoreInstanceState(savedInstanceState)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -254,7 +259,7 @@ class AuthorActivity : LoadingActivity(1) {
         return@map it
       }
       rootView.stories.layoutManager = LinearLayoutManager(context)
-      rootView.stories.createStorySwipeHelper { lastStoryId = it.storyId }
+      rootView.stories.createStorySwipeHelper { enteredReader(it.storyId) }
       adapter = StoryAdapter(context!!)
       rootView.stories.adapter = adapter
       if (stories.isEmpty()) {
