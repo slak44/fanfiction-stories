@@ -83,8 +83,10 @@ data class StoryProgress(val scrollProgress: Double = 0.0,
                          val scrollAbsolute: Double = 0.0,
                          val currentChapter: Long = 0L) : Parcelable, Serializable
 
+typealias StoryId = Long
+
 @Parcelize @SuppressLint("ParcelCreator")
-data class StoryModel(val storyId: Long,
+data class StoryModel(val storyId: StoryId,
                       var status: StoryStatus,
                       var progress: StoryProgress,
                       val fragment: StoryModelFragment,

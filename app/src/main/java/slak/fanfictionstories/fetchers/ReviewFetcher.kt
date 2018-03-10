@@ -8,6 +8,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import slak.fanfictionstories.R
+import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
 import slak.fanfictionstories.utility.*
@@ -15,7 +16,7 @@ import slak.fanfictionstories.utility.Notifications.defaultIntent
 
 @Parcelize @SuppressLint("ParcelCreator")
 data class Review(
-    val storyId: Long,
+    val storyId: StoryId,
     val chapter: Int,
     val author: String,
     val authorId: Long,
@@ -28,7 +29,7 @@ data class Review(
  * @returns the reviews, and how many pages of reviews there are in total, or an empty list and -1
  * if there are no reviews
  */
-fun getReviews(storyId: Long,
+fun getReviews(storyId: StoryId,
                chapter: Int, page: Int): Deferred<Pair<List<Review>, Int>> = async2(CommonPool) {
   val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
@@ -38,7 +39,7 @@ fun getReviews(storyId: Long,
   return@async2 parseReviewPage(storyId, html)
 }
 
-private fun parseReviewPage(storyId: Long, html: String): Pair<List<Review>, Int> {
+private fun parseReviewPage(storyId: StoryId, html: String): Pair<List<Review>, Int> {
   val doc = Jsoup.parse(html)
   val list = doc.select("div.table-bordered > table > tbody > tr > td").map {
     if (it.text().contains("No Reviews found")) return@parseReviewPage Pair(listOf(), -1)

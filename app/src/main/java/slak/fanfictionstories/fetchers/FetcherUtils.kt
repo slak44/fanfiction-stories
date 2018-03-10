@@ -104,7 +104,7 @@ object FetcherUtils {
    * Parses all required metadata for a [StoryModel].
    * @param html html string of any chapter of the story
    */
-  fun parseStoryModel(html: String, storyId: Long): StoryModel {
+  fun parseStoryModel(html: String, storyId: StoryId): StoryModel {
     // The raw html is completely insane
     // I mean really, using ' for attributes?
     // Sometimes not using any quotes at all?

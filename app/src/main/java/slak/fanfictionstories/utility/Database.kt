@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import kotlinx.coroutines.experimental.*
 import org.jetbrains.anko.db.*
+import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.StoryModel
 import java.util.*
 
@@ -71,12 +72,12 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     select(tableName = "stories").parseList(StoryModel.dbParser)
   }
 
-  fun storyById(storyId: Long): Deferred<Optional<StoryModel>> = useAsync {
+  fun storyById(storyId: StoryId): Deferred<Optional<StoryModel>> = useAsync {
     select("stories").whereSimple("storyId = ?", storyId.toString())
         .parseOpt(StoryModel.dbParser).opt()
   }
 
-  fun updateInStory(storyId: Long, vararg pairs: Pair<String, Any>): Deferred<Int> = useAsync {
+  fun updateInStory(storyId: StoryId, vararg pairs: Pair<String, Any>): Deferred<Int> = useAsync {
     update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
   }
 

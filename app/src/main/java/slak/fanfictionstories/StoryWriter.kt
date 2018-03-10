@@ -38,7 +38,7 @@ fun storyDir(ctx: Context, storyId: Long): Optional<File> {
  * Note that this function only suspends if it's actually writing; it immediately returns on failure
  * @returns true if we started writing data to disk, false otherwise
  */
-fun writeChapters(storyId: Long,
+fun writeChapters(storyId: StoryId,
                   chapters: Channel<String>): Deferred<Boolean> = async2(CommonPool) {
   val targetDir = storyDir(Static.currentCtx, storyId).orElse { return@async2 false }
   if (targetDir.exists()) {
@@ -65,7 +65,7 @@ fun writeChapters(storyId: Long,
 /**
  * Deletes the story chapter data directory
  */
-fun deleteLocalStory(ctx: Context, storyId: Long) = launch(CommonPool) {
+fun deleteLocalStory(ctx: Context, storyId: StoryId) = launch(CommonPool) {
   val targetDir = storyDir(ctx, storyId).orElseThrow(IllegalStateException("Storage missing"))
   if (!targetDir.exists()) {
     Log.w("StoryWriter#deleteLocalStory", "Tried to delete a story that does not exist")

@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
  * Download metadata and every chapter, then store them in the database and on disk.
  * @returns the model we just fetched, or an empty optional if the story already exists
  */
-fun fetchAndWriteStory(storyId: Long): Deferred<Optional<StoryModel>> = async2(CommonPool) {
+fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val model = fetchStoryModel(storyId).await().orElse { return@async2 Optional.empty<StoryModel>() }
   model.status = StoryStatus.LOCAL
   Static.database.upsertStory(model).await()
@@ -44,7 +44,7 @@ val storyCache = Cache<String>("StoryChapter", TimeUnit.MINUTES.toMillis(15))
  * @param storyId what story
  * @param chapter what chapter
  */
-fun fetchChapter(storyId: Long, chapter: Long): Deferred<String> = async2(CommonPool) {
+fun fetchChapter(storyId: StoryId, chapter: Long): Deferred<String> = async2(CommonPool) {
   val cacheKey = "id$storyId-ch$chapter"
   storyCache.hit(cacheKey).ifPresent2 { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
@@ -61,7 +61,7 @@ fun extractChapterText(doc: Document): String {
       ?: throw IllegalArgumentException("No story text in given document")
 }
 
-fun fetchStoryModel(storyId: Long): Deferred<Optional<StoryModel>> = async2(CommonPool) {
+fun fetchStoryModel(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val chapterHtml = fetchChapter(storyId, 1).await()
   if (chapterHtml.contains("Story Not Found")) return@async2 Optional.empty<StoryModel>()
   return@async2 parseStoryModel(chapterHtml, storyId).opt()
