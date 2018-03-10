@@ -29,7 +29,11 @@ import slak.fanfictionstories.utility.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-fun RecyclerView.createStorySwipeHelper(): ItemTouchHelper {
+/**
+ * Adds a [ItemTouchHelper] to the recycler that lets stories be swiped right to be read.
+ * @param onSwiped called when a story is entered, with the model used in the intent
+ */
+fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
   // Use a `lateinit var` because the coroutine inside cannot access
   // the `this` that is the ItemTouchHelper.Callback
   lateinit var swipeStory: ItemTouchHelper
@@ -43,6 +47,7 @@ fun RecyclerView.createStorySwipeHelper(): ItemTouchHelper {
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
       if (viewHolder !is StoryAdapter.StoryViewHolder) return
       val cardView = viewHolder.itemView as StoryCardView
+      onSwiped(cardView.currentModel!!)
       startActivity<StoryReaderActivity>(
           StoryReaderActivity.INTENT_STORY_MODEL to cardView.currentModel!! as Parcelable)
       // After the reader was opened, reset the translation by reattaching
@@ -56,7 +61,6 @@ fun RecyclerView.createStorySwipeHelper(): ItemTouchHelper {
     }
   })
   swipeStory.attachToRecyclerView(this)
-  return swipeStory
 }
 
 class StoryCardView : CardView {
@@ -303,7 +307,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    * @see undoHideStory
    */
   fun hideStory(position: Int, model: StoryModel) {
-    if (data.find { it is StoryCardData && it.model == model } == null)
+    if (data.find { it is StoryCardData && it.model.storyId == model.storyId } == null)
       throw IllegalArgumentException("Model not part of the adapter")
     pendingItems[model] = position
     data.removeAt(position)
@@ -325,6 +329,17 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     notifyItemInserted(pos)
     storyCount++
     onSizeChange(storyCount, filteredCount)
+  }
+
+  /**
+   * Update [StoryModel.progress] and [StoryModel.status] from the provided model.
+   */
+  fun updateStoryModel(newModel: StoryModel) {
+    val idx = data.indexOfFirst { it is StoryCardData && it.model.storyId == newModel.storyId }
+    if (idx == -1) throw IllegalArgumentException("Model not part of the adapter")
+    (data[idx] as StoryCardData).model.progress = newModel.progress
+    (data[idx] as StoryCardData).model.status = newModel.status
+    notifyItemChanged(idx)
   }
 
   /**

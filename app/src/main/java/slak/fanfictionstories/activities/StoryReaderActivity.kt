@@ -18,7 +18,6 @@ import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
-import org.jetbrains.anko.db.update
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
@@ -162,10 +161,11 @@ class StoryReaderActivity : LoadingActivity() {
       approxWordCountRemainText.visibility = extraDataVisibility
 
       // Set chapter's title (chapterToRead is 1-indexed)
-      chapterTitleText.text = model.chapterTitles()[chapterToRead.toInt() - 1]
+      if (model.fragment.chapterCount > 1) {
+        chapterTitleText.text = model.chapterTitles()[chapterToRead.toInt() - 1]
+      }
       // Don't show it if there is no title (otherwise there are leftover margins/padding)
-      chapterTitleText.visibility =
-          if (model.chapterTitles()[chapterToRead.toInt() - 1] == "") View.GONE else View.VISIBLE
+      chapterTitleText.visibility = if (chapterTitleText.text == "") View.GONE else View.VISIBLE
     }
 
     val html = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY,
