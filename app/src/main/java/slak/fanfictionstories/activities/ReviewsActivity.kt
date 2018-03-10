@@ -23,6 +23,11 @@ class ReviewsActivity : LoadingActivity() {
   companion object {
     const val INTENT_STORY_MODEL = "story_model_extra"
     const val INTENT_TARGET_CHAPTER = "target_chapter_extra"
+    private const val RESTORE_CHAPTER = "restore_chapter"
+    private const val RESTORE_CURRENT_PAGE = "restore_curr_page"
+    private const val RESTORE_TOTAL_PAGES = "restore_total"
+    private const val RESTORE_MODEL = "restore_model"
+    private const val RESTORE_ADAPTER = "restore_adapter"
   }
 
   private var chapter: Int = 0
@@ -56,6 +61,27 @@ class ReviewsActivity : LoadingActivity() {
     infinitePageScroll(reviewList, layoutManager) {
       addPage(++currentPage)
     }
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    outState.putInt(RESTORE_CHAPTER, chapter)
+    outState.putInt(RESTORE_CURRENT_PAGE, currentPage)
+    outState.putInt(RESTORE_TOTAL_PAGES, totalPages)
+    outState.putParcelable(RESTORE_MODEL, model)
+    outState.putParcelableArray(RESTORE_ADAPTER, adapter.getData().toTypedArray())
+  }
+
+  override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+    super.onRestoreInstanceState(savedInstanceState)
+    chapter = savedInstanceState.getInt(RESTORE_CHAPTER)
+    currentPage = savedInstanceState.getInt(RESTORE_CURRENT_PAGE)
+    totalPages = savedInstanceState.getInt(RESTORE_TOTAL_PAGES)
+    model = savedInstanceState.getParcelable(RESTORE_MODEL)
+    val data = savedInstanceState.getParcelableArray(RESTORE_ADAPTER)
+    @Suppress("unchecked_cast")
+    adapter.addReviews((data as Array<Review>).toList())
+    hideLoading()
   }
 
   private fun setSubtitle() {
@@ -124,6 +150,8 @@ class ReviewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   class ReviewHolder(val view: CardView) : RecyclerView.ViewHolder(view)
 
   private val reviews: MutableList<Review> = mutableListOf()
+
+  fun getData(): List<Review> = reviews.toList()
 
   fun clear() {
     val size = reviews.size
