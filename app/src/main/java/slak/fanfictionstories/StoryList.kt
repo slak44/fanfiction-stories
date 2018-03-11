@@ -9,6 +9,7 @@ import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -251,6 +252,10 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     setHasStableIds(true)
   }
 
+  companion object {
+    private const val TAG = "StoryAdapter"
+  }
+
   class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
   class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
@@ -320,6 +325,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   fun hideStory(position: Int, model: StoryModel) {
     if (data.find { it is StoryCardData && it.model.storyId == model.storyId } == null)
       throw IllegalArgumentException("Model not part of the adapter")
+    Log.v(TAG, "hideStory: pos=$position, model: $model")
     pendingItems[model] = position
     data.removeAt(position)
     notifyItemRemoved(position)
@@ -335,6 +341,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    */
   fun undoHideStory(model: StoryModel) {
     val pos = pendingItems[model] ?: throw IllegalArgumentException("This model was never hidden")
+    Log.v(TAG, "undoHideStory: pos=$pos, model: $model")
     data.add(pos, StoryCardData(model))
     pendingItems.remove(model)
     notifyItemInserted(pos)
