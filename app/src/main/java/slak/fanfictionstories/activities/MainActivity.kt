@@ -90,6 +90,8 @@ class MainActivity : ActivityWithStatic() {
     val storyId = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
     if (storyId == -1L) {
       resumeButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+      resumeButton.text = str(R.string.nothing_to_resume)
+      resumeButton.setOnClickListener {}
       return
     }
     val model = runBlocking { database.storyById(storyId).await() }.orElse { return@onResume }

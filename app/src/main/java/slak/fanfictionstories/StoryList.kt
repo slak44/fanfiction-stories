@@ -171,6 +171,8 @@ class StoryCardView : CardView {
       }) {
         deleteLocalStory(context, model.storyId).join()
         context.database.useAsync {
+          val currentResume = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
+          if (currentResume == model.storyId) Prefs.useImmediate { it.remove(Prefs.RESUME_STORY_ID) }
           delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
         }.await()
       }
