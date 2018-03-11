@@ -90,14 +90,18 @@ data class StoryModel(val storyId: StoryId,
                       val authorId: Long,
                       val title: String,
                       val serializedChapterTitles: String?) : Parcelable, Serializable {
-  /**
-   * Checks if this model is suitable for being written into the database.
-   * FIXME: some of these and more are actually coherency checks, which should be checked at compile time using proper types
-   */
+  init {
+    if (storyId <= 0) throw IllegalArgumentException("Story id is strictly positive")
+    if (authorId <= 0) throw IllegalArgumentException("Author id is strictly positive")
+    if (fragment.publishTime < 0) throw IllegalArgumentException("Publish time is positive")
+    if (fragment.updateTime < 0) throw IllegalArgumentException("Update time is positive")
+    if (fragment.chapterCount > 1 && serializedChapterTitles != null && chapterTitles().isEmpty()) {
+      throw IllegalArgumentException("There are chapters, but the titles do not exist")
+    }
+  }
+
+  /** Checks if this model is suitable for being written into the database. */
   fun isPersistable(): Boolean = when {
-    storyId <= 0L -> false
-    authorId <= 0L -> false
-    fragment.publishTime <= 0L -> false
     category == null -> false
     serializedChapterTitles == null -> false
     addedTime == null -> false
