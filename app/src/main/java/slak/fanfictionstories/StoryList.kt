@@ -164,6 +164,8 @@ class StoryCardView : CardView {
       }
       // Hide card
       adapter.hideStory(holder.adapterPosition, model)
+      // We need this because otherwise the screen gets out of sync with the data
+      adapter.notifyDataSetChanged()
       undoableAction(holder.itemView, R.string.removed_story, {
         adapter.undoHideStory(model)
       }) {
