@@ -12,8 +12,10 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.contentView
-import slak.fanfictionstories.*
-import slak.fanfictionstories.fetchers.*
+import slak.fanfictionstories.R
+import slak.fanfictionstories.fetchers.CategoryLink
+import slak.fanfictionstories.fetchers.categoryCache
+import slak.fanfictionstories.fetchers.fetchCategoryData
 import slak.fanfictionstories.utility.*
 
 val categories: Array<String> by lazy { Static.res.getStringArray(R.array.categories) }

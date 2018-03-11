@@ -168,14 +168,17 @@ fun TextView.drawableTint(@ColorRes colorRes: Int, theme: Resources.Theme, which
 class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpan() {
   companion object {
     private const val PLACEHOLDER = "######HRPLACEHOLDERHRPLACEHOLDERHRPLACEHOLDER######"
-    val tagHandlerFactory = { widthPx: Int -> Html.TagHandler { opening, tag, output, _ ->
-      if (tag == "hr") {
-        if (opening) output.insert(output.length, PLACEHOLDER)
-        else output.setSpan(HrSpan(1, widthPx),
-            output.length - PLACEHOLDER.length, output.length, 0)
+    val tagHandlerFactory = { widthPx: Int ->
+      Html.TagHandler { opening, tag, output, _ ->
+        if (tag == "hr") {
+          if (opening) output.insert(output.length, PLACEHOLDER)
+          else output.setSpan(HrSpan(1, widthPx),
+              output.length - PLACEHOLDER.length, output.length, 0)
+        }
       }
-    } }
+    }
   }
+
   override fun getSize(p0: Paint?, p1: CharSequence?, p2: Int, p3: Int,
                        p4: Paint.FontMetricsInt?): Int {
     return 0
@@ -217,6 +220,7 @@ private val suffixes = TreeMap(mapOf(
     1_000_000_000_000_000L to "P",
     1_000_000_000_000_000_000L to "E"
 ))
+
 /**
  * Truncate a number and append the respective suffix.
  *
@@ -310,12 +314,14 @@ fun undoableAction(view: View, snackText: String,
   val snack = Snackbar.make(view, snackText, Snackbar.LENGTH_LONG)
   snack.setAction(R.string.undo, onUndo)
   snack.addCallback(object : Snackbar.Callback() {
-    override fun onDismissed(transientBottomBar: Snackbar, event: Int) { launch(CommonPool) {
-      // These actions should trigger the action
-      // The user clicking undo or the code calling dismiss() do not trigger this
-      val actions = arrayOf(DISMISS_EVENT_CONSECUTIVE, DISMISS_EVENT_SWIPE, DISMISS_EVENT_TIMEOUT)
-      if (event in actions) action()
-    } }
+    override fun onDismissed(transientBottomBar: Snackbar, event: Int) {
+      launch(CommonPool) {
+        // These actions should trigger the action
+        // The user clicking undo or the code calling dismiss() do not trigger this
+        val actions = arrayOf(DISMISS_EVENT_CONSECUTIVE, DISMISS_EVENT_SWIPE, DISMISS_EVENT_TIMEOUT)
+        if (event in actions) action()
+      }
+    }
   })
   snack.show()
   return snack
@@ -340,6 +346,7 @@ operator fun SparseBooleanArray.set(key: Int, value: Boolean) {
  * Sugar for [Static]'s [Resources.getString].
  */
 fun str(@StringRes i: Int): String = Static.res.getString(i)
+
 /**
  * Sugar for [Static]'s [Resources.getString] with a format string.
  */
@@ -353,13 +360,13 @@ fun Resources.px(@DimenRes d: Int): Int = getDimensionPixelSize(d)
 /**
  * Call [org.jetbrains.anko.startActivity] from anywhere using [Static.currentActivity].
  */
-inline fun <reified T: Activity> startActivity(vararg params: Pair<String, Any?>) {
+inline fun <reified T : Activity> startActivity(vararg params: Pair<String, Any?>) {
   Static.currentActivity!!.startActivity<T>(*params)
 }
 
 /**
  * Call [org.jetbrains.anko.intentFor] from anywhere using [Static.currentCtx].
  */
-inline fun <reified T: Any> intentFor(vararg params: Pair<String, Any?>): Intent {
+inline fun <reified T : Any> intentFor(vararg params: Pair<String, Any?>): Intent {
   return Static.currentCtx.intentFor<T>(*params)
 }

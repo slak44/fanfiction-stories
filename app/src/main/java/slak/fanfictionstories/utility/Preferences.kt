@@ -23,24 +23,27 @@ object Prefs {
 
   var groupStrategy
     get() = GroupStrategy[Static.prefs.getInt(LIST_GROUP_STRATEGY, GroupStrategy.NONE.ordinal)]
-    set(new) { use { it.putInt(LIST_GROUP_STRATEGY, new.ordinal) } }
+    set(new) = use { it.putInt(LIST_GROUP_STRATEGY, new.ordinal) }
 
   var orderStrategy
     get() = OrderStrategy[Static.prefs.getInt(LIST_ORDER_STRATEGY, OrderStrategy.TITLE_ALPHABETIC.ordinal)]
-    set(new) { use { it.putInt(LIST_ORDER_STRATEGY, new.ordinal) } }
+    set(new) = use { it.putInt(LIST_ORDER_STRATEGY, new.ordinal) }
 
   var orderDirection
     get() = OrderDirection[Static.prefs.getInt(LIST_ORDER_IS_REVERSE, OrderDirection.DESC.ordinal)]
-    set(new) { use { it.putInt(LIST_ORDER_IS_REVERSE, new.ordinal) } }
+    set(new) = use { it.putInt(LIST_ORDER_IS_REVERSE, new.ordinal) }
 
   fun arrangement() = Arrangement(orderStrategy, orderDirection, groupStrategy)
 
   fun textSize() = Static.defaultPrefs.getString(
-      str(R.string.key_option_size), str(R.string.option_font_default)).toFloat()
+      str(R.string.key_option_size), str(R.string.option_size_default)).toFloat()
+
   fun textColor(theme: Resources.Theme) = Static.defaultPrefs.getInt(
       str(R.string.key_option_color), Static.res.getColor(R.color.textDefault, theme))
+
   fun textFont() = Typeface.create(Static.defaultPrefs.getString(
       str(R.string.key_option_font), str(R.string.option_font_default)), Typeface.NORMAL)
+
   fun textAntiAlias() = Static.defaultPrefs.getBoolean(
       str(R.string.key_option_antialias), str(R.string.option_antialias_default).toBoolean())
 

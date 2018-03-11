@@ -128,11 +128,11 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
       channel.close()
       channel
     }
-    // Try being smart, and only download delta when chapters were added
+  // Try being smart, and only download delta when chapters were added
     newModel.fragment.chapterCount > oldModel.fragment.chapterCount ->
       fetchChapterRange(Notifications.Kind.UPDATING, oldModel,
-        oldModel.fragment.chapterCount + 1, newModel.fragment.chapterCount)
-    // If nothing else, just re-download everything
+          oldModel.fragment.chapterCount + 1, newModel.fragment.chapterCount)
+  // If nothing else, just re-download everything
     else -> fetchChapterRange(Notifications.Kind.UPDATING, oldModel)
   }
   val isWriting = writeChapters(newModel.storyId, channel).await()

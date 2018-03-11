@@ -15,26 +15,29 @@ import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
 
-@Parcelize @SuppressLint("ParcelCreator")
+@Parcelize
+@SuppressLint("ParcelCreator")
 data class CategoryLink(val text: String,
                         val urlComponent: String,
                         val storyCount: String) : Parcelable, Serializable {
   fun isTargetCrossover(): Boolean =
       urlComponent.contains(Regex("crossovers", RegexOption.IGNORE_CASE))
+
   fun isTargetCategory(): Boolean {
     val pieces = urlComponent.split("/")
     if (pieces.size == 2 && categoryUrl.contains(pieces[1])) return true
     if (pieces[1] == "crossovers") return true
     return false
   }
+
   val displayName: String
     get() = if (isTargetCrossover()) str(R.string.title_crossover, text) else text
 }
 
 val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMillis(7))
 
-fun fetchCategoryData(categoryUrlComponent: String): Deferred<Array<CategoryLink>>
-    = async2(CommonPool) {
+fun fetchCategoryData(
+    categoryUrlComponent: String): Deferred<Array<CategoryLink>> = async2(CommonPool) {
   categoryCache.hit(categoryUrlComponent).ifPresent2 { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),

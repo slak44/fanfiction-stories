@@ -136,9 +136,9 @@ object FetcherUtils {
     } else {
       doc.select("#chap_select > option").slice(0..(meta.chapterCount - 1).toInt())
           .joinToString(CHAPTER_TITLE_SEPARATOR) {
-        // The actual chapter title is preceded by the chapter nr, a dot, and a space:
-        it.text().replace(Regex("\\d+\\. ", regexOpts), "")
-      }
+            // The actual chapter title is preceded by the chapter nr, a dot, and a space:
+            it.text().replace(Regex("\\d+\\. ", regexOpts), "")
+          }
     }
 
     return StoryModel(
@@ -164,8 +164,7 @@ object FetcherUtils {
     }
 
     return when {
-      // No nav, no pages
-      navLinks.isEmpty() -> 0
+      navLinks.isEmpty() -> 0 // No nav, no pages
       navLinks.last().`is`("a") ->
         // For reviews: /r/9156000/0/245/, we want the page nr, which is the last nr
         // For story lists: /game/Mass-Effect/?&srt=1&r=103&p=2, page nr is last nr as well

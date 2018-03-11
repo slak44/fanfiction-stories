@@ -14,10 +14,10 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
+import slak.fanfictionstories.StoryAdapterItem.GroupTitle
+import slak.fanfictionstories.StoryAdapterItem.StoryCardData
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
-import slak.fanfictionstories.StoryAdapterItem.StoryCardData
-import slak.fanfictionstories.StoryAdapterItem.GroupTitle
 
 class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResumer() {
   companion object {
@@ -172,10 +172,10 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       language.setSelection(Language.values().indexOf(fetcher.details.lang))
       status.setSelection(Status.values().indexOf(fetcher.details.status))
       length.setSelection(WordCount.values().indexOf(fetcher.details.wordCount))
-      char1.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char1Id})
-      char2.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char2Id})
-      char3.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char3Id})
-      char4.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char4Id})
+      char1.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char1Id })
+      char2.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char2Id })
+      char3.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char3Id })
+      char4.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char4Id })
 
       fetcher.worldList.ifPresent { wl ->
         val worldNameList = wl.map { it.name }.toMutableList()
@@ -187,7 +187,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
         notWorld.setEntries(worldNameList)
 
         world.onSelect { _, pos -> fetcher.details.worldId = wl[pos].id }
-        world.setSelection(wl.indexOfFirst { it.id == fetcher.details.worldId})
+        world.setSelection(wl.indexOfFirst { it.id == fetcher.details.worldId })
 
         notWorld.onSelect { _, pos -> fetcher.details.worldWithout = wl[pos].name }
         if (fetcher.details.worldWithout != null) {

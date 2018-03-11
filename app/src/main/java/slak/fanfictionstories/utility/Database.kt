@@ -4,7 +4,8 @@ import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Deferred
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.StoryModel
@@ -64,11 +65,11 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     }
   }
 
-  fun getLocalStories() : Deferred<List<StoryModel>> = useAsync {
+  fun getLocalStories(): Deferred<List<StoryModel>> = useAsync {
     select("stories").whereSimple("status = ?", "local").parseList(StoryModel.dbParser)
   }
 
-  fun getStories() : Deferred<List<StoryModel>> = useAsync {
+  fun getStories(): Deferred<List<StoryModel>> = useAsync {
     select(tableName = "stories").parseList(StoryModel.dbParser)
   }
 

@@ -13,20 +13,7 @@ import slak.fanfictionstories.fetchers.Genre
 import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.*
-import kotlin.collections.List
-import kotlin.collections.Map
-import kotlin.collections.MutableList
-import kotlin.collections.emptyList
-import kotlin.collections.filter
-import kotlin.collections.forEach
-import kotlin.collections.hashMapOf
-import kotlin.collections.map
-import kotlin.collections.mapOf
-import kotlin.collections.mutableListOf
 import kotlin.collections.set
-import kotlin.collections.sortWith
-import kotlin.collections.toMutableList
-import kotlin.collections.toTypedArray
 
 enum class StoryStatus {
   // Incomplete metadata, will be set to remote if user wants to read it
@@ -61,7 +48,8 @@ enum class StoryStatus {
 /**
  * The story data that can be extracted from the text div.
  */
-@Parcelize @SuppressLint("ParcelCreator")
+@Parcelize
+@SuppressLint("ParcelCreator")
 data class StoryModelFragment(val rating: String,
                               val language: String,
                               val wordCount: Long,
@@ -78,14 +66,16 @@ data class StoryModelFragment(val rating: String,
 /**
  * Stores the progress made in a story.
  */
-@Parcelize @SuppressLint("ParcelCreator")
+@Parcelize
+@SuppressLint("ParcelCreator")
 data class StoryProgress(val scrollProgress: Double = 0.0,
                          val scrollAbsolute: Double = 0.0,
                          val currentChapter: Long = 0L) : Parcelable, Serializable
 
 typealias StoryId = Long
 
-@Parcelize @SuppressLint("ParcelCreator")
+@Parcelize
+@SuppressLint("ParcelCreator")
 data class StoryModel(val storyId: StoryId,
                       var status: StoryStatus,
                       var progress: StoryProgress,
@@ -228,7 +218,8 @@ data class StoryModel(val storyId: StoryId,
 
 enum class GroupStrategy {
   // Group by property
-  CANON, AUTHOR, CATEGORY, STATUS, RATING, LANGUAGE, COMPLETION, GENRE,
+  CANON,
+  AUTHOR, CATEGORY, STATUS, RATING, LANGUAGE, COMPLETION, GENRE,
   // Don't do grouping
   NONE;
 
@@ -318,33 +309,39 @@ fun orderByDialog(context: Context,
 }
 
 private val progress = Comparator<StoryModel> { m1, m2 ->
-  Math.signum(m1.progressAsPercentage() - m2.progressAsPercentage()).toInt() }
+  Math.signum(m1.progressAsPercentage() - m2.progressAsPercentage()).toInt()
+}
 private val wordCount = Comparator<StoryModel> { m1, m2 ->
-  (m1.fragment.wordCount - m2.fragment.wordCount).toInt() }
+  (m1.fragment.wordCount - m2.fragment.wordCount).toInt()
+}
 private val reviewCount = Comparator<StoryModel> { m1, m2 ->
-  (m1.fragment.reviews - m2.fragment.reviews).toInt() }
+  (m1.fragment.reviews - m2.fragment.reviews).toInt()
+}
 private val followCount = Comparator<StoryModel> { m1, m2 ->
-  (m1.fragment.follows - m2.fragment.follows).toInt() }
+  (m1.fragment.follows - m2.fragment.follows).toInt()
+}
 private val favoritesCount = Comparator<StoryModel> { m1, m2 ->
-  (m1.fragment.favorites - m2.fragment.favorites).toInt() }
+  (m1.fragment.favorites - m2.fragment.favorites).toInt()
+}
 private val chapterCount = Comparator<StoryModel> { m1, m2 ->
-  (m1.fragment.chapterCount - m2.fragment.chapterCount).toInt() }
+  (m1.fragment.chapterCount - m2.fragment.chapterCount).toInt()
+}
 
 // These give most recent of the dates
 private val publish = Comparator<StoryModel> { m1, m2 ->
-  if (m1.fragment.publishTime == m2.fragment.publishTime ) return@Comparator 0
+  if (m1.fragment.publishTime == m2.fragment.publishTime) return@Comparator 0
   return@Comparator if (m1.fragment.publishTime - m2.fragment.publishTime > 0) 1 else -1
 }
 private val update = Comparator<StoryModel> { m1, m2 ->
-  if (m1.fragment.updateTime == m2.fragment.updateTime ) return@Comparator 0
+  if (m1.fragment.updateTime == m2.fragment.updateTime) return@Comparator 0
   return@Comparator if (m1.fragment.updateTime - m2.fragment.updateTime > 0) 1 else -1
 }
 private val added = Comparator<StoryModel> { m1, m2 ->
-  if (m1.addedTime == m2.addedTime ) return@Comparator 0
+  if (m1.addedTime == m2.addedTime) return@Comparator 0
   return@Comparator if (m1.addedTime!! - m2.addedTime!! > 0) 1 else -1
 }
 private val lastRead = Comparator<StoryModel> { m1, m2 ->
-  if (m1.lastReadTime == m2.lastReadTime ) return@Comparator 0
+  if (m1.lastReadTime == m2.lastReadTime) return@Comparator 0
   return@Comparator if (m1.lastReadTime!! - m2.lastReadTime!! > 0) 1 else -1
 }
 
@@ -364,10 +361,12 @@ enum class OrderDirection {
 
 enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
   // Numeric orderings
-  WORD_COUNT(wordCount), PROGRESS(progress), REVIEW_COUNT(reviewCount),
+  WORD_COUNT(wordCount),
+  PROGRESS(progress), REVIEW_COUNT(reviewCount),
   FOLLOWS(followCount), FAVORITES(favoritesCount), CHAPTER_COUNT(chapterCount),
   // Date orderings
-  PUBLISH_DATE(publish), UPDATE_DATE(update), ADDED_DATE(added), LAST_READ_DATE(lastRead),
+  PUBLISH_DATE(publish),
+  UPDATE_DATE(update), ADDED_DATE(added), LAST_READ_DATE(lastRead),
   // Other
   TITLE_ALPHABETIC(titleAlphabetic);
 

@@ -5,6 +5,7 @@ import android.app.job.JobScheduler
 
 enum class ScheduleResult {
   SUCCESS, FAILURE;
+
   companion object {
     fun from(intResult: Int): ScheduleResult = when (intResult) {
       JobScheduler.RESULT_SUCCESS -> SUCCESS

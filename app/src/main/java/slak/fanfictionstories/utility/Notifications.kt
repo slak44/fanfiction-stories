@@ -60,8 +60,8 @@ object Notifications {
     // Show group
     show(Kind.DONE_DOWNLOADING,
         create(Kind.DONE_DOWNLOADING, str(R.string.downloaded_stories), defaultIntent())
-        .setGroupSummary(true)
-        .setGroup(NOTIFICATIONS_DOWNLOADED_STORIES_GROUP))
+            .setGroupSummary(true)
+            .setGroup(NOTIFICATIONS_DOWNLOADED_STORIES_GROUP))
     // Show actual download notif
     val notif = create(Kind.DONE_DOWNLOADING, titleOfStory, readerIntent(storyId))
         .setContentTitle(str(R.string.downloaded_story))
@@ -79,8 +79,8 @@ object Notifications {
     // Show group
     show(Kind.DONE_UPDATING,
         create(Kind.DONE_UPDATING, str(R.string.x_stories_updated, stories.size), defaultIntent())
-        .setGroupSummary(true)
-        .setGroup(NOTIFICATIONS_UPDATED_STORIES_GROUP))
+            .setGroupSummary(true)
+            .setGroup(NOTIFICATIONS_UPDATED_STORIES_GROUP))
     // Show actual title notifs
     stories.forEach {
       val notif = create(Kind.DONE_UPDATING, it.second, readerIntent(it.first))

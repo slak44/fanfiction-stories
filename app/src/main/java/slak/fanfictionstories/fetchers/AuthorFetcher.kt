@@ -21,7 +21,8 @@ import java.util.concurrent.TimeUnit
 
 val authorCache = Cache<Author>("Author", TimeUnit.DAYS.toMillis(1))
 
-@Parcelize @SuppressLint("ParcelCreator")
+@Parcelize
+@SuppressLint("ParcelCreator")
 data class Author(val name: String,
                   val id: Long,
                   val joinedDateSeconds: Long,

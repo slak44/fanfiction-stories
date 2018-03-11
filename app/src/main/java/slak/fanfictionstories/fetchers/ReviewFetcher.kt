@@ -11,10 +11,14 @@ import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
-import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.Notifications.defaultIntent
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.patientlyFetchURL
+import slak.fanfictionstories.utility.str
 
-@Parcelize @SuppressLint("ParcelCreator")
+@Parcelize
+@SuppressLint("ParcelCreator")
 data class Review(
     val storyId: StoryId,
     val chapter: Int,

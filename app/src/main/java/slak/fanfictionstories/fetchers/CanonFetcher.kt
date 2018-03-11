@@ -118,9 +118,11 @@ enum class WordCount(val ffnetValue: String) {
 // It is unlikely that an update would invalidate the cache within 15 minutes
 val canonListCache = Cache<String>("CanonPage", TimeUnit.MINUTES.toMillis(15))
 
-@Parcelize @SuppressLint("ParcelCreator")
+@Parcelize
+@SuppressLint("ParcelCreator")
 class CanonFetcher(val details: Details) : Parcelable {
-  @Parcelize @SuppressLint("ParcelCreator")
+  @Parcelize
+  @SuppressLint("ParcelCreator")
   data class Details(
       val parentLink: CategoryLink,
 
@@ -144,9 +146,12 @@ class CanonFetcher(val details: Details) : Parcelable {
       var char2Without: String? = null
   ) : Parcelable
 
-  @Parcelize @SuppressLint("ParcelCreator")
+  @Parcelize
+  @SuppressLint("ParcelCreator")
   data class World(val name: String, val id: String) : Parcelable
-  @Parcelize @SuppressLint("ParcelCreator")
+
+  @Parcelize
+  @SuppressLint("ParcelCreator")
   data class Character(val name: String, val id: String) : Parcelable
 
   @IgnoredOnParcel
@@ -242,8 +247,7 @@ class CanonFetcher(val details: Details) : Parcelable {
       worldList = if (worldsElement.size == 0) {
         Optional.empty()
       } else {
-        worldsElement[0].children()
-            .map {option -> World(option.text(), option.`val`()) }.opt()
+        worldsElement[0].children().map { option -> World(option.text(), option.`val`()) }.opt()
       }
     }
 

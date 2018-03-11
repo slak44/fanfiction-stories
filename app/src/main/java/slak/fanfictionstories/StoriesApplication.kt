@@ -38,8 +38,8 @@ class StoriesApplication : Application() {
     // Init time/date lib
     AndroidThreeTen.init(this)
     // Try not to let exceptions crash the app
-    Thread.setDefaultUncaughtExceptionHandler {
-      thread, throwable -> Log.e("UNCAUGHT DEFAULT", thread.toString(), throwable)
+    Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+      Log.e("UNCAUGHT DEFAULT", thread.toString(), throwable)
     }
     // Init the caches from disk (all async)
     categoryCache.deserialize()

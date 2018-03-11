@@ -114,8 +114,8 @@ class StoryReaderActivity : LoadingActivity() {
   private fun showChapterSelectDialog() {
     AlertDialog.Builder(this@StoryReaderActivity)
         .setTitle(R.string.select_chapter)
-        .setItems(model.chapterTitles().mapIndexed {
-          idx, chapterTitle -> "${idx + 1}. $chapterTitle"
+        .setItems(model.chapterTitles().mapIndexed { idx, chapterTitle ->
+          "${idx + 1}. $chapterTitle"
         }.toTypedArray(), { dialog, which: Int ->
           dialog.dismiss()
           // This means 'go to same chapter', so do nothing
@@ -206,8 +206,10 @@ class StoryReaderActivity : LoadingActivity() {
       // Make sure that values >100 get clamped to 100
       val percentageScrolled = Math.min(rawPercentage, 100.0)
       val scrollAbs = chapterText.scrollStateFromScrollY(scrollY)
-      runBlocking { database.updateInStory(model.storyId,
-          "scrollProgress" to percentageScrolled, "scrollAbsolute" to scrollAbs).await() }
+      runBlocking {
+        database.updateInStory(model.storyId,
+            "scrollProgress" to percentageScrolled, "scrollAbsolute" to scrollAbs).await()
+      }
     }
   }
 
@@ -273,6 +275,7 @@ class StoryReaderActivity : LoadingActivity() {
     }
     return@async2 text
   }
+
   private fun readChapter(storyId: Long, chapter: Long): Deferred<String> = async2(CommonPool) {
     val storyDir = storyDir(this@StoryReaderActivity, storyId)
         .orElseThrow(IllegalStateException("Cannot read $storyId dir"))

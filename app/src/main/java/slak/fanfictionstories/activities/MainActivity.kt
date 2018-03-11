@@ -18,8 +18,10 @@ import org.jetbrains.anko.db.MapRowParser
 import org.jetbrains.anko.db.dropTable
 import org.jetbrains.anko.db.select
 import org.jetbrains.anko.startActivity
-import slak.fanfictionstories.*
+import slak.fanfictionstories.BuildConfig
+import slak.fanfictionstories.R
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
+import slak.fanfictionstories.getStorageDir
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.File
@@ -46,11 +48,13 @@ class MainActivity : ActivityWithStatic() {
         database.onCreate(database.writableDatabase)
         Log.i(TAG, "REINITED STORIES TABLE")
       }
-      addStoryBtn.setOnClickListener { launch(CommonPool) {
-        fetchAndWriteStory(12129863L).await()
-        fetchAndWriteStory(11953822L).await()
-        fetchAndWriteStory(12295826L).await()
-      } }
+      addStoryBtn.setOnClickListener {
+        launch(CommonPool) {
+          fetchAndWriteStory(12129863L).await()
+          fetchAndWriteStory(11953822L).await()
+          fetchAndWriteStory(12295826L).await()
+        }
+      }
       wipeDiskDataBtn.setOnClickListener {
         val deleted = File(getStorageDir(this@MainActivity).get(), "storiesData")
             .deleteRecursively()
@@ -60,13 +64,13 @@ class MainActivity : ActivityWithStatic() {
       downloadNotifBtn.setOnClickListener {
         AlertDialog.Builder(this).setItems(
             Notifications.Kind.values().map { it.toString() }.toTypedArray(), { _, which ->
-              val picked = Notifications.Kind.values()[which]
-              Notifications.show(picked, defaultIntent(), "TEST")
-              launch(UI) {
-                delay(2500)
-                Notifications.cancel(picked)
-              }
-            }).create().show()
+          val picked = Notifications.Kind.values()[which]
+          Notifications.show(picked, defaultIntent(), "TEST")
+          launch(UI) {
+            delay(2500)
+            Notifications.cancel(picked)
+          }
+        }).create().show()
       }
       wipeSettings.setOnClickListener {
         Prefs.useImmediate { it.clear() }

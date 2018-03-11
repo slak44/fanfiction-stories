@@ -52,7 +52,7 @@ class AuthorActivity : LoadingActivity(1) {
     if (authorId == -1L) throw IllegalArgumentException("Missing author id from intent")
 
     val authorName = intent.getStringExtra(INTENT_AUTHOR_NAME)
-      ?: throw IllegalArgumentException("Missing author name from intent")
+        ?: throw IllegalArgumentException("Missing author name from intent")
 
     title = authorName
 
@@ -158,9 +158,9 @@ class AuthorActivity : LoadingActivity(1) {
         val html = """
           <p>${str(R.string.bio_joined, joined)}</p>
           <p>${
-            if (author.get().updatedDateSeconds != 0L) str(R.string.bio_profile_update, updated)
-            else ""
-          }</p>
+        if (author.get().updatedDateSeconds != 0L) str(R.string.bio_profile_update, updated)
+        else ""
+        }</p>
           <p>${str(R.string.bio_author_id, author.get().id)}</p>
           <hr>
           ${author.get().bioHtml}
@@ -171,6 +171,7 @@ class AuthorActivity : LoadingActivity(1) {
       2 -> StoryListFragment.newInstance(ArrayList(author.get().favoriteStories))
       else -> throw IllegalStateException("getCount returned too many tabs")
     }
+
     override fun getCount(): Int = 3 // tabs
   }
 

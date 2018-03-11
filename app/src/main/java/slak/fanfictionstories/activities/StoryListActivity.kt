@@ -13,13 +13,13 @@ import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 
 class StoryListActivity : ActivityWithStatic() {
   private lateinit var adapter: StoryAdapter
+
   companion object {
     private const val SCROLL_STATE = "recycler_scroll_state"
   }

@@ -38,8 +38,7 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
   // the `this` that is the ItemTouchHelper.Callback
   lateinit var swipeStory: ItemTouchHelper
   swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
-    override fun getMovementFlags(recycler: RecyclerView, vh: RecyclerView.ViewHolder): Int
-        = if (vh is StoryAdapter.StoryViewHolder) makeMovementFlags(0, ItemTouchHelper.RIGHT) else 0
+    override fun getMovementFlags(recycler: RecyclerView, vh: RecyclerView.ViewHolder): Int = if (vh is StoryAdapter.StoryViewHolder) makeMovementFlags(0, ItemTouchHelper.RIGHT) else 0
 
     override fun onMove(recycler: RecyclerView, viewHolder: RecyclerView.ViewHolder,
                         target: RecyclerView.ViewHolder): Boolean = false
@@ -229,16 +228,28 @@ class StoryGroupTitle : TextView {
     canvas.drawLine(0F, measuredHeight.toFloat(), width, measuredHeight.toFloat(), border)
   }
 }
+
 @SuppressWarnings("ParcelCreator")
 sealed class StoryAdapterItem : Parcelable {
-  @Parcelize data class StoryCardData(var model: StoryModel,
-                                      var isExtended: Boolean = false) : StoryAdapterItem()
-  @Parcelize data class GroupTitle(val title: String) : StoryAdapterItem()
-  @Parcelize data class LoadingItem(val id: Int = ++counter) : StoryAdapterItem()
-  companion object { private var counter: Int = 0xF000000 }
+  @Parcelize
+  data class StoryCardData(var model: StoryModel,
+                           var isExtended: Boolean = false) : StoryAdapterItem()
+
+  @Parcelize
+  data class GroupTitle(val title: String) : StoryAdapterItem()
+
+  @Parcelize
+  data class LoadingItem(val id: Int = ++counter) : StoryAdapterItem()
+
+  companion object {
+    private var counter: Int = 0xF000000
+  }
 }
+
 class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-  init { setHasStableIds(true) }
+  init {
+    setHasStableIds(true)
+  }
 
   class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
@@ -420,6 +431,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
       is LoadingItem -> item.id.toLong() + (3 shl 15)
     }
   }
+
   override fun getItemViewType(position: Int): Int = when (data[position]) {
     is StoryCardData -> 0
     is GroupTitle -> 1

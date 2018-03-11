@@ -216,5 +216,6 @@ class ReviewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
       forceLayout()
     }
   }
+
   override fun getItemCount(): Int = reviews.size
 }

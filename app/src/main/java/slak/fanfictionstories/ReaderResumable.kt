@@ -21,18 +21,22 @@ class ReaderResumer : ReaderResumable {
   companion object {
     private const val LAST_STORY_ID_RESTORE = "last_story_id"
   }
+
   private var lastStoryId: Optional<Long> = Optional.empty()
   override fun updateOnResume(adapter: StoryAdapter): Job = launch(UI) {
     lastStoryId.ifPresent2 {
       Static.database.storyById(it).await().ifPresent { adapter.updateStoryModel(it) }
     }
   }
+
   override fun enteredReader(storyId: Long) {
     lastStoryId = storyId.opt()
   }
+
   override fun saveInstanceState(outState: Bundle) {
     outState.putLong(LAST_STORY_ID_RESTORE, lastStoryId.orElse(-1L))
   }
+
   override fun restoreInstanceState(savedInstanceState: Bundle) {
     val value = savedInstanceState.getLong(LAST_STORY_ID_RESTORE)
     lastStoryId = if (value == -1L) Optional.empty() else value.opt()
