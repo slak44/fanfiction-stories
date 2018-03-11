@@ -235,8 +235,16 @@ class StoryReaderActivity : LoadingActivity() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
-      R.id.goToTop -> nestedScroller.scrollTo(0, 0)
-      R.id.goToBottom -> nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
+      R.id.goToTop -> {
+        // Without this hacky call to fling, we don't scroll at all
+        nestedScroller.fling(0)
+        nestedScroller.fullScroll(NestedScrollView.FOCUS_UP)
+        appBar.setExpanded(true)
+      }
+      R.id.goToBottom -> {
+        nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
+        appBar.setExpanded(false)
+      }
       R.id.selectChapter -> showChapterSelectDialog()
       R.id.nextChapter -> nextChapterBtn.callOnClick()
       R.id.prevChapter -> prevChapterBtn.callOnClick()
