@@ -15,15 +15,17 @@ import java.io.Serializable
 import java.util.*
 import kotlin.collections.set
 
+/** Represents a [StoryModel]'s chapter download state. */
 enum class StoryStatus {
-  // Incomplete metadata, will be set to remote if user wants to read it
+  /** Incomplete metadata, will be set to remote if user wants to read it. */
   TRANSIENT,
-  // Partially on disk
+  /** Partially on disk. */
   REMOTE,
-  // Fully on disk
+  /** Fully on disk. */
   LOCAL;
 
   companion object {
+    /** Convert from the string found in the db to an instance of [StoryStatus]. */
     fun fromString(s: String): StoryStatus = when (s) {
       "transient" -> TRANSIENT
       "remote" -> REMOTE
@@ -32,24 +34,24 @@ enum class StoryStatus {
     }
   }
 
+  /** Convert from an instance of [StoryStatus] to a string to store in the db. */
   override fun toString(): String = when (this) {
     TRANSIENT -> "transient"
     REMOTE -> "remote"
     LOCAL -> "local"
   }
 
+  /** Convert from an instance of [StoryStatus] to a user-viewable string */
   fun toUIString(): String = when (this) {
+  // Users can never see a TRANSIENT story
     TRANSIENT -> throw IllegalArgumentException("Does not have an associated string")
     REMOTE -> str(R.string.remote)
     LOCAL -> str(R.string.local)
   }
 }
 
-/**
- * The story data that can be extracted from the text div.
- */
+/** The story data that can be extracted from the text div. */
 @Parcelize
-@SuppressLint("ParcelCreator")
 data class StoryModelFragment(val rating: String,
                               val language: String,
                               val wordCount: Long,
@@ -63,17 +65,16 @@ data class StoryModelFragment(val rating: String,
                               val updateTime: Long,
                               val isComplete: Long) : Parcelable, Serializable
 
-/**
- * Stores the progress made in a story.
- */
+/** Stores the progress made in a story. */
 @Parcelize
-@SuppressLint("ParcelCreator")
 data class StoryProgress(val scrollProgress: Double = 0.0,
                          val scrollAbsolute: Double = 0.0,
                          val currentChapter: Long = 0L) : Parcelable, Serializable
 
+/** Alias the story ids to [Long] for clarity. */
 typealias StoryId = Long
 
+/** Models a story, representing all of its data except for the chapter text. */
 @Parcelize
 @SuppressLint("ParcelCreator")
 data class StoryModel(val storyId: StoryId,
@@ -104,6 +105,7 @@ data class StoryModel(val storyId: StoryId,
     else -> true
   }
 
+  /** @returns an estimate about how many words have been read */
   fun wordsProgressedApprox(): Long {
     if (progress.currentChapter == 0L) return 0L
     // If this is too inaccurate, we might have to store each chapter's word count, then compute
@@ -115,14 +117,17 @@ data class StoryModel(val storyId: StoryId,
     return wordsPassedEstimate.toLong()
   }
 
+  /** @returns the progress through the story as a percentage */
   fun progressAsPercentage(): Double {
     if (fragment.chapterCount == 1L) return progress.scrollProgress
     // Return percentage
     return wordsProgressedApprox() * 100.0 / fragment.wordCount
   }
 
+  /** @returns whether or not the story has been marked complete by its author */
   fun isComplete(): Boolean = fragment.isComplete == 1L
 
+  /** @returns parsed [Genre]s from the raw data in [StoryModelFragment.genres] */
   fun genreList(): List<Genre> {
     if (fragment.genres == str(R.string.none)) return emptyList()
     return fragment.genres
@@ -135,9 +140,11 @@ data class StoryModel(val storyId: StoryId,
 
   fun characterList(): List<String> = fragment.characters.replace("[", "").split(", ", "] ")
 
+  /** @returns deserialized chapter titles */
   fun chapterTitles(): List<String> =
       serializedChapterTitles?.split(CHAPTER_TITLE_SEPARATOR) ?: emptyList()
 
+  /** @returns a map for writing to the database */
   fun toMap(): Map<String, Any?> = mapOf(
       "storyId" to storyId,
       "status" to status.toString(),
@@ -167,12 +174,14 @@ data class StoryModel(val storyId: StoryId,
       "lastReadTime" to lastReadTime
   )
 
+  /** @returns a list of pairs for writing to the database */
   fun toPairs(): Array<Pair<String, Any?>> =
       toMap().entries.map { it.key to it.value }.toTypedArray()
 
   companion object {
     private const val TEMP_SEPARATOR = "temporary_separator"
 
+    /** Get a [StoryModel] from a database row. */
     fun fromPairs(pairs: List<Pair<String, Any?>>): StoryModel {
       val map = pairs.toMap()
       return StoryModel(
@@ -218,8 +227,7 @@ data class StoryModel(val storyId: StoryId,
 
 enum class GroupStrategy {
   // Group by property
-  CANON,
-  AUTHOR, CATEGORY, STATUS, RATING, LANGUAGE, COMPLETION, GENRE,
+  CANON, AUTHOR, CATEGORY, STATUS, RATING, LANGUAGE, COMPLETION, GENRE,
   // Don't do grouping
   NONE;
 
