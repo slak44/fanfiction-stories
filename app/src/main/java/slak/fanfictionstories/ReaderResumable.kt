@@ -11,7 +11,7 @@ import slak.fanfictionstories.utility.opt
 import java.util.*
 
 interface ReaderResumable {
-  fun updateOnResume(adapter: StoryAdapter): Job
+  fun updateOnResume(viewModel: StoryListViewModel): Job
   fun enteredReader(storyId: Long)
   fun saveInstanceState(outState: Bundle)
   fun restoreInstanceState(savedInstanceState: Bundle)
@@ -23,9 +23,9 @@ class ReaderResumer : ReaderResumable {
   }
 
   private var lastStoryId: Optional<Long> = Optional.empty()
-  override fun updateOnResume(adapter: StoryAdapter): Job = launch(UI) {
+  override fun updateOnResume(viewModel: StoryListViewModel): Job = launch(UI) {
     lastStoryId.ifPresent2 {
-      Static.database.storyById(it).await().ifPresent { adapter.updateStoryModel(it) }
+      Static.database.storyById(it).await().ifPresent { viewModel.updateStoryModel(it) }
     }
   }
 

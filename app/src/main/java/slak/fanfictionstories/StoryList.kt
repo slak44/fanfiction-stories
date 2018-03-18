@@ -1,6 +1,8 @@
 package slak.fanfictionstories
 
 import android.animation.ObjectAnimator
+import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.MediatorLiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.content.Context
@@ -19,12 +21,10 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import kotlinx.android.parcel.Parcelize
+import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.story_component.view.*
-import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
@@ -256,58 +256,6 @@ sealed class StoryListItem : Parcelable {
 }
 
 /**
- * Convenience access property for non-nullable types.
- */
-var <T> MutableLiveData<T>.it: T
-  get() = value!!
-  set(newVal) {
-    value = newVal
-  }
-
-/**
- * For use with delegation when a class needs [AdapterDataObservable] and can't inherit from it
- * because it's an abstract class.
- * @see RecyclerView.AdapterDataObservable
- */
-interface IAdapterDataObservable {
-  fun notifyChanged()
-  fun notifyItemRangeChanged(positionStart: Int, itemCount: Int)
-  fun notifyItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?)
-  fun notifyItemRangeInserted(positionStart: Int, itemCount: Int)
-  fun notifyItemRangeRemoved(positionStart: Int, itemCount: Int)
-  fun notifyItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int)
-  fun registerObserver(observer: RecyclerView.AdapterDataObserver)
-  fun unregisterAll()
-  fun unregisterObserver(observer: RecyclerView.AdapterDataObserver)
-}
-
-/**
- * Can notify a bunch of [RecyclerView.AdapterDataObserver] of changes.
- * @see IAdapterDataObservable
- * @see RecyclerView.AdapterDataObservable
- * @see RecyclerView.AdapterDataObserver
- */
-class AdapterDataObservable :
-    Observable<RecyclerView.AdapterDataObserver>(), IAdapterDataObservable {
-  override fun notifyChanged() = mObservers.forEach { it.onChanged() }
-
-  override fun notifyItemRangeChanged(positionStart: Int, itemCount: Int) =
-      mObservers.forEach { it.onItemRangeChanged(positionStart, itemCount) }
-
-  override fun notifyItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) =
-      mObservers.forEach { it.onItemRangeChanged(positionStart, itemCount, payload) }
-
-  override fun notifyItemRangeInserted(positionStart: Int, itemCount: Int) =
-      mObservers.forEach { it.onItemRangeInserted(positionStart, itemCount) }
-
-  override fun notifyItemRangeRemoved(positionStart: Int, itemCount: Int) =
-      mObservers.forEach { it.onItemRangeRemoved(positionStart, itemCount) }
-
-  override fun notifyItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) =
-      mObservers.forEach { it.onItemRangeMoved(fromPosition, toPosition, itemCount) }
-}
-
-/**
  * Handles data for a list of stories. Recommended to be used with a [RecyclerView] and a
  * [RecyclerView.Adapter], for handling [IAdapterDataObservable] events.
  */
@@ -318,10 +266,43 @@ class StoryListViewModel : ViewModel(), IAdapterDataObservable by AdapterDataObs
 
   /** The stories, group titles, and loading items of the list. */
   private val data: MutableList<StoryListItem> = mutableListOf()
+
+  /**
+   * FIXME: see if room can make this obsolete
+   */
+  fun triggerDatabaseLoad() = launch(UI) {
+    val stories = Static.database.getStories().await()
+    arrangeStories(stories, Prefs.arrangement())
+  }
+
   /** How many stories are in [data]. */
   private val storyCount: MutableLiveData<Int> = MutableLiveData()
   /** How many stories have been filtered in the latest [arrangeStories] call. */
   private val filteredCount: MutableLiveData<Int> = MutableLiveData()
+  /** Mediates [storyCount] and [filteredCount]. */
+  private val dataSize: MediatorLiveData<Pair<Int, Int>> = MediatorLiveData()
+
+  fun getStoryCount(): LiveData<Int> = storyCount
+  fun getFilteredCount(): LiveData<Int> = storyCount
+  fun getCounts(): LiveData<Pair<Int, Int>> = dataSize
+
+  init {
+    storyCount.it = 0
+    filteredCount.it = 0
+    dataSize.it = Pair(0, 0)
+    dataSize.addSource(storyCount, {
+      dataSize.it = Pair(it!!, dataSize.it.second)
+    })
+    dataSize.addSource(filteredCount, {
+      dataSize.it = Pair(dataSize.it.first, it!!)
+    })
+  }
+
+  /** Get the [StoryListItem] at the given position. */
+  fun itemAt(position: Int) = data[position]
+
+  /** Get how many items are stored. */
+  fun itemCount() = data.size
 
   /**
    * Clear adapter data, including any pending items.
@@ -358,15 +339,21 @@ class StoryListViewModel : ViewModel(), IAdapterDataObservable by AdapterDataObs
     notifyItemRangeRemoved(loaderIdx, 1)
   }
 
-  /**
-   * Update [StoryModel.progress] and [StoryModel.status] from the provided model.
-   */
+  /** Update [StoryModel.progress] and [StoryModel.status] from the provided model. */
   fun updateStoryModel(newModel: StoryModel) {
     val idx = data.indexOfFirst { it is StoryCardData && it.model.storyId == newModel.storyId }
     if (idx == -1) throw IllegalArgumentException("Model not part of the adapter")
     (data[idx] as StoryCardData).model.progress = newModel.progress
     (data[idx] as StoryCardData).model.status = newModel.status
     notifyItemRangeChanged(idx, 1)
+  }
+
+  /** Update a story's card extension state. */
+  fun updateStoryState(position: Int, state: Boolean) {
+    if (data[position] !is StoryCardData) {
+      throw IllegalArgumentException("Item at $position is not a StoryCardData")
+    }
+    data[position] = StoryCardData((data[position] as StoryCardData).model, state)
   }
 
   /**
@@ -425,9 +412,13 @@ class StoryListViewModel : ViewModel(), IAdapterDataObservable by AdapterDataObs
   }
 }
 
+/**
+ * Adapts [StoryListItem]s to views for a [RecyclerView].
+ */
 class StoryAdapter(private val viewModel: StoryListViewModel) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-  private val vmObserver = object : RecyclerView.AdapterDataObserver() {
+
+  val vmObserver = object : RecyclerView.AdapterDataObserver() {
     override fun onChanged() = notifyDataSetChanged()
 
     override fun onItemRangeChanged(positionStart: Int, itemCount: Int) =
@@ -436,6 +427,14 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
     override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) =
         notifyItemRangeChanged(positionStart, itemCount, payload)
 
+    override fun onItemRangeInserted(positionStart: Int, itemCount: Int) =
+        notifyItemRangeInserted(positionStart, itemCount)
+
+    override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) =
+        notifyDataSetChanged()
+
+    override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) =
+        notifyItemRangeRemoved(positionStart, itemCount)
   }
 
   init {
@@ -443,25 +442,16 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
     viewModel.registerObserver(vmObserver)
   }
 
-  override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-    super.onDetachedFromRecyclerView(recyclerView)
-    viewModel.unregisterObserver(vmObserver)
-  }
-
-  companion object {
-    private const val TAG = "StoryAdapter"
-  }
-
   class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
   class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
 
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-    val item = data[position]
+    val item = viewModel.itemAt(position)
     when (item) {
       is StoryCardData -> {
         val view = (holder as StoryViewHolder).view
-        view.onExtendedStateChange = { data[position] = StoryCardData(item.model, it) }
+        view.onExtendedStateChange = { viewModel.updateStoryState(position, it) }
         view.isExtended = item.isExtended
         view.loadFromModel(item.model)
         view.setChildrenListeners(item.model, holder, viewModel)
@@ -492,9 +482,9 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
     }
   }
 
-  override fun getItemCount(): Int = data.size
+  override fun getItemCount(): Int = viewModel.itemCount()
   override fun getItemId(position: Int): Long {
-    val item = data[position]
+    val item = viewModel.itemAt(position)
     return when (item) {
       is StoryCardData -> item.model.storyId + (1 shl 15)
       is GroupTitle -> item.title.hashCode().toLong() + (2 shl 15)
@@ -502,7 +492,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
     }
   }
 
-  override fun getItemViewType(position: Int): Int = when (data[position]) {
+  override fun getItemViewType(position: Int): Int = when (viewModel.itemAt(position)) {
     is StoryCardData -> 0
     is GroupTitle -> 1
     is LoadingItem -> 2

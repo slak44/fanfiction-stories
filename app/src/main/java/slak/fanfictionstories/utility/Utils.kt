@@ -2,6 +2,9 @@ package slak.fanfictionstories.utility
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.arch.lifecycle.LifecycleOwner
+import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.MutableLiveData
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Canvas
@@ -369,4 +372,16 @@ inline fun <reified T : Activity> startActivity(vararg params: Pair<String, Any?
  */
 inline fun <reified T : Any> intentFor(vararg params: Pair<String, Any?>): Intent {
   return Static.currentCtx.intentFor<T>(*params)
+}
+
+/** Convenience access property for non-nullable types. */
+var <T> MutableLiveData<T>.it: T
+  get() = value!!
+  set(newVal) {
+    value = newVal
+  }
+
+/** Sugar over [observe] for non-nullable types. */
+fun <T> LiveData<T>.observe(owner: LifecycleOwner, observer: (T) -> Unit) {
+  observe(owner, android.arch.lifecycle.Observer { observer(it!!) })
 }

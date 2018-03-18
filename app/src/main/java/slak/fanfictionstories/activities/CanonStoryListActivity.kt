@@ -1,5 +1,6 @@
 package slak.fanfictionstories.activities
 
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
@@ -23,23 +24,23 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
   companion object {
     private const val CURRENT_PAGE_RESTORE = "current_page"
     private const val FETCHER_RESTORE = "canon_fetcher"
-    private const val ADAPTER_DATA_RESTORE = "adapter_data"
   }
 
-  private lateinit var adapter: StoryAdapter
   private lateinit var fetcher: CanonFetcher
+  private lateinit var viewModel: StoryListViewModel
   private var currentPage = 1
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    viewModel = ViewModelProviders.of(this).get(StoryListViewModel::class.java)
+
     setContentView(R.layout.activity_canon_story_list)
     setSupportActionBar(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     val parentLink: CategoryLink = intent.extras.getParcelable(INTENT_LINK_DATA)
 
-    adapter = StoryAdapter(this@CanonStoryListActivity)
-    canonStoryListView.adapter = adapter
+    canonStoryListView.adapter = StoryAdapter(viewModel)
     val layoutManager = LinearLayoutManager(this)
     canonStoryListView.layoutManager = layoutManager
 
@@ -49,7 +50,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       fetcher.details.lang = Prefs.filterLanguage()
       launch(UI) {
         showLoading()
-        adapter.addData(getPage(1).await())
+        viewModel.addData(getPage(1).await())
         setAppbarText()
         hideLoading()
       }
@@ -60,13 +61,13 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     canonStoryListView.createStorySwipeHelper { enteredReader(it.storyId) }
 
     infinitePageScroll(canonStoryListView, layoutManager) {
-      adapter.addDeferredData(getPage(++currentPage))
+      viewModel.addDeferredData(getPage(++currentPage))
     }
   }
 
   override fun onResume() {
     super.onResume()
-    updateOnResume(adapter)
+    updateOnResume(viewModel)
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
@@ -74,7 +75,6 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     saveInstanceState(outState)
     outState.putInt(CURRENT_PAGE_RESTORE, currentPage)
     outState.putParcelable(FETCHER_RESTORE, fetcher)
-    outState.putParcelableArray(ADAPTER_DATA_RESTORE, adapter.getData().toTypedArray())
   }
 
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -82,9 +82,6 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     restoreInstanceState(savedInstanceState)
     currentPage = savedInstanceState.getInt(CURRENT_PAGE_RESTORE)
     fetcher = savedInstanceState.getParcelable(FETCHER_RESTORE)
-    val data = savedInstanceState.getParcelableArray(ADAPTER_DATA_RESTORE)
-    @Suppress("unchecked_cast")
-    adapter.addData((data as Array<StoryListItem>).toList())
     setAppbarText()
     hideLoading()
   }
@@ -213,15 +210,13 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
 
     AlertDialog.Builder(this)
         .setTitle(R.string.filter_by)
-        .setOnDismissListener {
-          dialogOpened = false
-        }
+        .setOnDismissListener { dialogOpened = false }
         .setPositiveButton(R.string.native_filter_btn, { dialog, _ ->
-          adapter.clearData()
+          viewModel.clearData()
           currentPage = 1
           launch(UI) {
             showLoading()
-            adapter.addData(getPage(1).await())
+            viewModel.addData(getPage(1).await())
             setAppbarText()
             hideLoading()
           }

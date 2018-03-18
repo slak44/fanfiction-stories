@@ -1,5 +1,6 @@
 package slak.fanfictionstories.activities
 
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
@@ -226,6 +227,7 @@ class AuthorActivity : LoadingActivity(1) {
     }
 
     private lateinit var adapter: StoryAdapter
+    private lateinit var viewModel: StoryListViewModel
     private lateinit var stories: List<StoryModel>
 
     private var arrangement = Arrangement(
@@ -236,7 +238,7 @@ class AuthorActivity : LoadingActivity(1) {
 
     override fun onResume() {
       super.onResume()
-      updateOnResume(adapter)
+      updateOnResume(viewModel)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -251,6 +253,7 @@ class AuthorActivity : LoadingActivity(1) {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
+      viewModel = ViewModelProviders.of(this).get(StoryListViewModel::class.java)
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
       stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES).map {
         val model = runBlocking { Static.database.storyById(it.storyId).await() }
@@ -261,7 +264,7 @@ class AuthorActivity : LoadingActivity(1) {
       }
       rootView.stories.layoutManager = LinearLayoutManager(context)
       rootView.stories.createStorySwipeHelper { enteredReader(it.storyId) }
-      adapter = StoryAdapter(context!!)
+      adapter = StoryAdapter(viewModel)
       rootView.stories.adapter = adapter
       if (stories.isEmpty()) {
         rootView.noStories.visibility = View.VISIBLE
@@ -271,19 +274,19 @@ class AuthorActivity : LoadingActivity(1) {
         rootView.noStories.visibility = View.GONE
         rootView.orderBy.visibility = View.VISIBLE
         rootView.groupBy.visibility = View.VISIBLE
-        adapter.arrangeStories(stories, arrangement)
+        viewModel.arrangeStories(stories, arrangement)
       }
       rootView.orderBy.setOnClickListener {
         orderByDialog(context!!, arrangement.orderStrategy, arrangement.orderDirection) { str, dir ->
           arrangement = Arrangement(
               orderDirection = dir, orderStrategy = str, groupStrategy = arrangement.groupStrategy)
-          adapter.arrangeStories(stories, arrangement)
+          viewModel.arrangeStories(stories, arrangement)
         }
       }
       rootView.groupBy.setOnClickListener {
         groupByDialog(context!!, arrangement.groupStrategy) {
           arrangement = Arrangement(arrangement.orderStrategy, arrangement.orderDirection, it)
-          adapter.arrangeStories(stories, arrangement)
+          viewModel.arrangeStories(stories, arrangement)
         }
       }
       return rootView

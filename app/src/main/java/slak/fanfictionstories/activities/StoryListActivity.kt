@@ -1,7 +1,6 @@
 package slak.fanfictionstories.activities
 
 import android.os.Bundle
-import android.os.Parcelable
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
@@ -16,59 +15,30 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
+import android.arch.lifecycle.ViewModelProviders
 
 class StoryListActivity : ActivityWithStatic() {
-  private lateinit var adapter: StoryAdapter
-
-  companion object {
-    private const val SCROLL_STATE = "recycler_scroll_state"
-  }
+  private lateinit var viewModel: StoryListViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    viewModel = ViewModelProviders.of(this).get(StoryListViewModel::class.java)
+
     setContentView(R.layout.activity_story_list)
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     storyListView.layoutManager = LinearLayoutManager(this)
     storyListView.createStorySwipeHelper()
-    adapter = StoryAdapter(this@StoryListActivity)
-    adapter.onSizeChange = { storyCount, filteredCount ->
-      toolbar.subtitle = str(R.string.x_stories_y_filtered, storyCount, filteredCount)
+    viewModel.getCounts().observe(this) {
+      toolbar.subtitle = str(R.string.x_stories_y_filtered, it.first, it.second)
     }
-    storyListView.adapter = adapter
-    initializeAdapter()
-  }
-
-  private fun initializeAdapter() = launch(UI) {
-    val stories = database.getStories().await()
-    if (stories.isEmpty()) nothingHere.visibility = View.VISIBLE
-    else nothingHere.visibility = View.GONE
-    adapter.arrangeStories(stories, Prefs.arrangement())
-  }
-
-  private var layoutState: Parcelable? = null
-
-  override fun onSaveInstanceState(outState: Bundle) {
-    super.onSaveInstanceState(outState)
-    outState.putParcelable(SCROLL_STATE, storyListView.layoutManager.onSaveInstanceState())
-  }
-
-  override fun onPause() {
-    super.onPause()
-    layoutState = storyListView.layoutManager.onSaveInstanceState()
-  }
-
-  override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-    super.onRestoreInstanceState(savedInstanceState)
-    layoutState = savedInstanceState.getParcelable(SCROLL_STATE)
-  }
-
-  override fun onResume() {
-    super.onResume()
-    initializeAdapter().invokeOnCompletion {
-      storyListView.layoutManager.onRestoreInstanceState(layoutState)
+    viewModel.getStoryCount().observe(this) {
+      if (it == 0) nothingHere.visibility = View.VISIBLE
+      else nothingHere.visibility = View.GONE
     }
+    storyListView.adapter = StoryAdapter(viewModel)
+    if (viewModel.itemCount() == 0) viewModel.triggerDatabaseLoad()
   }
 
   private fun addByIdDialog() {
@@ -90,7 +60,7 @@ class StoryListActivity : ActivityWithStatic() {
           launch(CommonPool) {
             val models = list.map { fetchAndWriteStory(it).await() }
             val modelsFetched = models.count { it.isPresent }
-            if (modelsFetched > 0) initializeAdapter()
+            if (modelsFetched > 0) viewModel.triggerDatabaseLoad()
           }
         })
         .show()
@@ -146,14 +116,14 @@ class StoryListActivity : ActivityWithStatic() {
       R.id.group -> {
         groupByDialog(this, Prefs.groupStrategy) {
           Prefs.groupStrategy = it
-          initializeAdapter()
+          viewModel.triggerDatabaseLoad()
         }
       }
       R.id.sort -> {
         orderByDialog(this, Prefs.orderStrategy, Prefs.orderDirection) { str, dir ->
           Prefs.orderDirection = dir
           Prefs.orderStrategy = str
-          initializeAdapter()
+          viewModel.triggerDatabaseLoad()
         }
       }
       R.id.addById -> addByIdDialog()
