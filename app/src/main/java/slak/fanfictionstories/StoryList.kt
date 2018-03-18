@@ -383,8 +383,8 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
    */
   fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) {
     // Ignore currently pending stories, the user might have rearranged before the db was updated
-    val storiesNotPending = stories.filter { story ->
-      pendingItems.keys.find { it.storyId == story.storyId } == null
+    val storiesNotPending = stories.filter { (storyId) ->
+      pendingItems.keys.find { it.storyId == storyId } == null
     }
     clearData()
     val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
