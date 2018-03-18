@@ -17,6 +17,7 @@ interface ReaderResumable {
   fun restoreInstanceState(savedInstanceState: Bundle)
 }
 
+// FIXME merge this functionality into StoryListViewModel
 class ReaderResumer : ReaderResumable {
   companion object {
     private const val LAST_STORY_ID_RESTORE = "last_story_id"

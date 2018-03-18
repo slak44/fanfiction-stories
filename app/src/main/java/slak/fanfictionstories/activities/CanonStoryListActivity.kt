@@ -1,5 +1,7 @@
 package slak.fanfictionstories.activities
 
+import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -20,19 +22,42 @@ import slak.fanfictionstories.StoryListItem.StoryCardData
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 
-class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResumer() {
-  companion object {
-    private const val CURRENT_PAGE_RESTORE = "current_page"
-    private const val FETCHER_RESTORE = "canon_fetcher"
+class CanonListViewModel : StoryListViewModel() {
+  lateinit var fetcher: CanonFetcher
+  private var currentPage: MutableLiveData<Int> = MutableLiveData()
+
+  fun getPage(): LiveData<Int> = currentPage
+
+  init {
+    currentPage.it = 1
   }
 
-  private lateinit var fetcher: CanonFetcher
-  private lateinit var viewModel: StoryListViewModel
-  private var currentPage = 1
+  private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(CommonPool) {
+    val pageData = fetcher.get(page).await().map {
+      val model = Static.database.storyById(it.storyId).await()
+          .orElse(null) ?: return@map StoryCardData(it)
+      it.progress = model.progress
+      it.status = model.status
+      return@map StoryCardData(it)
+    }
+    if (pageData.isEmpty()) return@async2 listOf<StoryListItem>()
+    return@async2 listOf(GroupTitle(str(R.string.page_x, page)), *pageData.toTypedArray())
+  }
+
+  fun resetPagination() {
+    currentPage.it = 1
+  }
+
+  fun getCurrentPage() = getPage(currentPage.it)
+  fun getNextPage() = async2(UI) { getPage(++currentPage.it).await() }
+}
+
+class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResumer() {
+  private lateinit var viewModel: CanonListViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
+    viewModel = ViewModelProviders.of(this)[CanonListViewModel::class.java]
 
     setContentView(R.layout.activity_canon_story_list)
     setSupportActionBar(findViewById(R.id.toolbar))
@@ -46,14 +71,9 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
 
     if (savedInstanceState == null) {
       setTitle(R.string.loading___)
-      fetcher = CanonFetcher(CanonFetcher.Details(parentLink))
-      fetcher.details.lang = Prefs.filterLanguage()
-      launch(UI) {
-        showLoading()
-        viewModel.addData(getPage(1).await())
-        setAppbarText()
-        hideLoading()
-      }
+      viewModel.fetcher = CanonFetcher(CanonFetcher.Details(parentLink))
+      viewModel.fetcher.details.lang = Prefs.filterLanguage()
+      triggerLoadUI()
     } else {
       onRestoreInstanceState(savedInstanceState)
     }
@@ -61,8 +81,15 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     canonStoryListView.createStorySwipeHelper { enteredReader(it.storyId) }
 
     infinitePageScroll(canonStoryListView, layoutManager) {
-      viewModel.addDeferredData(getPage(++currentPage))
+      viewModel.addDeferredData(viewModel.getNextPage())
     }
+  }
+
+  private fun triggerLoadUI() = launch(UI) {
+    showLoading()
+    viewModel.addData(viewModel.getCurrentPage().await())
+    setAppbarText()
+    hideLoading()
   }
 
   override fun onResume() {
@@ -73,34 +100,18 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
     saveInstanceState(outState)
-    outState.putInt(CURRENT_PAGE_RESTORE, currentPage)
-    outState.putParcelable(FETCHER_RESTORE, fetcher)
   }
 
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
     super.onRestoreInstanceState(savedInstanceState)
     restoreInstanceState(savedInstanceState)
-    currentPage = savedInstanceState.getInt(CURRENT_PAGE_RESTORE)
-    fetcher = savedInstanceState.getParcelable(FETCHER_RESTORE)
     setAppbarText()
     hideLoading()
   }
 
-  private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(CommonPool) {
-    val pageData = fetcher.get(page).await().map {
-      val model = database.storyById(it.storyId).await()
-          .orElse(null) ?: return@map StoryCardData(it)
-      it.progress = model.progress
-      it.status = model.status
-      return@map StoryCardData(it)
-    }
-    if (pageData.isEmpty()) return@async2 listOf<StoryListItem>()
-    return@async2 listOf(GroupTitle(str(R.string.page_x, page)), *pageData.toTypedArray())
-  }
-
   private fun setAppbarText() {
-    title = fetcher.canonTitle.get()
-    supportActionBar?.subtitle = str(R.string.x_stories, fetcher.unfilteredStories.get())
+    title = viewModel.fetcher.canonTitle.get()
+    supportActionBar?.subtitle = str(R.string.x_stories, viewModel.fetcher.unfilteredStories.get())
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
@@ -132,7 +143,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       genresEdit[0] = strNone
       notGenre.setEntries(genresEdit)
 
-      val charNameList = fetcher.charList.map { it.name }.toMutableList()
+      val charNameList = viewModel.fetcher.charList.map { it.name }.toMutableList()
       charNameList[0] = strAny
       char1.setEntries(charNameList)
       char2.setEntries(charNameList)
@@ -142,39 +153,39 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       notChar1.setEntries(charNameList)
       notChar2.setEntries(charNameList)
 
-      sort.onSelect { _, pos -> fetcher.details.sort = Sort.values()[pos] }
-      timeRange.onSelect { _, pos -> fetcher.details.timeRange = TimeRange.values()[pos] }
-      genre1.onSelect { _, pos -> fetcher.details.genre1 = Genre.values()[pos] }
-      genre2.onSelect { _, pos -> fetcher.details.genre2 = Genre.values()[pos] }
-      rating.onSelect { _, pos -> fetcher.details.rating = Rating.values()[pos] }
-      status.onSelect { _, pos -> fetcher.details.status = Status.values()[pos] }
-      length.onSelect { _, pos -> fetcher.details.wordCount = WordCount.values()[pos] }
-      char1.onSelect { _, pos -> fetcher.details.char1Id = fetcher.charList[pos].id }
-      char2.onSelect { _, pos -> fetcher.details.char2Id = fetcher.charList[pos].id }
-      char3.onSelect { _, pos -> fetcher.details.char3Id = fetcher.charList[pos].id }
-      char4.onSelect { _, pos -> fetcher.details.char4Id = fetcher.charList[pos].id }
-      notChar1.onSelect { _, pos -> fetcher.details.char1Without = fetcher.charList[pos].id }
-      notChar2.onSelect { _, pos -> fetcher.details.char2Without = fetcher.charList[pos].id }
-      notGenre.onSelect { _, pos -> fetcher.details.genreWithout = Genre.values()[pos] }
+      sort.onSelect { _, pos -> viewModel.fetcher.details.sort = Sort.values()[pos] }
+      timeRange.onSelect { _, pos -> viewModel.fetcher.details.timeRange = TimeRange.values()[pos] }
+      genre1.onSelect { _, pos -> viewModel.fetcher.details.genre1 = Genre.values()[pos] }
+      genre2.onSelect { _, pos -> viewModel.fetcher.details.genre2 = Genre.values()[pos] }
+      rating.onSelect { _, pos -> viewModel.fetcher.details.rating = Rating.values()[pos] }
+      status.onSelect { _, pos -> viewModel.fetcher.details.status = Status.values()[pos] }
+      length.onSelect { _, pos -> viewModel.fetcher.details.wordCount = WordCount.values()[pos] }
+      char1.onSelect { _, pos -> viewModel.fetcher.details.char1Id = viewModel.fetcher.charList[pos].id }
+      char2.onSelect { _, pos -> viewModel.fetcher.details.char2Id = viewModel.fetcher.charList[pos].id }
+      char3.onSelect { _, pos -> viewModel.fetcher.details.char3Id = viewModel.fetcher.charList[pos].id }
+      char4.onSelect { _, pos -> viewModel.fetcher.details.char4Id = viewModel.fetcher.charList[pos].id }
+      notChar1.onSelect { _, pos -> viewModel.fetcher.details.char1Without = viewModel.fetcher.charList[pos].id }
+      notChar2.onSelect { _, pos -> viewModel.fetcher.details.char2Without = viewModel.fetcher.charList[pos].id }
+      notGenre.onSelect { _, pos -> viewModel.fetcher.details.genreWithout = Genre.values()[pos] }
       language.onSelect { _, pos ->
-        fetcher.details.lang = Language.values()[pos]
+        viewModel.fetcher.details.lang = Language.values()[pos]
         Prefs.use { it.putInt(Prefs.REMEMBER_LANG_ID, pos) }
       }
 
-      sort.setSelection(Sort.values().indexOf(fetcher.details.sort))
-      timeRange.setSelection(TimeRange.values().indexOf(fetcher.details.timeRange))
-      genre1.setSelection(Genre.values().indexOf(fetcher.details.genre1))
-      genre2.setSelection(Genre.values().indexOf(fetcher.details.genre2))
-      rating.setSelection(Rating.values().indexOf(fetcher.details.rating))
-      language.setSelection(Language.values().indexOf(fetcher.details.lang))
-      status.setSelection(Status.values().indexOf(fetcher.details.status))
-      length.setSelection(WordCount.values().indexOf(fetcher.details.wordCount))
-      char1.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char1Id })
-      char2.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char2Id })
-      char3.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char3Id })
-      char4.setSelection(fetcher.charList.indexOfFirst { it.id == fetcher.details.char4Id })
+      sort.setSelection(Sort.values().indexOf(viewModel.fetcher.details.sort))
+      timeRange.setSelection(TimeRange.values().indexOf(viewModel.fetcher.details.timeRange))
+      genre1.setSelection(Genre.values().indexOf(viewModel.fetcher.details.genre1))
+      genre2.setSelection(Genre.values().indexOf(viewModel.fetcher.details.genre2))
+      rating.setSelection(Rating.values().indexOf(viewModel.fetcher.details.rating))
+      language.setSelection(Language.values().indexOf(viewModel.fetcher.details.lang))
+      status.setSelection(Status.values().indexOf(viewModel.fetcher.details.status))
+      length.setSelection(WordCount.values().indexOf(viewModel.fetcher.details.wordCount))
+      char1.setSelection(viewModel.fetcher.charList.indexOfFirst { it.id == viewModel.fetcher.details.char1Id })
+      char2.setSelection(viewModel.fetcher.charList.indexOfFirst { it.id == viewModel.fetcher.details.char2Id })
+      char3.setSelection(viewModel.fetcher.charList.indexOfFirst { it.id == viewModel.fetcher.details.char3Id })
+      char4.setSelection(viewModel.fetcher.charList.indexOfFirst { it.id == viewModel.fetcher.details.char4Id })
 
-      fetcher.worldList.ifPresent { wl ->
+      viewModel.fetcher.worldList.ifPresent { wl ->
         val worldNameList = wl.map { it.name }.toMutableList()
 
         worldNameList[0] = strAny
@@ -183,28 +194,28 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
         worldNameList[0] = strNone
         notWorld.setEntries(worldNameList)
 
-        world.onSelect { _, pos -> fetcher.details.worldId = wl[pos].id }
-        world.setSelection(wl.indexOfFirst { it.id == fetcher.details.worldId })
+        world.onSelect { _, pos -> viewModel.fetcher.details.worldId = wl[pos].id }
+        world.setSelection(wl.indexOfFirst { it.id == viewModel.fetcher.details.worldId })
 
-        notWorld.onSelect { _, pos -> fetcher.details.worldWithout = wl[pos].name }
-        if (fetcher.details.worldWithout != null) {
-          notWorld.setSelection(worldNameList.indexOf(fetcher.details.worldWithout!!))
+        notWorld.onSelect { _, pos -> viewModel.fetcher.details.worldWithout = wl[pos].name }
+        if (viewModel.fetcher.details.worldWithout != null) {
+          notWorld.setSelection(worldNameList.indexOf(viewModel.fetcher.details.worldWithout!!))
         }
       }
-      val worldSpinnerState = if (fetcher.worldList.isPresent) View.VISIBLE else View.GONE
+      val worldSpinnerState = if (viewModel.fetcher.worldList.isPresent) View.VISIBLE else View.GONE
       world.visibility = worldSpinnerState
       notWorld.visibility = worldSpinnerState
       worldText.visibility = worldSpinnerState
       notWorldText.visibility = worldSpinnerState
 
-      if (fetcher.details.genreWithout != null) {
-        notGenre.setSelection(Genre.values().indexOf(fetcher.details.genreWithout!!))
+      if (viewModel.fetcher.details.genreWithout != null) {
+        notGenre.setSelection(Genre.values().indexOf(viewModel.fetcher.details.genreWithout!!))
       }
-      if (fetcher.details.char1Without != null) {
-        notChar1.setSelection(charNameList.indexOf(fetcher.details.char1Without!!))
+      if (viewModel.fetcher.details.char1Without != null) {
+        notChar1.setSelection(charNameList.indexOf(viewModel.fetcher.details.char1Without!!))
       }
-      if (fetcher.details.char2Without != null) {
-        notChar2.setSelection(charNameList.indexOf(fetcher.details.char2Without!!))
+      if (viewModel.fetcher.details.char2Without != null) {
+        notChar2.setSelection(charNameList.indexOf(viewModel.fetcher.details.char2Without!!))
       }
     }
 
@@ -213,13 +224,8 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
         .setOnDismissListener { dialogOpened = false }
         .setPositiveButton(R.string.native_filter_btn, { dialog, _ ->
           viewModel.clearData()
-          currentPage = 1
-          launch(UI) {
-            showLoading()
-            viewModel.addData(getPage(1).await())
-            setAppbarText()
-            hideLoading()
-          }
+          viewModel.resetPagination()
+          triggerLoadUI()
           dialog.dismiss()
         })
         .setView(layout)
@@ -228,7 +234,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
-      R.id.filter -> if (fetcher.charList.isNotEmpty()) openFilterDialog()
+      R.id.filter -> if (viewModel.fetcher.charList.isNotEmpty()) openFilterDialog()
       android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
     }

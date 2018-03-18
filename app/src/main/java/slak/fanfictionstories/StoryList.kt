@@ -6,7 +6,6 @@ import android.arch.lifecycle.MediatorLiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.content.Context
-import android.database.Observable
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Parcelable
@@ -21,7 +20,6 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import kotlinx.android.parcel.Parcelize
-import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
@@ -259,7 +257,7 @@ sealed class StoryListItem : Parcelable {
  * Handles data for a list of stories. Recommended to be used with a [RecyclerView] and a
  * [RecyclerView.Adapter], for handling [IAdapterDataObservable] events.
  */
-class StoryListViewModel : ViewModel(), IAdapterDataObservable by AdapterDataObservable() {
+open class StoryListViewModel : ViewModel(), IAdapterDataObservable by AdapterDataObservable() {
   companion object {
     private const val TAG = "StoryListViewModel"
   }
