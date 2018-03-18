@@ -253,7 +253,7 @@ class AuthorActivity : LoadingActivity(1) {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-      viewModel = ViewModelProviders.of(this).get(StoryListViewModel::class.java)
+      viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
       stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES).map {
         val model = runBlocking { Static.database.storyById(it.storyId).await() }

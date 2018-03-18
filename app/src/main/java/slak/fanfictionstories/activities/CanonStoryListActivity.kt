@@ -32,7 +32,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = ViewModelProviders.of(this).get(StoryListViewModel::class.java)
+    viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
 
     setContentView(R.layout.activity_canon_story_list)
     setSupportActionBar(findViewById(R.id.toolbar))

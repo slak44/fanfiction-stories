@@ -22,7 +22,7 @@ class StoryListActivity : ActivityWithStatic() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = ViewModelProviders.of(this).get(StoryListViewModel::class.java)
+    viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
 
     setContentView(R.layout.activity_story_list)
     setSupportActionBar(toolbar)
