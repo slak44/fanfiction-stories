@@ -14,8 +14,8 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
-import slak.fanfictionstories.StoryAdapterItem.GroupTitle
-import slak.fanfictionstories.StoryAdapterItem.StoryCardData
+import slak.fanfictionstories.StoryListItem.GroupTitle
+import slak.fanfictionstories.StoryListItem.StoryCardData
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 
@@ -84,12 +84,12 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     fetcher = savedInstanceState.getParcelable(FETCHER_RESTORE)
     val data = savedInstanceState.getParcelableArray(ADAPTER_DATA_RESTORE)
     @Suppress("unchecked_cast")
-    adapter.addData((data as Array<StoryAdapterItem>).toList())
+    adapter.addData((data as Array<StoryListItem>).toList())
     setAppbarText()
     hideLoading()
   }
 
-  private fun getPage(page: Int): Deferred<List<StoryAdapterItem>> = async2(CommonPool) {
+  private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(CommonPool) {
     val pageData = fetcher.get(page).await().map {
       val model = database.storyById(it.storyId).await()
           .orElse(null) ?: return@map StoryCardData(it)
@@ -97,7 +97,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       it.status = model.status
       return@map StoryCardData(it)
     }
-    if (pageData.isEmpty()) return@async2 listOf<StoryAdapterItem>()
+    if (pageData.isEmpty()) return@async2 listOf<StoryListItem>()
     return@async2 listOf(GroupTitle(str(R.string.page_x, page)), *pageData.toTypedArray())
   }
 

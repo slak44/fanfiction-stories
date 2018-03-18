@@ -22,7 +22,7 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
-import slak.fanfictionstories.StoryAdapterItem.*
+import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
@@ -235,16 +235,16 @@ class StoryGroupTitle : TextView {
 }
 
 @SuppressWarnings("ParcelCreator")
-sealed class StoryAdapterItem : Parcelable {
+sealed class StoryListItem : Parcelable {
   @Parcelize
   data class StoryCardData(var model: StoryModel,
-                           var isExtended: Boolean = false) : StoryAdapterItem()
+                           var isExtended: Boolean = false) : StoryListItem()
 
   @Parcelize
-  data class GroupTitle(val title: String) : StoryAdapterItem()
+  data class GroupTitle(val title: String) : StoryListItem()
 
   @Parcelize
-  data class LoadingItem(val id: Int = ++counter) : StoryAdapterItem()
+  data class LoadingItem(val id: Int = ++counter) : StoryListItem()
 
   companion object {
     private var counter: Int = 0xF000000
@@ -267,12 +267,12 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
   /**
    * Stores working data (stories and group titles).
    */
-  private val data: MutableList<StoryAdapterItem> = mutableListOf()
+  private val data: MutableList<StoryListItem> = mutableListOf()
 
   /**
    * Get an immutable copy of [data], for serialization purposes.
    */
-  fun getData(): List<StoryAdapterItem> = data.toList()
+  fun getData(): List<StoryListItem> = data.toList()
 
   /**
    * Clear adapter data, including any pending items.
@@ -287,7 +287,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     onSizeChange(0, 0)
   }
 
-  fun addData(item: StoryAdapterItem) {
+  fun addData(item: StoryListItem) {
     data.add(item)
     notifyItemInserted(data.size - 1)
     if (item is StoryCardData) {
@@ -296,7 +296,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     }
   }
 
-  fun addData(items: List<StoryAdapterItem>) {
+  fun addData(items: List<StoryListItem>) {
     data.addAll(items)
     notifyItemRangeInserted(data.size, items.size)
     val newStories = items.count { it is StoryCardData }
@@ -306,7 +306,7 @@ class StoryAdapter(val context: Context) : RecyclerView.Adapter<RecyclerView.Vie
     }
   }
 
-  fun addDeferredData(deferredList: Deferred<List<StoryAdapterItem>>) = launch(UI) {
+  fun addDeferredData(deferredList: Deferred<List<StoryListItem>>) = launch(UI) {
     addData(LoadingItem())
     val loaderIdx = data.size - 1
     addData(deferredList.await())
