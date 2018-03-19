@@ -23,7 +23,7 @@ import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 
 class CanonListViewModel : StoryListViewModel() {
-  lateinit var fetcher: CanonFetcher
+  val fetcher: CanonFetcher = CanonFetcher(CanonFetcher.Details(null))
   private var currentPage: MutableLiveData<Int> = MutableLiveData()
 
   fun getPage(): LiveData<Int> = currentPage
@@ -63,25 +63,25 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     setSupportActionBar(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    val parentLink: CategoryLink = intent.extras.getParcelable(INTENT_LINK_DATA)
-
     canonStoryListView.adapter = StoryAdapter(viewModel)
     val layoutManager = LinearLayoutManager(this)
     canonStoryListView.layoutManager = layoutManager
+    canonStoryListView.createStorySwipeHelper { enteredReader(it.storyId) }
+    infinitePageScroll(canonStoryListView, layoutManager) {
+      viewModel.addDeferredData(viewModel.getNextPage())
+    }
+
+    val parentLink: CategoryLink = intent.extras.getParcelable(INTENT_LINK_DATA)
+    viewModel.fetcher.details.parentLink = parentLink
+    viewModel.fetcher.details.lang = Prefs.filterLanguage()
+
+    setAppbarText()
 
     if (savedInstanceState == null) {
-      setTitle(R.string.loading___)
-      viewModel.fetcher = CanonFetcher(CanonFetcher.Details(parentLink))
-      viewModel.fetcher.details.lang = Prefs.filterLanguage()
       triggerLoadUI()
     } else {
       onRestoreInstanceState(savedInstanceState)
-    }
-
-    canonStoryListView.createStorySwipeHelper { enteredReader(it.storyId) }
-
-    infinitePageScroll(canonStoryListView, layoutManager) {
-      viewModel.addDeferredData(viewModel.getNextPage())
+      hideLoading()
     }
   }
 
@@ -90,6 +90,13 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     viewModel.addData(viewModel.getCurrentPage().await())
     setAppbarText()
     hideLoading()
+  }
+
+  private fun setAppbarText() {
+    title = viewModel.fetcher.canonTitle.orElse(str(R.string.loading___))
+    viewModel.fetcher.unfilteredStories.ifPresent {
+      supportActionBar?.subtitle = str(R.string.x_stories, it)
+    }
   }
 
   override fun onResume() {
@@ -105,20 +112,10 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
     super.onRestoreInstanceState(savedInstanceState)
     restoreInstanceState(savedInstanceState)
-    setAppbarText()
-    hideLoading()
-  }
-
-  private fun setAppbarText() {
-    title = viewModel.fetcher.canonTitle.get()
-    supportActionBar?.subtitle = str(R.string.x_stories, viewModel.fetcher.unfilteredStories.get())
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-    val toTint = arrayOf(
-        menu.findItem(R.id.filter)
-    )
-    for (item in toTint) item.iconTint(R.color.white, theme)
+    menu.findItem(R.id.filter).iconTint(R.color.white, theme)
     return super.onPrepareOptionsMenu(menu)
   }
 
