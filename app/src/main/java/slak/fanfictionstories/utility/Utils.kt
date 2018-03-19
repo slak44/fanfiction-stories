@@ -381,7 +381,7 @@ var <T> MutableLiveData<T>.it: T
     value = newVal
   }
 
-/** Sugar over [observe] for non-nullable types. */
+/** Sugar over [LiveData.observe] for non-nullable types. */
 fun <T> LiveData<T>.observe(owner: LifecycleOwner, observer: (T) -> Unit) {
   observe(owner, android.arch.lifecycle.Observer { observer(it!!) })
 }
