@@ -124,7 +124,7 @@ class CanonFetcher(val details: Details) : Parcelable {
   @Parcelize
   @SuppressLint("ParcelCreator")
   data class Details(
-      var parentLink: CategoryLink?,
+      val parentLink: CategoryLink,
 
       var sort: Sort = Sort.UPDATE_DATE,
       var timeRange: TimeRange = TimeRange.ALL,

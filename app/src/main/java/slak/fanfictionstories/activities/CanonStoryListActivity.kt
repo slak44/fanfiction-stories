@@ -23,7 +23,8 @@ import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 
 class CanonListViewModel : StoryListViewModel() {
-  val fetcher: CanonFetcher = CanonFetcher(CanonFetcher.Details(null))
+  val fetcher: CanonFetcher = CanonFetcher(
+      CanonFetcher.Details(intent.get().extras.getParcelable(INTENT_LINK_DATA)))
   private var currentPage: MutableLiveData<Int> = MutableLiveData()
 
   fun getPage(): LiveData<Int> = currentPage
@@ -57,7 +58,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = ViewModelProviders.of(this)[CanonListViewModel::class.java]
+    viewModel = obtainViewModel()
 
     setContentView(R.layout.activity_canon_story_list)
     setSupportActionBar(findViewById(R.id.toolbar))
@@ -71,8 +72,6 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       viewModel.addDeferredData(viewModel.getNextPage())
     }
 
-    val parentLink: CategoryLink = intent.extras.getParcelable(INTENT_LINK_DATA)
-    viewModel.fetcher.details.parentLink = parentLink
     viewModel.fetcher.details.lang = Prefs.filterLanguage()
 
     setAppbarText()

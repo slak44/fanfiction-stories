@@ -2,9 +2,7 @@ package slak.fanfictionstories.utility
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.*
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Canvas
@@ -15,6 +13,7 @@ import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.annotation.StringRes
 import android.support.design.widget.Snackbar
+import android.support.v4.app.FragmentActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Html
@@ -41,6 +40,7 @@ import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.reflect.KClass
 
 /** Wraps [async], except it also rethrows exceptions synchronously. */
 fun <T> async2(
@@ -359,3 +359,35 @@ var <T> MutableLiveData<T>.it: T
 fun <T> LiveData<T>.observe(owner: LifecycleOwner, observer: (T) -> Unit) {
   observe(owner, android.arch.lifecycle.Observer { observer(it!!) })
 }
+
+/**
+ * A [ViewModelProvider] that also includes the intent used to start the activity.
+ * @see ViewModelWithIntent
+ */
+open class ViewModelWithIntentProvider(store: ViewModelStore,
+                                       factory: Factory,
+                                       val withIntent: Intent) : ViewModelProvider(store, factory) {
+  inline fun <reified T : ViewModelWithIntent> viewModelFrom(): T {
+    val viewModel = super.get(T::class.java)
+    viewModel.intent = withIntent.opt()
+    return viewModel
+  }
+}
+
+/** A [ViewModel] that also stores an intent. */
+abstract class ViewModelWithIntent : ViewModel() {
+  var intent: Optional<Intent> = Optional.empty()
+}
+
+/** Get a [ViewModelWithIntentProvider] that gets a [ViewModelWithIntent]. */
+fun FragmentActivity.viewModelProvider(): ViewModelWithIntentProvider {
+  val factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application
+      ?: throw IllegalStateException("The FragmentActivity is not attached to an Application yet"))
+  return ViewModelWithIntentProvider(ViewModelStores.of(this), factory, intent)
+}
+
+/** Sugar for `viewModelProvider().viewModelFrom()`. */
+inline fun <reified T : ViewModelWithIntent> FragmentActivity.obtainViewModel(): T {
+  return viewModelProvider().viewModelFrom()
+}
+

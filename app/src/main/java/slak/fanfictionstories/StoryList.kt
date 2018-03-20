@@ -257,7 +257,8 @@ sealed class StoryListItem : Parcelable {
  * Handles data for a list of stories. Recommended to be used with a [RecyclerView] and a
  * [RecyclerView.Adapter], for handling [IAdapterDataObservable] events.
  */
-open class StoryListViewModel : ViewModel(), IAdapterDataObservable by AdapterDataObservable() {
+open class StoryListViewModel : ViewModelWithIntent(),
+    IAdapterDataObservable by AdapterDataObservable() {
   companion object {
     private const val TAG = "StoryListViewModel"
   }

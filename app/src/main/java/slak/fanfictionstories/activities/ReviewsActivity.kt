@@ -2,8 +2,6 @@ package slak.fanfictionstories.activities
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModel
-import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.CardView
@@ -13,7 +11,6 @@ import android.view.*
 import kotlinx.android.synthetic.main.activity_reviews.*
 import kotlinx.android.synthetic.main.dialog_report_review.view.*
 import kotlinx.android.synthetic.main.review_component.view.*
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
@@ -25,7 +22,7 @@ import slak.fanfictionstories.utility.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-class ReviewsViewModel : ViewModel(), IAdapterDataObservable by AdapterDataObservable() {
+class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by AdapterDataObservable() {
   private val chapterData = MutableLiveData<Int>()
   val chapter: LiveData<Int> get() = chapterData
 
@@ -34,7 +31,7 @@ class ReviewsViewModel : ViewModel(), IAdapterDataObservable by AdapterDataObser
   private val loadingEventsData = MutableLiveData<LoadEvent>()
   val loadingEvent: LiveData<LoadEvent> get() = loadingEventsData
 
-  lateinit var model: StoryModel
+  val model: StoryModel = intent.get().getParcelableExtra(ReviewsActivity.INTENT_STORY_MODEL)
 
   private var currentPage = 0
   var pageCount = 0
@@ -78,14 +75,11 @@ class ReviewsActivity : LoadingActivity() {
   private lateinit var viewModel: ReviewsViewModel
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = ViewModelProviders.of(this)[ReviewsViewModel::class.java]
+    viewModel = obtainViewModel()
 
     setContentView(R.layout.activity_reviews)
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-    viewModel.model = intent.getParcelableExtra(INTENT_STORY_MODEL)
-        ?: throw IllegalStateException("StoryModel is missing from the intent")
 
     viewModel.changeChapter(intent.getIntExtra(INTENT_TARGET_CHAPTER, ALL_CHAPTERS))
 
