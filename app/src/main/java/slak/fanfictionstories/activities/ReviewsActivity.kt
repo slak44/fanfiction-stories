@@ -13,6 +13,7 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.fetchers.NO_PAGES
 import slak.fanfictionstories.fetchers.Review
 import slak.fanfictionstories.fetchers.getReviews
 import slak.fanfictionstories.utility.*
@@ -100,7 +101,7 @@ class ReviewsActivity : LoadingActivity() {
     showLoading()
     val (list, pages) = getReviews(model.storyId, chapter, page).await()
     if (totalPages == 0) totalPages = pages
-    if (pages == -1) noReviewsText.visibility = View.VISIBLE
+    if (pages == NO_PAGES) noReviewsText.visibility = View.VISIBLE
     else noReviewsText.visibility = View.INVISIBLE
     adapter.addReviews(list)
     hideLoading()

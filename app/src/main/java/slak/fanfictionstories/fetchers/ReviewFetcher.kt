@@ -28,25 +28,37 @@ data class Review(
     val content: String
 ) : Parcelable
 
+private const val TAG = "ReviewPage"
+
 /**
  * Get a particular page of reviews for the specified story, for the specified chapter.
- * @returns the reviews, and how many pages of reviews there are in total, or an empty list and -1
- * if there are no reviews
+ * @returns a [Triple] of the reviews, how many pages of reviews there are in total and how many
+ * reviews are in total. If the particular page has no reviews (even if it is the first one),
+ * returns `Triple(emptyList(), NO_PAGES, 0)`
+ * @see NO_PAGES
  */
 fun getReviews(storyId: StoryId,
-               chapter: Int, page: Int): Deferred<Pair<List<Review>, Int>> = async2(CommonPool) {
+               chapter: Int,
+               page: Int): Deferred<Triple<List<Review>, Int, Int>> = async2(CommonPool) {
   val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_fetching_review_data, storyId.toString())
-    Log.e(FetcherUtils.TAG, "fetchReviewPage", it)
+    Log.e(TAG, "getReviews", it)
   }.await()
-  return@async2 parseReviewPage(storyId, html)
+  Log.v(TAG, "storyId=($storyId), chapter=($chapter), page=($page)")
+  val triple = parseReviewPage(storyId, html)
+  Log.v(TAG, "pages=(${triple.second}), reviewCount=(${triple.third})")
+  return@async2 triple
 }
 
-private fun parseReviewPage(storyId: StoryId, html: String): Pair<List<Review>, Int> {
+const val NO_PAGES: Int = -12
+
+private fun parseReviewPage(storyId: StoryId, html: String): Triple<List<Review>, Int, Int> {
   val doc = Jsoup.parse(html)
   val list = doc.select("div.table-bordered > table > tbody > tr > td").map {
-    if (it.text().contains("No Reviews found")) return@parseReviewPage Pair(listOf(), -1)
+    if (it.text().contains("No Reviews found")) {
+      return@parseReviewPage Triple(listOf(), NO_PAGES, 0)
+    }
     val maybeAuthor = it.select("img + a")
     val author: String
     val authorId: Long
@@ -66,7 +78,12 @@ private fun parseReviewPage(storyId: StoryId, html: String): Pair<List<Review>, 
     return@map Review(storyId, chapter, author, authorId, unixTimeSeconds, content)
   }
   val pageNav = doc.select("#content_wrapper_inner > center")
-  if (pageNav.size == 0) return Pair(list, 1)
+  if (pageNav.size == 0) return Triple(list, 1, list.size)
   val pageCount = getPageCountFromNav(pageNav[0])
-  return Pair(list, pageCount)
+  val reviewCount = pageNav[0].textNodes()[0].toString()
+      .split(" | ")[0]
+      .trim()
+      .replace(",", "")
+      .toInt()
+  return Triple(list, pageCount, reviewCount)
 }
