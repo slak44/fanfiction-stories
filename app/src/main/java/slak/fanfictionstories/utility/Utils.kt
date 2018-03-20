@@ -42,9 +42,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.experimental.CoroutineContext
 
-/**
- * Wraps [async], except it also rethrows exceptions synchronously.
- */
+/** Wraps [async], except it also rethrows exceptions synchronously. */
 fun <T> async2(
     context: CoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
@@ -69,9 +67,7 @@ fun errorDialog(title: String, msg: String) = launch(UI) {
       }).create().show()
 }
 
-/**
- * Same as [errorDialog], but with [StringRes] texts.
- */
+/** Same as [errorDialog], but with [StringRes] texts. */
 fun errorDialog(@StringRes title: Int, @StringRes msg: Int) {
   errorDialog(str(title), str(msg))
 }
@@ -132,9 +128,7 @@ fun patientlyFetchURL(url: String,
   }
 }
 
-/**
- * Emulates android:iconTint. Must be called in onPrepareOptionsMenu for each icon.
- */
+/** Emulates android:iconTint. Must be called in onPrepareOptionsMenu for each icon. */
 fun MenuItem.iconTint(@ColorRes colorRes: Int, theme: Resources.Theme) {
   val color = Static.res.getColor(colorRes, theme)
   val drawable = this.icon
@@ -146,9 +140,7 @@ enum class Direction {
   LEFT, TOP, RIGHT, BOTTOM
 }
 
-/**
- * Tints a drawable. No-op if the specified drawable is null.
- */
+/** Tints a drawable. No-op if the specified drawable is null. */
 fun TextView.drawableTint(@ColorRes colorRes: Int, theme: Resources.Theme, which: Direction) {
   val color = Static.res.getColor(colorRes, theme)
   val drawable = compoundDrawables[which.ordinal] ?: return
@@ -165,9 +157,7 @@ fun TextView.drawableTint(@ColorRes colorRes: Int, theme: Resources.Theme, which
   }
 }
 
-/**
- * A [ReplacementSpan] that tries to emulate a <hr> element.
- */
+/** A [ReplacementSpan] that tries to emulate a <hr> element. */
 class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpan() {
   companion object {
     private const val PLACEHOLDER = "######HRPLACEHOLDERHRPLACEHOLDERHRPLACEHOLDER######"
@@ -257,9 +247,7 @@ fun autoSuffixNumber(value: Int): String = autoSuffixNumber(value.toLong())
  */
 fun <T> T?.opt(): Optional<T> = if (this == null) Optional.empty() else Optional.of(this)
 
-/**
- * A prettier, `inline` version of [Optional.orElseGet].
- */
+/** A prettier, `inline` version of [Optional.orElseGet]. */
 inline fun <T> Optional<T>.orElse(block: () -> T): T = if (isPresent) this.get() else block()
 
 /**
@@ -270,9 +258,7 @@ inline fun <T> Optional<T>.ifPresent2(block: (T) -> Unit) {
   if (isPresent) block(this.get())
 }
 
-/**
- * Sugar for the default Optional.orElseThrow.
- */
+/** Sugar for the default Optional.orElseThrow. */
 fun <T> Optional<T>.orElseThrow(th: Throwable): T = if (isPresent) this.get() else throw th
 
 /**
@@ -302,9 +288,7 @@ fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage:
   })
 }
 
-/**
- * A [PrintWriter] instance that overwrites the target file.
- */
+/** A [PrintWriter] instance that overwrites the target file. */
 fun File.overwritePrintWriter() = PrintWriter(FileOutputStream(this, false))
 
 /**
@@ -345,31 +329,21 @@ operator fun SparseBooleanArray.set(key: Int, value: Boolean) {
   put(key, value)
 }
 
-/**
- * Sugar for [Static]'s [Resources.getString].
- */
+/** Sugar for [Static]'s [Resources.getString]. */
 fun str(@StringRes i: Int): String = Static.res.getString(i)
 
-/**
- * Sugar for [Static]'s [Resources.getString] with a format string.
- */
+/** Sugar for [Static]'s [Resources.getString] with a format string. */
 fun str(@StringRes i: Int, vararg format: Any?): String = Static.res.getString(i, *format)
 
-/**
- * Sugar for [Resources.getDimensionPixelSize].
- */
+/** Sugar for [Resources.getDimensionPixelSize]. */
 fun Resources.px(@DimenRes d: Int): Int = getDimensionPixelSize(d)
 
-/**
- * Call [org.jetbrains.anko.startActivity] from anywhere using [Static.currentActivity].
- */
+/** Call [org.jetbrains.anko.startActivity] from anywhere using [Static.currentActivity]. */
 inline fun <reified T : Activity> startActivity(vararg params: Pair<String, Any?>) {
   Static.currentActivity!!.startActivity<T>(*params)
 }
 
-/**
- * Call [org.jetbrains.anko.intentFor] from anywhere using [Static.currentCtx].
- */
+/** Call [org.jetbrains.anko.intentFor] from anywhere using [Static.currentCtx]. */
 inline fun <reified T : Any> intentFor(vararg params: Pair<String, Any?>): Intent {
   return Static.currentCtx.intentFor<T>(*params)
 }
