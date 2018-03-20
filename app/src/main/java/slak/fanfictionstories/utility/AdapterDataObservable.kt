@@ -45,3 +45,28 @@ class AdapterDataObservable :
   override fun notifyItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) =
       mObservers.forEach { it.onItemRangeMoved(fromPosition, toPosition, itemCount) }
 }
+
+/**
+ * Creates an observer that listens to a [Observable] and calls correct notify* methods when
+ * necessary.
+ * @param adapter the adapter instance to call notify* on
+ */
+fun createObserverForAdapter(
+    adapter: RecyclerView.Adapter<*>) = object : RecyclerView.AdapterDataObserver() {
+  override fun onChanged() = adapter.notifyDataSetChanged()
+
+  override fun onItemRangeChanged(positionStart: Int, itemCount: Int) =
+      adapter.notifyItemRangeChanged(positionStart, itemCount)
+
+  override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) =
+      adapter.notifyItemRangeChanged(positionStart, itemCount, payload)
+
+  override fun onItemRangeInserted(positionStart: Int, itemCount: Int) =
+      adapter.notifyItemRangeInserted(positionStart, itemCount)
+
+  override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) =
+      adapter.notifyDataSetChanged()
+
+  override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) =
+      adapter.notifyItemRangeRemoved(positionStart, itemCount)
+}

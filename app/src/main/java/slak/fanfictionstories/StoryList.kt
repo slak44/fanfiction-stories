@@ -416,24 +416,7 @@ open class StoryListViewModel : ViewModel(), IAdapterDataObservable by AdapterDa
 class StoryAdapter(private val viewModel: StoryListViewModel) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-  val vmObserver = object : RecyclerView.AdapterDataObserver() {
-    override fun onChanged() = notifyDataSetChanged()
-
-    override fun onItemRangeChanged(positionStart: Int, itemCount: Int) =
-        notifyItemRangeChanged(positionStart, itemCount)
-
-    override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) =
-        notifyItemRangeChanged(positionStart, itemCount, payload)
-
-    override fun onItemRangeInserted(positionStart: Int, itemCount: Int) =
-        notifyItemRangeInserted(positionStart, itemCount)
-
-    override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) =
-        notifyDataSetChanged()
-
-    override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) =
-        notifyItemRangeRemoved(positionStart, itemCount)
-  }
+  val vmObserver = createObserverForAdapter(this)
 
   init {
     setHasStableIds(true)
