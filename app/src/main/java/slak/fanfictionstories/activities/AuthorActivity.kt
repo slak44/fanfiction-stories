@@ -82,7 +82,7 @@ class AuthorActivity : LoadingActivity(1) {
   }
 
   /**
-   * Ensure the [tabs] are come back when the loading bar goes away.
+   * Ensure the [tabs] come back when the loading bar goes away.
    */
   override fun hideLoading() {
     super.hideLoading()
