@@ -31,7 +31,7 @@ class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by Adapte
   private val loadingEventsData = MutableLiveData<LoadEvent>()
   val loadingEvent: LiveData<LoadEvent> get() = loadingEventsData
 
-  val model: StoryModel = intent.get().getParcelableExtra(ReviewsActivity.INTENT_STORY_MODEL)
+  val model: StoryModel = intent!!.getParcelableExtra(ReviewsActivity.INTENT_STORY_MODEL)
 
   private var currentPage = 0
   var pageCount = 0

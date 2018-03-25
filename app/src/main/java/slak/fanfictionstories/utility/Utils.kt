@@ -40,7 +40,6 @@ import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.experimental.CoroutineContext
-import kotlin.reflect.KClass
 
 /** Wraps [async], except it also rethrows exceptions synchronously. */
 fun <T> async2(
@@ -369,14 +368,15 @@ open class ViewModelWithIntentProvider(store: ViewModelStore,
                                        val withIntent: Intent) : ViewModelProvider(store, factory) {
   inline fun <reified T : ViewModelWithIntent> viewModelFrom(): T {
     val viewModel = super.get(T::class.java)
-    viewModel.intent = withIntent.opt()
+    viewModel.intent = withIntent
     return viewModel
   }
 }
 
 /** A [ViewModel] that also stores an intent. */
 abstract class ViewModelWithIntent : ViewModel() {
-  var intent: Optional<Intent> = Optional.empty()
+  @PublishedApi
+  internal var intent: Intent? = null
 }
 
 /** Get a [ViewModelWithIntentProvider] that gets a [ViewModelWithIntent]. */
