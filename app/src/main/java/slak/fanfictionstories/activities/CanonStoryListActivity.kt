@@ -69,7 +69,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     canonStoryListView.layoutManager = layoutManager
     canonStoryListView.createStorySwipeHelper { enteredReader(it.storyId) }
     infinitePageScroll(canonStoryListView, layoutManager) {
-      viewModel.addDeferredData(viewModel.getNextPage())
+      viewModel.addDeferredItems(viewModel.getNextPage())
     }
 
     if (Prefs.filterLanguage()) viewModel.fetcher.details.lang = Prefs.preferredLanguage()
@@ -86,7 +86,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
 
   private fun triggerLoadUI() = launch(UI) {
     showLoading()
-    viewModel.addData(viewModel.getCurrentPage().await())
+    viewModel.addItems(viewModel.getCurrentPage().await())
     setAppbarText()
     hideLoading()
   }

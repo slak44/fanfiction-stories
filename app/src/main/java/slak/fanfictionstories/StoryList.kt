@@ -4,7 +4,6 @@ import android.animation.ObjectAnimator
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MediatorLiveData
 import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -317,23 +316,23 @@ open class StoryListViewModel : ViewModelWithIntent(),
     filteredCount.it = 0
   }
 
-  fun addData(item: StoryListItem) {
+  fun addItem(item: StoryListItem) {
     data.add(item)
     notifyItemRangeInserted(data.size - 1, 1)
     if (item is StoryCardData) storyCount.it++
   }
 
-  fun addData(items: List<StoryListItem>) {
+  fun addItems(items: List<StoryListItem>) {
     data.addAll(items)
     notifyItemRangeInserted(data.size, items.size)
     val newStories = items.count { it is StoryCardData }
     if (newStories > 0) storyCount.it += newStories
   }
 
-  fun addDeferredData(deferredList: Deferred<List<StoryListItem>>) = launch(UI) {
-    addData(LoadingItem())
+  fun addDeferredItems(deferredList: Deferred<List<StoryListItem>>) = launch(UI) {
+    addItem(LoadingItem())
     val loaderIdx = data.size - 1
-    addData(deferredList.await())
+    addItems(deferredList.await())
     data.removeAt(loaderIdx)
     notifyItemRangeRemoved(loaderIdx, 1)
   }
@@ -404,7 +403,7 @@ open class StoryListViewModel : ViewModelWithIntent(),
     val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
     groupStories(toData, arrangement.groupStrategy).toSortedMap().forEach {
       val ordered = orderStories(it.value, arrangement.orderStrategy, arrangement.orderDirection)
-      addData(listOf(GroupTitle(it.key), *ordered.map { StoryCardData(it) }.toTypedArray()))
+      addItems(listOf(GroupTitle(it.key), *ordered.map { StoryCardData(it) }.toTypedArray()))
     }
     filteredCount.it = storiesNotPending.size - toData.size
     storyCount.it = storiesNotPending.size
