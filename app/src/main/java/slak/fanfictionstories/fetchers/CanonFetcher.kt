@@ -225,11 +225,11 @@ class CanonFetcher(val details: Details) : Parcelable {
         if (details.char2Without != null) "_c2=${details.char2Without}" else ""
     ).joinToString("&")
 
-    val pathAndQuery = "${details.parentLink!!.urlComponent}/?p=$page&$queryParams"
+    val pathAndQuery = "${details.parentLink.urlComponent}/?p=$page&$queryParams"
     canonListCache.hit(pathAndQuery).ifPresent2 { return@async2 parseHtml(it) }
     val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {
       Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
-          R.string.error_with_canon_stories, details.parentLink!!.displayName)
+          R.string.error_with_canon_stories, details.parentLink.displayName)
       Log.e(TAG, "CanonFetcher: retry", it)
     }.await()
     canonListCache.update(pathAndQuery, html)
