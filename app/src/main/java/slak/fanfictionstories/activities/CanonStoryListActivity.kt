@@ -23,8 +23,9 @@ import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 
 class CanonListViewModel : StoryListViewModel() {
-  val fetcher: CanonFetcher = CanonFetcher(
-      CanonFetcher.Details(intent!!.extras.getParcelable(INTENT_LINK_DATA)))
+  val fetcher: CanonFetcher by lazy {
+    CanonFetcher(CanonFetcher.Details(intent!!.extras.getParcelable(INTENT_LINK_DATA)))
+  }
   private var currentPage: MutableLiveData<Int> = MutableLiveData()
 
   fun getPage(): LiveData<Int> = currentPage

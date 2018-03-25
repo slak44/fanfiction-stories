@@ -16,7 +16,7 @@ import android.view.*
 import kotlinx.android.synthetic.main.activity_author.*
 import kotlinx.android.synthetic.main.fragment_author_bio.view.*
 import kotlinx.android.synthetic.main.fragment_author_stories.view.*
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.*
@@ -27,9 +27,15 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class AuthorViewModel : ViewModelWithIntent() {
-  val authorId = intent!!.getLongExtra(AuthorActivity.INTENT_AUTHOR_ID, -1L)
-  val authorName = intent!!.getStringExtra(AuthorActivity.INTENT_AUTHOR_NAME)
-      ?: throw IllegalStateException("Intent has no author name")
+  val authorId: Long by lazy {
+    val id = intent!!.getLongExtra(AuthorActivity.INTENT_AUTHOR_ID, -1L)
+    if (id == -1L) throw IllegalStateException("Intent has no author id")
+    id
+  }
+  val authorName: String by lazy {
+    intent!!.getStringExtra(AuthorActivity.INTENT_AUTHOR_NAME)
+        ?: throw IllegalStateException("Intent has no author name")
+  }
   var author: Author? = null
     private set
 
@@ -39,8 +45,7 @@ class AuthorViewModel : ViewModelWithIntent() {
   val loadEvents: LiveData<LoadEvent> get() = loadEventsData
 
   init {
-    if (authorId == -1L) throw IllegalStateException("Intent has no author id")
-    launch(CommonPool) {
+    launch(UI) {
       author = getAuthor(authorId).await()
       loadEventsData.value = LoadEvent.LOADED
     }
@@ -221,15 +226,17 @@ class AuthorActivity : LoadingActivity(1) {
         fragment.arguments = args
         return fragment
       }
+
+      class ArrangedStoryListViewModel : StoryListViewModel() {
+        var arrangement = Arrangement(
+            OrderStrategy.TITLE_ALPHABETIC,
+            OrderDirection.DESC,
+            GroupStrategy.NONE
+        )
+      }
     }
 
-    private lateinit var viewModel: StoryListViewModel
-
-    private var arrangement = Arrangement(
-        OrderStrategy.TITLE_ALPHABETIC,
-        OrderDirection.DESC,
-        GroupStrategy.NONE
-    )
+    private lateinit var viewModel: ArrangedStoryListViewModel
 
     override fun onResume() {
       super.onResume()
@@ -248,7 +255,7 @@ class AuthorActivity : LoadingActivity(1) {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-      viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
+      viewModel = ViewModelProviders.of(this)[ArrangedStoryListViewModel::class.java]
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
       val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES).map {
         val model = runBlocking { Static.database.storyById(it.storyId).await() }
@@ -268,19 +275,20 @@ class AuthorActivity : LoadingActivity(1) {
         rootView.noStories.visibility = View.GONE
         rootView.orderBy.visibility = View.VISIBLE
         rootView.groupBy.visibility = View.VISIBLE
-        viewModel.arrangeStories(stories, arrangement)
+        viewModel.arrangeStories(stories, viewModel.arrangement)
       }
       rootView.orderBy.setOnClickListener {
-        orderByDialog(context!!, arrangement.orderStrategy, arrangement.orderDirection) { str, dir ->
-          arrangement = Arrangement(
-              orderDirection = dir, orderStrategy = str, groupStrategy = arrangement.groupStrategy)
-          viewModel.arrangeStories(stories, arrangement)
+        orderByDialog(context!!,
+            viewModel.arrangement.orderStrategy, viewModel.arrangement.orderDirection) { str, dir ->
+          viewModel.arrangement = Arrangement(str, dir, viewModel.arrangement.groupStrategy)
+          viewModel.arrangeStories(stories, viewModel.arrangement)
         }
       }
       rootView.groupBy.setOnClickListener {
-        groupByDialog(context!!, arrangement.groupStrategy) {
-          arrangement = Arrangement(arrangement.orderStrategy, arrangement.orderDirection, it)
-          viewModel.arrangeStories(stories, arrangement)
+        groupByDialog(context!!, viewModel.arrangement.groupStrategy) {
+          viewModel.arrangement = Arrangement(
+              viewModel.arrangement.orderStrategy, viewModel.arrangement.orderDirection, it)
+          viewModel.arrangeStories(stories, viewModel.arrangement)
         }
       }
       return rootView
