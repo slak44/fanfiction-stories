@@ -73,7 +73,10 @@ object Prefs {
     return ZonedDateTime.of(now.toLocalDate(), LocalTime.of(hour, minute), ZoneId.systemDefault())
   }
 
-  fun filterLanguage(): Language =
+  fun filterLanguage() = Static.prefs.getBoolean(str(R.string.key_option_lang_mem),
+      str(R.string.option_lang_mem_default).toBoolean())
+
+  fun preferredLanguage(): Language =
       Language.values()[Static.prefs.getInt(REMEMBER_LANG_ID, Language.ALL.ordinal)]
 
   /**

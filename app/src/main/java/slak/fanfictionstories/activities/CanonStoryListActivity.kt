@@ -2,7 +2,6 @@ package slak.fanfictionstories.activities
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
@@ -73,7 +72,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       viewModel.addDeferredData(viewModel.getNextPage())
     }
 
-    viewModel.fetcher.details.lang = Prefs.filterLanguage()
+    if (Prefs.filterLanguage()) viewModel.fetcher.details.lang = Prefs.preferredLanguage()
 
     setAppbarText()
 
