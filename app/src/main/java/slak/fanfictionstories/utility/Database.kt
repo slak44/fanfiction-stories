@@ -72,9 +72,9 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     select(tableName = "stories").parseList(StoryModel.dbParser)
   }
 
-  fun storyById(storyId: StoryId): Deferred<Optional2<StoryModel>> = useAsync {
+  fun storyById(storyId: StoryId): Deferred<Optional<StoryModel>> = useAsync {
     select("stories").whereSimple("storyId = ?", storyId.toString())
-        .parseOpt(StoryModel.dbParser).opt2()
+        .parseOpt(StoryModel.dbParser).opt()
   }
 
   fun updateInStory(storyId: StoryId, vararg pairs: Pair<String, Any>): Deferred<Int> = useAsync {

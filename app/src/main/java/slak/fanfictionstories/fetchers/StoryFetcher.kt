@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
  * Download metadata and every chapter, then store them in the database and on disk.
  * @returns the model we just fetched, or an empty optional if the story already exists
  */
-fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional2<StoryModel>> = async2(CommonPool) {
+fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val model = fetchStoryModel(storyId).await().orElse { return@async2 Empty<StoryModel>() }
   model.status = StoryStatus.LOCAL
   Static.database.upsertStory(model).await()
@@ -32,7 +32,7 @@ fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional2<StoryModel>> = asyn
     // FIXME show something saying we failed
     Static.database.updateInStory(storyId, "status" to "remote").await()
   }
-  return@async2 model.opt2()
+  return@async2 model.opt()
 }
 
 // It is unlikely that an update would invalidate the cache within 15 minutes
@@ -60,10 +60,10 @@ fun extractChapterText(doc: Document): String {
       ?: throw IllegalArgumentException("No story text in given document")
 }
 
-fun fetchStoryModel(storyId: StoryId): Deferred<Optional2<StoryModel>> = async2(CommonPool) {
+fun fetchStoryModel(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val chapterHtml = fetchChapter(storyId, 1).await()
   if (chapterHtml.contains("Story Not Found")) return@async2 Empty<StoryModel>()
-  return@async2 parseStoryModel(chapterHtml, storyId).opt2()
+  return@async2 parseStoryModel(chapterHtml, storyId).opt()
 }
 
 /**

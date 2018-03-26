@@ -129,15 +129,15 @@ class CanonFetcher(private val parentLink: CategoryLink,
                    var char2Id: String = "0",
                    var char3Id: String = "0",
                    var char4Id: String = "0",
-                   var genreWithout: @RawValue Optional2<Genre> = Empty(),
-                   var worldWithout: @RawValue Optional2<String> = Empty(),
-                   var char1Without: @RawValue Optional2<String> = Empty(),
-                   var char2Without: @RawValue Optional2<String> = Empty(),
-                   var worldList: @RawValue Optional2<List<World>> = Empty(),
-                   var charList: @RawValue Optional2<List<Character>> = Empty(),
-                   var unfilteredStoryCount: @RawValue Optional2<String> = Empty(),
-                   var canonTitle: @RawValue Optional2<String> = Empty(),
-                   var pageCount: @RawValue Optional2<Int> = Empty()
+                   var genreWithout: @RawValue Optional<Genre> = Empty(),
+                   var worldWithout: @RawValue Optional<String> = Empty(),
+                   var char1Without: @RawValue Optional<String> = Empty(),
+                   var char2Without: @RawValue Optional<String> = Empty(),
+                   var worldList: @RawValue Optional<List<World>> = Empty(),
+                   var charList: @RawValue Optional<List<Character>> = Empty(),
+                   var unfilteredStoryCount: @RawValue Optional<String> = Empty(),
+                   var canonTitle: @RawValue Optional<String> = Empty(),
+                   var pageCount: @RawValue Optional<Int> = Empty()
 ) : Parcelable {
   @Parcelize
   data class World(val name: String, val id: String) : Parcelable
@@ -186,16 +186,16 @@ class CanonFetcher(private val parentLink: CategoryLink,
       val charsElement = filtersDiv.select("select[name=\"characterid1\"]")
       if (charsElement.size > 0) {
         charList =
-            charsElement[0].children().map { opt -> Character(opt.text(), opt.`val`()) }.opt2()
+            charsElement[0].children().map { opt -> Character(opt.text(), opt.`val`()) }.opt()
       }
       val worldsElement = filtersDiv.select("select[name=\"verseid1\"]")
       if (worldsElement.size > 0) {
-        worldList = worldsElement[0].children().map { opt -> World(opt.text(), opt.`val`()) }.opt2()
+        worldList = worldsElement[0].children().map { opt -> World(opt.text(), opt.`val`()) }.opt()
       }
     }
 
     val div = doc.getElementById("content_wrapper_inner")
-    canonTitle = doc.title().replace(Regex("(?:FanFiction Archive)? \\| FanFiction"), "").opt2()
+    canonTitle = doc.title().replace(Regex("(?:FanFiction Archive)? \\| FanFiction"), "").opt()
     // That span only exists for normal canons
     val isCurrentlyCrossover = !div.child(0).`is`("span")
     val categoryTitle = if (isCurrentlyCrossover) canonTitle.get() else div.child(2).text()
@@ -237,18 +237,18 @@ class CanonFetcher(private val parentLink: CategoryLink,
     unfilteredStoryCount = if (centerElem.size == 0) {
       // If there is no element with the count there, it means there is only one page, so
       // we get how many stories were on the page
-      list.size.toString().opt2()
+      list.size.toString().opt()
     } else {
       val text = centerElem[0].textNodes()[0].text().split('|')[0].trim()
       // If the text isn't a number (or at least look like a number), we have no stories unfiltered
-      if (text[0].isDigit()) text.opt2()
-      else "0".opt2()
+      if (text[0].isDigit()) text.opt()
+      else "0".opt()
     }
 
     val pageNav = doc.select("#content_wrapper_inner > center").last()
     pageCount =
-        if (pageNav != null && pageNav.text() != "Filters") getPageCountFromNav(pageNav).opt2()
-        else 1.opt2()
+        if (pageNav != null && pageNav.text() != "Filters") getPageCountFromNav(pageNav).opt()
+        else 1.opt()
 
     return list
   }

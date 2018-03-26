@@ -5,7 +5,7 @@ import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
 
 /** Replacement for [java.util.Optional] using a sealed class. Is [Parcelable] if [E] is. */
-sealed class Optional2<E> {
+sealed class Optional<E> {
   /**
    * Gets the stored value.
    * @throws NoSuchElementException if the optional is empty
@@ -42,9 +42,9 @@ sealed class Optional2<E> {
 }
 
 @Parcelize
-class Empty<T> : Optional2<T>(), Parcelable
+class Empty<T> : Optional<T>(), Parcelable
 @Parcelize
-class Value<T>(val value: @RawValue T) : Optional2<T>(), Parcelable
+class Value<T>(val value: @RawValue T) : Optional<T>(), Parcelable
 
 /** Convenience extension fun for creating optional objects. */
-fun <T> T?.opt2(): Optional2<T> = if (this == null) Empty() else Value(this)
+fun <T> T?.opt(): Optional<T> = if (this == null) Empty() else Value(this)

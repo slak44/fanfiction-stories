@@ -70,7 +70,7 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
    * Attempt to get the cached value for a given key. If it doesn't exist or is expired, [Empty] is
    * returned instead.
    */
-  fun hit(key: String): Optional2<T> {
+  fun hit(key: String): Optional<T> {
     if (cache[key] == null) {
       Log.d(TAG, "Cache missed: $key")
       return Empty()
@@ -83,7 +83,7 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
       return Empty()
     }
     Log.d(TAG, "Cache hit: $key")
-    return cache[key]!!.first.opt2()
+    return cache[key]!!.first.opt()
   }
 
   /**

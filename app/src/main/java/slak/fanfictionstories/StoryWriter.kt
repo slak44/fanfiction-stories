@@ -16,20 +16,20 @@ fun haveExternalStorage() = Environment.MEDIA_MOUNTED == Environment.getExternal
 /**
  * @returns a [File] representing the external storage dir, or [Empty] if it's unavailable
  */
-fun getStorageDir(ctx: Context): Optional2<File> =
-    if (haveExternalStorage()) ctx.getExternalFilesDir(null).opt2() else Empty()
+fun getStorageDir(ctx: Context): Optional<File> =
+    if (haveExternalStorage()) ctx.getExternalFilesDir(null).opt() else Empty()
 
 /**
  * @returns a [File] representing the stories dir, or [Empty] if it's unavailable
  */
-fun storyDir(ctx: Context, storyId: Long): Optional2<File> {
+fun storyDir(ctx: Context, storyId: Long): Optional<File> {
   val storage = getStorageDir(ctx).orElse {
     Log.e("StoryWriter#storyDir", "no ext storage")
     errorDialog(R.string.ext_store_unavailable, R.string.ext_store_unavailable_tip)
     return Empty()
   }
   val storiesDir = File(storage, "storiesData")
-  return File(storiesDir, storyId.toString()).opt2()
+  return File(storiesDir, storyId.toString()).opt()
 }
 
 /**

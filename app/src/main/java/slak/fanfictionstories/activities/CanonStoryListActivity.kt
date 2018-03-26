@@ -146,7 +146,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       layout.rating.onSelect { _, pos -> rating = Rating.values()[pos] }
       layout.status.onSelect { _, pos -> status = Status.values()[pos] }
       layout.length.onSelect { _, pos -> wordCount = WordCount.values()[pos] }
-      layout.notGenre.onSelect { _, pos -> genreWithout = Genre.values()[pos].opt2() }
+      layout.notGenre.onSelect { _, pos -> genreWithout = Genre.values()[pos].opt() }
       layout.language.onSelect { _, pos ->
         lang = Language.values()[pos]
         Prefs.use { it.putInt(Prefs.REMEMBER_LANG_ID, pos) }
@@ -176,8 +176,8 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
         layout.char2.onSelect { _, pos -> char2Id = charList.get()[pos].id }
         layout.char3.onSelect { _, pos -> char3Id = charList.get()[pos].id }
         layout.char4.onSelect { _, pos -> char4Id = charList.get()[pos].id }
-        layout.notChar1.onSelect { _, pos -> char1Without = charList.get()[pos].id.opt2() }
-        layout.notChar2.onSelect { _, pos -> char2Without = charList.get()[pos].id.opt2() }
+        layout.notChar1.onSelect { _, pos -> char1Without = charList.get()[pos].id.opt() }
+        layout.notChar2.onSelect { _, pos -> char2Without = charList.get()[pos].id.opt() }
         layout.char1.setSelection(charList.get().indexOfFirst { it.id == char1Id })
         layout.char2.setSelection(charList.get().indexOfFirst { it.id == char2Id })
         layout.char3.setSelection(charList.get().indexOfFirst { it.id == char3Id })
@@ -204,7 +204,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
         layout.world.onSelect { _, pos -> worldId = wl[pos].id }
         layout.world.setSelection(wl.indexOfFirst { it.id == worldId })
 
-        layout.notWorld.onSelect { _, pos -> worldWithout = wl[pos].name.opt2() }
+        layout.notWorld.onSelect { _, pos -> worldWithout = wl[pos].name.opt() }
 
         worldWithout.ifPresent {
           layout.notWorld.setSelection(worldNameList.indexOf(it))
