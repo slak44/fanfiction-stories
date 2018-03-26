@@ -6,13 +6,13 @@
     android:layout_marginTop="@dimen/dialog_view_margin">
 
     <GridLayout
-        android:columnCount="2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="?dialogPreferredPadding"
+        android:columnCount="2"
         android:paddingBottom="?dialogPreferredPadding"
+        android:paddingEnd="8dp"
         android:paddingStart="8dp"
-        android:paddingEnd="8dp">
+        android:paddingTop="?dialogPreferredPadding">
 
         <TextView
             style="@style/AppTheme.FilterSpinnerLabel"
@@ -96,6 +96,7 @@
             android:entries="@array/genres"/>
 
         <TextView
+            android:id="@+id/char1Text"
             style="@style/AppTheme.FilterSpinnerLabel"
             android:text="@string/native_char1"/>
 
@@ -104,6 +105,7 @@
             style="@style/AppTheme.FilterSpinner"/>
 
         <TextView
+            android:id="@+id/char2Text"
             style="@style/AppTheme.FilterSpinnerLabel"
             android:text="@string/native_char2"/>
 
@@ -112,6 +114,7 @@
             style="@style/AppTheme.FilterSpinner"/>
 
         <TextView
+            android:id="@+id/char3Text"
             style="@style/AppTheme.FilterSpinnerLabel"
             android:text="@string/native_char3"/>
 
@@ -120,6 +123,7 @@
             style="@style/AppTheme.FilterSpinner"/>
 
         <TextView
+            android:id="@+id/char4Text"
             style="@style/AppTheme.FilterSpinnerLabel"
             android:text="@string/native_char4"/>
 
@@ -145,6 +149,7 @@
             style="@style/AppTheme.FilterSpinner"/>
 
         <TextView
+            android:id="@+id/notChar1Text"
             style="@style/AppTheme.FilterSpinnerLabel"
             android:text="@string/native_not_char1"/>
 
@@ -153,6 +158,7 @@
             style="@style/AppTheme.FilterSpinner"/>
 
         <TextView
+            android:id="@+id/notChar2Text"
             style="@style/AppTheme.FilterSpinnerLabel"
             android:text="@string/native_not_char2"/>
 

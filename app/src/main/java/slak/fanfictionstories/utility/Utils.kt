@@ -9,6 +9,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.net.NetworkInfo
+import android.os.Parcelable
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.annotation.StringRes
@@ -26,6 +27,8 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
+import kotlinx.android.parcel.Parcelize
+import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.sync.Mutex
@@ -39,6 +42,7 @@ import java.io.PrintWriter
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.NoSuchElementException
 import kotlin.coroutines.experimental.CoroutineContext
 
 /** Wraps [async], except it also rethrows exceptions synchronously. */
@@ -259,6 +263,30 @@ inline fun <T> Optional<T>.ifPresent2(block: (T) -> Unit) {
 
 /** Sugar for the default Optional.orElseThrow. */
 fun <T> Optional<T>.orElseThrow(th: Throwable): T = if (isPresent) this.get() else throw th
+
+sealed class Optional2<E> {
+  fun get(): E = when (this) {
+    is Empty -> throw NoSuchElementException("This optional is empty")
+    is Value<E> -> value
+  }
+
+  inline fun ifPresent(block: (E) -> Unit) {
+    if (this is Empty) return
+    else block(get())
+  }
+
+  fun orElse(other: E) = if (this is Empty) other else get()
+  inline fun orElse(block: () -> E) = if (this is Empty) block() else get()
+
+  fun orElseThrow(th: Throwable): E = if (this is Empty) throw th else get()
+}
+
+@Parcelize
+class Empty<T> : Optional2<T>(), Parcelable
+@Parcelize
+class Value<T>(val value: @RawValue T) : Optional2<T>(), Parcelable
+
+fun <T> T?.opt2(): Optional2<T> = if (this == null) Empty() else Value(this)
 
 /**
  * Provide infinite scrolling for a [RecyclerView] with a [LinearLayoutManager], using the provided

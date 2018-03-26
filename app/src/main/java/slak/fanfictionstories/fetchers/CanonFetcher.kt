@@ -7,6 +7,7 @@ import android.util.Log
 import kotlinx.android.parcel.IgnoredOnParcel
 import kotlinx.android.parcel.Parceler
 import kotlinx.android.parcel.Parcelize
+import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
@@ -119,117 +120,63 @@ enum class WordCount(val ffnetValue: String) {
 val canonListCache = Cache<String>("CanonPage", TimeUnit.MINUTES.toMillis(15))
 
 @Parcelize
-@SuppressLint("ParcelCreator")
-class CanonFetcher(val details: Details) : Parcelable {
+class CanonFetcher(private val parentLink: CategoryLink,
+                   var sort: Sort = Sort.UPDATE_DATE,
+                   var timeRange: TimeRange = TimeRange.ALL,
+                   var lang: Language = Language.ALL,
+                   var genre1: Genre = Genre.ALL,
+                   var genre2: Genre = Genre.ALL,
+                   var rating: Rating = Rating.ALL,
+                   var status: Status = Status.ALL,
+                   var wordCount: WordCount = WordCount.ALL,
+                   var worldId: String = "0",
+                   var char1Id: String = "0",
+                   var char2Id: String = "0",
+                   var char3Id: String = "0",
+                   var char4Id: String = "0",
+                   var genreWithout: @RawValue Optional2<Genre> = Empty(),
+                   var worldWithout: @RawValue Optional2<String> = Empty(),
+                   var char1Without: @RawValue Optional2<String> = Empty(),
+                   var char2Without: @RawValue Optional2<String> = Empty(),
+                   var worldList: @RawValue Optional2<List<World>> = Empty(),
+                   var charList: @RawValue Optional2<List<Character>> = Empty(),
+                   var unfilteredStoryCount: @RawValue Optional2<String> = Empty(),
+                   var canonTitle: @RawValue Optional2<String> = Empty(),
+                   var pageCount: @RawValue Optional2<Int> = Empty()
+) : Parcelable {
   @Parcelize
-  @SuppressLint("ParcelCreator")
-  data class Details(
-      val parentLink: CategoryLink,
-
-      var sort: Sort = Sort.UPDATE_DATE,
-      var timeRange: TimeRange = TimeRange.ALL,
-      var lang: Language = Language.ALL,
-      var genre1: Genre = Genre.ALL,
-      var genre2: Genre = Genre.ALL,
-      var rating: Rating = Rating.ALL,
-      var status: Status = Status.ALL,
-      var wordCount: WordCount = WordCount.ALL,
-      var worldId: String = "0",
-      var char1Id: String = "0",
-      var char2Id: String = "0",
-      var char3Id: String = "0",
-      var char4Id: String = "0",
-
-      var genreWithout: Genre? = null,
-      var worldWithout: String? = null,
-      var char1Without: String? = null,
-      var char2Without: String? = null
-  ) : Parcelable
-
-  @Parcelize
-  @SuppressLint("ParcelCreator")
   data class World(val name: String, val id: String) : Parcelable
 
   @Parcelize
-  @SuppressLint("ParcelCreator")
   data class Character(val name: String, val id: String) : Parcelable
 
-  @IgnoredOnParcel
-  var worldList: Optional<List<World>> = listOf<World>().opt()
-    private set
-  @IgnoredOnParcel
-  var charList: List<Character> = listOf()
-    private set
-  @IgnoredOnParcel
-  var unfilteredStories: Optional<String> = Optional.empty()
-    private set
-  @IgnoredOnParcel
-  var canonTitle: Optional<String> = Optional.empty()
-    private set
-  @IgnoredOnParcel
-  var pageCount: Optional<Int> = Optional.empty()
-    private set
-
-  companion object : Parceler<CanonFetcher> {
-    override fun create(parcel: Parcel): CanonFetcher {
-      val c = CanonFetcher(parcel.readParcelable(Details::class.java.classLoader) as Details)
-      @Suppress("unchecked_cast")
-      val worldArray = parcel.readArray(Array<World>::class.java.classLoader) as Array<World>?
-      c.worldList = worldArray?.toList()?.opt() ?: Optional.empty()
-
-      @Suppress("unchecked_cast")
-      val charArray = parcel.readArray(Array<Character>::class.java.classLoader) as Array<Character>
-      c.charList = charArray.toList()
-
-      val str = parcel.readString()
-      c.unfilteredStories = str?.opt() ?: Optional.empty()
-
-      val title = parcel.readString()
-      c.canonTitle = title?.opt() ?: Optional.empty()
-
-      val pageCount = parcel.readInt()
-      c.pageCount = if (pageCount == -1) Optional.empty() else pageCount.opt()
-
-      return c
-    }
-
-    override fun CanonFetcher.write(parcel: Parcel, flags: Int) {
-      parcel.writeParcelable(details, 0)
-      parcel.writeArray(worldList.orElse(listOf())?.toTypedArray())
-      parcel.writeArray(charList.toTypedArray())
-      parcel.writeString(unfilteredStories.orElse(null))
-      parcel.writeString(canonTitle.orElse(null))
-      parcel.writeInt(pageCount.orElse(-1))
-    }
-  }
-
   fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
-    if (pageCount.isPresent && page > pageCount.get()) return@async2 emptyList<StoryModel>()
+    pageCount.ifPresent { if (page > it) return@async2 emptyList<StoryModel>() }
     val queryParams = listOf(
-        details.sort.queryParam(),
-        details.timeRange.queryParam(),
-        details.lang.queryParam(),
-        details.genre1.queryParam(1),
-        details.genre2.queryParam(2),
-        details.rating.queryParam(),
-        details.status.queryParam(),
-        details.wordCount.queryParam(),
-        "v1=${details.worldId}",
-        "c1=${details.char1Id}",
-        "c2=${details.char2Id}",
-        "c3=${details.char3Id}",
-        "c4=${details.char4Id}",
-        if (details.genreWithout != null) "_${details.genreWithout!!.queryParam(1)}" else "",
-        if (details.worldWithout != null) "_v1=${details.worldWithout}" else "",
-        if (details.char1Without != null) "_c1=${details.char1Without}" else "",
-        if (details.char2Without != null) "_c2=${details.char2Without}" else ""
-    ).joinToString("&")
+        sort.queryParam(),
+        timeRange.queryParam(),
+        lang.queryParam(),
+        genre1.queryParam(1),
+        genre2.queryParam(2),
+        rating.queryParam(),
+        status.queryParam(),
+        wordCount.queryParam(),
+        "v1=$worldId",
+        "c1=$char1Id",
+        "c2=$char2Id",
+        "c3=$char3Id",
+        "c4=$char4Id",
+        if (genreWithout !is Empty) "_${genreWithout.get().queryParam(1)}" else "",
+        if (worldWithout !is Empty) "_v1=${worldWithout.get()}" else "",
+        if (char1Without !is Empty) "_c1=${char1Without.get()}" else "",
+        if (char2Without !is Empty) "_c2=${char2Without.get()}" else ""
+    ).filter { it.isNotEmpty() }.joinToString("&")
 
-    val pathAndQuery = "${details.parentLink.urlComponent}/?p=$page&$queryParams"
+    val pathAndQuery = "${parentLink.urlComponent}/?p=$page&$queryParams"
     canonListCache.hit(pathAndQuery).ifPresent2 { return@async2 parseHtml(it) }
     val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {
       Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
-          R.string.error_with_canon_stories, details.parentLink.displayName)
+          R.string.error_with_canon_stories, parentLink.displayName)
       Log.e(TAG, "CanonFetcher: retry", it)
     }.await()
     canonListCache.update(pathAndQuery, html)
@@ -239,20 +186,21 @@ class CanonFetcher(val details: Details) : Parcelable {
   private fun parseHtml(html: String): List<StoryModel> {
     val doc = Jsoup.parse(html)
 
-    if (charList.isEmpty() || (worldList.isPresent && worldList.get().isEmpty())) {
+    if (charList is Empty || worldList is Empty) {
       val filtersDiv = doc.select("#filters > form > div.modal-body")
-      val charsElement = filtersDiv.select("select[name=\"characterid1\"]")[0]
-      charList = charsElement.children().map { option -> Character(option.text(), option.`val`()) }
+      val charsElement = filtersDiv.select("select[name=\"characterid1\"]")
+      if (charsElement.size > 0) {
+        charList =
+            charsElement[0].children().map { opt -> Character(opt.text(), opt.`val`()) }.opt2()
+      }
       val worldsElement = filtersDiv.select("select[name=\"verseid1\"]")
-      worldList = if (worldsElement.size == 0) {
-        Optional.empty()
-      } else {
-        worldsElement[0].children().map { option -> World(option.text(), option.`val`()) }.opt()
+      if (worldsElement.size > 0) {
+        worldList = worldsElement[0].children().map { opt -> World(opt.text(), opt.`val`()) }.opt2()
       }
     }
 
     val div = doc.getElementById("content_wrapper_inner")
-    canonTitle = doc.title().replace(Regex("(?:FanFiction Archive)? \\| FanFiction"), "").opt()
+    canonTitle = doc.title().replace(Regex("(?:FanFiction Archive)? \\| FanFiction"), "").opt2()
     // That span only exists for normal canons
     val isCurrentlyCrossover = !div.child(0).`is`("span")
     val categoryTitle = if (isCurrentlyCrossover) canonTitle.get() else div.child(2).text()
@@ -291,21 +239,21 @@ class CanonFetcher(val details: Details) : Parcelable {
     }.collect(Collectors.toList())
 
     val centerElem = doc.select("#filters + center")
-    unfilteredStories = if (centerElem.size == 0) {
+    unfilteredStoryCount = if (centerElem.size == 0) {
       // If there is no element with the count there, it means there is only one page, so
       // we get how many stories were on the page
-      list.size.toString().opt()
+      list.size.toString().opt2()
     } else {
       val text = centerElem[0].textNodes()[0].text().split('|')[0].trim()
       // If the text isn't a number (or at least look like a number), we have no stories unfiltered
-      if (text[0].isDigit()) text.opt()
-      else "0".opt()
+      if (text[0].isDigit()) text.opt2()
+      else "0".opt2()
     }
 
     val pageNav = doc.select("#content_wrapper_inner > center").last()
     pageCount =
-        if (pageNav != null && pageNav.text() != "Filters") getPageCountFromNav(pageNav).opt()
-        else 1.opt()
+        if (pageNav != null && pageNav.text() != "Filters") getPageCountFromNav(pageNav).opt2()
+        else 1.opt2()
 
     return list
   }
