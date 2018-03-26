@@ -20,8 +20,11 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.story_component.view.*
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
@@ -159,7 +162,7 @@ class StoryCardView : CardView {
     removeBtn.setOnClickListener {
       // Even though we have a model, fetch it from db to make sure there are no inconsistencies
       val dbModel = runBlocking { Static.database.storyById(model.storyId).await() }
-      if (!dbModel.isPresent) {
+      if (dbModel is Empty) {
         errorDialog(R.string.storyid_does_not_exist, R.string.storyid_does_not_exist_tip)
         return@setOnClickListener
       }
@@ -183,12 +186,12 @@ class StoryCardView : CardView {
       addBtn.text = str(R.string.adding___)
       launch(UI) {
         val newModel = fetchAndWriteStory(model.storyId).await()
-        if (newModel.isPresent) {
-          addBtn.visibility = View.GONE
-        } else {
+        if (newModel is Empty) {
           addBtn.visibility = View.VISIBLE
           addBtn.isEnabled = true
           addBtn.text = str(R.string.download)
+        } else {
+          addBtn.visibility = View.GONE
         }
       }
     }

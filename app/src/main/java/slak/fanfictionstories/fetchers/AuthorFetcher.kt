@@ -15,8 +15,11 @@ import slak.fanfictionstories.StoryProgress
 import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
-import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Cache
+import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.Notifications.defaultIntent
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.patientlyFetchURL
 import java.util.concurrent.TimeUnit
 
 val authorCache = Cache<Author>("Author", TimeUnit.DAYS.toMillis(1))
@@ -39,7 +42,7 @@ data class Author(val name: String,
  * @see Author
  */
 fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
-  authorCache.hit(authorId.toString()).ifPresent2 { return@async2 it }
+  authorCache.hit(authorId.toString()).ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_fetching_author_data, authorId.toString())

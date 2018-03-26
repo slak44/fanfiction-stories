@@ -10,27 +10,26 @@ import kotlinx.coroutines.experimental.channels.consumeEach
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.utility.*
 import java.io.File
-import java.util.*
 
 fun haveExternalStorage() = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()
 
 /**
- * @returns a File representing the external storage dir, or Optional.empty() if it's unavailable
+ * @returns a [File] representing the external storage dir, or [Empty] if it's unavailable
  */
-fun getStorageDir(ctx: Context): Optional<File> =
-    if (haveExternalStorage()) ctx.getExternalFilesDir(null).opt() else Optional.empty()
+fun getStorageDir(ctx: Context): Optional2<File> =
+    if (haveExternalStorage()) ctx.getExternalFilesDir(null).opt2() else Empty()
 
 /**
- * @returns a File representing the stories dir, or Optional.empty() if it's unavailable
+ * @returns a [File] representing the stories dir, or [Empty] if it's unavailable
  */
-fun storyDir(ctx: Context, storyId: Long): Optional<File> {
+fun storyDir(ctx: Context, storyId: Long): Optional2<File> {
   val storage = getStorageDir(ctx).orElse {
     Log.e("StoryWriter#storyDir", "no ext storage")
     errorDialog(R.string.ext_store_unavailable, R.string.ext_store_unavailable_tip)
-    return Optional.empty()
+    return Empty()
   }
   val storiesDir = File(storage, "storiesData")
-  return File(storiesDir, storyId.toString()).opt()
+  return File(storiesDir, storyId.toString()).opt2()
 }
 
 /**

@@ -9,7 +9,6 @@ import kotlinx.coroutines.experimental.Deferred
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.StoryModel
-import java.util.*
 
 class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 2) {
   companion object {
@@ -73,9 +72,9 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     select(tableName = "stories").parseList(StoryModel.dbParser)
   }
 
-  fun storyById(storyId: StoryId): Deferred<Optional<StoryModel>> = useAsync {
+  fun storyById(storyId: StoryId): Deferred<Optional2<StoryModel>> = useAsync {
     select("stories").whereSimple("storyId = ?", storyId.toString())
-        .parseOpt(StoryModel.dbParser).opt()
+        .parseOpt(StoryModel.dbParser).opt2()
   }
 
   fun updateInStory(storyId: StoryId, vararg pairs: Pair<String, Any>): Deferred<Int> = useAsync {

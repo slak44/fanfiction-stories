@@ -1,5 +1,6 @@
 package slak.fanfictionstories.activities
 
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
@@ -15,7 +16,6 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
-import android.arch.lifecycle.ViewModelProviders
 
 class StoryListActivity : ActivityWithStatic() {
   private lateinit var viewModel: StoryListViewModel
@@ -59,7 +59,7 @@ class StoryListActivity : ActivityWithStatic() {
           dialog.dismiss()
           launch(CommonPool) {
             val models = list.map { fetchAndWriteStory(it).await() }
-            val modelsFetched = models.count { it.isPresent }
+            val modelsFetched = models.count { it !is Empty }
             if (modelsFetched > 0) viewModel.triggerDatabaseLoad()
           }
         })

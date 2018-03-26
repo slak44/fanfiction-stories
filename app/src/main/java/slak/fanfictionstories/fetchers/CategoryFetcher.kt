@@ -38,7 +38,7 @@ val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMilli
 
 fun fetchCategoryData(
     categoryUrlComponent: String): Deferred<Array<CategoryLink>> = async2(CommonPool) {
-  categoryCache.hit(categoryUrlComponent).ifPresent2 { return@async2 it }
+  categoryCache.hit(categoryUrlComponent).ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_with_categories, categoryUrlComponent)

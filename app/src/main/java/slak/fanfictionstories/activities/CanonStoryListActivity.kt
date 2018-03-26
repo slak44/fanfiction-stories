@@ -36,7 +36,7 @@ class CanonListViewModel : StoryListViewModel() {
   private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(CommonPool) {
     val pageData = fetcher.get(page).await().map {
       val model = Static.database.storyById(it.storyId).await()
-          .orElse(null) ?: return@map StoryCardData(it)
+          .orNull() ?: return@map StoryCardData(it)
       it.progress = model.progress
       it.status = model.status
       return@map StoryCardData(it)

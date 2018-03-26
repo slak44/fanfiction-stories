@@ -4,7 +4,6 @@ import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
 import java.io.*
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 typealias ExpirationEpoch = Long
@@ -68,23 +67,23 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
   }
 
   /**
-   * Attempt to get the cached value for a given key. If it doesn't exist or is expired, an empty
-   * [Optional] will be returned instead.
+   * Attempt to get the cached value for a given key. If it doesn't exist or is expired, [Empty] is
+   * returned instead.
    */
-  fun hit(key: String): Optional<T> {
+  fun hit(key: String): Optional2<T> {
     if (cache[key] == null) {
       Log.d(TAG, "Cache missed: $key")
-      return Optional.empty()
+      return Empty()
     }
     if (isExpired(cache[key]!!.second)) {
       // Cache expired; remove and return nothing
       Log.d(TAG, "Cache expired: $key")
       cache.remove(key)
       serialize()
-      return Optional.empty()
+      return Empty()
     }
     Log.d(TAG, "Cache hit: $key")
-    return cache[key]!!.first.opt()
+    return cache[key]!!.first.opt2()
   }
 
   /**

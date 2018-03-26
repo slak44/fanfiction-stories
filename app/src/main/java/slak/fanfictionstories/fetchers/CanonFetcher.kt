@@ -1,11 +1,7 @@
 package slak.fanfictionstories.fetchers
 
-import android.annotation.SuppressLint
-import android.os.Parcel
 import android.os.Parcelable
 import android.util.Log
-import kotlinx.android.parcel.IgnoredOnParcel
-import kotlinx.android.parcel.Parceler
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.CommonPool
@@ -22,7 +18,6 @@ import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
-import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
 
@@ -173,7 +168,7 @@ class CanonFetcher(private val parentLink: CategoryLink,
     ).filter { it.isNotEmpty() }.joinToString("&")
 
     val pathAndQuery = "${parentLink.urlComponent}/?p=$page&$queryParams"
-    canonListCache.hit(pathAndQuery).ifPresent2 { return@async2 parseHtml(it) }
+    canonListCache.hit(pathAndQuery).ifPresent { return@async2 parseHtml(it) }
     val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {
       Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
           R.string.error_with_canon_stories, parentLink.displayName)

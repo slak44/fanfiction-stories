@@ -259,7 +259,7 @@ class AuthorActivity : LoadingActivity(1) {
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
       val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES).map {
         val model = runBlocking { Static.database.storyById(it.storyId).await() }
-            .orElse(null) ?: return@map it
+            .orNull() ?: return@map it
         it.progress = model.progress
         it.status = model.status
         return@map it
