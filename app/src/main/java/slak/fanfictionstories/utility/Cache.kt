@@ -13,14 +13,19 @@ typealias CacheMap<T> = ConcurrentHashMap<String, Pair<T, ExpirationEpoch>>
  * A simple cache implementation that stores items of type [T], in memory and on disk (in a file).
  *
  * Relies on a [ConcurrentHashMap] with [String] keys, and on [Serializable].
+ * @param name this will show up in debug messages, and is useful to tell multiple instances apart
+ * @param cacheTimeMs how long to keep things in the map, in milliseconds
+ * @see [java.util.concurrent.TimeUnit.MILLISECONDS]
+ * @see [CacheMap]
  */
-class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch) {
+class Cache<T : Serializable>(val name: String, val cacheTimeMs: Long) {
   private var cache = CacheMap<T>()
   private val cacheMapFile = File(Static.cacheDir, "$name.cached-map")
   private val TAG = "Cache[$name]"
 
   /**
    * Read the serialized cache on disk and load it into memory, if possible. Does not try too hard.
+   * @see serialize
    */
   fun deserialize() = async2(CommonPool) {
     if (!cacheMapFile.exists()) {
@@ -42,25 +47,19 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
     }
   }
 
-  /**
-   * Check the expiration date of each item, and remove it if expired.
-   */
+  /** Check the expiration date of each item, and remove it if expired. */
   fun purge() = launch(CommonPool) {
     cache.entries.removeIf { isExpired(it.value.second) }
   }
 
-  /**
-   * Write the current serialized state of the cache to disk.
-   */
+  /** Write the current serialized state of the cache to disk. */
   fun serialize() = launch(CommonPool) {
     val objOut = ObjectOutputStream(FileOutputStream(cacheMapFile))
     objOut.writeObject(cache)
     objOut.close()
   }
 
-  /**
-   * Update or set the value for a key in this cache. Resets expiration date for that key.
-   */
+  /** Update or set the value for a key in this cache. Resets expiration date for that key. */
   fun update(key: String, data: T) {
     cache[key] = data to System.currentTimeMillis() + cacheTimeMs
     serialize()
@@ -86,9 +85,7 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
     return cache[key]!!.first.opt()
   }
 
-  /**
-   * Clears both the in-memory map, and deletes the file on disk holding the cache.
-   */
+  /** Clears both the in-memory map, and deletes the file on disk holding the cache. */
   fun clear() {
     cache = CacheMap()
     val deleted = cacheMapFile.delete()
@@ -98,9 +95,7 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: ExpirationEpoch
   }
 
   companion object {
-    /**
-     * Checks if a given timestamp is past the current timestamp.
-     */
+    /** Checks if a given timestamp is past the current timestamp. */
     fun isExpired(date: ExpirationEpoch): Boolean = System.currentTimeMillis() > date
   }
 }
