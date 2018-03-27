@@ -76,7 +76,6 @@ typealias StoryId = Long
 
 /** Models a story, representing all of its data except for the chapter text. */
 @Parcelize
-@SuppressLint("ParcelCreator")
 data class StoryModel(val storyId: StoryId,
                       var status: StoryStatus,
                       var progress: StoryProgress,

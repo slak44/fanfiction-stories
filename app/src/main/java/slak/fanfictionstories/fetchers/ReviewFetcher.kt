@@ -1,6 +1,5 @@
 package slak.fanfictionstories.fetchers
 
-import android.annotation.SuppressLint
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
@@ -17,7 +16,6 @@ import java.io.Serializable
 import java.util.concurrent.TimeUnit
 
 @Parcelize
-@SuppressLint("ParcelCreator")
 data class Review(
     val storyId: StoryId,
     val chapter: Int,

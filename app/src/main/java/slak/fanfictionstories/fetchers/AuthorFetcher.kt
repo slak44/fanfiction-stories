@@ -1,6 +1,5 @@
 package slak.fanfictionstories.fetchers
 
-import android.annotation.SuppressLint
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
@@ -25,7 +24,6 @@ import java.util.concurrent.TimeUnit
 val authorCache = Cache<Author>("Author", TimeUnit.DAYS.toMillis(1))
 
 @Parcelize
-@SuppressLint("ParcelCreator")
 data class Author(val name: String,
                   val id: Long,
                   val joinedDateSeconds: Long,
