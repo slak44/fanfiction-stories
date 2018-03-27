@@ -226,17 +226,9 @@ class AuthorActivity : LoadingActivity(1) {
         fragment.arguments = args
         return fragment
       }
-
-      class ArrangedStoryListViewModel : StoryListViewModel() {
-        var arrangement = Arrangement(
-            OrderStrategy.TITLE_ALPHABETIC,
-            OrderDirection.DESC,
-            GroupStrategy.NONE
-        )
-      }
     }
 
-    private lateinit var viewModel: ArrangedStoryListViewModel
+    private lateinit var viewModel: StoryListViewModel
 
     override fun onResume() {
       super.onResume()
@@ -255,7 +247,7 @@ class AuthorActivity : LoadingActivity(1) {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-      viewModel = ViewModelProviders.of(this)[ArrangedStoryListViewModel::class.java]
+      viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
       val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES).map {
         val model = runBlocking { Static.database.storyById(it.storyId).await() }
@@ -275,20 +267,20 @@ class AuthorActivity : LoadingActivity(1) {
         rootView.noStories.visibility = View.GONE
         rootView.orderBy.visibility = View.VISIBLE
         rootView.groupBy.visibility = View.VISIBLE
-        viewModel.arrangeStories(stories, viewModel.arrangement)
+        viewModel.arrangeStories(stories, Prefs.authorArrangement())
       }
       rootView.orderBy.setOnClickListener {
         orderByDialog(context!!,
-            viewModel.arrangement.orderStrategy, viewModel.arrangement.orderDirection) { str, dir ->
-          viewModel.arrangement = Arrangement(str, dir, viewModel.arrangement.groupStrategy)
-          viewModel.arrangeStories(stories, viewModel.arrangement)
+            Prefs.authorOrderStrategy, Prefs.authorOrderDirection) { str, dir ->
+          Prefs.authorOrderDirection = dir
+          Prefs.authorOrderStrategy = str
+          viewModel.arrangeStories(stories, Prefs.authorArrangement())
         }
       }
       rootView.groupBy.setOnClickListener {
-        groupByDialog(context!!, viewModel.arrangement.groupStrategy) {
-          viewModel.arrangement = Arrangement(
-              viewModel.arrangement.orderStrategy, viewModel.arrangement.orderDirection, it)
-          viewModel.arrangeStories(stories, viewModel.arrangement)
+        groupByDialog(context!!, Prefs.authorGroupStrategy) {
+          Prefs.authorGroupStrategy = it
+          viewModel.arrangeStories(stories, Prefs.authorArrangement())
         }
       }
       return rootView

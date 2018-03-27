@@ -114,15 +114,15 @@ class StoryListActivity : ActivityWithStatic() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.group -> {
-        groupByDialog(this, Prefs.groupStrategy) {
-          Prefs.groupStrategy = it
+        groupByDialog(this, Prefs.storyListGroupStrategy) {
+          Prefs.storyListGroupStrategy = it
           viewModel.triggerDatabaseLoad()
         }
       }
       R.id.sort -> {
-        orderByDialog(this, Prefs.orderStrategy, Prefs.orderDirection) { str, dir ->
-          Prefs.orderDirection = dir
-          Prefs.orderStrategy = str
+        orderByDialog(this, Prefs.storyListOrderStrategy, Prefs.storyListOrderDirection) { str, dir ->
+          Prefs.storyListOrderDirection = dir
+          Prefs.storyListOrderStrategy = str
           viewModel.triggerDatabaseLoad()
         }
       }

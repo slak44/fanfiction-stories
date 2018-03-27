@@ -30,7 +30,6 @@ import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
-import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -273,7 +272,7 @@ open class StoryListViewModel : ViewModelWithIntent(),
    */
   fun triggerDatabaseLoad() = launch(UI) {
     val stories = Static.database.getStories().await()
-    arrangeStories(stories, Prefs.arrangement())
+    arrangeStories(stories, Prefs.storyListArrangement())
   }
 
   /** How many stories are in [data]. */

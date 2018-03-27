@@ -23,20 +23,40 @@ object Prefs {
   const val LIST_GROUP_STRATEGY = "list_group_strategy"
   const val LIST_ORDER_STRATEGY = "list_order_strategy"
   const val LIST_ORDER_IS_REVERSE = "list_order_strategy_rev"
+  const val AUTHOR_LIST_GROUP_STRATEGY = "author_list_group_strategy"
+  const val AUTHOR_LIST_ORDER_STRATEGY = "author_list_order_strategy"
+  const val AUTHOR_LIST_ORDER_IS_REVERSE = "author_list_order_strategy_rev"
 
-  var groupStrategy
+  var storyListGroupStrategy
     get() = GroupStrategy[Static.prefs.getInt(LIST_GROUP_STRATEGY, GroupStrategy.NONE.ordinal)]
     set(new) = use { it.putInt(LIST_GROUP_STRATEGY, new.ordinal) }
 
-  var orderStrategy
+  var storyListOrderStrategy
     get() = OrderStrategy[Static.prefs.getInt(LIST_ORDER_STRATEGY, OrderStrategy.TITLE_ALPHABETIC.ordinal)]
     set(new) = use { it.putInt(LIST_ORDER_STRATEGY, new.ordinal) }
 
-  var orderDirection
+  var storyListOrderDirection
     get() = OrderDirection[Static.prefs.getInt(LIST_ORDER_IS_REVERSE, OrderDirection.DESC.ordinal)]
     set(new) = use { it.putInt(LIST_ORDER_IS_REVERSE, new.ordinal) }
 
-  fun arrangement() = Arrangement(orderStrategy, orderDirection, groupStrategy)
+  fun storyListArrangement() =
+      Arrangement(storyListOrderStrategy, storyListOrderDirection, storyListGroupStrategy)
+
+  var authorGroupStrategy
+    get() = GroupStrategy[Static.prefs.getInt(AUTHOR_LIST_GROUP_STRATEGY, GroupStrategy.NONE.ordinal)]
+    set(new) = use { it.putInt(AUTHOR_LIST_GROUP_STRATEGY, new.ordinal) }
+
+  var authorOrderStrategy
+    get() = OrderStrategy[Static.prefs.getInt(AUTHOR_LIST_ORDER_STRATEGY, OrderStrategy.TITLE_ALPHABETIC.ordinal)]
+    set(new) = use { it.putInt(AUTHOR_LIST_ORDER_STRATEGY, new.ordinal) }
+
+  var authorOrderDirection
+    get() = OrderDirection[Static.prefs.getInt(AUTHOR_LIST_ORDER_IS_REVERSE, OrderDirection.DESC.ordinal)]
+    set(new) = use { it.putInt(AUTHOR_LIST_ORDER_IS_REVERSE, new.ordinal) }
+
+  fun authorArrangement() =
+      Arrangement(authorOrderStrategy, authorOrderDirection, authorGroupStrategy)
+
 
   fun textSize() = Static.defaultPrefs.getString(
       str(R.string.key_option_size), str(R.string.option_size_default)).toFloat()

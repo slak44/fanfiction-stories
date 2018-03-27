@@ -43,8 +43,8 @@ enum class StoryStatus {
 
   /** Convert from an instance of [StoryStatus] to a user-viewable string */
   fun toUIString(): String = when (this) {
-  // Users can never see a TRANSIENT story
-    TRANSIENT -> throw IllegalArgumentException("Does not have an associated string")
+  // We pretend TRANSIENT == REMOTE, because they are the same as far as the user is concerned
+    TRANSIENT -> str(R.string.remote)
     REMOTE -> str(R.string.remote)
     LOCAL -> str(R.string.local)
   }
