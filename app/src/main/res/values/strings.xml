@@ -102,6 +102,9 @@ Untouched Stories: %d (%.2f%%)"
     <string name="update_time_summary">Around which hour to update every day</string>
     <string name="category_browser">Story Browsing</string>
     <string name="browser_remember_language">Remember language used in filter</string>
+    <string name="category_datetime">Date/Time Display</string>
+    <string name="datetime_option_locale">Locale</string>
+    <string name="datetime_option_locale_summary">A BCP 47 language tag used for correct formatting of time and date</string>
 
     <!-- Preference key values -->
     <string name="key_option_font" translatable="false">font_option_type</string>
@@ -111,6 +114,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="key_option_update_time" translatable="false">auto_updates_time</string>
     <string name="key_option_net_type" translatable="false">auto_updates_network_type</string>
     <string name="key_option_lang_mem" translatable="false">remember_language</string>
+    <string name="key_option_locale" translatable="false">datetime_locale</string>
 
     <!-- Preference default values -->
     <string name="option_font_default" translatable="false">Roboto</string>
@@ -119,6 +123,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="option_update_time_default" translatable="false">23:00</string>
     <string name="option_net_type_default" translatable="false">not_roaming</string>
     <string name="option_lang_mem_default" translatable="false">true</string>
+    <string name="option_locale_default">Default</string>
 
     <!-- Notifications -->
     <string name="download_notification_channel">Download Notifications</string>

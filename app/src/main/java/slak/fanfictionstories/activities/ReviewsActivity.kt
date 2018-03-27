@@ -176,7 +176,7 @@ class ReviewAdapter(
   private fun bindReviewProps(view: CardView, review: Review) = with(view) {
     reviewAuthor.text = review.author
     reviewChapter.text = str(R.string.chapter_x, review.chapter)
-    reviewDate.text = SimpleDateFormat.getDateInstance()
+    reviewDate.text = Prefs.simpleDateFormatter
         .format(Date(review.unixTimeSeconds * 1000))
     reviewContent.text = review.content
     viewAuthorBtn.setOnClickListener {

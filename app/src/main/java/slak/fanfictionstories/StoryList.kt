@@ -130,7 +130,7 @@ class StoryCardView : CardView {
     categoryText.text = str(R.string.in_category, model.category)
     categoryText.visibility = if (model.category == null) View.GONE else View.VISIBLE
     updateDateText.text = str(R.string.updated_on,
-        SimpleDateFormat.getDateInstance().format(Date(model.fragment.updateTime * 1000)))
+        Prefs.simpleDateFormatter.format(Date(model.fragment.updateTime * 1000)))
     if (model.fragment.updateTime == 0L) {
       // Do this instead of View.GONE or View.INVISIBLE because we want
       // its margins, but not its height
@@ -138,7 +138,7 @@ class StoryCardView : CardView {
       updateDateText.requestLayout()
     }
     publishDateText.text = str(R.string.published_on,
-        SimpleDateFormat.getDateInstance().format(Date(model.fragment.publishTime * 1000)))
+        Prefs.simpleDateFormatter.format(Date(model.fragment.publishTime * 1000)))
     reviewsText.text = str(R.string.x_reviews, model.fragment.reviews)
     favoritesText.text = str(R.string.x_favorites, model.fragment.favorites)
     followsText.text = str(R.string.x_follows, model.fragment.follows)

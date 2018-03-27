@@ -159,10 +159,10 @@ class AuthorActivity : LoadingActivity(1) {
   inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
     override fun getItem(position: Int): Fragment = when (position) {
       0 -> {
-        val joined = SimpleDateFormat.getDateInstance().format(
-            Date(viewModel.author!!.joinedDateSeconds * 1000))
-        val updated = SimpleDateFormat.getDateInstance().format(
-            Date(viewModel.author!!.updatedDateSeconds * 1000))
+        val joined = Prefs.simpleDateFormatter
+            .format(Date(viewModel.author!!.joinedDateSeconds * 1000))
+        val updated = Prefs.simpleDateFormatter
+            .format(Date(viewModel.author!!.updatedDateSeconds * 1000))
         val html = """
           <p>${str(R.string.bio_joined, joined)}</p>
           <p>${

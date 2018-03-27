@@ -11,6 +11,9 @@ import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Language
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.*
 
 object Prefs {
   const val PREFS_FILE = "slak.fanfictionstories.SHARED_PREFERENCES"
@@ -73,11 +76,25 @@ object Prefs {
     return ZonedDateTime.of(now.toLocalDate(), LocalTime.of(hour, minute), ZoneId.systemDefault())
   }
 
-  fun filterLanguage() = Static.prefs.getBoolean(str(R.string.key_option_lang_mem),
+  fun filterLanguage() = Static.defaultPrefs.getBoolean(str(R.string.key_option_lang_mem),
       str(R.string.option_lang_mem_default).toBoolean())
 
   fun preferredLanguage(): Language =
-      Language.values()[Static.prefs.getInt(REMEMBER_LANG_ID, Language.ALL.ordinal)]
+      Language.values()[Static.defaultPrefs.getInt(REMEMBER_LANG_ID, Language.ALL.ordinal)]
+
+  fun locale() = Static.defaultPrefs.getString(
+      str(R.string.key_option_locale), str(R.string.option_locale_default))
+
+  val simpleDateFormatter: DateFormat
+    get() {
+      val localeStr = Prefs.locale()
+      val locale = if (localeStr == str(R.string.option_locale_default)) {
+        Locale.getDefault()
+      } else {
+        Locale(localeStr)
+      }
+      return SimpleDateFormat.getDateInstance(SimpleDateFormat.DEFAULT, locale)
+    }
 
   /**
    * Like [use], but uses [SharedPreferences.Editor.commit] instead of apply.
