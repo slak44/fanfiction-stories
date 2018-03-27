@@ -22,27 +22,33 @@ import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 
 class CanonListViewModel : StoryListViewModel() {
-  val fetcher: CanonFetcher by lazy {
-    CanonFetcher(intent!!.extras.getParcelable(INTENT_LINK_DATA))
+  val parentLink: CategoryLink by lazy {
+    intent!!.extras.getParcelable<CategoryLink>(INTENT_LINK_DATA)
   }
-  private var currentPage: MutableLiveData<Int> = MutableLiveData()
+  val filters = CanonFilters()
 
-  fun getPage(): LiveData<Int> = currentPage
+  var metadata = CanonMetadata()
+    private set
+
+  private var currentPage: MutableLiveData<Int> = MutableLiveData()
+  val currPage: LiveData<Int> get() = currentPage
 
   init {
     currentPage.it = 1
   }
 
   private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(CommonPool) {
-    val pageData = fetcher.get(page).await().map {
+    val canonPage = getCanonPage(parentLink, filters, page).await()
+    metadata = canonPage.metadata
+    val storyData = canonPage.storyList.map {
       val model = Static.database.storyById(it.storyId).await()
           .orNull() ?: return@map StoryCardData(it)
       it.progress = model.progress
       it.status = model.status
       return@map StoryCardData(it)
     }
-    if (pageData.isEmpty()) return@async2 listOf<StoryListItem>()
-    return@async2 listOf(GroupTitle(str(R.string.page_x, page)), *pageData.toTypedArray())
+    if (storyData.isEmpty()) return@async2 emptyList<StoryListItem>()
+    return@async2 listOf(GroupTitle(str(R.string.page_x, page)), *storyData.toTypedArray())
   }
 
   fun resetPagination() {
@@ -72,7 +78,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       viewModel.addDeferredItems(viewModel.getNextPage())
     }
 
-    if (Prefs.filterLanguage()) viewModel.fetcher.lang = Prefs.preferredLanguage()
+    if (Prefs.filterLanguage()) viewModel.filters.lang = Prefs.preferredLanguage()
 
     setAppbarText()
 
@@ -92,8 +98,8 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
   }
 
   private fun setAppbarText() {
-    title = viewModel.fetcher.canonTitle.orElse(str(R.string.loading___))
-    viewModel.fetcher.unfilteredStoryCount.ifPresent {
+    title = viewModel.metadata.canonTitle.orElse(str(R.string.loading___))
+    viewModel.metadata.unfilteredStoryCount.ifPresent {
       supportActionBar?.subtitle = str(R.string.x_stories, it)
     }
   }
@@ -134,7 +140,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     val strNone = str(R.string.none)
     val strAny = str(R.string.any)
 
-    with(viewModel.fetcher) {
+    with(viewModel.filters) {
       val genresEdit = resources.getStringArray(R.array.genres).toMutableList()
       genresEdit[0] = strNone
       layout.notGenre.setEntries(genresEdit)
@@ -162,37 +168,39 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       layout.length.setSelection(WordCount.values().indexOf(wordCount))
       genreWithout.ifPresent { layout.notGenre.setSelection(Genre.values().indexOf(it)) }
 
-      charList.ifPresent {
-        val charNameList = it.map { it.name }.toMutableList()
-        charNameList[0] = strAny
-        layout.char1.setEntries(charNameList)
-        layout.char2.setEntries(charNameList)
-        layout.char3.setEntries(charNameList)
-        layout.char4.setEntries(charNameList)
-        charNameList[0] = strNone
-        layout.notChar1.setEntries(charNameList)
-        layout.notChar2.setEntries(charNameList)
-        layout.char1.onSelect { _, pos -> char1Id = charList.get()[pos].id }
-        layout.char2.onSelect { _, pos -> char2Id = charList.get()[pos].id }
-        layout.char3.onSelect { _, pos -> char3Id = charList.get()[pos].id }
-        layout.char4.onSelect { _, pos -> char4Id = charList.get()[pos].id }
-        layout.notChar1.onSelect { _, pos -> char1Without = charList.get()[pos].id.opt() }
-        layout.notChar2.onSelect { _, pos -> char2Without = charList.get()[pos].id.opt() }
-        layout.char1.setSelection(charList.get().indexOfFirst { it.id == char1Id })
-        layout.char2.setSelection(charList.get().indexOfFirst { it.id == char2Id })
-        layout.char3.setSelection(charList.get().indexOfFirst { it.id == char3Id })
-        layout.char4.setSelection(charList.get().indexOfFirst { it.id == char4Id })
-        char1Without.ifPresent { layout.notChar1.setSelection(charNameList.indexOf(it)) }
-        char2Without.ifPresent { layout.notChar2.setSelection(charNameList.indexOf(it)) }
+      with(viewModel.metadata) {
+        charList.ifPresent {
+          val charNameList = it.map { it.name }.toMutableList()
+          charNameList[0] = strAny
+          layout.char1.setEntries(charNameList)
+          layout.char2.setEntries(charNameList)
+          layout.char3.setEntries(charNameList)
+          layout.char4.setEntries(charNameList)
+          charNameList[0] = strNone
+          layout.notChar1.setEntries(charNameList)
+          layout.notChar2.setEntries(charNameList)
+          layout.char1.onSelect { _, pos -> char1Id = charList.get()[pos].id }
+          layout.char2.onSelect { _, pos -> char2Id = charList.get()[pos].id }
+          layout.char3.onSelect { _, pos -> char3Id = charList.get()[pos].id }
+          layout.char4.onSelect { _, pos -> char4Id = charList.get()[pos].id }
+          layout.notChar1.onSelect { _, pos -> char1Without = charList.get()[pos].id.opt() }
+          layout.notChar2.onSelect { _, pos -> char2Without = charList.get()[pos].id.opt() }
+          layout.char1.setSelection(charList.get().indexOfFirst { it.id == char1Id })
+          layout.char2.setSelection(charList.get().indexOfFirst { it.id == char2Id })
+          layout.char3.setSelection(charList.get().indexOfFirst { it.id == char3Id })
+          layout.char4.setSelection(charList.get().indexOfFirst { it.id == char4Id })
+          char1Without.ifPresent { layout.notChar1.setSelection(charNameList.indexOf(it)) }
+          char2Without.ifPresent { layout.notChar2.setSelection(charNameList.indexOf(it)) }
+        }
       }
-      val charSpinnerState = if (charList is Empty) View.GONE else View.VISIBLE
+      val charSpinnerState = if (viewModel.metadata.charList is Empty) View.GONE else View.VISIBLE
       listOf(layout.char1, layout.char2, layout.char3, layout.char4, layout.notChar1,
           layout.notChar2, layout.char1Text, layout.char2Text, layout.char3Text, layout.char4Text,
           layout.notChar1Text, layout.notChar2Text).forEach {
         it.visibility = charSpinnerState
       }
 
-      worldList.ifPresent { wl ->
+      viewModel.metadata.worldList.ifPresent { wl ->
         val worldNameList = wl.map { it.name }.toMutableList()
 
         worldNameList[0] = strAny
@@ -210,7 +218,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
           layout.notWorld.setSelection(worldNameList.indexOf(it))
         }
       }
-      val worldSpinnerState = if (worldList is Empty) View.GONE else View.VISIBLE
+      val worldSpinnerState = if (viewModel.metadata.worldList is Empty) View.GONE else View.VISIBLE
       layout.world.visibility = worldSpinnerState
       layout.notWorld.visibility = worldSpinnerState
       layout.worldText.visibility = worldSpinnerState
@@ -232,7 +240,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
-      R.id.filter -> viewModel.fetcher.pageCount.ifPresent { openFilterDialog() }
+      R.id.filter -> viewModel.metadata.pageCount.ifPresent { openFilterDialog() }
       android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
     }

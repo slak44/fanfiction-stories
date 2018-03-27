@@ -12,12 +12,12 @@ import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.StoryProgress
 import slak.fanfictionstories.StoryStatus
-import slak.fanfictionstories.fetchers.FetcherUtils.TAG
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
+import java.io.Serializable
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
 
@@ -111,145 +111,167 @@ enum class WordCount(val ffnetValue: String) {
   fun queryParam(): String = "len=$ffnetValue"
 }
 
-// It is unlikely that an update would invalidate the cache within 15 minutes
-val canonListCache = Cache<String>("CanonPage", TimeUnit.MINUTES.toMillis(15))
+@Parcelize
+data class World(val name: String, val id: String) : Parcelable, Serializable
 
 @Parcelize
-class CanonFetcher(private val parentLink: CategoryLink,
-                   var sort: Sort = Sort.UPDATE_DATE,
-                   var timeRange: TimeRange = TimeRange.ALL,
-                   var lang: Language = Language.ALL,
-                   var genre1: Genre = Genre.ALL,
-                   var genre2: Genre = Genre.ALL,
-                   var rating: Rating = Rating.ALL,
-                   var status: Status = Status.ALL,
-                   var wordCount: WordCount = WordCount.ALL,
-                   var worldId: String = "0",
-                   var char1Id: String = "0",
-                   var char2Id: String = "0",
-                   var char3Id: String = "0",
-                   var char4Id: String = "0",
-                   var genreWithout: @RawValue Optional<Genre> = Empty(),
-                   var worldWithout: @RawValue Optional<String> = Empty(),
-                   var char1Without: @RawValue Optional<String> = Empty(),
-                   var char2Without: @RawValue Optional<String> = Empty(),
-                   var worldList: @RawValue Optional<List<World>> = Empty(),
-                   var charList: @RawValue Optional<List<Character>> = Empty(),
-                   var unfilteredStoryCount: @RawValue Optional<String> = Empty(),
-                   var canonTitle: @RawValue Optional<String> = Empty(),
-                   var pageCount: @RawValue Optional<Int> = Empty()
-) : Parcelable {
-  @Parcelize
-  data class World(val name: String, val id: String) : Parcelable
+data class Character(val name: String, val id: String) : Parcelable, Serializable
 
-  @Parcelize
-  data class Character(val name: String, val id: String) : Parcelable
+@Parcelize
+data class CanonFilters(var sort: Sort = Sort.UPDATE_DATE,
+                        var timeRange: TimeRange = TimeRange.ALL,
+                        var lang: Language = Language.ALL,
+                        var genre1: Genre = Genre.ALL,
+                        var genre2: Genre = Genre.ALL,
+                        var rating: Rating = Rating.ALL,
+                        var status: Status = Status.ALL,
+                        var wordCount: WordCount = WordCount.ALL,
+                        var worldId: String = "0",
+                        var char1Id: String = "0",
+                        var char2Id: String = "0",
+                        var char3Id: String = "0",
+                        var char4Id: String = "0",
+                        var genreWithout: @RawValue Optional<Genre> = Empty(),
+                        var worldWithout: @RawValue Optional<String> = Empty(),
+                        var char1Without: @RawValue Optional<String> = Empty(),
+                        var char2Without: @RawValue Optional<String> = Empty()) : Parcelable {
+  fun queryParams() = listOf(
+      sort.queryParam(),
+      timeRange.queryParam(),
+      lang.queryParam(),
+      genre1.queryParam(1),
+      genre2.queryParam(2),
+      rating.queryParam(),
+      status.queryParam(),
+      wordCount.queryParam(),
+      "v1=$worldId",
+      "c1=$char1Id",
+      "c2=$char2Id",
+      "c3=$char3Id",
+      "c4=$char4Id",
+      if (genreWithout !is Empty) "_${genreWithout.get().queryParam(1)}" else "",
+      if (worldWithout !is Empty) "_v1=${worldWithout.get()}" else "",
+      if (char1Without !is Empty) "_c1=${char1Without.get()}" else "",
+      if (char2Without !is Empty) "_c2=${char2Without.get()}" else ""
+  ).filter { it.isNotEmpty() }.joinToString("&")
+}
 
-  fun get(page: Int): Deferred<List<StoryModel>> = async2(CommonPool) {
-    pageCount.ifPresent { if (page > it) return@async2 emptyList<StoryModel>() }
-    val queryParams = listOf(
-        sort.queryParam(),
-        timeRange.queryParam(),
-        lang.queryParam(),
-        genre1.queryParam(1),
-        genre2.queryParam(2),
-        rating.queryParam(),
-        status.queryParam(),
-        wordCount.queryParam(),
-        "v1=$worldId",
-        "c1=$char1Id",
-        "c2=$char2Id",
-        "c3=$char3Id",
-        "c4=$char4Id",
-        if (genreWithout !is Empty) "_${genreWithout.get().queryParam(1)}" else "",
-        if (worldWithout !is Empty) "_v1=${worldWithout.get()}" else "",
-        if (char1Without !is Empty) "_c1=${char1Without.get()}" else "",
-        if (char2Without !is Empty) "_c2=${char2Without.get()}" else ""
-    ).filter { it.isNotEmpty() }.joinToString("&")
+@Parcelize
+data class CanonMetadata(val worldList: @RawValue Optional<List<World>> = Empty(),
+                         val charList: @RawValue Optional<List<Character>> = Empty(),
+                         val unfilteredStoryCount: @RawValue Optional<String> = Empty(),
+                         val canonTitle: @RawValue Optional<String> = Empty(),
+                         val pageCount: @RawValue Optional<Int> = Empty()
+) : Parcelable, Serializable
 
-    val pathAndQuery = "${parentLink.urlComponent}/?p=$page&$queryParams"
-    canonListCache.hit(pathAndQuery).ifPresent { return@async2 parseHtml(it) }
-    val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {
-      Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
-          R.string.error_with_canon_stories, parentLink.displayName)
-      Log.e(TAG, "CanonFetcher: retry", it)
-    }.await()
-    canonListCache.update(pathAndQuery, html)
-    return@async2 parseHtml(html)
+@Parcelize
+data class CanonPage(val storyList: List<StoryModel>,
+                     val metadata: CanonMetadata) : Parcelable, Serializable
+
+// It is unlikely that an update would invalidate the cache within 15 minutes
+val canonListCache = Cache<CanonPage>("CanonPage", TimeUnit.MINUTES.toMillis(15))
+
+private const val TAG = "CanonPage"
+
+/**
+ * Fetches a [CanonPage] for the canon pointed at by [parentLink], using the filters provided by
+ * [filters].
+ */
+fun getCanonPage(parentLink: CategoryLink,
+                 filters: CanonFilters, page: Int): Deferred<CanonPage> = async2(CommonPool) {
+  val pathAndQuery = "${parentLink.urlComponent}/?p=$page&${filters.queryParams()}"
+  canonListCache.hit(pathAndQuery).ifPresent { return@async2 it }
+  val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {
+    Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
+        R.string.error_with_canon_stories, parentLink.displayName)
+    Log.e(TAG, "Retry", it)
+  }.await()
+  val pageData = parseHtml(html)
+  canonListCache.update(pathAndQuery, pageData)
+  return@async2 pageData
+}
+
+private fun parseHtml(html: String): CanonPage {
+  val doc = Jsoup.parse(html)
+
+  val filtersDiv = doc.select("#filters > form > div.modal-body")
+  val charsElement = filtersDiv.select("select[name=\"characterid1\"]")
+  val charList = if (charsElement.size > 0) {
+    charsElement[0].children().map { opt -> Character(opt.text(), opt.`val`()) }.opt()
+  } else {
+    Empty()
+  }
+  val worldsElement = filtersDiv.select("select[name=\"verseid1\"]")
+  val worldList = if (worldsElement.size > 0) {
+    worldsElement[0].children().map { opt -> World(opt.text(), opt.`val`()) }.opt()
+  } else {
+    Empty()
   }
 
-  private fun parseHtml(html: String): List<StoryModel> {
-    val doc = Jsoup.parse(html)
+  val div = doc.getElementById("content_wrapper_inner")
+  val canonTitle = doc.title().replace(Regex("(?:FanFiction Archive)? \\| FanFiction"), "").opt()
+  // That span only exists for normal canons
+  val isCurrentlyCrossover = !div.child(0).`is`("span")
+  val categoryTitle = if (isCurrentlyCrossover) canonTitle.get() else div.child(2).text()
 
-    if (charList is Empty || worldList is Empty) {
-      val filtersDiv = doc.select("#filters > form > div.modal-body")
-      val charsElement = filtersDiv.select("select[name=\"characterid1\"]")
-      if (charsElement.size > 0) {
-        charList =
-            charsElement[0].children().map { opt -> Character(opt.text(), opt.`val`()) }.opt()
-      }
-      val worldsElement = filtersDiv.select("select[name=\"verseid1\"]")
-      if (worldsElement.size > 0) {
-        worldList = worldsElement[0].children().map { opt -> World(opt.text(), opt.`val`()) }.opt()
-      }
-    }
+  val list = doc.select("#content_wrapper_inner > div.z-list.zhover.zpointer").parallelStream().map {
+    // Looks like /s/12656819/1/For-the-Motherland, pick the id
+    val storyId = it.child(0).attr("href").split('/')[2].toLong()
+    // The one and only text node there is the title
+    val title = Parser.unescapeEntities(it.child(0).text(), false)
 
-    val div = doc.getElementById("content_wrapper_inner")
-    canonTitle = doc.title().replace(Regex("(?:FanFiction Archive)? \\| FanFiction"), "").opt()
-    // That span only exists for normal canons
-    val isCurrentlyCrossover = !div.child(0).`is`("span")
-    val categoryTitle = if (isCurrentlyCrossover) canonTitle.get() else div.child(2).text()
+    // The author 'a' element is the second last before the reviews
+    val authorAnchor = it.select("a:not(.reviews)").last()
+    val authorName = authorAnchor.textNodes()[0].toString()
 
-    val list = doc.select("#content_wrapper_inner > div.z-list.zhover.zpointer").parallelStream().map {
-      // Looks like /s/12656819/1/For-the-Motherland, pick the id
-      val storyId = it.child(0).attr("href").split('/')[2].toLong()
-      // The one and only text node there is the title
-      val title = Parser.unescapeEntities(it.child(0).text(), false)
+    // There is only one such div
+    val summaryMetaDiv = it.select("div.z-indent.z-padtop")[0]
+    val summary = Parser.unescapeEntities(summaryMetaDiv.textNodes()[0].toString(), false).trim()
+    val metaStuff = summaryMetaDiv.child(0)
+    val meta = parseStoryMetadata(metaStuff.html(), metaStuff)
 
-      // The author 'a' element is the second last before the reviews
-      val authorAnchor = it.select("a:not(.reviews)").last()
-      val authorName = authorAnchor.textNodes()[0].toString()
+    return@map StoryModel(
+        storyId = storyId,
+        fragment = meta,
+        progress = StoryProgress(),
+        authorId = authorIdFromAuthor(authorAnchor),
+        author = authorName,
+        status = StoryStatus.TRANSIENT,
+        canon = canonTitle.get(),
+        category = categoryTitle,
+        summary = summary,
+        title = title,
+        serializedChapterTitles = null,
+        addedTime = null,
+        lastReadTime = null
+    )
+  }.collect(Collectors.toList())
 
-      // There is only one such div
-      val summaryMetaDiv = it.select("div.z-indent.z-padtop")[0]
-      val summary = Parser.unescapeEntities(summaryMetaDiv.textNodes()[0].toString(), false).trim()
-      val metaStuff = summaryMetaDiv.child(0)
-      val meta = parseStoryMetadata(metaStuff.html(), metaStuff)
+  val centerElem = doc.select("#filters + center")
+  val unfilteredStoryCount = if (centerElem.size == 0) {
+    // If there is no element with the count there, it means there is only one page, so
+    // we get how many stories were on the page
+    list.size.toString().opt()
+  } else {
+    val text = centerElem[0].textNodes()[0].text().split('|')[0].trim()
+    // If the text isn't a number (or at least look like a number), we have no stories unfiltered
+    if (text[0].isDigit()) text.opt()
+    else "0".opt()
+  }
 
-      return@map StoryModel(
-          storyId = storyId,
-          fragment = meta,
-          progress = StoryProgress(),
-          authorId = authorIdFromAuthor(authorAnchor),
-          author = authorName,
-          status = StoryStatus.TRANSIENT,
-          canon = canonTitle.get(),
-          category = categoryTitle,
-          summary = summary,
-          title = title,
-          serializedChapterTitles = null,
-          addedTime = null,
-          lastReadTime = null
+  val pageNav = doc.select("#content_wrapper_inner > center").last()
+  val pageCount =
+      if (pageNav != null && pageNav.text() != "Filters") getPageCountFromNav(pageNav).opt()
+      else 1.opt()
+
+  return CanonPage(
+      storyList = list,
+      metadata = CanonMetadata(
+          canonTitle = canonTitle,
+          charList = charList,
+          worldList = worldList,
+          pageCount = pageCount,
+          unfilteredStoryCount = unfilteredStoryCount
       )
-    }.collect(Collectors.toList())
-
-    val centerElem = doc.select("#filters + center")
-    unfilteredStoryCount = if (centerElem.size == 0) {
-      // If there is no element with the count there, it means there is only one page, so
-      // we get how many stories were on the page
-      list.size.toString().opt()
-    } else {
-      val text = centerElem[0].textNodes()[0].text().split('|')[0].trim()
-      // If the text isn't a number (or at least look like a number), we have no stories unfiltered
-      if (text[0].isDigit()) text.opt()
-      else "0".opt()
-    }
-
-    val pageNav = doc.select("#content_wrapper_inner > center").last()
-    pageCount =
-        if (pageNav != null && pageNav.text() != "Filters") getPageCountFromNav(pageNav).opt()
-        else 1.opt()
-
-    return list
-  }
+  )
 }

@@ -3,6 +3,7 @@ package slak.fanfictionstories.utility
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
+import java.io.Serializable
 
 /** Replacement for [java.util.Optional] using a sealed class. Is [Parcelable] if [E] is. */
 sealed class Optional<E> {
@@ -42,9 +43,9 @@ sealed class Optional<E> {
 }
 
 @Parcelize
-class Empty<T> : Optional<T>(), Parcelable
+class Empty<T> : Optional<T>(), Parcelable, Serializable
 @Parcelize
-class Value<T>(val value: @RawValue T) : Optional<T>(), Parcelable
+class Value<T>(val value: @RawValue T) : Optional<T>(), Parcelable, Serializable
 
 /** Convenience extension fun for creating optional objects. */
 fun <T> T?.opt(): Optional<T> = if (this == null) Empty() else Value(this)
