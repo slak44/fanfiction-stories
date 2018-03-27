@@ -188,6 +188,7 @@ Untouched Stories: %d (%.2f%%)"
 
     <!-- Story reviews -->
     <string name="reviews_for">Reviews for %s</string>
+    <string name="x_reviews_for_chapter_y">%d reviews for chapter %d</string>
     <string name="chapter_x">For Chapter %d</string>
     <string name="all_chapters">All Chapters</string>
     <string name="reply">Reply</string>

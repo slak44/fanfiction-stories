@@ -38,11 +38,14 @@ class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by Adapte
   private var currentPage = 0
   var pageCount = 0
     private set
+  var reviewCount = 0
+    private set
 
   fun changeChapter(newChapter: Int) {
     clear()
     currentPage = 1
     pageCount = 0
+    reviewCount = 0
     chapterData.it = newChapter
   }
 
@@ -58,8 +61,9 @@ class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by Adapte
   fun loadPage() = launch(UI) {
     if (pageCount != 0 && currentPage >= pageCount) return@launch
     loadingEventsData.it = LoadEvent.LOADING
-    val (list, pages) = getReviews(model.storyId, chapterData.it, currentPage).await()
+    val (list, pages, reviews) = getReviews(model.storyId, chapterData.it, currentPage).await()
     if (pageCount == 0) pageCount = pages
+    if (reviewCount == 0) reviewCount = reviews
     reviewsList.addAll(list)
     notifyItemRangeInserted(reviewsList.size - list.size, list.size)
     loadingEventsData.it = LoadEvent.DONE_LOADING
@@ -86,7 +90,6 @@ class ReviewsActivity : LoadingActivity() {
     viewModel.changeChapter(intent.getIntExtra(INTENT_TARGET_CHAPTER, ALL_CHAPTERS))
 
     title = str(R.string.reviews_for, viewModel.model.title)
-    setSubtitle()
 
     reviewList.adapter = ReviewAdapter(viewModel)
     val layoutManager = LinearLayoutManager(this)
@@ -99,6 +102,7 @@ class ReviewsActivity : LoadingActivity() {
           hideLoading()
           if (viewModel.pageCount == NO_PAGES) noReviewsText.visibility = View.VISIBLE
           else noReviewsText.visibility = View.INVISIBLE
+          setSubtitle()
         }
       }
     }
@@ -115,7 +119,7 @@ class ReviewsActivity : LoadingActivity() {
     }
     toolbar.subtitle =
         if (viewModel.chapter.value == ALL_CHAPTERS) str(R.string.all_chapters)
-        else str(R.string.chapter_x, viewModel.chapter.value)
+        else str(R.string.x_reviews_for_chapter_y, viewModel.reviewCount, viewModel.chapter.value)
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
