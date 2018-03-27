@@ -20,7 +20,7 @@ import org.jetbrains.anko.db.select
 import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.BuildConfig
 import slak.fanfictionstories.R
-import slak.fanfictionstories.fetchers.fetchAndWriteStory
+import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.getStorageDir
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
@@ -112,7 +112,14 @@ class MainActivity : ActivityWithStatic() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
-      R.id.action_settings -> startActivity<SettingsActivity>()
+      R.id.actionSettings -> startActivity<SettingsActivity>()
+      R.id.clearAllCaches -> {
+        categoryCache.clear()
+        storyCache.clear()
+        canonListCache.clear()
+        authorCache.clear()
+        reviewCache.clear()
+      }
       else -> return super.onOptionsItemSelected(item)
     }
     return true
