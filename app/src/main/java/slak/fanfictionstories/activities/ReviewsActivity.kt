@@ -143,9 +143,9 @@ class ReviewsActivity : LoadingActivity() {
         ).toTypedArray()
         AlertDialog.Builder(this)
             .setTitle(R.string.select_chapter)
-            .setItems(items, { dialog, which: Int ->
+            .setSingleChoiceItems(items, viewModel.chapter.value!! - 1, { dialog, which: Int ->
               dialog.dismiss()
-              if (viewModel.chapter.value == which) return@setItems
+              if (viewModel.chapter.value == which) return@setSingleChoiceItems
               viewModel.changeChapter(which)
               viewModel.loadPage()
               setSubtitle()
