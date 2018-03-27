@@ -19,16 +19,12 @@ open class LoadingActivity(private val idxInToolbarLayout: Int = -1) : ActivityW
     (toolbar.parent as ViewGroup).addView(progress, idxInToolbarLayout)
   }
 
-  /**
-   * Make the loading bar visible.
-   */
+  /** Make the loading bar visible. */
   open fun showLoading() {
     activityProgressBar.visibility = View.VISIBLE
   }
 
-  /**
-   * Hide the loading bar.
-   */
+  /** Hide the loading bar. */
   open fun hideLoading() {
     activityProgressBar.visibility = View.GONE
   }

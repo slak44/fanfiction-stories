@@ -211,6 +211,7 @@ enum class SQLiteResultCode(val code: Int) {
   }
 }
 
+/** Extracts the [SQLiteResultCode] from the string error. */
 fun SQLiteConstraintException.errCode(): SQLiteResultCode {
   val msg = message ?: return SQLiteResultCode.OTHER
   val target = "(code "
@@ -220,20 +221,14 @@ fun SQLiteConstraintException.errCode(): SQLiteResultCode {
   return SQLiteResultCode.fromCode(msg.slice(startIdx until idx).toInt())
 }
 
-/**
- * Access property for [Context].
- */
+/** Access property for [Context]. */
 val Context.database: DatabaseHelper
   get() = DatabaseHelper.getInstance(applicationContext)
 
-/**
- * Access property for [Static].
- */
+/** Access property for [Static]. */
 val Static.database: DatabaseHelper
   get() = DatabaseHelper.getInstance(currentCtx.applicationContext)
 
-/**
- * Like [ManagedSQLiteOpenHelper.use], but using [async2] and [CommonPool].
- */
+/** Like [ManagedSQLiteOpenHelper.use], but using [async2] and [CommonPool]. */
 fun <T> ManagedSQLiteOpenHelper.useAsync(f: SQLiteDatabase.() -> T): Deferred<T> =
     async2(CommonPool) { this@useAsync.use(f) }

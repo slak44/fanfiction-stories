@@ -23,9 +23,7 @@ enum class NetworkType(val jobInfoVal: Int) {
   UNMETERED(JobInfo.NETWORK_TYPE_UNMETERED);
 }
 
-/**
- * Convenience extension to use the [NetworkType] enum instead of named ints.
- */
+/** Convenience extension to use the [NetworkType] enum instead of named ints. */
 fun JobInfo.Builder.setRequiredNetworkType(type: NetworkType): JobInfo.Builder {
   return this.setRequiredNetworkType(type.jobInfoVal)
 }
@@ -34,9 +32,7 @@ enum class BackoffPolicy(val jobInfoVal: Int) {
   LINEAR(JobInfo.BACKOFF_POLICY_LINEAR), EXPONENTIAL(JobInfo.BACKOFF_POLICY_EXPONENTIAL)
 }
 
-/**
- * Convenience extension to use the [BackoffPolicy] enum instead of named ints.
- */
+/** Convenience extension to use the [BackoffPolicy] enum instead of named ints. */
 fun JobInfo.Builder.setBackoffCriteria(initialBackoffMillis: Long,
                                        policy: BackoffPolicy): JobInfo.Builder {
   return this.setBackoffCriteria(initialBackoffMillis, policy.jobInfoVal)

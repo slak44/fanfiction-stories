@@ -33,19 +33,13 @@ class FastTextView : View {
    * Warning: accessing this property while [setText] runs is unwise, due to the possibility of a
    * race condition.
    * @see setText
-   * @see setOnTextChangeListener
+   * @see onTextChange
    */
   var staticLayout: StaticLayout? = null
     private set
   private var textPaint: TextPaint? = null
 
-  private var onTextChange: (Spanned) -> Unit = {}
-  /**
-   * @param listener called when the text changes, more precisely, when the [staticLayout] changes
-   */
-  fun setOnTextChangeListener(listener: (Spanned) -> Unit) {
-    onTextChange = listener
-  }
+  var onTextChange: (Spanned) -> Unit = {}
 
   /**
    * Lays out the given [Spanned], and creates [staticLayout]. We use [async2] so that layout
@@ -87,6 +81,7 @@ class FastTextView : View {
    *
    * Adapted from: https://stackoverflow.com/a/14387971
    * @returns the serialized double to be used with [scrollYFromScrollState]
+   * @see scrollYFromScrollState
    */
   fun scrollStateFromScrollY(scrollY: Int): Double {
     val layout = staticLayout!!

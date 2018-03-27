@@ -184,7 +184,7 @@ class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpa
 
 /**
  * Pretty wrapper for [AdapterView.OnItemSelectedListener] in the common case where only
- * onItemSelected needs to be overridden
+ * onItemSelected needs to be overridden.
  */
 fun Spinner.onSelect(block: (spinner: Spinner, position: Int) -> Unit) {
   this.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -204,6 +204,7 @@ fun <T> Spinner.setEntries(entries: List<T>) {
   this.adapter = adapter
 }
 
+/** @see autoSuffixNumber */
 private val suffixes = TreeMap(mapOf(
     1_000L to "K",
     1_000_000L to "M",
@@ -290,9 +291,7 @@ fun undoableAction(view: View, snackText: String,
   return snack
 }
 
-/**
- * @see undoableAction
- */
+/** @see undoableAction */
 fun undoableAction(view: View, @StringRes snackText: Int,
                    onUndo: (View) -> Unit = {}, action: suspend () -> Unit): Snackbar {
   return undoableAction(view, str(snackText), onUndo, action)

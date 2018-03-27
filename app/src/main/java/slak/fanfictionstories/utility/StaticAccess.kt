@@ -60,9 +60,7 @@ object Static {
   }
 }
 
-/**
- * Helper base class for use with [Static].
- */
+/** Helper base class for use with [Static]. */
 abstract class ActivityWithStatic : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     Static.init(this, this)

@@ -90,9 +90,7 @@ object Prefs {
     editor.commit()
   }
 
-  /**
-   * Wraps [SharedPreferences]'s edit-change-apply boilerplate.
-   */
+  /** Wraps [SharedPreferences]'s edit-change-apply boilerplate. */
   fun use(block: (SharedPreferences.Editor) -> Unit) {
     val editor = Static.prefs.edit()
     block(editor)
