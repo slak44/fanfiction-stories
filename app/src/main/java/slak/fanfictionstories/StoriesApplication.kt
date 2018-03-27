@@ -7,10 +7,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
-import slak.fanfictionstories.fetchers.authorCache
-import slak.fanfictionstories.fetchers.canonListCache
-import slak.fanfictionstories.fetchers.categoryCache
-import slak.fanfictionstories.fetchers.storyCache
+import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.ScheduleResult
 import slak.fanfictionstories.utility.Static
 import java.util.concurrent.TimeUnit
@@ -46,6 +43,7 @@ class StoriesApplication : Application() {
     storyCache.deserialize()
     canonListCache.deserialize()
     authorCache.deserialize()
+    reviewCache.deserialize()
     // Schedule initial update job if no update job exists
     scheduleInitUpdate()
   }

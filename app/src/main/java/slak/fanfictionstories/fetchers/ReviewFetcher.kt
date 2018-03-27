@@ -11,11 +11,10 @@ import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
-import slak.fanfictionstories.utility.Notifications
+import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
-import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.patientlyFetchURL
-import slak.fanfictionstories.utility.str
+import java.io.Serializable
+import java.util.concurrent.TimeUnit
 
 @Parcelize
 @SuppressLint("ParcelCreator")
@@ -26,9 +25,13 @@ data class Review(
     val authorId: Long,
     val unixTimeSeconds: Long,
     val content: String
-) : Parcelable
+) : Parcelable, Serializable
 
 private const val TAG = "ReviewPage"
+
+typealias ReviewPage = Triple<List<Review>, Int, Int>
+
+val reviewCache = Cache<ReviewPage>("ReviewPage", TimeUnit.DAYS.toMillis(1))
 
 /**
  * Get a particular page of reviews for the specified story, for the specified chapter.
@@ -38,8 +41,8 @@ private const val TAG = "ReviewPage"
  * @see NO_PAGES
  */
 fun getReviews(storyId: StoryId,
-               chapter: Int,
-               page: Int): Deferred<Triple<List<Review>, Int, Int>> = async2(CommonPool) {
+               chapter: Int, page: Int): Deferred<ReviewPage> = async2(CommonPool) {
+  reviewCache.hit("$storyId/$chapter/$page").ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_fetching_review_data, storyId.toString())
@@ -48,6 +51,7 @@ fun getReviews(storyId: StoryId,
   Log.v(TAG, "storyId=($storyId), chapter=($chapter), page=($page)")
   val triple = parseReviewPage(storyId, html)
   Log.v(TAG, "pages=(${triple.second}), reviewCount=(${triple.third})")
+  reviewCache.update("$storyId/$chapter/$page", triple)
   return@async2 triple
 }
 
