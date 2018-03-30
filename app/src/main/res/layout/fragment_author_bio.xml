@@ -8,10 +8,11 @@
     tools:context="slak.fanfictionstories.activities.AuthorActivity$HtmlFragment">
 
     <android.support.v4.widget.NestedScrollView
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/constraintLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/constraintLayout">
 
         <TextView
             android:id="@+id/html"
