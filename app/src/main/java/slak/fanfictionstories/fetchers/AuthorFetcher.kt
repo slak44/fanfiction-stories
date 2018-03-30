@@ -7,6 +7,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import org.jsoup.parser.Parser
 import org.jsoup.select.Elements
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
@@ -14,6 +15,7 @@ import slak.fanfictionstories.StoryProgress
 import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
+import slak.fanfictionstories.fetchers.FetcherUtils.unescape
 import slak.fanfictionstories.utility.Cache
 import slak.fanfictionstories.utility.Notifications
 import slak.fanfictionstories.utility.Notifications.defaultIntent
@@ -93,7 +95,7 @@ private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?)
       progress = StoryProgress(),
       status = StoryStatus.TRANSIENT,
       // FFnet category is our canon
-      canon = it.attr("data-category"),
+      canon = unescape(it.attr("data-category")),
       // Category info is unavailable here!
       category = null,
       summary = it.children().last().textNodes().first().text(),

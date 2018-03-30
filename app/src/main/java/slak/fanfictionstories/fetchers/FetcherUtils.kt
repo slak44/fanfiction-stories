@@ -4,15 +4,14 @@ import android.util.Log
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
+import org.jsoup.parser.Parser
 import slak.fanfictionstories.*
 import slak.fanfictionstories.utility.str
 import java.util.*
 
 object FetcherUtils {
-  @JvmStatic
-  val TAG = "Fetcher"
-  @JvmStatic
-  val regexOpts: Set<RegexOption> = hashSetOf(
+  const val TAG = "Fetcher"
+  private val regexOpts: Set<RegexOption> = hashSetOf(
       RegexOption.MULTILINE,
       RegexOption.UNIX_LINES,
       RegexOption.DOT_MATCHES_ALL
@@ -24,9 +23,14 @@ object FetcherUtils {
   private fun cleanNrMatch(res: MatchResult?): String? =
       res?.groupValues?.get(1)?.replace(",", "")?.trim()
 
-  /**
-   * Parses just the story metadata from the metadata div text.
-   */
+  /** Removes html entities, and replaces some backslash escapes. */
+  fun unescape(text: String): String {
+    return Parser.unescapeEntities(text, false)
+        .replace("\\'", "'")
+        .replace("\\\"", "\"")
+  }
+
+  /** Parses just the story metadata from the metadata div text. */
   fun parseStoryMetadata(metadata: String, element: Element): StoryModelFragment {
     val ratingLang = Regex("Rated: (?:<a .*?>Fiction[ ]+?)?(.*?)(?:</a>)? - (.*?) -", regexOpts)
         .find(metadata) ?: {
@@ -122,10 +126,10 @@ object FetcherUtils {
     val summary = doc.select("#profile_top > div.xcontrast_txt")[0].text()
 
     val navLinks = doc.select("#pre_story_links > span.lc-left > a.xcontrast_txt")
-    val canon = navLinks.last().text()
+    val canon = unescape(navLinks.last().text())
     val category =
         if (navLinks.size == 1) str(R.string.crossovers)
-        else navLinks.dropLast(1).last().text()
+        else unescape(navLinks.dropLast(1).last().text())
 
     val metaElem = doc.select("#profile_top > span.xgray")[0]
     val meta = parseStoryMetadata(metaElem.html(), metaElem)

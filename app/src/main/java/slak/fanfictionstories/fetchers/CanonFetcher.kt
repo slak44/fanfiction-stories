@@ -15,6 +15,7 @@ import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
+import slak.fanfictionstories.fetchers.FetcherUtils.unescape
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.Serializable
@@ -218,7 +219,7 @@ private fun parseHtml(html: String): CanonPage {
     // Looks like /s/12656819/1/For-the-Motherland, pick the id
     val storyId = it.child(0).attr("href").split('/')[2].toLong()
     // The one and only text node there is the title
-    val title = Parser.unescapeEntities(it.child(0).text(), false)
+    val title = unescape(it.child(0).text())
 
     // The author 'a' element is the second last before the reviews
     val authorAnchor = it.select("a:not(.reviews)").last()
@@ -226,7 +227,7 @@ private fun parseHtml(html: String): CanonPage {
 
     // There is only one such div
     val summaryMetaDiv = it.select("div.z-indent.z-padtop")[0]
-    val summary = Parser.unescapeEntities(summaryMetaDiv.textNodes()[0].toString(), false).trim()
+    val summary = unescape(summaryMetaDiv.textNodes()[0].toString()).trim()
     val metaStuff = summaryMetaDiv.child(0)
     val meta = parseStoryMetadata(metaStuff.html(), metaStuff)
 
