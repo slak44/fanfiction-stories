@@ -83,6 +83,7 @@ class UpdateService : JobService() {
       storyModels.forEach { model ->
         val sModel = fetchStoryModel(model.storyId).await().orElse { return@forEach }
         val updated = updateStory(sModel).await()
+        Log.v(TAG, "Story ${model.storyId} was update performed: $updated")
         if (updated) updatedStories.add(model)
       }
       Notifications.cancel(Notifications.Kind.UPDATING)

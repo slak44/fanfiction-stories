@@ -8,12 +8,13 @@ import kotlinx.coroutines.experimental.launch
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import slak.fanfictionstories.*
-import slak.fanfictionstories.fetchers.FetcherUtils.TAG
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 import slak.fanfictionstories.utility.Notifications.readerIntent
 import java.util.concurrent.TimeUnit
+
+private const val TAG = "StoryFetcher"
 
 /**
  * Download metadata and every chapter, then store them in the database and on disk.
@@ -99,6 +100,7 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
   Notifications.show(
       Notifications.Kind.UPDATING, defaultIntent(), R.string.checking_story, oldModel.title)
   val newModel = fetchStoryModel(oldModel.storyId).await().orElse { return@async2 false }
+  Log.v(TAG, "Attempting update from\n   oldModel: $oldModel\nto newModel: $newModel")
   // Skip non-locals from updates, since the operation does not make sense for them
   if (oldModel.status != StoryStatus.LOCAL) return@async2 false
   // Stories can't get un-updated
@@ -115,6 +117,7 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
     oldModel.progress
   }
 
+  Log.v(TAG, "Replacing ${oldModel.storyId} in database")
   Static.database.replaceStory(newModel).await()
 
   val channel: Channel<String> = when {
