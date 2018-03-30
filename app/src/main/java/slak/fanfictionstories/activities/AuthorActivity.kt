@@ -16,6 +16,7 @@ import android.view.*
 import kotlinx.android.synthetic.main.activity_author.*
 import kotlinx.android.synthetic.main.fragment_author_bio.view.*
 import kotlinx.android.synthetic.main.fragment_author_stories.view.*
+import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
@@ -242,18 +243,8 @@ class AuthorActivity : LoadingActivity(1) {
       if (savedInstanceState != null) restoreInstanceState(savedInstanceState)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-      viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
-      val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
-      val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES).map {
-        val model = runBlocking { Static.database.storyById(it.storyId).await() }
-            .orNull() ?: return@map it
-        it.progress = model.progress
-        it.status = model.status
-        return@map it
-      }
-      rootView.stories.layoutManager = LinearLayoutManager(context)
+    private fun initLayout(rootView: View, stories: List<StoryModel>) = launch(UI) {
+      rootView.stories.layoutManager = LinearLayoutManager(getContext())
       rootView.stories.createStorySwipeHelper { enteredReader(it.storyId) }
       rootView.stories.adapter = StoryAdapter(viewModel)
       if (stories.isEmpty()) {
@@ -267,7 +258,7 @@ class AuthorActivity : LoadingActivity(1) {
         viewModel.arrangeStories(stories, Prefs.authorArrangement())
       }
       rootView.orderBy.setOnClickListener {
-        orderByDialog(context!!,
+        orderByDialog(getContext()!!,
             Prefs.authorOrderStrategy, Prefs.authorOrderDirection) { str, dir ->
           Prefs.authorOrderDirection = dir
           Prefs.authorOrderStrategy = str
@@ -275,10 +266,26 @@ class AuthorActivity : LoadingActivity(1) {
         }
       }
       rootView.groupBy.setOnClickListener {
-        groupByDialog(context!!, Prefs.authorGroupStrategy) {
+        groupByDialog(getContext()!!, Prefs.authorGroupStrategy) {
           Prefs.authorGroupStrategy = it
           viewModel.arrangeStories(stories, Prefs.authorArrangement())
         }
+      }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
+      viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
+      val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
+      launch(CommonPool) {
+        val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES).map {
+          val model = Static.database.storyById(it.storyId).await()
+              .orNull() ?: return@map it
+          it.progress = model.progress
+          it.status = model.status
+          return@map it
+        }
+        initLayout(rootView, stories)
       }
       return rootView
     }
