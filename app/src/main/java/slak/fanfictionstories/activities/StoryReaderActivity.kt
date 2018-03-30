@@ -5,6 +5,7 @@ import android.os.Parcelable
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
 import android.text.Html
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -29,6 +30,7 @@ import java.io.File
 
 class StoryReaderActivity : LoadingActivity() {
   companion object {
+    private const val TAG = "StoryReaderActivity"
     const val INTENT_STORY_MODEL = "bundle"
     private const val RESTORE_STORY_MODEL = "story_model"
     private const val RESTORE_CURRENT_CHAPTER = "current_chapter"
@@ -46,17 +48,21 @@ class StoryReaderActivity : LoadingActivity() {
     if (savedInstanceState != null) {
       onRestoreInstanceState(savedInstanceState)
       restoreScrollStatus()
+      Log.v(TAG, "Restore model in onCreate: $model")
     } else {
       model = intent.getParcelableExtra(INTENT_STORY_MODEL) ?: return
-      if (model.status == StoryStatus.TRANSIENT) {
-        // If it's in the db, use it, else keep the transient one
-        model = runBlocking { database.storyById(model.storyId).await() }.orElse(model)
-      }
-      // Local stories load fast enough that we do not need this loader
-      if (model.status == StoryStatus.LOCAL) hideLoading()
       currentChapter =
           if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
+      Log.v(TAG, "Intent extra model: $model")
     }
+
+    // If the story is in the db, use it
+    if (model.status != StoryStatus.LOCAL) {
+      model = runBlocking { database.storyById(model.storyId).await() }.orElse(model)
+    }
+
+    // Local stories load fast enough that we do not need this loader
+    if (model.status == StoryStatus.LOCAL) hideLoading()
 
     // Save story for the resume button, but not for transient stories, because those aren't in db
     // Also update last time the story was read
