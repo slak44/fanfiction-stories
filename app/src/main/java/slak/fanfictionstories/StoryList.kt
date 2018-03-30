@@ -7,6 +7,7 @@ import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Path
 import android.os.Parcelable
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
@@ -16,8 +17,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.takisoft.colorpicker.ColorPickerDialog
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.story_component.view.*
 import kotlinx.coroutines.experimental.Deferred
@@ -30,6 +33,7 @@ import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Optional
 import java.util.*
 
 /**
@@ -41,7 +45,10 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
   // the `this` that is the ItemTouchHelper.Callback
   lateinit var swipeStory: ItemTouchHelper
   swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
-    override fun getMovementFlags(recycler: RecyclerView, vh: RecyclerView.ViewHolder): Int = if (vh is StoryAdapter.StoryViewHolder) makeMovementFlags(0, ItemTouchHelper.RIGHT) else 0
+    override fun getMovementFlags(recycler: RecyclerView, vh: RecyclerView.ViewHolder): Int =
+        if (vh is StoryAdapter.StoryViewHolder)
+          makeMovementFlags(0, ItemTouchHelper.RIGHT)
+        else 0
 
     override fun onMove(recycler: RecyclerView, viewHolder: RecyclerView.ViewHolder,
                         target: RecyclerView.ViewHolder): Boolean = false
@@ -65,6 +72,111 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
   swipeStory.attachToRecyclerView(this)
 }
 
+/**
+ * A button that is rendered as a story's color marker, which is a colored triangle on the top-right
+ * corner.
+ * @see StoryCardView
+ * @see markerSize
+ * @see thisBtnSize
+ */
+class MarkerButton : Button, View.OnClickListener {
+  constructor(context: Context) : super(context)
+  constructor(context: Context, set: AttributeSet) : super(context, set)
+  constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
+
+  companion object {
+    /** Marker cathetus length. */
+    private val markerSize by lazy {
+      if (!Static.isInitialized) return@lazy 64F
+      Static.res.px(R.dimen.story_component_marker_size).toFloat()
+    }
+    /** Button is square, this is its length. */
+    private val thisBtnSize by lazy {
+      if (!Static.isInitialized) return@lazy 128F
+      Static.res.px(R.dimen.story_component_marker_button_size).toFloat()
+    }
+  }
+
+  var storyModel: Optional<StoryModel> = Empty()
+    set(value) {
+      field = value
+      if (value.get().status == StoryStatus.TRANSIENT) {
+        launch(UI) {
+          val marker = getContext().database.getTransientMarker(value.get().storyId).await()
+          paint = createPaint(marker.orElse(0))
+          invalidate()
+        }
+      } else {
+        paint = createPaint(value.get().markerColor.toInt())
+        invalidate()
+      }
+    }
+
+  init {
+    super.setOnClickListener(this)
+  }
+
+  override fun setOnClickListener(l: OnClickListener?) {} // Don't
+
+  override fun onClick(v: View) {
+    if (storyModel is Empty) return
+    val colors = resources.getIntArray(R.array.markerColors)
+    val selectedColor = storyModel.get().markerColor.toInt()
+    val dialog = ColorPickerDialog(context, 0, {
+      if (storyModel.get().status != StoryStatus.TRANSIENT) {
+        context.database.updateInStory(storyModel.get().storyId, "markerColor" to it)
+      } else {
+        context.database.setTransientMarker(storyModel.get().storyId, it)
+      }
+      storyModel.get().markerColor = it.toLong()
+      paint = createPaint(it)
+      invalidate()
+    }, ColorPickerDialog.Params.Builder(context)
+        .setColors(colors)
+        .setColorContentDescriptions(resources.getStringArray(R.array.markerColorNames))
+        .setSelectedColor(selectedColor)
+        .setSortColors(false)
+        .build())
+    dialog.setTitle(R.string.select_marker_color)
+    dialog.setMessage(str(R.string.select_marker_color_msg))
+    dialog.setCancelable(true)
+    dialog.show()
+  }
+
+  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    setMeasuredDimension(thisBtnSize.toInt(), thisBtnSize.toInt())
+  }
+
+  private fun createPaint(color: Int): Paint {
+    val p = Paint()
+    p.color = color
+    p.style = Paint.Style.FILL
+    return p
+  }
+
+  private var paint: Paint = createPaint(resources.getColor(R.color.alpha, context.theme))
+
+  private val path by lazy {
+    val p = Path()
+    p.moveTo(thisBtnSize, 0F)
+    p.lineTo(thisBtnSize - markerSize, 0F)
+    p.lineTo(thisBtnSize, markerSize)
+    p.lineTo(thisBtnSize, 0F)
+    p.close()
+    p
+  }
+
+  override fun onDraw(canvas: Canvas) {
+    super.onDraw(canvas)
+    canvas.drawPath(path, paint)
+  }
+}
+
+/**
+ * A [CardView] that shows a story's metadata. Don't use directly, use [R.layout.story_component].
+ * @see R.layout.story_component
+ * @see StoryAdapter
+ */
 class StoryCardView : CardView {
   constructor(context: Context) : super(context)
   constructor(context: Context, set: AttributeSet) : super(context, set)
@@ -77,9 +189,7 @@ class StoryCardView : CardView {
 
   var currentModel: StoryModel? = null
 
-  /**
-   * Whether or not the details layout is visible.
-   */
+  /** Whether or not the details layout is visible. */
   var isExtended: Boolean = false
     set(value) {
       if (value) {
@@ -146,6 +256,8 @@ class StoryCardView : CardView {
     if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.GONE
     if (model.status == StoryStatus.TRANSIENT) removeBtn.visibility = View.GONE
 
+    markerBtn.storyModel = model.opt()
+
     // Reset card UI (including the measured size) to default
     addBtn.isEnabled = true
     val unspec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
@@ -202,6 +314,11 @@ class StoryCardView : CardView {
   }
 }
 
+/**
+ * An underlined [TextView] for use in [StoryAdapter] with [RecyclerView]s.
+ * @see StoryListItem
+ * @see GroupTitle
+ */
 class StoryGroupTitle : TextView {
   constructor(context: Context) : super(context)
   constructor(context: Context, set: AttributeSet) : super(context, set)
@@ -237,15 +354,18 @@ class StoryGroupTitle : TextView {
   }
 }
 
-@SuppressWarnings("ParcelCreator")
+/** An abstract item in a list of stories. */
 sealed class StoryListItem : Parcelable {
+  /** The data for an actual story in a list of stories. */
   @Parcelize
   data class StoryCardData(var model: StoryModel,
                            var isExtended: Boolean = false) : StoryListItem()
 
+  /** The title for a story group in a list of stories. */
   @Parcelize
   data class GroupTitle(val title: String) : StoryListItem()
 
+  /** A loading bar in a list of stories. */
   @Parcelize
   data class LoadingItem(val id: Int = ++counter) : StoryListItem()
 

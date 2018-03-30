@@ -7,6 +7,14 @@
     android:layout_marginBottom="@dimen/story_list_margin"
     android:focusable="true">
 
+    <slak.fanfictionstories.MarkerButton
+        android:id="@+id/markerBtn"
+        android:layout_width="@dimen/story_component_marker_button_size"
+        android:layout_height="@dimen/story_component_marker_button_size"
+        android:layout_gravity="right"
+        android:background="@color/alpha"
+        tools:ignore="RtlHardcoded"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

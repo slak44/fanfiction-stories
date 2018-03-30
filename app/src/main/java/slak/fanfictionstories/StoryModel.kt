@@ -10,6 +10,7 @@ import kotlinx.android.parcel.Parcelize
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.fetchers.FetcherUtils.CHAPTER_TITLE_SEPARATOR
 import slak.fanfictionstories.fetchers.Genre
+import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.*
@@ -79,6 +80,7 @@ typealias StoryId = Long
 data class StoryModel(val storyId: StoryId,
                       var status: StoryStatus,
                       var progress: StoryProgress,
+                      var markerColor: Long = 0,
                       val fragment: StoryModelFragment,
                       val addedTime: Long?,
                       val lastReadTime: Long?,
@@ -174,7 +176,8 @@ data class StoryModel(val storyId: StoryId,
       "canon" to canon,
       "chapterTitles" to serializedChapterTitles,
       "addedTime" to addedTime,
-      "lastReadTime" to lastReadTime
+      "lastReadTime" to lastReadTime,
+      "markerColor" to markerColor
   )
 
   /** @returns a list of pairs for writing to the database */
@@ -217,7 +220,8 @@ data class StoryModel(val storyId: StoryId,
           author = map["author"]!! as String,
           authorId = map["authorId"]!! as Long,
           title = map["title"]!! as String,
-          serializedChapterTitles = map["chapterTitles"]!! as String
+          serializedChapterTitles = map["chapterTitles"]!! as String,
+          markerColor = map["markerColor"]!! as Long
       )
     }
 
@@ -230,7 +234,7 @@ data class StoryModel(val storyId: StoryId,
 
 enum class GroupStrategy {
   // Group by property
-  CANON, AUTHOR, CATEGORY, STATUS, RATING, LANGUAGE, COMPLETION, GENRE,
+  CANON, AUTHOR, CATEGORY, STATUS, RATING, LANGUAGE, COMPLETION, GENRE, MARKER,
   // Don't do grouping
   NONE;
 
@@ -243,6 +247,7 @@ enum class GroupStrategy {
     LANGUAGE -> R.string.group_language
     COMPLETION -> R.string.group_completion
     GENRE -> R.string.group_genre
+    MARKER -> R.string.group_marker_color
     NONE -> R.string.group_none
   })
 
@@ -269,6 +274,19 @@ fun groupStories(stories: MutableList<StoryModel>,
     Genre.values().forEach { if (map[it.toUIString()]!!.isEmpty()) map.remove(it.toUIString()) }
     return map
   }
+  if (strategy == GroupStrategy.MARKER) {
+    val names = Static.res.getStringArray(R.array.markerColorNames)
+    val colors = Static.res.getIntArray(R.array.markerColors)
+    val map = hashMapOf<String, MutableList<StoryModel>>()
+    names.forEach { map[it] = mutableListOf() }
+    stories.forEach {
+      val idx = colors.indexOf(it.markerColor.toInt())
+      val colorName = names[idx]
+      map[colorName]!!.add(it)
+    }
+    names.forEach { if (map[it]!!.isEmpty()) map.remove(it) }
+    return map
+  }
   val map = hashMapOf<String, MutableList<StoryModel>>()
   stories.forEach {
     val value: String = when (strategy) {
@@ -280,8 +298,7 @@ fun groupStories(stories: MutableList<StoryModel>,
       GroupStrategy.CATEGORY -> it.category ?: str(R.string.no_category)
       GroupStrategy.RATING -> str(R.string.rated_x, it.fragment.rating)
       GroupStrategy.LANGUAGE -> it.fragment.language
-      GroupStrategy.GENRE,
-      GroupStrategy.NONE -> throw IllegalStateException("Unreachable code, fast-pathed above")
+      else -> throw IllegalStateException("Unreachable code, fast-pathed above")
     }
     if (map[value] == null) map[value] = mutableListOf()
     map[value]!!.add(it)

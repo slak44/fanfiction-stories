@@ -14,7 +14,7 @@ import java.io.File
 
 // We don't leak anything here; the 2 static fields stored here are kept always up to date
 // That means we can only store a reference to things that are currently in use anyway
-// And the moment these change, so should this class
+// And the moment these change, so should our fields, and the previous references are lost
 @SuppressLint("StaticFieldLeak")
 /**
  * Provides static access to various resources in [ActivityWithStatic] activities. Using this class
@@ -42,6 +42,14 @@ object Static {
   val notifManager: NotificationManager get() = notificationManager!!
   val jobScheduler: JobScheduler get() = jobSchedulerProp!!
 
+  /**
+   * Returns whether or not this class' properties are usable. Static replacement for
+   * [android.view.View.isInEditMode], because that is not usable in some places where [Static] is.
+   */
+  val isInitialized: Boolean
+    get() = thisCtx != null
+
+  /** Called by [ActivityWithStatic]. Implementation detail. */
   fun init(context: Context, contextActivity: ActivityWithStatic? = null) {
     currentActivity = contextActivity
     thisCtx = context

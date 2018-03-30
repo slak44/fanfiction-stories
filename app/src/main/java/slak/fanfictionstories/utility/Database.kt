@@ -10,7 +10,7 @@ import org.jetbrains.anko.db.*
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.StoryModel
 
-class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 2) {
+class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 4) {
   companion object {
     private var instance: DatabaseHelper? = null
 
@@ -52,7 +52,12 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         updateTime INTEGER NOT NULL,
         storyId INTEGER UNIQUE NOT NULL,
         addedTime INTEGER NOT NULL,
-        lastReadTime INTEGER NOT NULL
+        lastReadTime INTEGER NOT NULL,
+        markerColor INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS transientMarkers (
+        storyId INTEGER PRIMARY KEY NOT NULL UNIQUE,
+        markerColor INTEGER NOT NULL
       );
     """)
   }
@@ -61,7 +66,26 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     if (oldVersion == 1 && newVersion == 2) {
       db.execSQL("ALTER TABLE stories ADD COLUMN addedTime INTEGER NOT NULL DEFAULT 0;")
       db.execSQL("ALTER TABLE stories ADD COLUMN lastReadTime INTEGER NOT NULL DEFAULT 0;")
+    } else if (oldVersion == 2 && newVersion == 3) {
+      db.execSQL("ALTER TABLE stories ADD COLUMN markerColor INTEGER NOT NULL DEFAULT 0;")
+    } else if (oldVersion == 3 && newVersion == 4) {
+      db.execSQL("""
+        CREATE TABLE IF NOT EXISTS transientMarkers (
+          storyId INTEGER PRIMARY KEY NOT NULL UNIQUE,
+          markerColor INTEGER NOT NULL
+        );
+      """.trimIndent())
     }
+  }
+
+  fun getTransientMarker(storyId: StoryId): Deferred<Optional<Int>> = useAsync {
+    select("transientMarkers", "markerColor")
+        .whereSimple("storyId = ?", storyId.toString())
+        .parseOpt(IntParser).opt()
+  }
+
+  fun setTransientMarker(storyId: StoryId, color: Int) = useAsync {
+    replaceOrThrow("transientMarkers", "storyId" to storyId, "markerColor" to color)
   }
 
   fun getLocalStories(): Deferred<List<StoryModel>> = useAsync {

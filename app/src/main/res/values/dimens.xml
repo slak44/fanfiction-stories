@@ -19,6 +19,9 @@
 
     <dimen name="flat_button_height">36dp</dimen>
 
+    <dimen name="story_component_marker_size">16dp</dimen>
+    <dimen name="story_component_marker_button_size">32dp</dimen>
+
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>

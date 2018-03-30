@@ -56,6 +56,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="group_language">Language</string>
     <string name="group_completion">Completion Status</string>
     <string name="group_genre">Genre</string>
+    <string name="group_marker_color">Marker Color</string>
     <string name="no_category">No Category</string>
 
     <!-- Order strategies -->
@@ -179,6 +180,8 @@ Untouched Stories: %d (%.2f%%)"
     <string name="x_favorites">%d favorites</string>
     <string name="x_follows">%d follows</string>
     <string name="adding...">Downloading…</string>
+    <string name="select_marker_color">Pick marker color</string>
+    <string name="select_marker_color_msg">You can annotate each story with a colored marker</string>
 
     <!-- Story reader -->
     <string name="go_to_top">Go to Top</string>
