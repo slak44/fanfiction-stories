@@ -45,9 +45,7 @@ fun scheduleInitialUpdateJob(): ScheduleResult {
   return ScheduleResult.from(Static.jobScheduler.schedule(builder.build()))
 }
 
-/**
- * Schedule the periodic update job.
- */
+/** Schedule the periodic update job. */
 fun schedulePeriodicUpdateJob(): ScheduleResult {
   val builder = JobInfo.Builder(UPDATE_JOB_INFO_ID, updateComponent)
       .setPeriodic(TimeUnit.DAYS.toMillis(1), TimeUnit.MINUTES.toMillis(100))
