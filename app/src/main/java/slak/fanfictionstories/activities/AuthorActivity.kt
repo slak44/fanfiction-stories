@@ -163,16 +163,13 @@ class AuthorActivity : LoadingActivity(1) {
             .format(Date(viewModel.author!!.joinedDateSeconds * 1000))
         val updated = Prefs.simpleDateFormatter
             .format(Date(viewModel.author!!.updatedDateSeconds * 1000))
-        val html = """
-          <p>${str(R.string.bio_joined, joined)}</p>
-          <p>${
-        if (viewModel.author!!.updatedDateSeconds != 0L) str(R.string.bio_profile_update, updated)
-        else ""
-        }</p>
-          <p>${str(R.string.bio_author_id, viewModel.author!!.id)}</p>
-          <hr>
-          ${viewModel.author!!.bioHtml}
-        """.trimIndent()
+        val formattedUpdateDate = if (viewModel.author!!.updatedDateSeconds != 0L)
+          str(R.string.bio_profile_update, updated) else ""
+        val html = str(R.string.bio_html_prelude,
+            str(R.string.bio_joined, joined),
+            formattedUpdateDate,
+            str(R.string.bio_author_id, viewModel.author!!.id),
+            viewModel.author!!.bioHtml)
         HtmlFragment.newInstance(html)
       }
       1 -> StoryListFragment.newInstance(ArrayList(viewModel.author!!.userStories))

@@ -227,6 +227,13 @@ Untouched Stories: %d (%.2f%%)"
     <string name="bio_joined">Joined: %s</string>
     <string name="bio_profile_update">Profile Updated: %s</string>
     <string name="bio_author_id">Author ID: %d</string>
+    <string name="bio_html_prelude"> <![CDATA[
+        <p>%s</p>
+        <p>%s</p>
+        <p>%s</p>
+        <hr/>
+        %s
+    ]]></string>
 
     <!-- Error dialogs -->
     <string name="got_it">Got it</string>
