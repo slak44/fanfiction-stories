@@ -34,12 +34,13 @@
         android:id="@+id/storyListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="@dimen/story_list_margin"
-        android:clipToPadding="false"
-        android:layout_marginStart="@dimen/story_list_margin"
         android:layout_marginEnd="@dimen/story_list_margin"
+        android:layout_marginStart="@dimen/story_list_margin"
+        android:clipToPadding="false"
         android:divider="@color/alpha"
         android:dividerHeight="@dimen/story_list_margin"
+        android:paddingTop="@dimen/story_list_margin"
+        android:scrollbars="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:context="slak.fanfictionstories.activities.StoryListActivity">
 

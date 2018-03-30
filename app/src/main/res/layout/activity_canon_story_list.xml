@@ -26,9 +26,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/story_list_margin"
-        android:paddingBottom="?attr/actionBarSize"
         android:divider="@color/alpha"
         android:dividerHeight="@dimen/list_separator_height"
+        android:paddingBottom="?attr/actionBarSize"
+        android:scrollbars="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appBar"
@@ -37,6 +38,5 @@
         tools:showIn="@layout/activity_canon_story_list">
 
     </android.support.v7.widget.RecyclerView>
-
 
 </android.support.constraint.ConstraintLayout>
