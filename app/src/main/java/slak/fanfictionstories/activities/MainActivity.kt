@@ -114,6 +114,7 @@ class MainActivity : ActivityWithStatic() {
     when (item.itemId) {
       R.id.actionSettings -> startActivity<SettingsActivity>()
       R.id.clearAllCaches -> {
+        Log.d(TAG, "Clearing all caches")
         categoryCache.clear()
         storyCache.clear()
         canonListCache.clear()
