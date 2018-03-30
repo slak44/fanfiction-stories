@@ -145,7 +145,7 @@ object Notifications {
   }
 
   fun cancel(kind: Kind) {
-    Log.i("Notifications", "killed $kind")
+    Log.d("Notifications", "killed $kind")
     Static.notifManager.cancel(kind.reqId)
   }
 }
