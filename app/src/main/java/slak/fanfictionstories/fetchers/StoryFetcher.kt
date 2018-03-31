@@ -61,6 +61,10 @@ fun extractChapterText(doc: Document): String {
       ?: throw IllegalArgumentException("No story text in given document")
 }
 
+/**
+ * Just download metadata for the [storyId].
+ * @returns the [StoryModel] if it was there, or [Empty] if the story was not found
+ */
 fun fetchStoryModel(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val chapterHtml = fetchChapter(storyId, 1).await()
   if (chapterHtml.contains("Story Not Found")) return@async2 Empty<StoryModel>()
