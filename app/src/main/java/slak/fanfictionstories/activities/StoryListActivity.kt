@@ -17,7 +17,7 @@ import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 
-class StoryListActivity : ActivityWithStatic() {
+class StoryListActivity : ActivityWithStatic(), ReaderResumable by ReaderResumer() {
   private lateinit var viewModel: StoryListViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,7 +29,7 @@ class StoryListActivity : ActivityWithStatic() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     storyListView.layoutManager = LinearLayoutManager(this)
-    storyListView.createStorySwipeHelper()
+    storyListView.createStorySwipeHelper { enteredReader(it.storyId) }
     viewModel.getCounts().observe(this) {
       toolbar.subtitle = str(R.string.x_stories_y_filtered, it.first, it.second)
     }
@@ -39,6 +39,21 @@ class StoryListActivity : ActivityWithStatic() {
     }
     storyListView.adapter = StoryAdapter(viewModel)
     if (viewModel.itemCount() == 0) viewModel.triggerDatabaseLoad()
+  }
+
+  override fun onResume() {
+    super.onResume()
+    updateOnResume(viewModel)
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    saveInstanceState(outState)
+  }
+
+  override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+    super.onRestoreInstanceState(savedInstanceState)
+    restoreInstanceState(savedInstanceState)
   }
 
   private fun addByIdDialog() {
