@@ -19,10 +19,7 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
-import org.jetbrains.anko.db.MapRowParser
-import org.jetbrains.anko.db.delete
-import org.jetbrains.anko.db.dropTable
-import org.jetbrains.anko.db.select
+import org.jetbrains.anko.db.*
 import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.BuildConfig
 import slak.fanfictionstories.R
@@ -85,14 +82,17 @@ class MainActivity : ActivityWithStatic() {
           }).create().show()
         },
         "Dump stories table to stdout" to {
-          Log.d(TAG, database.readableDatabase.select("stories")
+          val r = database.readableDatabase.select("stories")
               .parseList(object : MapRowParser<String> {
                 override fun parseRow(columns: Map<String, Any?>): String {
                   return columns.entries.joinToString(", ") {
-                    "(${it.key}) ${it.value.toString()}"
+                    return@joinToString if (it.key != "summary" && it.key != "chapterTitles")
+                      "(${it.key}) ${it.value.toString()}"
+                    else ""
                   }
                 }
-              }).joinToString("\n"))
+              }).joinToString("\n")
+          println(r)
         },
         "Import CSV" to {
           ActivityCompat.requestPermissions(this, arrayOf(
@@ -134,6 +134,15 @@ class MainActivity : ActivityWithStatic() {
               .create()
           dialog.setView(editText)
           dialog.show()
+        },
+        "Normalize progress" to {
+          launch {
+            database.getStories().await().forEach {
+              if (it.progressAsPercentage() > 75.0 || it.progress.scrollAbsolute == 999999.0)
+                database.updateInStory(it.storyId,
+                    "scrollAbsolute" to 999999.0, "scrollProgress" to 100.0)
+            }
+          }
         }
     ).entries.forEach { kv ->
       val b = Button(this)
