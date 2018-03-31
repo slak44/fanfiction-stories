@@ -66,7 +66,13 @@ data class StoryModelFragment(val rating: String,
                               val updateTime: Long,
                               val isComplete: Long) : Parcelable, Serializable
 
-/** Stores the progress made in a story. */
+/**
+ * Stores the progress made in a story.
+ * @param scrollAbsolute serialized value from
+ * [slak.fanfictionstories.utility.FastTextView.scrollStateFromScrollY]
+ * @param scrollProgress percentage scrolled in current chapter
+ * @param currentChapter the current chapter
+ */
 @Parcelize
 data class StoryProgress(val scrollProgress: Double = 0.0,
                          val scrollAbsolute: Double = 0.0,
