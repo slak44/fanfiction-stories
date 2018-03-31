@@ -143,6 +143,14 @@ class MainActivity : ActivityWithStatic() {
                     "scrollAbsolute" to 999999.0, "scrollProgress" to 100.0)
             }
           }
+        },
+        "Import List" to {
+          launch(CommonPool) {
+            File("/sdcard/Download/storyId.list")
+                .readText()
+                .split('\n')
+                .forEach { fetchAndWriteStory(it.toLong()).await() }
+          }
         }
     ).entries.forEach { kv ->
       val b = Button(this)
