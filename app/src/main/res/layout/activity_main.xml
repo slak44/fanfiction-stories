@@ -56,21 +56,26 @@
             android:drawableStart="@drawable/ic_library_books_black_24dp"
             android:text="@string/story_browse"/>
 
-        <LinearLayout
-            android:id="@+id/debugButtons"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
+            android:layout_height="wrap_content">
 
-            <TextView
+            <LinearLayout
+                android:id="@+id/debugButtons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/debug_title"
-                android:textColor="@android:color/holo_red_light"
-                android:textSize="18sp"/>
-        </LinearLayout>
+                android:orientation="vertical"
+                android:visibility="gone">
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/debug_title"
+                    android:textColor="@android:color/holo_red_light"
+                    android:textSize="18sp"/>
+            </LinearLayout>
+
+        </ScrollView>
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
