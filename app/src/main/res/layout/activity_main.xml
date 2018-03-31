@@ -69,42 +69,6 @@
                 android:text="@string/debug_title"
                 android:textColor="@android:color/holo_red_light"
                 android:textSize="18sp"/>
-
-            <Button
-                android:id="@+id/regenTableBtn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/regen_stories_table"/>
-
-            <Button
-                android:id="@+id/addStoryBtn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/add_story"/>
-
-            <Button
-                android:id="@+id/wipeDiskDataBtn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/wipe_disk_data"/>
-
-            <Button
-                android:id="@+id/downloadNotifBtn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/test_notif"/>
-
-            <Button
-                android:id="@+id/wipeSettings"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/wipe_settings"/>
-
-            <Button
-                android:id="@+id/dumpDb"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/dump_db"/>
         </LinearLayout>
 
     </LinearLayout>
