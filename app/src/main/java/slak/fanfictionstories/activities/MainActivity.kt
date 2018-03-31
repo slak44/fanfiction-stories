@@ -23,6 +23,7 @@ import org.jetbrains.anko.db.*
 import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.BuildConfig
 import slak.fanfictionstories.R
+import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.getStorageDir
 import slak.fanfictionstories.utility.*
@@ -150,6 +151,16 @@ class MainActivity : ActivityWithStatic() {
                 .readText()
                 .split('\n')
                 .forEach { fetchAndWriteStory(it.toLong()).await() }
+          }
+        },
+        "Tag all stories" to {
+          database.writableDatabase.update("stories", "markerColor" to -6697984).exec()
+        },
+        "Download all stories" to {
+          launch {
+            database.getStories().await().filter { it.status != StoryStatus.LOCAL }.forEach {
+              fetchAndWriteStory(it.storyId).await()
+            }
           }
         }
     ).entries.forEach { kv ->
