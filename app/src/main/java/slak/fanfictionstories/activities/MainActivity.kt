@@ -154,7 +154,8 @@ class MainActivity : ActivityWithStatic() {
           }
         },
         "Tag all stories" to {
-          database.writableDatabase.update("stories", "markerColor" to -6697984).exec()
+          database.writableDatabase.update("stories", "markerColor" to -6697984)
+              .whereSimple("markerColor = ?", "0").exec()
         },
         "Download all stories" to {
           launch {

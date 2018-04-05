@@ -23,6 +23,13 @@ private const val TAG = "StoryFetcher"
 fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val model = fetchStoryModel(storyId).await().orElse { return@async2 Empty<StoryModel>() }
   model.status = StoryStatus.LOCAL
+  val existingModel = Static.database.storyById(storyId).await().orNull()
+  if (existingModel != null) {
+    model.markerColor = existingModel.markerColor
+    model.addedTime = existingModel.addedTime
+    model.lastReadTime = existingModel.lastReadTime
+    model.progress = existingModel.progress
+  }
   Static.database.upsertStory(model).await()
   val isWriting: Boolean =
       writeChapters(storyId, fetchChapterRange(Notifications.Kind.DOWNLOADING, model)).await()
