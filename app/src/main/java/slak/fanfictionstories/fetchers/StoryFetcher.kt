@@ -23,6 +23,8 @@ private const val TAG = "StoryFetcher"
 fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val model = fetchStoryModel(storyId).await().orElse { return@async2 Empty<StoryModel>() }
   model.status = StoryStatus.LOCAL
+  val transientMarker = Static.database.getTransientMarker(storyId).await().orNull()
+  if (transientMarker != null) model.markerColor = transientMarker.toLong()
   val existingModel = Static.database.storyById(storyId).await().orNull()
   if (existingModel != null) {
     model.markerColor = existingModel.markerColor
