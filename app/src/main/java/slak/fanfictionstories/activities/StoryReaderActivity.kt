@@ -1,6 +1,5 @@
 package slak.fanfictionstories.activities
 
-import android.graphics.Rect
 import android.os.Bundle
 import android.os.Parcelable
 import android.support.v4.widget.NestedScrollView
@@ -12,7 +11,6 @@ import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.content_story_reader.*
-import kotlinx.android.synthetic.main.story_component.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
@@ -30,6 +28,7 @@ import slak.fanfictionstories.fetchers.fetchChapter
 import slak.fanfictionstories.utility.*
 import java.io.File
 
+/** Shows a chapter of a story for reading. */
 class StoryReaderActivity : LoadingActivity() {
   companion object {
     private const val TAG = "StoryReaderActivity"

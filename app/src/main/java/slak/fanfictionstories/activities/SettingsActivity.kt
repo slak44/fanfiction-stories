@@ -10,6 +10,7 @@ import slak.fanfictionstories.utility.ActivityWithStatic
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.str
 
+/** The preferences activity, for user-controlled settings. */
 class SettingsActivity : ActivityWithStatic(), SharedPreferences.OnSharedPreferenceChangeListener {
   override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
     if (key != str(R.string.key_option_update_time)) return
@@ -32,7 +33,7 @@ class SettingsActivity : ActivityWithStatic(), SharedPreferences.OnSharedPrefere
   }
 }
 
-class MainSettingsFragment : PreferenceFragmentCompat() {
+internal class MainSettingsFragment : PreferenceFragmentCompat() {
   override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {
     addPreferencesFromResource(R.xml.settings_main)
   }

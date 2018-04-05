@@ -12,6 +12,7 @@ import slak.fanfictionstories.utility.ScheduleResult
 import slak.fanfictionstories.utility.Static
 import java.util.concurrent.TimeUnit
 
+/** Runs a whole bunch of static initializers in [onCreate]. */
 @Suppress("unused")
 class StoriesApplication : Application() {
   companion object {

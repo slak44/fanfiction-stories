@@ -7,7 +7,6 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import org.jsoup.parser.Parser
 import org.jsoup.select.Elements
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
@@ -25,6 +24,12 @@ import java.util.concurrent.TimeUnit
 
 val authorCache = Cache<Author>("Author", TimeUnit.DAYS.toMillis(1))
 
+private const val TAG = "AuthorFetcher"
+
+/**
+ * A data class representing an author's metadata.
+ * @see getAuthor
+ */
 @Parcelize
 data class Author(val name: String,
                   val id: Long,
@@ -46,7 +51,7 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
   val html = patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_fetching_author_data, authorId.toString())
-    Log.e(FetcherUtils.TAG, "fetchAuthorPage", it)
+    Log.e(TAG, "fetchAuthorPage", it)
   }.await()
   val doc = Jsoup.parse(html)
   val authorName = doc.select("#content_wrapper_inner > span").first().text()
@@ -59,7 +64,7 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
   } ?: listOf()
   val favAuthors = doc.getElementById("fa").select("dl").map {
     val authorElement = it.select("a").first()
-    return@map Pair(FetcherUtils.authorIdFromAuthor(authorElement), authorElement.text())
+    return@map Pair(authorIdFromAuthor(authorElement), authorElement.text())
   }
   // USING TABLES FOR ALIGNMENT IN 2018 GOD DAMMIT
   val retardedTableCell =

@@ -21,6 +21,7 @@ import slak.fanfictionstories.StoryListItem.StoryCardData
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 
+/** Stores the data required for a [CanonStoryListActivity]. */
 class CanonListViewModel : StoryListViewModel() {
   val parentLink: CategoryLink by lazy {
     intent!!.extras.getParcelable<CategoryLink>(INTENT_LINK_DATA)
@@ -59,6 +60,7 @@ class CanonListViewModel : StoryListViewModel() {
   fun getNextPage() = async2(UI) { getPage(++currentPage.it).await() }
 }
 
+/** A list of stories within a canon. */
 class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResumer() {
   private lateinit var viewModel: CanonListViewModel
 

@@ -27,6 +27,7 @@ import slak.fanfictionstories.utility.*
 import java.text.SimpleDateFormat
 import java.util.*
 
+/** Stores and loads the data required for an author page. */
 class AuthorViewModel : ViewModelWithIntent() {
   val authorId: Long by lazy {
     val id = intent!!.getLongExtra(AuthorActivity.INTENT_AUTHOR_ID, -1L)
@@ -53,6 +54,10 @@ class AuthorViewModel : ViewModelWithIntent() {
   }
 }
 
+/**
+ * An author's detail page. Has his bio, his stories, his favorite stories, his favourite authors,
+ * and other user related actions.
+ */
 class AuthorActivity : LoadingActivity(1) {
   companion object {
     const val INTENT_AUTHOR_ID = "author_id_intent"

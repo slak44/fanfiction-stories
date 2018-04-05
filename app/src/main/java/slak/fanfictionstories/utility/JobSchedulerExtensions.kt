@@ -3,6 +3,7 @@ package slak.fanfictionstories.utility
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 
+/** Wraps some ints in [JobScheduler]. */
 enum class ScheduleResult {
   SUCCESS, FAILURE;
 
@@ -15,6 +16,7 @@ enum class ScheduleResult {
   }
 }
 
+/** Wraps some ints in [JobInfo]. */
 enum class NetworkType(val jobInfoVal: Int) {
   ANY(JobInfo.NETWORK_TYPE_ANY),
   METERED(JobInfo.NETWORK_TYPE_METERED),
@@ -28,6 +30,7 @@ fun JobInfo.Builder.setRequiredNetworkType(type: NetworkType): JobInfo.Builder {
   return this.setRequiredNetworkType(type.jobInfoVal)
 }
 
+/** Wraps some ints in [JobInfo]. */
 enum class BackoffPolicy(val jobInfoVal: Int) {
   LINEAR(JobInfo.BACKOFF_POLICY_LINEAR), EXPONENTIAL(JobInfo.BACKOFF_POLICY_EXPONENTIAL)
 }

@@ -8,19 +8,25 @@ import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categoryUrl
-import slak.fanfictionstories.fetchers.FetcherUtils.TAG
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
 
+/**
+ * A link found in a category. Can point to a canon (to see with
+ * [slak.fanfictionstories.activities.CanonStoryListActivity]), or to further navigation in
+ * crossover categories (to see with [slak.fanfictionstories.activities.BrowseCategoryActivity]).
+ * @see fetchCategoryData
+ */
 @Parcelize
 data class CategoryLink(val text: String,
                         val urlComponent: String,
                         val storyCount: String) : Parcelable, Serializable {
-  fun isTargetCrossover(): Boolean =
+  private fun isTargetCrossover(): Boolean =
       urlComponent.contains(Regex("crossovers", RegexOption.IGNORE_CASE))
 
+  /** @returns if this link points to a category rather than a canon */
   fun isTargetCategory(): Boolean {
     val pieces = urlComponent.split("/")
     if (pieces.size == 2 && categoryUrl.contains(pieces[1])) return true
@@ -28,14 +34,21 @@ data class CategoryLink(val text: String,
     return false
   }
 
+  /** How this link should be displayed in the UI. */
   val displayName: String
     get() = if (isTargetCrossover()) str(R.string.title_crossover, text) else text
 }
 
 val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMillis(7))
 
-fun fetchCategoryData(
-    categoryUrlComponent: String): Deferred<Array<CategoryLink>> = async2(CommonPool) {
+private const val TAG = "CategoryFetcher"
+
+/**
+ * Fetches the list of [CategoryLink]s at the target [categoryUrlComponent].
+ * @see CategoryLink
+ */
+fun fetchCategoryData(categoryUrlComponent: String):
+    Deferred<Array<CategoryLink>> = async2(CommonPool) {
   categoryCache.hit(categoryUrlComponent).ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),

@@ -1,5 +1,11 @@
 package slak.fanfictionstories
 
+/**
+ * Updates can be forced via adb for testing:
+ * Initial: `adb shell cmd jobscheduler run -f slak.fanfictionstories 909729`
+ * Periodic: `adb shell cmd jobscheduler run -f slak.fanfictionstories 662035`
+ */
+
 import android.app.Service
 import android.app.job.JobInfo
 import android.app.job.JobParameters
@@ -18,10 +24,6 @@ import slak.fanfictionstories.fetchers.fetchStoryModel
 import slak.fanfictionstories.fetchers.updateStory
 import slak.fanfictionstories.utility.*
 import java.util.concurrent.TimeUnit
-
-// Updates can be forced via adb for testing:
-// Initial: `adb shell cmd jobscheduler run -f slak.fanfictionstories 909729`
-// Periodic: `adb shell cmd jobscheduler run -f slak.fanfictionstories 662035`
 
 private const val UPDATE_INIT_DELAY_JOB_INFO_ID = 0xDE1A1
 private const val UPDATE_JOB_INFO_ID = 0xA1A13
@@ -59,6 +61,7 @@ fun schedulePeriodicUpdateJob(): ScheduleResult {
   return ScheduleResult.from(Static.jobScheduler.schedule(builder.build()))
 }
 
+/** The service invoked periodically to update the local stories. */
 class UpdateService : JobService() {
   companion object {
     private const val TAG = "UpdateService"

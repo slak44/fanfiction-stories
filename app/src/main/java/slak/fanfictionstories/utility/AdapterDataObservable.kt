@@ -4,6 +4,12 @@ import android.database.Observable
 import android.support.v7.widget.RecyclerView
 
 /**
+ * This whole file is a bunch of boilerplate, caused by the lack of multiple inheritance in Java
+ * and Kotlin, and by the Android framework's own [RecyclerView.AdapterDataObservable] that is not
+ * accessible and has to be reimplemented.
+ */
+
+/**
  * For use with delegation when a class needs [AdapterDataObservable] and can't inherit from it
  * because it's an abstract class.
  * @see RecyclerView.AdapterDataObservable

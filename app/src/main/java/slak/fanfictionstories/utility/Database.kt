@@ -78,33 +78,42 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     }
   }
 
+  /** Gets the color marker for a transient story, if it exists. */
   fun getTransientMarker(storyId: StoryId): Deferred<Optional<Int>> = useAsync {
     select("transientMarkers", "markerColor")
         .whereSimple("storyId = ?", storyId.toString())
         .parseOpt(IntParser).opt()
   }
 
+  /** Sets the color marker for the given transient story. */
   fun setTransientMarker(storyId: StoryId, color: Int) = useAsync {
     replaceOrThrow("transientMarkers", "storyId" to storyId, "markerColor" to color)
   }
 
+  /**
+   * Get a list of [slak.fanfictionstories.StoryStatus.LOCAL] [slak.fanfictionstories.StoryModel]s.
+   */
   fun getLocalStories(): Deferred<List<StoryModel>> = useAsync {
     select("stories").whereSimple("status = ?", "local").parseList(StoryModel.dbParser)
   }
 
+  /** Get ALL stored stories. */
   fun getStories(): Deferred<List<StoryModel>> = useAsync {
     select(tableName = "stories").parseList(StoryModel.dbParser)
   }
 
+  /** Get a [StoryModel] by its id, if it exists. */
   fun storyById(storyId: StoryId): Deferred<Optional<StoryModel>> = useAsync {
     select("stories").whereSimple("storyId = ?", storyId.toString())
         .parseOpt(StoryModel.dbParser).opt()
   }
 
+  /** Update some particular columns for a particular storyId. */
   fun updateInStory(storyId: StoryId, vararg pairs: Pair<String, Any>): Deferred<Int> = useAsync {
     update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
   }
 
+  /** Upsert a story in the DB. */
   fun upsertStory(model: StoryModel) = useAsync {
     if (!model.isPersistable()) {
       Log.e("upsertStory", model.toString())
@@ -123,6 +132,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     }
   }
 
+  /** Replace a story in the DB. */
   fun replaceStory(model: StoryModel): Deferred<Long> = useAsync {
     if (!model.isPersistable()) {
       Log.e("replaceStory", model.toString())

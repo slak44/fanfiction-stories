@@ -15,6 +15,7 @@ import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.injectDebugButtons
 import slak.fanfictionstories.utility.*
 
+/** The main menu. Allows navigation to other sections of the app. */
 class MainActivity : ActivityWithStatic() {
   companion object {
     private const val TAG = "MainActivity"

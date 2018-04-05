@@ -19,9 +19,9 @@ import slak.fanfictionstories.fetchers.NO_PAGES
 import slak.fanfictionstories.fetchers.Review
 import slak.fanfictionstories.fetchers.getReviews
 import slak.fanfictionstories.utility.*
-import java.text.SimpleDateFormat
 import java.util.*
 
+/** Stores and fetches the data required for a [ReviewsActivity]. */
 class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by AdapterDataObservable() {
   private val chapterData = MutableLiveData<Int>()
   val chapter: LiveData<Int> get() = chapterData
@@ -71,6 +71,7 @@ class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by Adapte
   }
 }
 
+/** Presents a story's reviews. */
 class ReviewsActivity : LoadingActivity() {
   companion object {
     const val INTENT_STORY_MODEL = "story_model_extra"
@@ -158,6 +159,7 @@ class ReviewsActivity : LoadingActivity() {
   }
 }
 
+/** For using [Review] objects with [RecyclerView]. */
 class ReviewAdapter(
     private val viewModel: ReviewsViewModel) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   class ReviewHolder(val view: CardView) : RecyclerView.ViewHolder(view)

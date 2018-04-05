@@ -9,15 +9,18 @@ import slak.fanfictionstories.*
 import slak.fanfictionstories.utility.str
 import java.util.*
 
+/** Utility functions common to everyone in the [slak.fanfictionstories.fetchers] package. */
 object FetcherUtils {
-  const val TAG = "Fetcher"
   private val regexOpts: Set<RegexOption> = hashSetOf(
       RegexOption.MULTILINE,
       RegexOption.UNIX_LINES,
       RegexOption.DOT_MATCHES_ALL
   )
 
-  // Regen DB if you change this separator
+  /**
+   * Separates chapter titles when stored in the database. Regen the database if you change this
+   * separator.
+   */
   const val CHAPTER_TITLE_SEPARATOR = "^^^%!@#__PLACEHOLDER__%!@#~~~"
 
   private fun cleanNrMatch(res: MatchResult?): String? =
@@ -99,8 +102,13 @@ object FetcherUtils {
     )
   }
 
+  /**
+   * Extract the author id from an element whose href points at an author page.
+   *
+   * The `href` on the author element looks like /u/12341234/I-Am-An-Author
+   */
   fun authorIdFromAuthor(author: Element): Long {
-    // The `href` on the author element looks like /u/6772732/Gnaoh-El-Nart, so pick the id at pos 2
+    // Pick the id at pos 2
     return author.attr("href").split("/")[2].toLong()
   }
 
@@ -162,6 +170,10 @@ object FetcherUtils {
     )
   }
 
+  /**
+   * Navigation elements are common to multiple components. This function extracts the page count
+   * from such an element.
+   */
   fun getPageCountFromNav(nav: Element): Int {
     val navLinks = nav.children().filter {
       !it.text().contains(Regex("Next|Prev"))

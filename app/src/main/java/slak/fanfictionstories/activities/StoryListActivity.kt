@@ -17,6 +17,7 @@ import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 
+/** The list of stories the user has started reading, or has downloaded. */
 class StoryListActivity : ActivityWithStatic(), ReaderResumable by ReaderResumer() {
   private lateinit var viewModel: StoryListViewModel
 

@@ -42,8 +42,10 @@ sealed class Optional<E> {
   fun orElseThrow(th: Throwable): E = if (this is Empty) throw th else get()
 }
 
+/** @see Optional */
 @Parcelize
 class Empty<T> : Optional<T>(), Parcelable, Serializable
+/** @see Optional */
 @Parcelize
 class Value<T>(val value: @RawValue T) : Optional<T>(), Parcelable, Serializable
 

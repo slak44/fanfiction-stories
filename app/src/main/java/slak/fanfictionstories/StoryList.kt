@@ -207,9 +207,7 @@ class StoryCardView : CardView {
       onExtendedStateChange(value)
     }
 
-  /**
-   * Called when the view is extended/unextended.
-   */
+  /** Called when the view is extended/unextended. */
   var onExtendedStateChange: (Boolean) -> Unit = {}
 
   fun loadFromModel(model: StoryModel) {
@@ -264,6 +262,7 @@ class StoryCardView : CardView {
     measure(unspec, unspec)
   }
 
+  /** Binds various children listeners to the correct [StoryModel]/[StoryListViewModel]. */
   fun setChildrenListeners(model: StoryModel, holder: RecyclerView.ViewHolder,
                            viewModel: StoryListViewModel) {
     // Disable touching on the progress seek bar
@@ -438,12 +437,14 @@ open class StoryListViewModel : ViewModelWithIntent(),
     filteredCount.it = 0
   }
 
+  /** Add an item to the recycler. */
   fun addItem(item: StoryListItem) {
     data.add(item)
     notifyItemRangeInserted(data.size - 1, 1)
     if (item is StoryCardData) storyCount.it++
   }
 
+  /** Add a bunch of items to the recycler. */
   fun addItems(items: List<StoryListItem>) {
     data.addAll(items)
     notifyItemRangeInserted(data.size, items.size)
@@ -451,6 +452,7 @@ open class StoryListViewModel : ViewModelWithIntent(),
     if (newStories > 0) storyCount.it += newStories
   }
 
+  /** Asynchronously add a bunch of items to the recycler, showing a loader until they show up. */
   fun addDeferredItems(deferredList: Deferred<List<StoryListItem>>) = launch(UI) {
     addItem(LoadingItem())
     val loaderIdx = data.size - 1
@@ -532,9 +534,7 @@ open class StoryListViewModel : ViewModelWithIntent(),
   }
 }
 
-/**
- * Adapts [StoryListItem]s to views for a [RecyclerView].
- */
+/** Adapts [StoryListItem]s to views for a [RecyclerView]. */
 class StoryAdapter(private val viewModel: StoryListViewModel) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 

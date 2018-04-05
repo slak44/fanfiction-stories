@@ -15,6 +15,7 @@ import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
 
+/** Represents a review's metadata and content. */
 @Parcelize
 data class Review(
     val storyId: StoryId,
@@ -27,6 +28,7 @@ data class Review(
 
 private const val TAG = "ReviewPage"
 
+/** @see getReviews */
 typealias ReviewPage = Triple<List<Review>, Int, Int>
 
 val reviewCache = Cache<ReviewPage>("ReviewPage", TimeUnit.DAYS.toMillis(1))
@@ -35,7 +37,7 @@ val reviewCache = Cache<ReviewPage>("ReviewPage", TimeUnit.DAYS.toMillis(1))
  * Get a particular page of reviews for the specified story, for the specified chapter.
  * @returns a [Triple] of the reviews, how many pages of reviews there are in total and how many
  * reviews are in total. If the particular page has no reviews (even if it is the first one),
- * returns `Triple(emptyList(), NO_PAGES, 0)`
+ * returns `ReviewPage(emptyList(), NO_PAGES, 0)`
  * @see NO_PAGES
  */
 fun getReviews(storyId: StoryId,
@@ -53,6 +55,7 @@ fun getReviews(storyId: StoryId,
   return@async2 triple
 }
 
+/** @see getReviews */
 const val NO_PAGES: Int = -12
 
 private fun parseReviewPage(storyId: StoryId, html: String): Triple<List<Review>, Int, Int> {

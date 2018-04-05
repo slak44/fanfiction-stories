@@ -6,7 +6,9 @@ import kotlinx.coroutines.experimental.launch
 import java.io.*
 import java.util.concurrent.ConcurrentHashMap
 
+/** @see Cache */
 typealias ExpirationEpoch = Long
+/** @see Cache */
 typealias CacheMap<T> = ConcurrentHashMap<String, Pair<T, ExpirationEpoch>>
 
 /**

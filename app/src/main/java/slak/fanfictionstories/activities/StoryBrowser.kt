@@ -25,6 +25,7 @@ val categoryUrl: Array<String> by lazy {
 
 const val INTENT_LINK_DATA = "link_data_cat_browser"
 
+/** Allows selecting one of ffnet's categories. */
 class SelectCategoryActivity : ActivityWithStatic() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -50,6 +51,10 @@ class SelectCategoryActivity : ActivityWithStatic() {
   }
 }
 
+/**
+ * Navigate a category. Can represent links to canons, or links to further categories when working
+ * with crossovers.
+ */
 class BrowseCategoryActivity : LoadingActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

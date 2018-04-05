@@ -238,6 +238,11 @@ data class StoryModel(val storyId: StoryId,
   }
 }
 
+/**
+ * Possible ways of grouping stories in a [StoryListViewModel].
+ * @see groupByDialog
+ * @see groupStories
+ */
 enum class GroupStrategy {
   // Group by property
   CANON, AUTHOR, CATEGORY, STATUS, RATING, LANGUAGE, COMPLETION, GENRE, MARKER,
@@ -263,9 +268,7 @@ enum class GroupStrategy {
   }
 }
 
-/**
- * @returns a map that maps titles to grouped stories, according to the given [GroupStrategy]
- */
+/** @returns a map that maps titles to grouped stories, according to the given [GroupStrategy]. */
 fun groupStories(stories: MutableList<StoryModel>,
                  strategy: GroupStrategy): Map<String, MutableList<StoryModel>> {
   if (strategy == GroupStrategy.NONE)
@@ -312,6 +315,7 @@ fun groupStories(stories: MutableList<StoryModel>,
   return map
 }
 
+/** Shows a dialog presenting [GroupStrategy] choices for grouping. */
 fun groupByDialog(context: Context, defaultStrategy: GroupStrategy,
                   action: (GroupStrategy) -> Unit) {
   AlertDialog.Builder(context)
@@ -322,6 +326,7 @@ fun groupByDialog(context: Context, defaultStrategy: GroupStrategy,
       }).show()
 }
 
+/** Shows a dialog presenting [OrderStrategy] and [OrderDirection] choices for ordering. */
 @SuppressLint("InflateParams")
 fun orderByDialog(context: Context,
                   defaultStrategy: OrderStrategy,
@@ -385,6 +390,10 @@ private val titleAlphabetic = Comparator<StoryModel> { m1, m2 ->
   return@Comparator if (m1.title < m2.title) 1 else -1
 }
 
+/**
+ * Only possible directions for ordering of content.
+ * @see OrderStrategy
+ */
 enum class OrderDirection {
   ASC, DESC;
 
@@ -393,6 +402,12 @@ enum class OrderDirection {
   }
 }
 
+/**
+ * Possible ways to order stories in a [StoryListViewModel].
+ * @see OrderDirection
+ * @see orderByDialog
+ * @see orderStories
+ */
 enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
   // Numeric orderings
   WORD_COUNT(wordCount),
@@ -424,15 +439,14 @@ enum class OrderStrategy(val comparator: Comparator<StoryModel>) {
   }
 }
 
+/** Sorts stories based on the provided [OrderStrategy] and [OrderDirection]. */
 fun orderStories(stories: MutableList<StoryModel>,
                  s: OrderStrategy, d: OrderDirection): MutableList<StoryModel> {
   stories.sortWith(if (d == OrderDirection.DESC) s.comparator.reversed() else s.comparator)
   return stories
 }
 
-/**
- * Contains all the data necessary to arrange a list of [StoryModel]s.
- */
+/** Wraps all the data necessary to arrange a list of [StoryModel]s. */
 data class Arrangement(val orderStrategy: OrderStrategy = OrderStrategy.TITLE_ALPHABETIC,
                        val orderDirection: OrderDirection = OrderDirection.DESC,
                        val groupStrategy: GroupStrategy = GroupStrategy.NONE)

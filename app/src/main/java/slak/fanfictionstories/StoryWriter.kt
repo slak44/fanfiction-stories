@@ -11,17 +11,14 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.utility.*
 import java.io.File
 
+/** @returns whether or not we have external storage available */
 fun haveExternalStorage() = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()
 
-/**
- * @returns a [File] representing the external storage dir, or [Empty] if it's unavailable
- */
+/** @returns a [File] representing the external storage dir, or [Empty] if it's unavailable */
 fun getStorageDir(ctx: Context): Optional<File> =
     if (haveExternalStorage()) ctx.getExternalFilesDir(null).opt() else Empty()
 
-/**
- * @returns a [File] representing the stories dir, or [Empty] if it's unavailable
- */
+/** @returns a [File] representing the stories dir, or [Empty] if it's unavailable */
 fun storyDir(ctx: Context, storyId: Long): Optional<File> {
   val storage = getStorageDir(ctx).orElse {
     Log.e("StoryWriter#storyDir", "no ext storage")
@@ -61,9 +58,7 @@ fun writeChapters(storyId: StoryId,
   }.await()
 }
 
-/**
- * Deletes the story chapter data directory
- */
+/** Deletes the story chapter data directory. */
 fun deleteLocalStory(ctx: Context, storyId: StoryId) = launch(CommonPool) {
   val targetDir = storyDir(ctx, storyId).orElseThrow(IllegalStateException("Storage missing"))
   if (!targetDir.exists()) {

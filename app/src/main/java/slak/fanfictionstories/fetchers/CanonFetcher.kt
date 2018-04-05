@@ -7,7 +7,6 @@ import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
-import org.jsoup.parser.Parser
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.StoryProgress
@@ -22,6 +21,7 @@ import java.io.Serializable
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
 
+/** Describes ffnet sort options. */
 enum class Sort(val ffnetValue: String) {
   UPDATE_DATE("1"), PUBLISH_DATE("2"),
   REVIEWS("3"), FAVORITES("4"), FOLLOWS("5");
@@ -29,6 +29,7 @@ enum class Sort(val ffnetValue: String) {
   fun queryParam(): String = "srt=$ffnetValue"
 }
 
+/** Describes publish time/update time filters. */
 enum class TimeRange(val ffnetValue: String) {
   ALL("0"),
   UPD_LAST_DAY("1"), UPD_LAST_WEEK("2"), UPD_LAST_MONTH("3"), UPD_LAST_6_MONTHS("4"),
@@ -40,6 +41,7 @@ enum class TimeRange(val ffnetValue: String) {
   fun queryParam(): String = "t=$ffnetValue"
 }
 
+/** Describes language filters */
 enum class Language(val ffnetValue: String) {
   ALL(""), ENGLISH("1"), SPANISH("2"), FRENCH("3"), GERMAN("4"), CHINESE("5"), DUTCH("7"),
   PORTUGUESE("8"), RUSSIAN("10"), ITALIAN("11"), POLISH("13"), HUNGARIAN("14"), FINNISH("20"),
@@ -53,6 +55,7 @@ enum class Language(val ffnetValue: String) {
   fun queryParam(): String = "lan=$ffnetValue"
 }
 
+/** Describes genres filters. */
 enum class Genre(val ffnetValue: String) {
   ALL("0"), ADVENTURE("6"), ANGST("10"), CRIME("18"), DRAMA("4"), FAMILY("19"), FANTASY("14"),
   FRIENDSHIP("21"), GENERAL("1"), HORROR("8"), HUMOR("3"), HURT_COMFORT("20"), MYSTERY("7"),
@@ -91,6 +94,7 @@ enum class Genre(val ffnetValue: String) {
   fun queryParam(which: Int): String = "g$which=$ffnetValue"
 }
 
+/** Describes ffnet ratings. */
 enum class Rating(val ffnetValue: String) {
   ALL("10"),
   K_TO_T("103"), K_TO_K_PLUS("102"), K("1"), K_PLUS("2"), T("3"), M("4");
@@ -98,12 +102,14 @@ enum class Rating(val ffnetValue: String) {
   fun queryParam(): String = "r=$ffnetValue"
 }
 
+/** Describes story completion filters. */
 enum class Status(val ffnetValue: String) {
   ALL("0"), IN_PROGRESS("1"), COMPLETE("2");
 
   fun queryParam(): String = "s=$ffnetValue"
 }
 
+/** Describes word count filters. */
 enum class WordCount(val ffnetValue: String) {
   ALL("0"),
   UNDER_1K("11"), UNDER_5K("51"), OVER_1K("1"), OVER_5K("5"), OVER_10K("10"), OVER_20K("20"),
@@ -112,12 +118,7 @@ enum class WordCount(val ffnetValue: String) {
   fun queryParam(): String = "len=$ffnetValue"
 }
 
-@Parcelize
-data class World(val name: String, val id: String) : Parcelable, Serializable
-
-@Parcelize
-data class Character(val name: String, val id: String) : Parcelable, Serializable
-
+/** A class representing ffnet's filter dialog. Provides the same filtering options. */
 @Parcelize
 data class CanonFilters(var sort: Sort = Sort.UPDATE_DATE,
                         var timeRange: TimeRange = TimeRange.ALL,
@@ -136,6 +137,7 @@ data class CanonFilters(var sort: Sort = Sort.UPDATE_DATE,
                         var worldWithout: @RawValue Optional<String> = Empty(),
                         var char1Without: @RawValue Optional<String> = Empty(),
                         var char2Without: @RawValue Optional<String> = Empty()) : Parcelable {
+  /** Transforms these filters to query params compatible with ffnet. */
   fun queryParams() = listOf(
       sort.queryParam(),
       timeRange.queryParam(),
@@ -158,6 +160,13 @@ data class CanonFilters(var sort: Sort = Sort.UPDATE_DATE,
 }
 
 @Parcelize
+data class World(val name: String, val id: String) : Parcelable, Serializable
+
+@Parcelize
+data class Character(val name: String, val id: String) : Parcelable, Serializable
+
+/** Metadata for a canon. Useful for filtering and showing various info about the canon. */
+@Parcelize
 data class CanonMetadata(val worldList: @RawValue Optional<List<World>> = Empty(),
                          val charList: @RawValue Optional<List<Character>> = Empty(),
                          val unfilteredStoryCount: @RawValue Optional<String> = Empty(),
@@ -165,6 +174,7 @@ data class CanonMetadata(val worldList: @RawValue Optional<List<World>> = Empty(
                          val pageCount: @RawValue Optional<Int> = Empty()
 ) : Parcelable, Serializable
 
+/** The data contained in a canon page, which is [CanonMetadata] and the list of stories. */
 @Parcelize
 data class CanonPage(val storyList: List<StoryModel>,
                      val metadata: CanonMetadata) : Parcelable, Serializable
@@ -177,6 +187,7 @@ private const val TAG = "CanonPage"
 /**
  * Fetches a [CanonPage] for the canon pointed at by [parentLink], using the filters provided by
  * [filters].
+ * @see CanonFilters
  */
 fun getCanonPage(parentLink: CategoryLink,
                  filters: CanonFilters, page: Int): Deferred<CanonPage> = async2(CommonPool) {
