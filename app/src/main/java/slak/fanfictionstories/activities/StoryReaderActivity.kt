@@ -1,5 +1,6 @@
 package slak.fanfictionstories.activities
 
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.Parcelable
 import android.support.v4.widget.NestedScrollView
@@ -11,6 +12,7 @@ import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.content_story_reader.*
+import kotlinx.android.synthetic.main.story_component.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
@@ -206,6 +208,14 @@ class StoryReaderActivity : LoadingActivity() {
     // Start at the top, regardless of where we were when we ran this function
     nestedScroller.scrollTo(0, 0)
 
+    // If the text is so short the scroller doesn't need to scroll, max out progress right away
+    if (nestedScroller.height > chapterText.staticLayout!!.height) {
+      runBlocking {
+        database.updateInStory(model.storyId,
+            "scrollProgress" to 100.0, "scrollAbsolute" to 99999999.0).await()
+      }
+    }
+
     // Record scroll status
     nestedScroller.setOnScrollChangeListener { scroller, _, scrollY: Int, _, _ ->
       val rawPercentage = scrollY * 100.0 / (scrollingLayout.measuredHeight - scroller.bottom)
@@ -220,11 +230,8 @@ class StoryReaderActivity : LoadingActivity() {
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-    val toTint = arrayOf(
-        menu.findItem(R.id.goToTop),
-        menu.findItem(R.id.goToBottom)
-    )
-    for (item in toTint) item.iconTint(R.color.white, theme)
+    menu.findItem(R.id.goToTop).iconTint(R.color.white, theme)
+    menu.findItem(R.id.goToBottom).iconTint(R.color.white, theme)
     menu.findItem(R.id.nextChapter).isEnabled = nextChapterBtn.isEnabled
     menu.findItem(R.id.prevChapter).isEnabled = prevChapterBtn.isEnabled
     menu.findItem(R.id.selectChapter).isEnabled = selectChapterBtn.isEnabled
