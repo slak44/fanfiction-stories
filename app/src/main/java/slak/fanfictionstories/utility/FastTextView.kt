@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.support.v4.view.ViewCompat
-import android.text.Layout
 import android.text.Spanned
 import android.text.StaticLayout
 import android.text.TextPaint
@@ -30,15 +29,21 @@ class FastTextView : View {
   /**
    * This view's layout. Is null unless [setText] was called.
    *
-   * Warning: accessing this property while [setText] runs is unwise, due to the possibility of a
+   * Warning: accessing this property *while* [setText] runs is unwise, due to the possibility of a
    * race condition.
    * @see setText
    * @see onTextChange
    */
   var staticLayout: StaticLayout? = null
     private set
+
+  /**
+   * This is fetched from preferences, but we keep a reference to calculate some text properties.
+   * @see lineHeight
+   */
   private var textPaint: TextPaint? = null
 
+  /** @see setText */
   var onTextChange: (Spanned) -> Unit = {}
 
   /**
@@ -49,14 +54,13 @@ class FastTextView : View {
     if (!ViewCompat.isLaidOut(this@FastTextView)) {
       Log.w(TAG, "Forcing layout, setText was called before we were laid out")
       async2(UI) {
+        // This is done because we *need* the correct width when building the layout
         this@FastTextView.forceLayout()
       }.await()
     }
 
     textPaint = Prefs.textPaint(theme)
-
-    staticLayout = StaticLayout(s, textPaint,
-        width, Layout.Alignment.ALIGN_NORMAL, 1F, 0F, false)
+    staticLayout = StaticLayout.Builder.obtain(s, 0, s.length, textPaint, width).build()
 
     async2(UI) {
       this@FastTextView.layoutParams.height = staticLayout!!.height
@@ -70,7 +74,7 @@ class FastTextView : View {
    * Should be equivalent to [android.widget.TextView.getLineHeight].
    *
    * Formula is `Math.round(textPaint.getFontMetrics(null) * spacingMult + spacingAdd)`, but here
-   * `spacingMult` is 1F and `spacingAdd` is 0
+   * `spacingMult` is 1F and `spacingAdd` is 0 (defaults)
    */
   val lineHeight: Int get() = textPaint!!.getFontMetricsInt(null)
 

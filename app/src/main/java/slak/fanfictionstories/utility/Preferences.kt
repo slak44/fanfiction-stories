@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Typeface
 import android.text.TextPaint
+import android.util.Log
 import android.util.TypedValue
 import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
@@ -15,7 +16,10 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
+/** A metric ton of boilerplate with interfacing with various [SharedPreferences] data. */
 object Prefs {
+  private const val TAG = "PrefsObject"
+
   const val PREFS_FILE = "slak.fanfictionstories.SHARED_PREFERENCES"
 
   const val RESUME_STORY_ID = "resume_story_id"
@@ -57,26 +61,47 @@ object Prefs {
   fun authorArrangement() =
       Arrangement(authorOrderStrategy, authorOrderDirection, authorGroupStrategy)
 
-
   fun textSize() = Static.defaultPrefs.getString(
       str(R.string.key_option_size), str(R.string.option_size_default)).toFloat()
 
   fun textColor(theme: Resources.Theme) = Static.defaultPrefs.getInt(
       str(R.string.key_option_color), Static.res.getColor(R.color.textDefault, theme))
 
-  fun textFont() = Typeface.create(Static.defaultPrefs.getString(
-      str(R.string.key_option_font), str(R.string.option_font_default)), Typeface.NORMAL)
+  fun textFontName() = Static.defaultPrefs.getString(
+      str(R.string.key_option_font), str(R.string.option_font_default))
+
+  fun textFont() = Typeface.create(textFontName(), Typeface.NORMAL)
 
   fun textAntiAlias() = Static.defaultPrefs.getBoolean(
       str(R.string.key_option_antialias), str(R.string.option_antialias_default).toBoolean())
 
+  private var textPaintCache: TextPaint? = null
+  private var fontNameCache: String? = null
+
   fun textPaint(theme: Resources.Theme): TextPaint {
-    val tp = TextPaint()
-    tp.color = textColor(theme)
-    tp.typeface = textFont()
-    tp.textSize =
+    val color = textColor(theme)
+    val size =
         TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textSize(), Static.res.displayMetrics)
-    tp.isAntiAlias = textAntiAlias()
+    val antialias = textAntiAlias()
+    val fontName = textFontName()
+    // Try to return the same instance if its params haven't changed, because [Paint] uses native
+    // calls, and these are annoyingly slow, plus returning a new instance every time breaks
+    // equality
+    if (textPaintCache != null &&
+        textPaintCache!!.textSize == size &&
+        textPaintCache!!.color == color &&
+        textPaintCache!!.isAntiAlias == antialias &&
+        fontNameCache == fontName) {
+      Log.v(TAG, "Reusing TextPaint instance $textPaintCache")
+      return textPaintCache!!
+    }
+    val tp = TextPaint()
+    tp.color = color
+    tp.typeface = textFont()
+    tp.textSize = size
+    tp.isAntiAlias = antialias
+    fontNameCache = fontName
+    textPaintCache = tp
     return tp
   }
 

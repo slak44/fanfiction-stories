@@ -17,6 +17,7 @@ import android.support.v4.app.FragmentActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Html
+import android.text.TextPaint
 import android.text.style.ReplacementSpan
 import android.util.Log
 import android.util.SparseBooleanArray
@@ -365,4 +366,8 @@ fun FragmentActivity.viewModelProvider(): ViewModelWithIntentProvider {
 /** Sugar for `viewModelProvider().viewModelFrom()`. */
 inline fun <reified T : ViewModelWithIntent> FragmentActivity.obtainViewModel(): T {
   return viewModelProvider().viewModelFrom()
+}
+
+infix fun TextPaint.equals(other: TextPaint) {
+
 }
