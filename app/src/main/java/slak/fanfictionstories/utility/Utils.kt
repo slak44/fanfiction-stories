@@ -366,4 +366,3 @@ fun FragmentActivity.viewModelProvider(): ViewModelWithIntentProvider {
 inline fun <reified T : ViewModelWithIntent> FragmentActivity.obtainViewModel(): T {
   return viewModelProvider().viewModelFrom()
 }
-
