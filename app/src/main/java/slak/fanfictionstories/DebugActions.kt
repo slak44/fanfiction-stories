@@ -33,6 +33,10 @@ fun injectDebugButtons(activity: MainActivity) {
   }
 }
 
+/** Convenience method for debugging. */
+@Suppress("unused")
+fun printAll(vararg stuff: Any?) = stuff.forEach { println(it) }
+
 @SuppressLint("SdCardPath")
 val debugActions = mapOf(
     "Regen stories table" to {
