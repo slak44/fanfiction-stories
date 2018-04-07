@@ -19,12 +19,10 @@ import kotlinx.android.synthetic.main.fragment_author_stories.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Author
 import slak.fanfictionstories.fetchers.getAuthor
 import slak.fanfictionstories.utility.*
-import java.text.SimpleDateFormat
 import java.util.*
 
 /** Stores and loads the data required for an author page. */

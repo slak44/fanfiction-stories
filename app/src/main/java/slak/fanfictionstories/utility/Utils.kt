@@ -17,7 +17,6 @@ import android.support.v4.app.FragmentActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Html
-import android.text.TextPaint
 import android.text.style.ReplacementSpan
 import android.util.Log
 import android.util.SparseBooleanArray
@@ -32,8 +31,9 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.sync.Mutex
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.startActivity
+import slak.fanfictionstories.Notifications
+import slak.fanfictionstories.Notifications.defaultIntent
 import slak.fanfictionstories.R
-import slak.fanfictionstories.utility.Notifications.defaultIntent
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
@@ -366,8 +366,4 @@ fun FragmentActivity.viewModelProvider(): ViewModelWithIntentProvider {
 /** Sugar for `viewModelProvider().viewModelFrom()`. */
 inline fun <reified T : ViewModelWithIntent> FragmentActivity.obtainViewModel(): T {
   return viewModelProvider().viewModelFrom()
-}
-
-infix fun TextPaint.equals(other: TextPaint) {
-
 }

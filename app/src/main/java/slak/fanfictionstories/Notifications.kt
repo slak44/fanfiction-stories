@@ -1,4 +1,4 @@
-package slak.fanfictionstories.utility
+package slak.fanfictionstories
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -14,9 +14,11 @@ import android.support.v4.app.TaskStackBuilder
 import android.util.Log
 import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.intentFor
-import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.StoryListActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
+import slak.fanfictionstories.utility.Static
+import slak.fanfictionstories.utility.intentFor
+import slak.fanfictionstories.utility.str
 
 object Notifications {
   const val DOWNLOAD_CHANNEL = "download_channel"

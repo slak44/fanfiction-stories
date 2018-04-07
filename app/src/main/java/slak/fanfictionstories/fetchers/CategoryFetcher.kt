@@ -6,10 +6,11 @@ import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
+import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categoryUrl
 import slak.fanfictionstories.utility.*
-import slak.fanfictionstories.utility.Notifications.defaultIntent
+import slak.fanfictionstories.Notifications.defaultIntent
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
 

@@ -9,10 +9,8 @@ import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.startActivity
-import slak.fanfictionstories.BuildConfig
-import slak.fanfictionstories.R
+import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.*
-import slak.fanfictionstories.injectDebugButtons
 import slak.fanfictionstories.utility.*
 
 /** The main menu. Allows navigation to other sections of the app. */

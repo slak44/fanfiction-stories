@@ -10,8 +10,8 @@ import org.jsoup.nodes.Document
 import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
-import slak.fanfictionstories.utility.Notifications.defaultIntent
-import slak.fanfictionstories.utility.Notifications.readerIntent
+import slak.fanfictionstories.Notifications.defaultIntent
+import slak.fanfictionstories.Notifications.readerIntent
 import java.util.concurrent.TimeUnit
 
 private const val TAG = "StoryFetcher"

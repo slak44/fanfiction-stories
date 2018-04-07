@@ -1,4 +1,4 @@
-package slak.fanfictionstories.utility
+package slak.fanfictionstories
 
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
@@ -7,8 +7,10 @@ import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jetbrains.anko.db.*
-import slak.fanfictionstories.StoryId
-import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.utility.Optional
+import slak.fanfictionstories.utility.Static
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.opt
 
 class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 4) {
   companion object {

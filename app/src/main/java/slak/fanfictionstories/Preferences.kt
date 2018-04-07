@@ -1,4 +1,4 @@
-package slak.fanfictionstories.utility
+package slak.fanfictionstories
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
@@ -10,8 +10,10 @@ import android.util.TypedValue
 import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
-import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Language
+import slak.fanfictionstories.utility.NetworkType
+import slak.fanfictionstories.utility.Static
+import slak.fanfictionstories.utility.str
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -92,7 +94,7 @@ object Prefs {
         textPaintCache!!.color == color &&
         textPaintCache!!.isAntiAlias == antialias &&
         fontNameCache == fontName) {
-      Log.v(TAG, "Reusing TextPaint instance $textPaintCache")
+      Log.v(TAG, "Reusing TextPaint instance ${textPaintCache}")
       return textPaintCache!!
     }
     val tp = TextPaint()
@@ -132,7 +134,7 @@ object Prefs {
 
   val simpleDateFormatter: DateFormat
     get() {
-      val localeStr = Prefs.locale()
+      val localeStr = locale()
       val locale = if (localeStr == str(R.string.option_locale_default)) {
         Locale.getDefault()
       } else {
