@@ -68,11 +68,10 @@ fun errorDialog(title: String, msg: String) = launch(UI) {
 }
 
 /** Same as [errorDialog], but with [StringRes] texts. */
-fun errorDialog(@StringRes title: Int, @StringRes msg: Int) {
-  errorDialog(str(title), str(msg))
-}
+fun errorDialog(@StringRes title: Int, @StringRes msg: Int) = errorDialog(str(title), str(msg))
 
 private const val NETWORK_WAIT_DELAY_MS = 500L
+private const val NET_TAG = "waitForNetwork"
 
 /**
  * Suspends until there is an active connection.
@@ -86,32 +85,35 @@ fun waitForNetwork() = async2(CommonPool) {
     if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
       // No connection; wait
       Notifications.show(Notifications.Kind.NETWORK, defaultIntent(), R.string.waiting_for_connection)
-      Log.i("waitForNetwork", "No connection")
+      Log.w(NET_TAG, "No connection")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else if (activeNetwork.isConnecting()) {
       // We're connecting; wait
       Notifications.show(Notifications.Kind.NETWORK, defaultIntent(), R.string.connecting)
-      Log.i("waitForNetwork", "Connecting...")
+      Log.i(NET_TAG, "Connecting...")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else {
       // We're connected!
       Notifications.cancel(Notifications.Kind.NETWORK)
+      Log.i(NET_TAG, "We have a connection")
       break
     }
   }
 }
 
+/** Shorthand for `isConnectedOrConnecting && !isConnected`. */
 fun NetworkInfo.isConnecting() = isConnectedOrConnecting && !isConnected
 
 private const val RATE_LIMIT_MS = 300L
+private const val URL_TAG = "patientlyFetchURL"
 
 /**
  * Fetches the resource at the specified url, patiently.
  *
  * Waits for the network using [waitForNetwork], then waits for the rate limit [RATE_LIMIT_MS].
  *
- * If the download fails, call the error callback, wait for the rate limit again, and then call this
- * function recursively.
+ * If the download fails, call the [onError] callback, wait for the rate limit again, and then call
+ * this function recursively.
  */
 fun patientlyFetchURL(url: String,
                       onError: (t: Throwable) -> Unit): Deferred<String> = async2(CommonPool) {
@@ -124,6 +126,7 @@ fun patientlyFetchURL(url: String,
   } catch (t: Throwable) {
     // Something happened; retry
     onError(t)
+    Log.e(URL_TAG, "Failed to fetch url ($url)", t)
     patientlyFetchURL(url, onError).await()
   }
 }
@@ -136,9 +139,7 @@ fun MenuItem.iconTint(@ColorRes colorRes: Int, theme: Resources.Theme) {
   this.icon = drawable
 }
 
-enum class Direction {
-  LEFT, TOP, RIGHT, BOTTOM
-}
+enum class Direction { LEFT, TOP, RIGHT, BOTTOM }
 
 /** Tints a drawable. No-op if the specified drawable is null. */
 fun TextView.drawableTint(@ColorRes colorRes: Int, theme: Resources.Theme, which: Direction) {
@@ -173,9 +174,7 @@ class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpa
   }
 
   override fun getSize(p0: Paint?, p1: CharSequence?, p2: Int, p3: Int,
-                       p4: Paint.FontMetricsInt?): Int {
-    return 0
-  }
+                       p4: Paint.FontMetricsInt?): Int = 0
 
   override fun draw(canvas: Canvas, text: CharSequence, start: Int, end: Int, x: Float, top: Int,
                     y: Int, bottom: Int, paint: Paint) {
@@ -185,7 +184,7 @@ class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpa
 
 /**
  * Pretty wrapper for [AdapterView.OnItemSelectedListener] in the common case where only
- * onItemSelected needs to be overridden.
+ * [AdapterView.OnItemSelectedListener.onItemSelected] needs to be overridden.
  */
 fun Spinner.onSelect(block: (spinner: Spinner, position: Int) -> Unit) {
   this.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -206,7 +205,7 @@ fun <T> Spinner.setEntries(entries: List<T>) {
 }
 
 /** @see autoSuffixNumber */
-private val suffixes = TreeMap(mapOf(
+private val siSuffixes = TreeMap(mapOf(
     1_000L to "K",
     1_000_000L to "M",
     1_000_000_000L to "G",
@@ -216,9 +215,9 @@ private val suffixes = TreeMap(mapOf(
 ))
 
 /**
- * Truncate a number and append the respective suffix.
+ * Truncate a number and append the respective SI suffix.
  *
- * Example: 12345 -> 12K
+ * Something like: 12345 -> 12K, 5257274 -> 5M
  * Original Java Source: https://stackoverflow.com/a/30661479/3329467
  */
 fun autoSuffixNumber(value: Long): String {
@@ -227,7 +226,7 @@ fun autoSuffixNumber(value: Long): String {
   if (value < 0) return "-" + autoSuffixNumber(-value)
   if (value < 1000) return value.toString() // deal with easy case
 
-  val e = suffixes.floorEntry(value)
+  val e = siSuffixes.floorEntry(value)
   val divideBy = e.key
   val suffix = e.value
 
@@ -301,9 +300,7 @@ fun undoableAction(view: View, @StringRes snackText: Int,
 /**
  * Enables property access syntax for [SparseBooleanArray]. Forwards to [SparseBooleanArray.put].
  */
-operator fun SparseBooleanArray.set(key: Int, value: Boolean) {
-  put(key, value)
-}
+operator fun SparseBooleanArray.set(key: Int, value: Boolean) = put(key, value)
 
 /** Sugar for [Static]'s [Resources.getString]. */
 fun str(@StringRes i: Int): String = Static.res.getString(i)

@@ -193,7 +193,6 @@ fun getCanonPage(parentLink: CategoryLink,
   val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_with_canon_stories, parentLink.displayName)
-    Log.e(TAG, "Retry", it)
   }.await()
   val pageData = parseHtml(html)
   canonListCache.update(pathAndQuery, pageData)

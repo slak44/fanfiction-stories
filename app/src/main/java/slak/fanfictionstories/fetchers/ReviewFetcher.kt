@@ -47,7 +47,6 @@ fun getReviews(storyId: StoryId,
   val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_fetching_review_data, storyId.toString())
-    Log.e(TAG, "getReviews", it)
   }.await()
   Log.v(TAG, "storyId=($storyId), chapter=($chapter), page=($page)")
   val triple = parseReviewPage(storyId, html)

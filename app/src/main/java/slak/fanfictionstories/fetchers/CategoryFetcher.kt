@@ -54,7 +54,6 @@ fun fetchCategoryData(categoryUrlComponent: String):
   val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_with_categories, categoryUrlComponent)
-    Log.e(TAG, "Category fetch fail: $categoryUrlComponent", it)
   }.await()
   val doc = Jsoup.parse(html)
   val result = doc.select("#list_output div").map {

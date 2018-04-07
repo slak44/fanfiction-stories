@@ -51,7 +51,6 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
   val html = patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_fetching_author_data, authorId.toString())
-    Log.e(TAG, "fetchAuthorPage", it)
   }.await()
   val doc = Jsoup.parse(html)
   val authorName = doc.select("#content_wrapper_inner > span").first().text()

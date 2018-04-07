@@ -59,7 +59,6 @@ fun fetchChapter(storyId: StoryId, chapter: Long): Deferred<String> = async2(Com
   val html = patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
     Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
         R.string.error_fetching_story_data, storyId.toString())
-    Log.e(TAG, "fetchChapter", it)
   }.await()
   storyCache.update(cacheKey, html)
   return@async2 html
