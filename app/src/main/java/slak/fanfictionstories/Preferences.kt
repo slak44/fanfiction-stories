@@ -94,7 +94,7 @@ object Prefs {
         textPaintCache!!.color == color &&
         textPaintCache!!.isAntiAlias == antialias &&
         fontNameCache == fontName) {
-      Log.v(TAG, "Reusing TextPaint instance ${textPaintCache}")
+      Log.v(TAG, "Reusing TextPaint instance $textPaintCache")
       return textPaintCache!!
     }
     val tp = TextPaint()
