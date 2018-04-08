@@ -458,12 +458,11 @@ open class StoryListViewModel : ViewModelWithIntent(),
     notifyItemRangeRemoved(loaderIdx, 1)
   }
 
-  /** Update [StoryModel.progress] and [StoryModel.status] from the provided model. */
+  /** Update a stored [StoryModel] from the provided [newModel]. */
   fun updateStoryModel(newModel: StoryModel) {
     val idx = data.indexOfFirst { it is StoryCardData && it.model.storyId == newModel.storyId }
     if (idx == -1) throw IllegalArgumentException("Model not part of the adapter")
-    (data[idx] as StoryCardData).model.progress = newModel.progress
-    (data[idx] as StoryCardData).model.status = newModel.status
+    (data[idx] as StoryCardData).model = newModel
     notifyItemRangeChanged(idx, 1)
   }
 
