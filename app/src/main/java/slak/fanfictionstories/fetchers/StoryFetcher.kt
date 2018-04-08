@@ -132,7 +132,7 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
   newModel.lastReadTime = oldModel.lastReadTime
 
   Log.v(TAG, "Replacing ${oldModel.storyId} in database")
-  Static.database.replaceStory(newModel).await()
+  Static.database.upsertStory(newModel).await()
 
   val channel: Channel<String> = when {
   // Special case when there is only one chapter
