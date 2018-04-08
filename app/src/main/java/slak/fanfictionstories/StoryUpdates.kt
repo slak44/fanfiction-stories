@@ -84,8 +84,7 @@ class UpdateService : JobService() {
       val updatedStories = mutableListOf<StoryModel>()
       val storyModels = applicationContext.database.getLocalStories().await()
       storyModels.forEach { model ->
-        val sModel = fetchStoryModel(model.storyId).await().orElse { return@forEach }
-        val updated = updateStory(sModel).await()
+        val updated = updateStory(model).await()
         Log.v(TAG, "Story ${model.storyId} was update performed: $updated")
         if (updated) updatedStories.add(model)
       }

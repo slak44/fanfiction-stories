@@ -106,6 +106,7 @@ fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
 
 /**
  * Tries to update story metadata and chapters. Only works on local stories.
+ * @param oldModel the EXISTING [StoryModel], fetched from db
  * @returns whether or not the update was done
  */
 fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
