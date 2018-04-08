@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.support.v4.view.ViewCompat
-import android.text.Spanned
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
@@ -45,13 +44,13 @@ class FastTextView : View {
   private var textPaint: TextPaint? = null
 
   /** @see setText */
-  var onTextChange: (Spanned) -> Unit = {}
+  var onTextChange: (CharSequence) -> Unit = {}
 
   /**
-   * Lays out the given [Spanned], and creates [staticLayout]. We use [async2] so that layout
+   * Lays out the given [CharSequence], and creates [staticLayout]. We use [async2] so that layout
    * creation (the most expensive operation when there's lots of text) does not block the UI.
    */
-  fun setText(s: Spanned, theme: Resources.Theme) = async2(CommonPool) {
+  fun setText(s: CharSequence, theme: Resources.Theme) = async2(CommonPool) {
     if (!ViewCompat.isLaidOut(this@FastTextView)) {
       Log.w(TAG, "Forcing layout, setText was called before we were laid out")
       async2(UI) {
