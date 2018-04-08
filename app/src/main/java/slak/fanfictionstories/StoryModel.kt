@@ -7,6 +7,7 @@ import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
 import android.widget.Switch
 import kotlinx.android.parcel.Parcelize
+import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.fetchers.FetcherUtils.CHAPTER_TITLE_SEPARATOR
 import slak.fanfictionstories.fetchers.Genre
@@ -86,7 +87,6 @@ typealias StoryId = Long
 data class StoryModel(val storyId: StoryId,
                       var status: StoryStatus,
                       var progress: StoryProgress,
-                      var markerColor: Long = 0,
                       val fragment: StoryModelFragment,
                       var addedTime: Long?,
                       var lastReadTime: Long?,
@@ -182,8 +182,7 @@ data class StoryModel(val storyId: StoryId,
       "canon" to canon,
       "chapterTitles" to serializedChapterTitles,
       "addedTime" to addedTime,
-      "lastReadTime" to lastReadTime,
-      "markerColor" to markerColor
+      "lastReadTime" to lastReadTime
   )
 
   /** @returns a list of pairs for writing to the database */
@@ -226,8 +225,7 @@ data class StoryModel(val storyId: StoryId,
           author = map["author"]!! as String,
           authorId = map["authorId"]!! as Long,
           title = map["title"]!! as String,
-          serializedChapterTitles = map["chapterTitles"]!! as String,
-          markerColor = map["markerColor"]!! as Long
+          serializedChapterTitles = map["chapterTitles"]!! as String
       )
     }
 
@@ -288,10 +286,12 @@ fun groupStories(stories: MutableList<StoryModel>,
     val colors = Static.res.getIntArray(R.array.markerColors)
     val map = hashMapOf<String, MutableList<StoryModel>>()
     names.forEach { map[it] = mutableListOf() }
-    stories.forEach {
-      val idx = colors.indexOf(it.markerColor.toInt())
-      val colorName = names[idx]
-      map[colorName]!!.add(it)
+    runBlocking {
+      stories.forEach {
+        val idx = colors.indexOf(Static.database.getMarker(it.storyId).await().orElse(0))
+        val colorName = names[idx]
+        map[colorName]!!.add(it)
+      }
     }
     names.forEach { if (map[it]!!.isEmpty()) map.remove(it) }
     return map

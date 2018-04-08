@@ -20,7 +20,6 @@ import kotlinx.coroutines.experimental.launch
 import org.threeten.bp.Duration
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
-import slak.fanfictionstories.fetchers.fetchStoryModel
 import slak.fanfictionstories.fetchers.updateStory
 import slak.fanfictionstories.utility.*
 import java.util.concurrent.TimeUnit

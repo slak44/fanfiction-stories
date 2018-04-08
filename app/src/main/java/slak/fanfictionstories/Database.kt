@@ -12,7 +12,7 @@ import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.opt
 
-class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 4) {
+class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 5) {
   companion object {
     private var instance: DatabaseHelper? = null
 
@@ -54,10 +54,9 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         updateTime INTEGER NOT NULL,
         storyId INTEGER UNIQUE NOT NULL,
         addedTime INTEGER NOT NULL,
-        lastReadTime INTEGER NOT NULL,
-        markerColor INTEGER NOT NULL
+        lastReadTime INTEGER NOT NULL
       );
-      CREATE TABLE IF NOT EXISTS transientMarkers (
+      CREATE TABLE IF NOT EXISTS colorMarkers (
         storyId INTEGER PRIMARY KEY NOT NULL UNIQUE,
         markerColor INTEGER NOT NULL
       );
@@ -77,19 +76,77 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
           markerColor INTEGER NOT NULL
         );
       """.trimIndent())
+    } else if (oldVersion == 4 && newVersion == 5) {
+      db.execSQL("ALTER TABLE transientMarkers RENAME TO colorMarkers;")
+      db.execSQL("""
+        INSERT INTO colorMarkers (storyId, markerColor)
+          SELECT storyId, markerColor FROM stories;
+      """.trimIndent())
+      // Everything below is just remove the markerColor column from the stories table
+      db.execSQL("""
+        CREATE TEMPORARY TABLE storiesBackup(_id, title, author, authorId, summary, category, canon,
+        language, genres, characters, rating, reviews, favorites, follows, status, chapterTitles,
+        chapterCount, currentChapter, isComplete, scrollProgress, scrollAbsolute, wordCount,
+        publishTime, updateTime, storyId, addedTime, lastReadTime);
+      """.trimIndent())
+      db.execSQL("""
+        INSERT INTO storiesBackup SELECT _id, title, author, authorId, summary, category, canon,
+        language, genres, characters, rating, reviews, favorites, follows, status, chapterTitles,
+        chapterCount, currentChapter, isComplete, scrollProgress, scrollAbsolute, wordCount,
+        publishTime, updateTime, storyId, addedTime, lastReadTime FROM stories;
+      """.trimIndent())
+      db.execSQL("DROP TABLE stories;")
+      db.execSQL("""
+        CREATE TABLE stories (
+        _id INTEGER PRIMARY KEY UNIQUE,
+        title TEXT NOT NULL,
+        author TEXT NOT NULL,
+        authorId INTEGER NOT NULL,
+        summary TEXT NOT NULL,
+        category TEXT NOT NULL,
+        canon TEXT NOT NULL,
+        language TEXT NOT NULL,
+        genres TEXT NOT NULL,
+        characters TEXT NOT NULL,
+        rating TEXT NOT NULL,
+        reviews INTEGER CHECK(reviews >= 0) NOT NULL,
+        favorites INTEGER CHECK(favorites >= 0) NOT NULL,
+        follows INTEGER CHECK(follows >= 0) NOT NULL,
+        status TEXT CHECK(status IN ('remote', 'local')) NOT NULL,
+        chapterTitles TEXT NOT NULL,
+        chapterCount INTEGER CHECK(chapterCount > 0) NOT NULL,
+        currentChapter INTEGER CHECK(currentChapter >= 0 AND currentChapter <= chapterCount) NOT NULL,
+        isComplete INTEGER CHECK(isComplete IN (0, 1)) NOT NULL,
+        scrollProgress REAL CHECK(scrollProgress >= 0 AND scrollProgress <= 100) NOT NULL,
+        scrollAbsolute REAL NOT NULL,
+        wordCount INTEGER CHECK(wordCount > 0) NOT NULL,
+        publishTime INTEGER NOT NULL,
+        updateTime INTEGER NOT NULL,
+        storyId INTEGER UNIQUE NOT NULL,
+        addedTime INTEGER NOT NULL,
+        lastReadTime INTEGER NOT NULL
+      );
+      """.trimIndent())
+      db.execSQL("""
+        INSERT INTO stories SELECT _id, title, author, authorId, summary, category, canon,
+        language, genres, characters, rating, reviews, favorites, follows, status, chapterTitles,
+        chapterCount, currentChapter, isComplete, scrollProgress, scrollAbsolute, wordCount,
+        publishTime, updateTime, storyId, addedTime, lastReadTime FROM storiesBackup;
+      """.trimIndent())
+      db.execSQL("DROP TABLE storiesBackup;")
     }
   }
 
-  /** Gets the color marker for a transient story, if it exists. */
-  fun getTransientMarker(storyId: StoryId): Deferred<Optional<Int>> = useAsync {
-    select("transientMarkers", "markerColor")
+  /** Gets the color marker for a story, if it exists. */
+  fun getMarker(storyId: StoryId): Deferred<Optional<Int>> = useAsync {
+    select("colorMarkers", "markerColor")
         .whereSimple("storyId = ?", storyId.toString())
         .parseOpt(IntParser).opt()
   }
 
-  /** Sets the color marker for the given transient story. */
-  fun setTransientMarker(storyId: StoryId, color: Int) = useAsync {
-    replaceOrThrow("transientMarkers", "storyId" to storyId, "markerColor" to color)
+  /** Sets the color marker for the given story. */
+  fun setMarker(storyId: StoryId, color: Int) = useAsync {
+    replaceOrThrow("colorMarkers", "storyId" to storyId, "markerColor" to color)
   }
 
   /**

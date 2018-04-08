@@ -105,15 +105,17 @@ val debugActions = mapOf(
               Static.database.updateInStory(model.get().storyId,
                   "status" to "remote", "currentChapter" to it[1].toLong(),
                   "scrollProgress" to it[5].toDouble(), "scrollAbsolute" to it[4].toDouble(),
-                  "lastReadTime" to it[3].toLong() / 1000, "addedTime" to it[2].toLong() / 1000,
-                  "markerColor" to -6697984)
+                  "lastReadTime" to it[3].toLong() / 1000, "addedTime" to it[2].toLong() / 1000)
+              Static.database.setMarker(model.get().storyId, -6697984)
               Log.d(TAG, "Fixed")
             }
           }
     },
-    "Purge untagged stories" to {
-      Static.database.writableDatabase.delete("stories", "markerColor = 0")
-    },
+//     FIXME this has to be rewritten
+//    "Purge untagged stories" to {
+//
+//      Static.database.writableDatabase.delete("stories", "markerColor = 0")
+//    },
     "Run SQL" to {
       val editText = EditText(Static.currentCtx)
       val dialog = AlertDialog.Builder(Static.currentCtx)
@@ -142,8 +144,8 @@ val debugActions = mapOf(
       }
     },
     "Tag all stories" to {
-      Static.database.writableDatabase.update("stories", "markerColor" to -6697984)
-          .whereSimple("markerColor = ?", "0").exec()
+      Static.database.writableDatabase.update("markerColors",
+          "markerColor" to -6697984).whereSimple("markerColor = ?", "0").exec()
     },
     "Download all stories" to {
       launch {

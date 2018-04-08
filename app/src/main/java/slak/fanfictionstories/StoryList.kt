@@ -100,14 +100,9 @@ class MarkerButton : Button, View.OnClickListener {
   var storyModel: Optional<StoryModel> = Empty()
     set(value) {
       field = value
-      if (value.get().status == StoryStatus.TRANSIENT) {
-        launch(UI) {
-          val marker = getContext().database.getTransientMarker(value.get().storyId).await()
-          paint = createPaint(marker.orElse(0))
-          invalidate()
-        }
-      } else {
-        paint = createPaint(value.get().markerColor.toInt())
+      launch(UI) {
+        val marker = getContext().database.getMarker(value.get().storyId).await()
+        paint = createPaint(marker.orElse(0))
         invalidate()
       }
     }
@@ -121,26 +116,24 @@ class MarkerButton : Button, View.OnClickListener {
   override fun onClick(v: View) {
     if (storyModel is Empty) return
     val colors = resources.getIntArray(R.array.markerColors)
-    val selectedColor = storyModel.get().markerColor.toInt()
-    val dialog = ColorPickerDialog(context, 0, {
-      if (storyModel.get().status != StoryStatus.TRANSIENT) {
-        context.database.updateInStory(storyModel.get().storyId, "markerColor" to it)
-      } else {
-        context.database.setTransientMarker(storyModel.get().storyId, it)
-      }
-      storyModel.get().markerColor = it.toLong()
-      paint = createPaint(it)
-      invalidate()
-    }, ColorPickerDialog.Params.Builder(context)
-        .setColors(colors)
-        .setColorContentDescriptions(resources.getStringArray(R.array.markerColorNames))
-        .setSelectedColor(selectedColor)
-        .setSortColors(false)
-        .build())
-    dialog.setTitle(R.string.select_marker_color)
-    dialog.setMessage(str(R.string.select_marker_color_msg))
-    dialog.setCancelable(true)
-    dialog.show()
+    launch(UI) {
+      val selectedColor = getContext().database.getMarker(storyModel.get().storyId).await()
+      val dialog = ColorPickerDialog(getContext(), 0, {
+        getContext().database.setMarker(storyModel.get().storyId, it)
+        paint = createPaint(it)
+        invalidate()
+      }, ColorPickerDialog.Params.Builder(getContext())
+          .setColors(colors)
+          .setColorContentDescriptions(resources.getStringArray(R.array.markerColorNames))
+          .setSelectedColor(selectedColor.orElse(0))
+          .setSortColors(false)
+          .build())
+      dialog.setTitle(R.string.select_marker_color)
+      dialog.setMessage(str(R.string.select_marker_color_msg))
+      dialog.setCancelable(true)
+      dialog.show()
+
+    }
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
