@@ -125,10 +125,15 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
   if (oldModel.fragment.updateTime == newModel.fragment.updateTime) return@async2 false
 
   newModel.progress = if (oldModel.progress.currentChapter > newModel.fragment.chapterCount) {
+    Log.i(TAG, "Had to discard progress for id ${oldModel.storyId} because oldModel current" +
+        "chapter value exceeds newModel chapter count")
     StoryProgress(currentChapter = newModel.fragment.chapterCount)
   } else {
     oldModel.progress
   }
+  newModel.markerColor = oldModel.markerColor
+  newModel.addedTime = oldModel.addedTime
+  newModel.lastReadTime = oldModel.lastReadTime
 
   Log.v(TAG, "Replacing ${oldModel.storyId} in database")
   Static.database.replaceStory(newModel).await()
