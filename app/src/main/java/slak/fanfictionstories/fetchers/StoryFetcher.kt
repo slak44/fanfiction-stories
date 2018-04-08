@@ -61,6 +61,11 @@ fun fetchChapter(storyId: StoryId, chapter: Long): Deferred<String> = async2(Com
   return@async2 html
 }
 
+/**
+ * Get the story chapter's html as a [String].
+ * @param doc the document to search for the data
+ * @throws IllegalArgumentException if the document does not contain story chapter data
+ */
 fun extractChapterText(doc: Document): String {
   return doc.getElementById("storytext")?.html()
       ?: throw IllegalArgumentException("No story text in given document")
