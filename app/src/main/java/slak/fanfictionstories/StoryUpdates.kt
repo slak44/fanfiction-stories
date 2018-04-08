@@ -82,7 +82,9 @@ class UpdateService : JobService() {
     coroutineJob = launch(CommonPool) {
       val updatedStories = mutableListOf<StoryModel>()
       val storyModels = applicationContext.database.getLocalStories().await()
-      storyModels.forEach { model ->
+      orderStories(storyModels.toMutableList(),
+          Prefs.storyListOrderStrategy,
+          Prefs.storyListOrderDirection).forEach { model ->
         val updated = updateStory(model).await()
         Log.v(TAG, "Story ${model.storyId} was update performed: $updated")
         if (updated) updatedStories.add(model)
