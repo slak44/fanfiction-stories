@@ -131,6 +131,8 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
   newModel.addedTime = oldModel.addedTime
   newModel.lastReadTime = oldModel.lastReadTime
 
+  newModel.status = StoryStatus.LOCAL
+
   Log.v(TAG, "Replacing ${oldModel.storyId} in database")
   Static.database.upsertStory(newModel).await()
 
