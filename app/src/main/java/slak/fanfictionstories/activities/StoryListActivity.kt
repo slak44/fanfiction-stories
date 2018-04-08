@@ -18,7 +18,7 @@ import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 
 /** The list of stories the user has started reading, or has downloaded. */
-class StoryListActivity : ActivityWithStatic(), ReaderResumable by ReaderResumer() {
+class StoryListActivity : LoadingActivity(), ReaderResumable by ReaderResumer() {
   private lateinit var viewModel: StoryListViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,6 +32,7 @@ class StoryListActivity : ActivityWithStatic(), ReaderResumable by ReaderResumer
     storyListView.layoutManager = LinearLayoutManager(this)
     storyListView.createStorySwipeHelper { enteredReader(it.storyId) }
     viewModel.getCounts().observe(this) {
+      if (it.first == StoryListViewModel.UNINITIALIZED) return@observe
       toolbar.subtitle = str(R.string.x_stories_y_filtered, it.first, it.second)
     }
     viewModel.getStoryCount().observe(this) {
@@ -39,7 +40,11 @@ class StoryListActivity : ActivityWithStatic(), ReaderResumable by ReaderResumer
       else nothingHere.visibility = View.GONE
     }
     storyListView.adapter = StoryAdapter(viewModel)
-    if (viewModel.itemCount() == 0) viewModel.triggerDatabaseLoad()
+    if (viewModel.itemCount() == 0) {
+      viewModel.triggerDatabaseLoad().invokeOnCompletion { hideLoading() }
+    } else {
+      hideLoading()
+    }
   }
 
   override fun onResume() {

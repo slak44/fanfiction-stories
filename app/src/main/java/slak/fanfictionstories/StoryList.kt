@@ -374,6 +374,7 @@ open class StoryListViewModel : ViewModelWithIntent(),
     IAdapterDataObservable by AdapterDataObservable() {
   companion object {
     private const val TAG = "StoryListViewModel"
+    const val UNINITIALIZED = -1
   }
 
   /** The stories, group titles, and loading items of the list. */
@@ -387,9 +388,12 @@ open class StoryListViewModel : ViewModelWithIntent(),
     arrangeStories(stories, Prefs.storyListArrangement())
   }
 
-  /** How many stories are in [data]. */
+  /** How many stories are in [data]. Is [UNINITIALIZED] until initialized. */
   private val storyCount: MutableLiveData<Int> = MutableLiveData()
-  /** How many stories have been filtered in the latest [arrangeStories] call. */
+  /**
+   * How many stories have been filtered in the latest [arrangeStories] call.
+   * Is [UNINITIALIZED] until initialized.
+   */
   private val filteredCount: MutableLiveData<Int> = MutableLiveData()
   /** Mediates [storyCount] and [filteredCount]. */
   private val dataSize: MediatorLiveData<Pair<Int, Int>> = MediatorLiveData()
@@ -399,9 +403,9 @@ open class StoryListViewModel : ViewModelWithIntent(),
   fun getCounts(): LiveData<Pair<Int, Int>> = dataSize
 
   init {
-    storyCount.it = 0
-    filteredCount.it = 0
-    dataSize.it = Pair(0, 0)
+    storyCount.it = UNINITIALIZED
+    filteredCount.it = UNINITIALIZED
+    dataSize.it = Pair(UNINITIALIZED, UNINITIALIZED)
     dataSize.addSource(storyCount, {
       dataSize.it = Pair(it!!, dataSize.it.second)
     })
