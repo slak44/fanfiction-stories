@@ -1,6 +1,7 @@
 package slak.fanfictionstories.utility
 
 import android.database.Observable
+import android.support.annotation.UiThread
 import android.support.v7.widget.RecyclerView
 
 /**
@@ -18,6 +19,7 @@ import android.support.v7.widget.RecyclerView
  * equivalent to an [Observable] and the adapter equivalent to an [android.arch.lifecycle.Observer].
  * @see RecyclerView.AdapterDataObservable
  */
+@UiThread
 interface IAdapterDataObservable {
   fun notifyChanged()
   fun notifyItemRangeChanged(positionStart: Int, itemCount: Int)
@@ -36,6 +38,7 @@ interface IAdapterDataObservable {
  * @see RecyclerView.AdapterDataObservable
  * @see RecyclerView.AdapterDataObserver
  */
+@UiThread
 class AdapterDataObservable :
     Observable<RecyclerView.AdapterDataObserver>(), IAdapterDataObservable {
   override fun notifyChanged() = mObservers.forEach { it.onChanged() }
@@ -63,20 +66,26 @@ class AdapterDataObservable :
  */
 fun createObserverForAdapter(
     adapter: RecyclerView.Adapter<*>) = object : RecyclerView.AdapterDataObserver() {
+  @UiThread
   override fun onChanged() = adapter.notifyDataSetChanged()
 
+  @UiThread
   override fun onItemRangeChanged(positionStart: Int, itemCount: Int) =
       adapter.notifyItemRangeChanged(positionStart, itemCount)
 
+  @UiThread
   override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) =
       adapter.notifyItemRangeChanged(positionStart, itemCount, payload)
 
+  @UiThread
   override fun onItemRangeInserted(positionStart: Int, itemCount: Int) =
       adapter.notifyItemRangeInserted(positionStart, itemCount)
 
+  @UiThread
   override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) =
       adapter.notifyDataSetChanged()
 
+  @UiThread
   override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) =
       adapter.notifyItemRangeRemoved(positionStart, itemCount)
 }
