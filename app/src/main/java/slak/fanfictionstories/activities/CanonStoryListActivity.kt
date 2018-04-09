@@ -61,7 +61,7 @@ class CanonListViewModel : StoryListViewModel() {
 }
 
 /** A list of stories within a canon. */
-class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResumer() {
+class CanonStoryListActivity : LoadingActivity() {
   private lateinit var viewModel: CanonListViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,7 +75,7 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     canonStoryListView.adapter = StoryAdapter(viewModel)
     val layoutManager = LinearLayoutManager(this)
     canonStoryListView.layoutManager = layoutManager
-    canonStoryListView.createStorySwipeHelper { enteredReader(it.storyId) }
+    canonStoryListView.createStorySwipeHelper()
     infinitePageScroll(canonStoryListView, layoutManager) {
       viewModel.addDeferredItems(viewModel.getNextPage())
     }
@@ -90,6 +90,8 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
       onRestoreInstanceState(savedInstanceState)
       hideLoading()
     }
+
+    viewModel.defaultStoryListObserver.register()
   }
 
   private fun triggerLoadUI() = launch(UI) {
@@ -104,21 +106,6 @@ class CanonStoryListActivity : LoadingActivity(), ReaderResumable by ReaderResum
     viewModel.metadata.unfilteredStoryCount.ifPresent {
       supportActionBar?.subtitle = str(R.string.x_stories, it)
     }
-  }
-
-  override fun onResume() {
-    super.onResume()
-    updateOnResume(viewModel)
-  }
-
-  override fun onSaveInstanceState(outState: Bundle) {
-    super.onSaveInstanceState(outState)
-    saveInstanceState(outState)
-  }
-
-  override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-    super.onRestoreInstanceState(savedInstanceState)
-    restoreInstanceState(savedInstanceState)
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {

@@ -9,6 +9,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.os.Parcelable
+import android.support.annotation.UiThread
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -28,6 +29,8 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
+import slak.fanfictionstories.MarkerButton.Companion.markerSize
+import slak.fanfictionstories.MarkerButton.Companion.thisBtnSize
 import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
@@ -270,7 +273,7 @@ class StoryCardView : CardView {
         return@setOnClickListener
       }
       // Hide card
-      viewModel.hideStory(holder.adapterPosition, model)
+      viewModel.hideStory(model)
       // We need this because otherwise the screen gets out of sync with the data
       viewModel.notifyChanged()
       undoableAction(holder.itemView, R.string.removed_story, {
@@ -371,7 +374,7 @@ sealed class StoryListItem : Parcelable {
  * [RecyclerView.Adapter], for handling [IAdapterDataObservable] events.
  */
 open class StoryListViewModel : ViewModelWithIntent(),
-    IAdapterDataObservable by AdapterDataObservable() {
+    IAdapterDataObservable by AdapterDataObservable(), Collection<StoryListItem> {
   companion object {
     private const val TAG = "StoryListViewModel"
     const val UNINITIALIZED = -1
@@ -379,6 +382,24 @@ open class StoryListViewModel : ViewModelWithIntent(),
 
   /** The stories, group titles, and loading items of the list. */
   private val data: MutableList<StoryListItem> = mutableListOf()
+
+  /**
+   * This model's default [IStoryEventObserver]. Register it to use it, or don't and have a custom
+   * observer somewhere else.
+   */
+  val defaultStoryListObserver = object : IStoryEventObserver {
+    override fun onStoriesChanged(t: StoryChangeEvent) {
+      launch(UI) {
+        // We just update the stories that might have changed, regardless of what happened
+        t.models.forEach {
+          val idx = indexOfStoryId(it.storyId)
+          // And then again, only if they are part of our model
+          if (idx == -1) return@forEach
+          updateStoryModel(idx, it)
+        }
+      }
+    }
+  }
 
   /**
    * FIXME: see if room can make this obsolete
@@ -415,16 +436,30 @@ open class StoryListViewModel : ViewModelWithIntent(),
   }
 
   /** Get the [StoryListItem] at the given position. */
-  fun itemAt(position: Int) = data[position]
+  operator fun get(position: Int) = data[position]
 
-  /** Get how many items are stored. */
-  fun itemCount() = data.size
+  /** Get how many [StoryListItem] are stored. */
+  override val size get() = data.size
+
+  override fun isEmpty() = data.isEmpty()
+  override operator fun contains(element: StoryListItem) = data.contains(element)
+  override fun iterator() = data.iterator()
+  override fun containsAll(elements: Collection<StoryListItem>) = data.containsAll(elements)
+
+  /**
+   * Find the index of a [StoryCardData] whose model has the specified id.
+   * @return the index, or -1 if it doesn't exist
+   */
+  fun indexOfStoryId(storyId: StoryId): Int = data.indexOfFirst {
+    it is StoryCardData && it.model.storyId == storyId
+  }
 
   /**
    * Clear adapter data, including any pending items.
    * @see data
    * @see pendingItems
    */
+  @UiThread
   fun clearData() {
     val dataSize = data.size
     data.clear()
@@ -435,6 +470,7 @@ open class StoryListViewModel : ViewModelWithIntent(),
   }
 
   /** Add an item to the recycler. */
+  @UiThread
   fun addItem(item: StoryListItem) {
     data.add(item)
     notifyItemRangeInserted(data.size - 1, 1)
@@ -442,6 +478,7 @@ open class StoryListViewModel : ViewModelWithIntent(),
   }
 
   /** Add a bunch of items to the recycler. */
+  @UiThread
   fun addItems(items: List<StoryListItem>) {
     data.addAll(items)
     notifyItemRangeInserted(data.size, items.size)
@@ -449,7 +486,8 @@ open class StoryListViewModel : ViewModelWithIntent(),
     if (newStories > 0) storyCount.it += newStories
   }
 
-  /** Asynchronously add a bunch of items to the recycler, showing a loader until they show up. */
+  /** Asynchronously add a bunch of items to the recycler, adding a loader until they show up. */
+  @UiThread
   fun addDeferredItems(deferredList: Deferred<List<StoryListItem>>) = launch(UI) {
     addItem(LoadingItem())
     val loaderIdx = data.size - 1
@@ -458,12 +496,30 @@ open class StoryListViewModel : ViewModelWithIntent(),
     notifyItemRangeRemoved(loaderIdx, 1)
   }
 
-  /** Update a stored [StoryModel] from the provided [newModel]. */
+  /**
+   * Update a stored [StoryModel] from the provided [newModel].
+   * @throws IllegalArgumentException when the model is not part of the list
+   */
+  @UiThread
   fun updateStoryModel(newModel: StoryModel) {
-    val idx = data.indexOfFirst { it is StoryCardData && it.model.storyId == newModel.storyId }
-    if (idx == -1) throw IllegalArgumentException("Model not part of the adapter")
-    (data[idx] as StoryCardData).model = newModel
-    notifyItemRangeChanged(idx, 1)
+    val idx = indexOfStoryId(newModel.storyId)
+    if (idx == -1) throw IllegalArgumentException("Model not part of the list")
+    updateStoryModel(idx, newModel)
+  }
+
+  /**
+   * Update the stored [StoryModel] at the given position from the provided [newModel].
+   * @throws IllegalArgumentException when the position is incorrect
+   */
+  @UiThread
+  fun updateStoryModel(position: Int, newModel: StoryModel) {
+    if (data[position] !is StoryCardData ||
+        (data[position] as StoryCardData).model.storyId != newModel.storyId) {
+      throw IllegalArgumentException(
+          "Item at $position is not a StoryCardData with the correct storyId")
+    }
+    (data[position] as StoryCardData).model = newModel
+    notifyItemRangeChanged(position, 1)
   }
 
   /** Update a story's card extension state. */
@@ -481,18 +537,19 @@ open class StoryListViewModel : ViewModelWithIntent(),
   private val pendingItems = mutableMapOf<StoryModel, Int>()
 
   /**
-   * Remove the story from the adapter and keep track of its data.
-   * @param position adapter position of story view
+   * Remove the story from the model, but keep track of its data.
+   * @param model a model to be hidden
    * @see pendingItems
    * @see undoHideStory
    */
-  fun hideStory(position: Int, model: StoryModel) {
-    if (data.find { it is StoryCardData && it.model.storyId == model.storyId } == null)
-      throw IllegalArgumentException("Model not part of the adapter")
-    Log.v(TAG, "hideStory: pos=$position, model: $model")
-    pendingItems[model] = position
-    data.removeAt(position)
-    notifyItemRangeRemoved(position, 1)
+  @UiThread
+  fun hideStory(model: StoryModel) {
+    val idx = indexOfStoryId(model.storyId)
+    if (idx == -1) throw IllegalArgumentException("Model not part of the list")
+    Log.v(TAG, "hideStory: pos=$idx, model: $model")
+    pendingItems[model] = idx
+    data.removeAt(idx)
+    notifyItemRangeRemoved(idx, 1)
     storyCount.it--
   }
 
@@ -502,6 +559,7 @@ open class StoryListViewModel : ViewModelWithIntent(),
    * @see pendingItems
    * @see hideStory
    */
+  @UiThread
   fun undoHideStory(model: StoryModel) {
     val pos = pendingItems[model] ?: throw IllegalArgumentException("This model was never hidden")
     Log.v(TAG, "undoHideStory: pos=$pos, model: $model")
@@ -514,6 +572,7 @@ open class StoryListViewModel : ViewModelWithIntent(),
   /**
    * Filter, group, sort [stories] according to the [arrangement], and put the results in [data].
    */
+  @UiThread
   fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) {
     // Ignore currently pending stories, the user might have rearranged before the db was updated
     val storiesNotPending = stories.filter { (storyId) ->
@@ -546,7 +605,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
   class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
 
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-    val item = viewModel.itemAt(position)
+    val item = viewModel[position]
     when (item) {
       is StoryCardData -> {
         val view = (holder as StoryViewHolder).view
@@ -581,9 +640,9 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
     }
   }
 
-  override fun getItemCount(): Int = viewModel.itemCount()
+  override fun getItemCount(): Int = viewModel.size
   override fun getItemId(position: Int): Long {
-    val item = viewModel.itemAt(position)
+    val item = viewModel[position]
     return when (item) {
       is StoryCardData -> item.model.storyId + (1 shl 15)
       is GroupTitle -> item.title.hashCode().toLong() + (2 shl 15)
@@ -591,7 +650,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
     }
   }
 
-  override fun getItemViewType(position: Int): Int = when (viewModel.itemAt(position)) {
+  override fun getItemViewType(position: Int): Int = when (viewModel[position]) {
     is StoryCardData -> 0
     is GroupTitle -> 1
     is LoadingItem -> 2

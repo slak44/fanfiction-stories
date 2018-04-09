@@ -18,8 +18,25 @@ import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 
 /** The list of stories the user has started reading, or has downloaded. */
-class StoryListActivity : LoadingActivity(), ReaderResumable by ReaderResumer() {
+class StoryListActivity : LoadingActivity(), IStoryEventObserver {
   private lateinit var viewModel: StoryListViewModel
+
+  override fun onStoriesChanged(t: StoryChangeEvent) {
+    launch(UI) {
+      if (t.kind === StoryEventKind.New) {
+        viewModel.triggerDatabaseLoad()
+        return@launch
+      }
+      t.models.forEach {
+        val idx = viewModel.indexOfStoryId(it.storyId)
+        if (idx == -1) return@forEach
+        when (t.kind) {
+          is StoryEventKind.Changed -> viewModel.updateStoryModel(idx, it)
+          is StoryEventKind.Removed -> viewModel.hideStory(it)
+        }
+      }
+    }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -30,7 +47,7 @@ class StoryListActivity : LoadingActivity(), ReaderResumable by ReaderResumer() 
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     storyListView.layoutManager = LinearLayoutManager(this)
-    storyListView.createStorySwipeHelper { enteredReader(it.storyId) }
+    storyListView.createStorySwipeHelper()
     viewModel.getCounts().observe(this) {
       if (it.first == StoryListViewModel.UNINITIALIZED) return@observe
       toolbar.subtitle = str(R.string.x_stories_y_filtered, it.first, it.second)
@@ -40,26 +57,12 @@ class StoryListActivity : LoadingActivity(), ReaderResumable by ReaderResumer() 
       else nothingHere.visibility = View.GONE
     }
     storyListView.adapter = StoryAdapter(viewModel)
-    if (viewModel.itemCount() == 0) {
+    if (viewModel.isEmpty()) {
       viewModel.triggerDatabaseLoad().invokeOnCompletion { hideLoading() }
     } else {
       hideLoading()
     }
-  }
-
-  override fun onResume() {
-    super.onResume()
-    updateOnResume(viewModel)
-  }
-
-  override fun onSaveInstanceState(outState: Bundle) {
-    super.onSaveInstanceState(outState)
-    saveInstanceState(outState)
-  }
-
-  override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-    super.onRestoreInstanceState(savedInstanceState)
-    restoreInstanceState(savedInstanceState)
+    register()
   }
 
   private fun addByIdDialog() {

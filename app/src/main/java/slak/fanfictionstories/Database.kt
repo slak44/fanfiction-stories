@@ -146,7 +146,9 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
 
   /** Sets the color marker for the given story. */
   fun setMarker(storyId: StoryId, color: Int) = useAsync {
-    replaceOrThrow("colorMarkers", "storyId" to storyId, "markerColor" to color)
+    val long = replaceOrThrow("colorMarkers", "storyId" to storyId, "markerColor" to color)
+    StoryEventNotifier.notifyStoryChanged(listOf(storyId), StoryEventKind.Changed)
+    return@useAsync long
   }
 
   /**
@@ -169,7 +171,9 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
 
   /** Update some particular columns for a particular storyId. */
   fun updateInStory(storyId: StoryId, vararg pairs: Pair<String, Any>): Deferred<Int> = useAsync {
-    update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
+    val int = update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
+    StoryEventNotifier.notifyStoryChanged(listOf(storyId), StoryEventKind.Changed)
+    return@useAsync int
   }
 
   /** Upsert a story in the DB. */
@@ -181,23 +185,16 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     transaction {
       try {
         insertOrThrow("stories", *model.toPairs())
+        StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.New)
       } catch (err: SQLiteConstraintException) {
         // Rethrow if it isn't a unique violation
         if (err.errCode() != SQLiteResultCode.CONSTRAINT_UNIQUE) throw err
         // Unique broken => story already exists, so update it
         update("stories", *model.toPairs())
             .whereSimple("storyId = ?", model.storyId.toString()).exec()
+        StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.Changed)
       }
     }
-  }
-
-  /** Replace a story in the DB. */
-  fun replaceStory(model: StoryModel): Deferred<Long> = useAsync {
-    if (!model.isPersistable()) {
-      Log.e("replaceStory", model.toString())
-      throw IllegalArgumentException("This model is unfit for the database")
-    }
-    replaceOrThrow("stories", *model.toPairs())
   }
 }
 

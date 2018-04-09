@@ -215,7 +215,7 @@ class AuthorActivity : LoadingActivity(1) {
    * Fragment that lists stories using a [android.support.v7.widget.RecyclerView] and
    * [StoryAdapter].
    */
-  internal class StoryListFragment : Fragment(), ReaderResumable by ReaderResumer() {
+  internal class StoryListFragment : Fragment() {
     companion object {
       private const val ARG_STORIES = "stories"
 
@@ -231,24 +231,9 @@ class AuthorActivity : LoadingActivity(1) {
 
     private lateinit var viewModel: StoryListViewModel
 
-    override fun onResume() {
-      super.onResume()
-      updateOnResume(viewModel)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-      super.onSaveInstanceState(outState)
-      saveInstanceState(outState)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-      super.onActivityCreated(savedInstanceState)
-      if (savedInstanceState != null) restoreInstanceState(savedInstanceState)
-    }
-
     private fun initLayout(rootView: View, stories: List<StoryModel>) = launch(UI) {
       rootView.stories.layoutManager = LinearLayoutManager(getContext())
-      rootView.stories.createStorySwipeHelper { enteredReader(it.storyId) }
+      rootView.stories.createStorySwipeHelper()
       rootView.stories.adapter = StoryAdapter(viewModel)
       if (stories.isEmpty()) {
         rootView.noStories.visibility = View.VISIBLE
@@ -288,7 +273,8 @@ class AuthorActivity : LoadingActivity(1) {
           it.status = model.status
           return@map it
         }
-        initLayout(rootView, stories)
+        initLayout(rootView, stories).join()
+        viewModel.defaultStoryListObserver.register()
       }
       return rootView
     }

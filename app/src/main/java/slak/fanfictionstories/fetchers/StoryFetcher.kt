@@ -5,6 +5,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
+import org.jetbrains.anko.db.replaceOrThrow
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import slak.fanfictionstories.*
@@ -161,7 +162,8 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
   val isWriting = writeChapters(newModel.storyId, channel).await()
   if (!isWriting) {
     // Revert model to old values
-    Static.database.replaceStory(oldModel).await()
+    Static.database.use { replaceOrThrow("stories", *oldModel.toPairs()) }
+    StoryEventNotifier.notifyStoryChanged(listOf(oldModel), StoryEventKind.Changed)
     Log.e(TAG, "Had to revert update to ${oldModel.storyId}")
     return@async2 false
   }
