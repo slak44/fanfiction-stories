@@ -322,18 +322,21 @@ class StoryGroupTitle : TextView {
   companion object {
     private val borderHeight = Static.res.px(R.dimen.story_list_title_divider_height)
     private val bottomMargin = Static.res.px(R.dimen.story_list_margin)
+    /**
+     * Make only one instance of those, because they are more or less expensive, and there is no
+     * reason they can't just be shared between all instances of [StoryGroupTitle].
+     */
+    private val border: Paint by lazy {
+      val border = Paint()
+      border.style = Paint.Style.STROKE
+      border.color = Static.res.getColor(R.color.textDefault, Static.currentCtx.theme)
+      border.strokeWidth = borderHeight.toFloat()
+      border
+    }
   }
 
   init {
     setPadding(0, 0, 0, resources.px(R.dimen.story_list_title_underline_margin))
-  }
-
-  private val border: Paint by lazy {
-    val border = Paint()
-    border.style = Paint.Style.STROKE
-    border.color = Static.res.getColor(android.R.color.secondary_text_dark, this.context.theme)
-    border.strokeWidth = borderHeight.toFloat()
-    border
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
