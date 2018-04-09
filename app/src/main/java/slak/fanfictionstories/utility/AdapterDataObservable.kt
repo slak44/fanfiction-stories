@@ -12,6 +12,10 @@ import android.support.v7.widget.RecyclerView
 /**
  * For use with delegation when a class needs [AdapterDataObservable] and can't inherit from it
  * because it's an abstract class.
+ *
+ * For example, a [android.arch.lifecycle.ViewModel] might implement this interface, and a
+ * [RecyclerView.Adapter] might register an observer of its own to the model. That makes the model
+ * equivalent to an [Observable] and the adapter equivalent to an [android.arch.lifecycle.Observer].
  * @see RecyclerView.AdapterDataObservable
  */
 interface IAdapterDataObservable {
