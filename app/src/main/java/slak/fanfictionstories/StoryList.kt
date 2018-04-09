@@ -372,9 +372,13 @@ sealed class StoryListItem : Parcelable {
 /**
  * Handles data for a list of stories. Recommended to be used with a [RecyclerView] and a
  * [RecyclerView.Adapter], for handling [IAdapterDataObservable] events.
+ *
+ * Can also be used as an abstract list of [StoryListItem]s.
  */
-open class StoryListViewModel : ViewModelWithIntent(),
-    IAdapterDataObservable by AdapterDataObservable(), Collection<StoryListItem> {
+open class StoryListViewModel :
+    ViewModelWithIntent(),
+    IAdapterDataObservable by AdapterDataObservable(),
+    List<StoryListItem> {
   companion object {
     private const val TAG = "StoryListViewModel"
     const val UNINITIALIZED = -1
@@ -435,16 +439,23 @@ open class StoryListViewModel : ViewModelWithIntent(),
     })
   }
 
-  /** Get the [StoryListItem] at the given position. */
-  operator fun get(position: Int) = data[position]
+  /** Get the [StoryListItem] at the given index. */
+  override operator fun get(index: Int) = data[index]
 
   /** Get how many [StoryListItem] are stored. */
   override val size get() = data.size
+
+  // Forwarded List<> interface calls to [data]:
 
   override fun isEmpty() = data.isEmpty()
   override operator fun contains(element: StoryListItem) = data.contains(element)
   override fun iterator() = data.iterator()
   override fun containsAll(elements: Collection<StoryListItem>) = data.containsAll(elements)
+  override fun indexOf(element: StoryListItem): Int = data.indexOf(element)
+  override fun lastIndexOf(element: StoryListItem): Int = data.lastIndexOf(element)
+  override fun listIterator(): ListIterator<StoryListItem> = data.listIterator()
+  override fun listIterator(index: Int): ListIterator<StoryListItem> = data.listIterator(index)
+  override fun subList(fromIndex: Int, toIndex: Int) = data.subList(fromIndex, toIndex)
 
   /**
    * Find the index of a [StoryCardData] whose model has the specified id.
@@ -515,8 +526,8 @@ open class StoryListViewModel : ViewModelWithIntent(),
   fun updateStoryModel(position: Int, newModel: StoryModel) {
     if (data[position] !is StoryCardData ||
         (data[position] as StoryCardData).model.storyId != newModel.storyId) {
-      throw IllegalArgumentException(
-          "Item at $position is not a StoryCardData with the correct storyId")
+      throw IllegalArgumentException("Item at $position is not a StoryCardData with the correct" +
+          "storyId (${(data[position] as StoryCardData).model.storyId} vs ${newModel.storyId})")
     }
     (data[position] as StoryCardData).model = newModel
     notifyItemRangeChanged(position, 1)
@@ -604,6 +615,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
   class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
   class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
 
+  @UiThread
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
     val item = viewModel[position]
     when (item) {
@@ -619,25 +631,13 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
     }
   }
 
-  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-    val inflater = LayoutInflater.from(parent.context)
-    val view: View = when (viewType) {
-      0 -> inflater.inflate(R.layout.story_component, parent, false)
-      1 -> StoryGroupTitle(parent.context)
-      2 -> inflater.inflate(R.layout.loading_circle_indeterminate, parent, false)
-      else -> throw IllegalStateException("getItemViewType out of sync with onCreateViewHolder")
-    }
-    view.alpha = 0F
-    view.isDrawingCacheEnabled = true
-    val fadeIn = ObjectAnimator.ofFloat(view, "alpha", 0.3F, 1F)
-    fadeIn.startDelay = 50
-    fadeIn.start()
-    return when (viewType) {
-      0 -> StoryViewHolder(view as StoryCardView)
-      1 -> TitleViewHolder(view as StoryGroupTitle)
-      2 -> ProgressBarHolder(view as ProgressBar)
-      else -> throw IllegalStateException("getItemViewType out of sync with onCreateViewHolder")
-    }
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
+    0 -> StoryViewHolder(LayoutInflater.from(parent.context)
+        .inflate(R.layout.story_component, parent, false) as StoryCardView)
+    1 -> TitleViewHolder(StoryGroupTitle(parent.context))
+    2 -> ProgressBarHolder(LayoutInflater.from(parent.context)
+        .inflate(R.layout.loading_circle_indeterminate, parent, false) as ProgressBar)
+    else -> throw IllegalStateException("getItemViewType out of sync with onCreateViewHolder")
   }
 
   override fun getItemCount(): Int = viewModel.size
