@@ -80,17 +80,17 @@ class UpdateService : JobService() {
     }
     Log.i(TAG, "Update job started")
     coroutineJob = launch(CommonPool) {
-      val updatedStories = mutableListOf<StoryModel>()
       val storyModels = applicationContext.database.getLocalStories().await()
-      orderStories(storyModels.toMutableList(),
+      val updatedStories = orderStories(storyModels.toMutableList(),
           Prefs.storyListOrderStrategy,
-          Prefs.storyListOrderDirection).forEach { model ->
-        val updated = updateStory(model).await()
-        Log.v(TAG, "Story ${model.storyId} was update performed: $updated")
-        if (updated) updatedStories.add(model)
+          Prefs.storyListOrderDirection).mapNotNull { model ->
+        val newModel = updateStory(model).await()
+        Log.v(TAG, "Story ${model.storyId} was update performed: ${newModel !is Empty}")
+        return@mapNotNull if (newModel !is Empty) Pair(newModel.get().storyId, newModel.get().title)
+        else null
       }
       Notifications.cancel(Notifications.Kind.UPDATING)
-      Notifications.updatedStories(updatedStories.map { Pair(it.storyId, it.title) })
+      Notifications.updatedStories(updatedStories)
       jobFinished(params, false)
     }
     return true

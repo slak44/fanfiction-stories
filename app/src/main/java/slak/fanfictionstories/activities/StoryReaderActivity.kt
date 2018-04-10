@@ -26,6 +26,7 @@ import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.fetchers.extractChapterText
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.fetchers.fetchChapter
+import slak.fanfictionstories.fetchers.updateStory
 import slak.fanfictionstories.utility.*
 import java.io.File
 
@@ -278,6 +279,16 @@ class StoryReaderActivity : LoadingActivity() {
       }
       R.id.downloadLocal -> launch(CommonPool) {
         model = fetchAndWriteStory(model.storyId).await().orElse(model)
+      }
+      R.id.checkForUpdate -> launch(CommonPool) {
+        val newModel = updateStory(model).await()
+        if (newModel !is Empty) {
+          model = newModel.get()
+          Notifications.updatedStories(listOf(Pair(model.storyId, model.title)))
+        } else {
+          Notifications.cancel(Notifications.Kind.UPDATING)
+          Notifications.updatedStories(emptyList())
+        }
       }
       R.id.deleteLocal -> undoableAction(contentView!!, R.string.data_deleted) {
         deleteLocalStory(this, model.storyId)

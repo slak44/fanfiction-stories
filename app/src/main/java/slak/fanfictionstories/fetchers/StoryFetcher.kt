@@ -110,22 +110,25 @@ fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
 /**
  * Tries to update story metadata and chapters. Only works on local stories.
  * @param oldModel the EXISTING [StoryModel], fetched from db
- * @returns whether or not the update was done
+ * @returns if the update was done, the updated model, otherwise [Empty]
  */
-fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
+fun updateStory(oldModel: StoryModel): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   Notifications.show(
       Notifications.Kind.UPDATING, defaultIntent(), R.string.checking_story, oldModel.title)
-  val newModel = fetchStoryModel(oldModel.storyId).await().orElse { return@async2 false }
+  val newModel = fetchStoryModel(oldModel.storyId).await().orElse {
+    return@async2 Empty<StoryModel>()
+  }
   Log.v(TAG, "Attempting update from\n   oldModel: $oldModel\nto newModel: $newModel")
   // Skip non-locals from updates, since the operation does not make sense for them
-  if (oldModel.status != StoryStatus.LOCAL) return@async2 false
+  if (oldModel.status != StoryStatus.LOCAL) return@async2 Empty<StoryModel>()
   // Stories can't get un-updated
   if (oldModel.fragment.updateTime != 0L && newModel.fragment.updateTime == 0L)
     throw IllegalStateException("The old model had updates; the new one doesn't")
   // Story has never received an update, our job here is done
-  if (newModel.fragment.updateTime == 0L) return@async2 false
+  if (newModel.fragment.updateTime == 0L) return@async2 Empty<StoryModel>()
   // Update time is identical, nothing to do again
-  if (oldModel.fragment.updateTime == newModel.fragment.updateTime) return@async2 false
+  if (oldModel.fragment.updateTime == newModel.fragment.updateTime)
+    return@async2 Empty<StoryModel>()
 
   newModel.progress = if (oldModel.progress.currentChapter > newModel.fragment.chapterCount) {
     Log.i(TAG, "Had to discard progress for id ${oldModel.storyId} because oldModel current" +
@@ -165,8 +168,8 @@ fun updateStory(oldModel: StoryModel): Deferred<Boolean> = async2(CommonPool) {
     Static.database.use { replaceOrThrow("stories", *oldModel.toPairs()) }
     StoryEventNotifier.notifyStoryChanged(listOf(oldModel), StoryEventKind.Changed)
     Log.e(TAG, "Had to revert update to ${oldModel.storyId}")
-    return@async2 false
+    return@async2 Empty<StoryModel>()
   }
   Notifications.cancel(Notifications.Kind.UPDATING)
-  return@async2 true
+  return@async2 newModel.opt()
 }
