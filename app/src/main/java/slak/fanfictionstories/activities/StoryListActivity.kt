@@ -65,6 +65,11 @@ class StoryListActivity : LoadingActivity(), IStoryEventObserver {
     register()
   }
 
+  override fun onDestroy() {
+    super.onDestroy()
+    unregister()
+  }
+
   private fun addByIdDialog() {
     AlertDialog.Builder(this)
         .setTitle(R.string.story_by_id_title)

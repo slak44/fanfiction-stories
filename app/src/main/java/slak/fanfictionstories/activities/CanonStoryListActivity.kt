@@ -95,6 +95,11 @@ class CanonStoryListActivity : LoadingActivity() {
     viewModel.defaultStoryListObserver.register()
   }
 
+  override fun onDestroy() {
+    super.onDestroy()
+    viewModel.defaultStoryListObserver.unregister()
+  }
+
   private fun triggerLoadUI() = launch(UI) {
     showLoading()
     viewModel.addItems(viewModel.getCurrentPage().await())
