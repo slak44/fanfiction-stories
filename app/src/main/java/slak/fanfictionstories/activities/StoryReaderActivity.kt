@@ -2,6 +2,7 @@ package slak.fanfictionstories.activities
 
 import android.os.Bundle
 import android.os.Parcelable
+import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
 import android.text.Html
@@ -174,6 +175,11 @@ class StoryReaderActivity : LoadingActivity() {
       // Don't show it if there is no title (otherwise there are leftover margins/padding)
       chapterTitleText.visibility = if (chapterTitleText.text == "") View.GONE else View.VISIBLE
     }
+
+    // We use the width for the <hr> elements
+    if (!ViewCompat.isLaidOut(chapterText)) launch(UI) { chapterText.forceLayout() }.join()
+
+    if (chapterText.width == 0) Log.w(TAG, "chapterText.width is 0!")
 
     val html = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY,
         null, HrSpan.tagHandlerFactory(chapterText.width))
