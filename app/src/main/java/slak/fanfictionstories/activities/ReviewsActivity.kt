@@ -1,5 +1,6 @@
 package slak.fanfictionstories.activities
 
+import android.annotation.SuppressLint
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.os.Bundle
@@ -196,6 +197,7 @@ class ReviewAdapter(
     }
   }
 
+  @SuppressLint("InflateParams")
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, pos: Int) = with(holder.itemView) {
     bindReviewProps(this as CardView, viewModel.reviews[pos])
     replyBtn.setOnClickListener {

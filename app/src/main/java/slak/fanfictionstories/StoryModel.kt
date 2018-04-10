@@ -7,6 +7,7 @@ import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
 import android.widget.Switch
 import kotlinx.android.parcel.Parcelize
+import kotlinx.android.synthetic.main.dialog_order_by_switch.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.runBlocking
@@ -337,15 +338,14 @@ fun orderByDialog(context: Context,
                   action: (OrderStrategy, OrderDirection) -> Unit) {
   val layout = LayoutInflater.from(context)
       .inflate(R.layout.dialog_order_by_switch, null, false)
-  val switch = layout.findViewById(R.id.reverseOrderSw) as Switch
-  if (defaultDirection == OrderDirection.ASC) switch.toggle()
+  if (defaultDirection == OrderDirection.ASC) layout.reverseOrderSw.toggle()
   AlertDialog.Builder(context)
       .setTitle(R.string.sort_by)
       .setView(layout)
       .setSingleChoiceItems(OrderStrategy.uiItems(), defaultStrategy.ordinal, { d, which ->
         d.dismiss()
         action(OrderStrategy[which],
-            if (switch.isChecked) OrderDirection.ASC else OrderDirection.DESC)
+            if (layout.reverseOrderSw.isChecked) OrderDirection.ASC else OrderDirection.DESC)
       })
       .show()
 }

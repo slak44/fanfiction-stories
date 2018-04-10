@@ -1,5 +1,6 @@
 package slak.fanfictionstories.activities
 
+import android.annotation.SuppressLint
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.os.Bundle
@@ -119,6 +120,7 @@ class CanonStoryListActivity : LoadingActivity() {
   }
 
   private var dialogOpened: Boolean = false
+  @SuppressLint("InflateParams")
   private fun openFilterDialog() {
     // Don't open more than one dialog
     if (dialogOpened) return
