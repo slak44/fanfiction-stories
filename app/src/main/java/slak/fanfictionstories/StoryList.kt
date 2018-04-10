@@ -1,6 +1,5 @@
 package slak.fanfictionstories
 
-import android.animation.ObjectAnimator
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MediatorLiveData
 import android.arch.lifecycle.MutableLiveData
@@ -33,7 +32,6 @@ import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
-import slak.fanfictionstories.utility.Optional
 import java.util.*
 
 /**
