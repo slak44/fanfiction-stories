@@ -118,7 +118,6 @@ class MarkerButton : Button, View.OnClickListener {
   override fun setOnClickListener(l: OnClickListener?) {} // Don't
 
   override fun onClick(v: View) {
-    if (markerColor == 0) return
     val colors = resources.getIntArray(R.array.markerColors)
     launch(UI) {
       val dialog = ColorPickerDialog(getContext(), 0, {
