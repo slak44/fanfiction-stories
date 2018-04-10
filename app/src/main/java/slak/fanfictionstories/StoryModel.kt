@@ -14,6 +14,7 @@ import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.fetchers.FetcherUtils.CHAPTER_TITLE_SEPARATOR
 import slak.fanfictionstories.fetchers.Genre
+import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.str
@@ -291,11 +292,11 @@ fun groupStories(
     val colors = Static.res.getIntArray(R.array.markerColors)
     val map = hashMapOf<String, MutableList<StoryModel>>()
     names.forEach { map[it] = mutableListOf() }
+    val idToMarkerName = Static.database.getMarkers(stories.map { it.storyId }).await().mapValues {
+      names[colors.indexOf(it.value.toInt())]
+    }
     stories.forEach {
-      // FIXME 0000171
-      val idx = colors.indexOf(Static.database.getMarker(it.storyId).await().orElse(0))
-      val colorName = names[idx]
-      map[colorName]!!.add(it)
+      map[idToMarkerName[it.storyId]]!!.add(it)
     }
     names.forEach { if (map[it]!!.isEmpty()) map.remove(it) }
     return@async2 map

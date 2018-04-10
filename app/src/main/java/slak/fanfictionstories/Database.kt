@@ -7,10 +7,7 @@ import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jetbrains.anko.db.*
-import slak.fanfictionstories.utility.Optional
-import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.opt
+import slak.fanfictionstories.utility.*
 
 class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 5) {
   companion object {
@@ -137,11 +134,26 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     }
   }
 
-  /** Gets the color marker for a story, if it exists. */
-  fun getMarker(storyId: StoryId): Deferred<Optional<Int>> = useAsync {
+  /** Gets the color marker for a story, or 0 if there is none. */
+  fun getMarker(storyId: StoryId): Deferred<Long> = useAsync {
     select("colorMarkers", "markerColor")
         .whereSimple("storyId = ?", storyId.toString())
-        .parseOpt(IntParser).opt()
+        .parseOpt(LongParser) ?: 0L
+  }
+
+  /** Get color markers for a list of stories, or 0 if there is none. */
+  fun getMarkers(storyIds: List<StoryId>): Deferred<Map<StoryId, Long>> = useAsync {
+    val map = select("colorMarkers", "storyId", "markerColor")
+        .whereSimple(
+            "storyId in (${"?,".repeat(storyIds.size).dropLast(1)})",
+            *storyIds.map { it.toString() }.toTypedArray())
+        .parseList(object : MapRowParser<Pair<StoryId, Long>> {
+          override fun parseRow(columns: Map<String, Any?>): Pair<StoryId, Long> {
+            return Pair(columns["storyId"] as StoryId, columns["markerColor"] as Long)
+          }
+        }).toMap().toMutableMap()
+    storyIds.forEach { if (!map.containsKey(it)) map[it] = 0L }
+    return@useAsync map
   }
 
   /** Sets the color marker for the given story. */

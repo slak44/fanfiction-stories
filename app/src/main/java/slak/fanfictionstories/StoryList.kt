@@ -24,11 +24,8 @@ import android.widget.TextView
 import com.takisoft.colorpicker.ColorPickerDialog
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.story_component.view.*
-import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.MarkerButton.Companion.markerSize
 import slak.fanfictionstories.MarkerButton.Companion.thisBtnSize
 import slak.fanfictionstories.StoryListItem.*
@@ -100,12 +97,18 @@ class MarkerButton : Button, View.OnClickListener {
     }
   }
 
-  var storyModel: Optional<StoryModel> = Empty()
+  fun bindMarker(storyId: StoryId, markerColor: Int) {
+    this.storyId = storyId
+    this.markerColor = markerColor
+  }
+
+  private var storyId: StoryId = 0
+
+  private var markerColor: Int = 0
     set(value) {
       field = value
       launch(UI) {
-        val marker = getContext().database.getMarker(value.get().storyId).await()
-        paint = createPaint(marker.orElse(0))
+        paint = createPaint(value)
         invalidate()
       }
     }
@@ -117,25 +120,22 @@ class MarkerButton : Button, View.OnClickListener {
   override fun setOnClickListener(l: OnClickListener?) {} // Don't
 
   override fun onClick(v: View) {
-    if (storyModel is Empty) return
+    if (markerColor == 0) return
     val colors = resources.getIntArray(R.array.markerColors)
     launch(UI) {
-      val selectedColor = getContext().database.getMarker(storyModel.get().storyId).await()
       val dialog = ColorPickerDialog(getContext(), 0, {
-        getContext().database.setMarker(storyModel.get().storyId, it)
-        paint = createPaint(it)
-        invalidate()
+        getContext().database.setMarker(storyId, it)
+        markerColor = it
       }, ColorPickerDialog.Params.Builder(getContext())
           .setColors(colors)
           .setColorContentDescriptions(resources.getStringArray(R.array.markerColorNames))
-          .setSelectedColor(selectedColor.orElse(0))
+          .setSelectedColor(markerColor)
           .setSortColors(false)
           .build())
       dialog.setTitle(R.string.select_marker_color)
       dialog.setMessage(str(R.string.select_marker_color_msg))
       dialog.setCancelable(true)
       dialog.show()
-
     }
   }
 
@@ -250,7 +250,9 @@ class StoryCardView : CardView {
     if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.GONE
     if (model.status == StoryStatus.TRANSIENT) removeBtn.visibility = View.GONE
 
-    markerBtn.storyModel = model.opt()
+    launch(CommonPool) {
+      markerBtn.bindMarker(model.storyId, Static.database.getMarker(model.storyId).await().toInt())
+    }
 
     // Reset card UI (including the measured size) to default
     addBtn.isEnabled = true
@@ -259,8 +261,7 @@ class StoryCardView : CardView {
   }
 
   /** Binds various children listeners to the correct [StoryModel]/[StoryListViewModel]. */
-  fun setChildrenListeners(model: StoryModel, holder: RecyclerView.ViewHolder,
-                           viewModel: StoryListViewModel) {
+  fun setChildrenListeners(model: StoryModel, viewModel: StoryListViewModel) {
     // Disable touching on the progress seek bar
     storyProgress.setOnTouchListener { _, _ -> true }
     // Show/hide details layout when pressing content
@@ -276,14 +277,13 @@ class StoryCardView : CardView {
       viewModel.hideStory(model)
       // We need this because otherwise the screen gets out of sync with the data
       viewModel.notifyChanged()
-      undoableAction(holder.itemView, R.string.removed_story, {
-        viewModel.undoHideStory(model)
-      }) {
+      undoableAction(this, R.string.removed_story, { viewModel.undoHideStory(model) }) {
         deleteLocalStory(context, model.storyId).join()
         context.database.useAsync {
           val currentResume = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
           if (currentResume == model.storyId) Prefs.useImmediate { it.remove(Prefs.RESUME_STORY_ID) }
           delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
+          StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.Removed)
         }.await()
       }
     }
@@ -501,7 +501,6 @@ open class StoryListViewModel :
   }
 
   /** Asynchronously add a bunch of items to the recycler, adding a loader until they show up. */
-  @UiThread
   fun addDeferredItems(deferredList: Deferred<List<StoryListItem>>) = launch(UI) {
     addItem(LoadingItem())
     val loaderIdx = data.size - 1
@@ -626,7 +625,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
         view.onExtendedStateChange = { viewModel.updateStoryState(position, it) }
         view.isExtended = item.isExtended
         view.loadFromModel(item.model)
-        view.setChildrenListeners(item.model, holder, viewModel)
+        view.setChildrenListeners(item.model, viewModel)
       }
       is GroupTitle -> (holder as TitleViewHolder).view.text = item.title
       is LoadingItem -> (holder as ProgressBarHolder).view.id = item.id
