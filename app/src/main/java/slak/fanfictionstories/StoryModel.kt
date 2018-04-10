@@ -7,11 +7,14 @@ import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
 import android.widget.Switch
 import kotlinx.android.parcel.Parcelize
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.fetchers.FetcherUtils.CHAPTER_TITLE_SEPARATOR
 import slak.fanfictionstories.fetchers.Genre
 import slak.fanfictionstories.utility.Static
+import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.*
@@ -267,10 +270,11 @@ enum class GroupStrategy {
 }
 
 /** @returns a map that maps titles to grouped stories, according to the given [GroupStrategy]. */
-fun groupStories(stories: MutableList<StoryModel>,
-                 strategy: GroupStrategy): Map<String, MutableList<StoryModel>> {
+fun groupStories(
+    stories: MutableList<StoryModel>,
+    strategy: GroupStrategy): Deferred<Map<String, MutableList<StoryModel>>> = async2(CommonPool) {
   if (strategy == GroupStrategy.NONE)
-    return mapOf(str(R.string.all_stories) to stories)
+    return@async2 mapOf(str(R.string.all_stories) to stories)
   if (strategy == GroupStrategy.GENRE) {
     val map = hashMapOf<String, MutableList<StoryModel>>()
     Genre.values().forEach { map[it.toUIString()] = mutableListOf() }
@@ -279,22 +283,21 @@ fun groupStories(stories: MutableList<StoryModel>,
     stories.filter { it.fragment.genres != none }
         .forEach { story -> story.genreList().forEach { map[it.toUIString()]!!.add(story) } }
     Genre.values().forEach { if (map[it.toUIString()]!!.isEmpty()) map.remove(it.toUIString()) }
-    return map
+    return@async2 map
   }
   if (strategy == GroupStrategy.MARKER) {
     val names = Static.res.getStringArray(R.array.markerColorNames)
     val colors = Static.res.getIntArray(R.array.markerColors)
     val map = hashMapOf<String, MutableList<StoryModel>>()
     names.forEach { map[it] = mutableListOf() }
-    runBlocking {
-      stories.forEach {
-        val idx = colors.indexOf(Static.database.getMarker(it.storyId).await().orElse(0))
-        val colorName = names[idx]
-        map[colorName]!!.add(it)
-      }
+    stories.forEach {
+      // FIXME 0000171
+      val idx = colors.indexOf(Static.database.getMarker(it.storyId).await().orElse(0))
+      val colorName = names[idx]
+      map[colorName]!!.add(it)
     }
     names.forEach { if (map[it]!!.isEmpty()) map.remove(it) }
-    return map
+    return@async2 map
   }
   val map = hashMapOf<String, MutableList<StoryModel>>()
   stories.forEach {
@@ -312,7 +315,7 @@ fun groupStories(stories: MutableList<StoryModel>,
     if (map[value] == null) map[value] = mutableListOf()
     map[value]!!.add(it)
   }
-  return map
+  return@async2 map
 }
 
 /** Shows a dialog presenting [GroupStrategy] choices for grouping. */

@@ -384,7 +384,7 @@ open class StoryListViewModel :
     List<StoryListItem> {
   companion object {
     private const val TAG = "StoryListViewModel"
-    const val UNINITIALIZED = -1
+    const val UNINITIALIZED = -11234
   }
 
   /** The stories, group titles, and loading items of the list. */
@@ -413,7 +413,7 @@ open class StoryListViewModel :
    */
   fun triggerDatabaseLoad() = launch(UI) {
     val stories = Static.database.getStories().await()
-    arrangeStories(stories, Prefs.storyListArrangement())
+    arrangeStories(stories, Prefs.storyListArrangement()).join()
   }
 
   /** How many stories are in [data]. Is [UNINITIALIZED] until initialized. */
@@ -479,8 +479,8 @@ open class StoryListViewModel :
     data.clear()
     notifyItemRangeRemoved(0, dataSize)
     pendingItems.clear()
-    storyCount.it = 0
-    filteredCount.it = 0
+    storyCount.it = UNINITIALIZED
+    filteredCount.it = UNINITIALIZED
   }
 
   /** Add an item to the recycler. */
@@ -586,15 +586,14 @@ open class StoryListViewModel :
   /**
    * Filter, group, sort [stories] according to the [arrangement], and put the results in [data].
    */
-  @UiThread
-  fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) {
+  fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) = launch(UI) {
     // Ignore currently pending stories, the user might have rearranged before the db was updated
     val storiesNotPending = stories.filter { (storyId) ->
       pendingItems.keys.find { it.storyId == storyId } == null
     }
     clearData()
     val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
-    groupStories(toData, arrangement.groupStrategy).toSortedMap().forEach {
+    groupStories(toData, arrangement.groupStrategy).await().toSortedMap().forEach {
       val ordered = orderStories(it.value, arrangement.orderStrategy, arrangement.orderDirection)
       addItems(listOf(GroupTitle(it.key), *ordered.map { StoryCardData(it) }.toTypedArray()))
     }
