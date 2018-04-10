@@ -60,9 +60,7 @@ object StoryEventNotifier : Observable<IStoryEventObserver>() {
    * @see notifyStoryChanged
    */
   fun notifyStoryChanged(ids: List<StoryId>, kind: StoryEventKind) = launch(CommonPool) {
-    // FIXME bug 0000171
-    val stories = ids.mapNotNull { Static.database.storyById(it).await().orNull() }
-    notifyStoryChanged(stories, kind)
+    notifyStoryChanged(Static.database.storiesById(ids).await(), kind)
   }
 }
 

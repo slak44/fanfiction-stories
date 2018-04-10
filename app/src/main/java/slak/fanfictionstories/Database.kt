@@ -144,9 +144,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   /** Get color markers for a list of stories, or 0 if there is none. */
   fun getMarkers(storyIds: List<StoryId>): Deferred<Map<StoryId, Long>> = useAsync {
     val map = select("colorMarkers", "storyId", "markerColor")
-        .whereSimple(
-            "storyId in (${"?,".repeat(storyIds.size).dropLast(1)})",
-            *storyIds.map { it.toString() }.toTypedArray())
+        .whereAny("storyId", storyIds.map { it.toString() }.toTypedArray())
         .parseList(object : MapRowParser<Pair<StoryId, Long>> {
           override fun parseRow(columns: Map<String, Any?>): Pair<StoryId, Long> {
             return Pair(columns["storyId"] as StoryId, columns["markerColor"] as Long)
@@ -181,6 +179,16 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         .parseOpt(StoryModel.dbParser).opt()
   }
 
+  /**
+   * Get a bunch of [StoryModel]s by their ids.
+   * @return a list of the models (but the ones not found in the database will be missing from it)
+   */
+  fun storiesById(storyIds: List<StoryId>): Deferred<List<StoryModel>> = useAsync {
+    select("stories")
+        .whereAny("storyId", storyIds.map { it.toString() }.toTypedArray())
+        .parseList(StoryModel.dbParser)
+  }
+
   /** Update some particular columns for a particular storyId. */
   fun updateInStory(storyId: StoryId, vararg pairs: Pair<String, Any>): Deferred<Int> = useAsync {
     val int = update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
@@ -208,6 +216,14 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
       }
     }
   }
+}
+
+/**
+ * A `WHERE` clause of the form `columnName in (value1, value2, ...)`, using the provided array of
+ * values.
+ */
+fun SelectQueryBuilder.whereAny(columnName: String, values: Array<String>): SelectQueryBuilder {
+  return whereSimple("$columnName in (${"?,".repeat(values.size).dropLast(1)})", *values)
 }
 
 /**
