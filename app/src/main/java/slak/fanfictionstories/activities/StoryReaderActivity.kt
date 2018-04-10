@@ -241,9 +241,8 @@ class StoryReaderActivity : LoadingActivity() {
     menu.findItem(R.id.nextChapter).isEnabled = nextChapterBtn.isEnabled
     menu.findItem(R.id.prevChapter).isEnabled = prevChapterBtn.isEnabled
     menu.findItem(R.id.selectChapter).isEnabled = selectChapterBtn.isEnabled
-    val isNotLocal = model.status != StoryStatus.LOCAL
-    menu.findItem(R.id.downloadLocal).isVisible = isNotLocal
-    menu.findItem(R.id.downloadLocal).isEnabled = isNotLocal
+    menu.findItem(R.id.downloadLocal).isVisible = model.status != StoryStatus.LOCAL
+    menu.findItem(R.id.checkForUpdate).isVisible = model.status == StoryStatus.LOCAL
     return super.onPrepareOptionsMenu(menu)
   }
 
