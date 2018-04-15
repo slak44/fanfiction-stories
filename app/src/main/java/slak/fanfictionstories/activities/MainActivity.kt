@@ -24,8 +24,8 @@ class MainActivity : ActivityWithStatic() {
     setContentView(R.layout.activity_main)
     setSupportActionBar(toolbar)
 
-    storyListButton.setOnClickListener { startActivity<StoryListActivity>() }
-    storyBrowseButton.setOnClickListener { startActivity<SelectCategoryActivity>() }
+    storyListBtn.setOnClickListener { startActivity<StoryListActivity>() }
+    storyBrowseBtn.setOnClickListener { startActivity<SelectCategoryActivity>() }
 
     if (BuildConfig.DEBUG) injectDebugButtons(this)
   }
@@ -34,17 +34,17 @@ class MainActivity : ActivityWithStatic() {
     super.onResume()
     val storyId = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
     if (storyId == -1L) {
-      resumeButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
-      resumeButton.text = str(R.string.nothing_to_resume)
-      resumeButton.setOnClickListener {}
+      resumeBtn.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+      resumeBtn.text = str(R.string.nothing_to_resume)
+      resumeBtn.setOnClickListener {}
       return
     }
     val model = runBlocking { database.storyById(storyId).await() }.orElse { return@onResume }
-    resumeButton.text = Html.fromHtml(str(R.string.resume_story, model.title, model.author,
+    resumeBtn.text = Html.fromHtml(str(R.string.resume_story, model.title, model.author,
         model.progress.currentChapter, model.fragment.chapterCount), Html.FROM_HTML_MODE_COMPACT)
-    resumeButton.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_restore_black_24dp, 0, 0, 0)
-    resumeButton.drawableTint(R.color.white, theme, Direction.LEFT)
-    resumeButton.setOnClickListener {
+    resumeBtn.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_restore_black_24dp, 0, 0, 0)
+    resumeBtn.drawableTint(R.color.white, theme, Direction.LEFT)
+    resumeBtn.setOnClickListener {
       startActivity<StoryReaderActivity>(
           StoryReaderActivity.INTENT_STORY_MODEL to model as Parcelable)
     }

@@ -38,20 +38,20 @@
         tools:layout_editor_absoluteX="0dp">
 
         <TextView
-            android:id="@+id/resumeButton"
+            android:id="@+id/resumeBtn"
             style="@style/AppTheme.Touchable.ListItem.WithDrawable"
             android:text="@string/nothing_to_resume"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
 
         <TextView
-            android:id="@+id/storyListButton"
+            android:id="@+id/storyListBtn"
             style="@style/AppTheme.Touchable.ListItem.WithDrawable"
             android:drawableStart="@drawable/ic_view_list_black_24dp"
             android:text="@string/story_list"/>
 
         <TextView
-            android:id="@+id/storyBrowseButton"
+            android:id="@+id/storyBrowseBtn"
             style="@style/AppTheme.Touchable.ListItem.WithDrawable"
             android:drawableStart="@drawable/ic_library_books_black_24dp"
             android:text="@string/story_browse"/>
