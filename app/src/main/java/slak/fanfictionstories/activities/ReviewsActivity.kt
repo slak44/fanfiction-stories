@@ -11,7 +11,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.*
 import kotlinx.android.synthetic.main.activity_reviews.*
 import kotlinx.android.synthetic.main.dialog_report_review.view.*
-import kotlinx.android.synthetic.main.review_component.view.*
+import kotlinx.android.synthetic.main.component_review.view.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.Prefs
@@ -174,7 +174,7 @@ class ReviewAdapter(
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
     return ReviewHolder(LayoutInflater.from(parent.context)
-        .inflate(R.layout.review_component, parent, false) as CardView)
+        .inflate(R.layout.component_review, parent, false) as CardView)
   }
 
   private fun bindReviewProps(view: CardView, review: Review) = with(view) {

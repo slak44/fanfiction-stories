@@ -36,7 +36,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appBar"
         app:layout_constraintVertical_bias="0.0"
-        tools:listitem="@layout/review_component">
+        tools:listitem="@layout/component_review">
 
     </android.support.v7.widget.RecyclerView>
 

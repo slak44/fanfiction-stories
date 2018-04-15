@@ -22,7 +22,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import com.takisoft.colorpicker.ColorPickerDialog
 import kotlinx.android.parcel.Parcelize
-import kotlinx.android.synthetic.main.story_component.view.*
+import kotlinx.android.synthetic.main.component_story.view.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import slak.fanfictionstories.MarkerButton.Companion.markerSize
@@ -166,8 +166,8 @@ class MarkerButton : Button, View.OnClickListener {
 }
 
 /**
- * A [CardView] that shows a story's metadata. Don't use directly, use [R.layout.story_component].
- * @see R.layout.story_component
+ * A [CardView] that shows a story's metadata. Don't use directly, use [R.layout.component_story].
+ * @see R.layout.component_story
  * @see StoryAdapter
  */
 class StoryCardView : CardView {
@@ -631,7 +631,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
     0 -> StoryViewHolder(LayoutInflater.from(parent.context)
-        .inflate(R.layout.story_component, parent, false) as StoryCardView)
+        .inflate(R.layout.component_story, parent, false) as StoryCardView)
     1 -> TitleViewHolder(StoryGroupTitle(parent.context))
     2 -> ProgressBarHolder(LayoutInflater.from(parent.context)
         .inflate(R.layout.loading_circle_indeterminate, parent, false) as ProgressBar)

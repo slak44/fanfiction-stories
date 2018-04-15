@@ -32,7 +32,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appBarLayout"
-        tools:listitem="@layout/favorite_canon_component"
+        tools:listitem="@layout/component_favorite_canon"
         tools:context="slak.fanfictionstories.activities.FavoriteCanonsActivity"/>
 
 </android.support.constraint.ConstraintLayout>

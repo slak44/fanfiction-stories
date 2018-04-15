@@ -11,7 +11,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_story_reader.*
-import kotlinx.android.synthetic.main.content_story_reader.*
+import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI

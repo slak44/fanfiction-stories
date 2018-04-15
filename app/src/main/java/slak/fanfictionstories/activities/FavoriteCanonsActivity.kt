@@ -12,7 +12,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.activity_favorite_canons.*
-import kotlinx.android.synthetic.main.favorite_canon_component.view.*
+import kotlinx.android.synthetic.main.component_favorite_canon.view.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
@@ -63,7 +63,7 @@ private class CanonAdapter(links: List<CategoryLink>) :
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
     return CanonViewHolder(LayoutInflater.from(parent.context)
-        .inflate(R.layout.favorite_canon_component, parent, false))
+        .inflate(R.layout.component_favorite_canon, parent, false))
   }
 
   override fun getItemCount(): Int = linkList.size

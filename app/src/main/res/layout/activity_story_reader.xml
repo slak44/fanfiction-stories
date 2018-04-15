@@ -37,6 +37,6 @@
         </net.opacapp.multilinecollapsingtoolbar.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_story_reader"/>
+    <include layout="@layout/activity_story_reader_content"/>
 
 </android.support.design.widget.CoordinatorLayout>
