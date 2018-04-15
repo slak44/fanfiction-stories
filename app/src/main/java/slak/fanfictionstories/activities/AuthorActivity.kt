@@ -56,13 +56,12 @@ class AuthorViewModel : ViewModelWithIntent() {
  * An author's detail page. Has his bio, his stories, his favorite stories, his favourite authors,
  * and other user related actions.
  */
-class AuthorActivity : LoadingActivity(1) {
+class AuthorActivity :
+    ViewModelWorkaroundLoadingActivity<AuthorViewModel>(AuthorViewModel::class, 1) {
   companion object {
     const val INTENT_AUTHOR_ID = "author_id_intent"
     const val INTENT_AUTHOR_NAME = "author_name_intent"
   }
-
-  private lateinit var viewModel: AuthorViewModel
 
   /**
    * The [android.support.v4.view.PagerAdapter] that will provide

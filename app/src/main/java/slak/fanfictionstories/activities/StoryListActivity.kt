@@ -18,9 +18,9 @@ import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 
 /** The list of stories the user has started reading, or has downloaded. */
-class StoryListActivity : LoadingActivity(), IStoryEventObserver {
-  private lateinit var viewModel: StoryListViewModel
-
+class StoryListActivity :
+    ViewModelWorkaroundLoadingActivity<StoryListViewModel>(StoryListViewModel::class),
+    IStoryEventObserver {
   override fun onStoriesChanged(t: StoryChangeEvent) {
     launch(UI) {
       if (t.kind === StoryEventKind.New) {

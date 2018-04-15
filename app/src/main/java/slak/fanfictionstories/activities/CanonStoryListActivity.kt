@@ -62,9 +62,8 @@ class CanonListViewModel : StoryListViewModel() {
 }
 
 /** A list of stories within a canon. */
-class CanonStoryListActivity : LoadingActivity() {
-  private lateinit var viewModel: CanonListViewModel
-
+class CanonStoryListActivity :
+    ViewModelWorkaroundLoadingActivity<CanonListViewModel>(CanonListViewModel::class) {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     viewModel = obtainViewModel()

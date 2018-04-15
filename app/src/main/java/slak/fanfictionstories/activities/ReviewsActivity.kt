@@ -74,14 +74,14 @@ class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by Adapte
 }
 
 /** Presents a story's reviews. */
-class ReviewsActivity : LoadingActivity() {
+class ReviewsActivity :
+    ViewModelWorkaroundLoadingActivity<ReviewsViewModel>(ReviewsViewModel::class) {
   companion object {
     const val INTENT_STORY_MODEL = "story_model_extra"
     const val INTENT_TARGET_CHAPTER = "target_chapter_extra"
     private const val ALL_CHAPTERS = 0
   }
 
-  private lateinit var viewModel: ReviewsViewModel
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     viewModel = obtainViewModel()
