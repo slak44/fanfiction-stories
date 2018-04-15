@@ -26,6 +26,7 @@ class MainActivity : ActivityWithStatic() {
 
     storyListBtn.setOnClickListener { startActivity<StoryListActivity>() }
     storyBrowseBtn.setOnClickListener { startActivity<SelectCategoryActivity>() }
+    favoriteCanonsBtn.setOnClickListener { startActivity<FavoriteCanonsActivity>() }
 
     if (BuildConfig.DEBUG) injectDebugButtons(this)
   }

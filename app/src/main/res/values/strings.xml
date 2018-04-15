@@ -17,6 +17,7 @@
     <string name="crossovers">Crossovers</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="favorite_canons">Favorite Canons</string>
 
     <!-- Canon story list -->
     <string name="error_with_canon_stories">Can\'t access %s stories; Retrying…</string>
@@ -79,6 +80,9 @@ Untouched Stories: %d (%.2f%%)"
     <string name="resume_story"><![CDATA[Resume: <b>%s</b> by <i>%s</i> — Chapter %d/%d]]></string>
     <string name="nothing_to_resume">No story to resume</string>
     <string name="story_browse">Browse Stories</string>
+
+    <!-- Favorite Canons activity -->
+    <string name="remove_favorite">Remove From Favorites</string>
 
     <!-- Settings activity -->
     <string name="title_activity_settings">Settings</string>

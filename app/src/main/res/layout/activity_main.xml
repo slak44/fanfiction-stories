@@ -56,6 +56,12 @@
             android:drawableStart="@drawable/ic_library_books_black_24dp"
             android:text="@string/story_browse"/>
 
+        <TextView
+            android:id="@+id/favoriteCanonsBtn"
+            style="@style/AppTheme.Touchable.ListItem.WithDrawable"
+            android:drawableStart="@drawable/ic_favorite_black_24dp"
+            android:text="@string/favorite_canons"/>
+
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="300dp">
