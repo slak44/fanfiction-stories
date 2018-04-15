@@ -269,8 +269,8 @@ fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage:
 fun File.overwritePrintWriter() = PrintWriter(FileOutputStream(this, false))
 
 /**
- * Shows a snack with an undo button. If [Snackbar.dismiss] isn't called and the undo button wasn't
- * pressed, execute the provided action in a coroutine.
+ * Shows a snack with an undo button. If  the undo button wasn't pressed, execute the provided
+ * action in a coroutine.
  * @param view snackbar target
  */
 fun undoableAction(view: View, snackText: String,
@@ -279,12 +279,8 @@ fun undoableAction(view: View, snackText: String,
   snack.setAction(R.string.undo, onUndo)
   snack.addCallback(object : Snackbar.Callback() {
     override fun onDismissed(transientBottomBar: Snackbar, event: Int) {
-      launch(CommonPool) {
-        // These actions should trigger the action
-        // The user clicking undo or the code calling dismiss() do not trigger this
-        val actions = arrayOf(DISMISS_EVENT_CONSECUTIVE, DISMISS_EVENT_SWIPE, DISMISS_EVENT_TIMEOUT)
-        if (event in actions) action()
-      }
+      // The user clicking undo does not trigger this
+      if (event != DISMISS_EVENT_ACTION) launch(CommonPool) { action() }
     }
   })
   snack.show()

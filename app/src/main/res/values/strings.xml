@@ -18,11 +18,11 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="favorite_canons">Favorite Canons</string>
+    <string name="x_stories">%s stories</string>
 
     <!-- Canon story list -->
     <string name="error_with_canon_stories">Can\'t access %s stories; Retrying…</string>
     <string name="page_x">Page %d</string>
-    <string name="x_stories">%s stories</string>
 
     <!-- Select category activity -->
     <string name="title_activity_select_category">Select Category</string>
@@ -82,7 +82,11 @@ Untouched Stories: %d (%.2f%%)"
     <string name="story_browse">Browse Stories</string>
 
     <!-- Favorite Canons activity -->
-    <string name="remove_favorite">Remove From Favorites</string>
+    <string name="removed_favorite_snack">Removed link</string>
+    <string name="remove_favorite">Remove from Favorites</string>
+    <string name="add_to_favorites">Add to Favorites</string>
+    <string name="favorited_x">Favorited %s</string>
+    <string name="unfavorited">Removed from favorites</string>
 
     <!-- Settings activity -->
     <string name="title_activity_settings">Settings</string>

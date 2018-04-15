@@ -11,36 +11,34 @@
         android:id="@+id/canonTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:layout_marginTop="8dp"
         android:textAppearance="@android:style/TextAppearance.Material.Large"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Some Random Canon"/>
 
     <TextView
         android:id="@+id/storyCountText"
-        android:layout_width="0dp"
+        android:layout_width="118dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="16dp"
-        app:layout_constraintBottom_toBottomOf="@+id/canonTitle"
-        app:layout_constraintEnd_toStartOf="@+id/removeBtn"
-        app:layout_constraintStart_toEndOf="@+id/canonTitle"
-        app:layout_constraintTop_toTopOf="@+id/canonTitle"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/canonTitle"
         tools:text="12.2K stories"/>
 
     <ImageButton
         android:id="@+id/removeBtn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
         android:background="@null"
         android:contentDescription="@string/remove_favorite"
         android:src="@drawable/ic_remove_circle_black_24dp"
         android:tint="@color/white"
-        app:layout_constraintBottom_toBottomOf="@+id/canonTitle"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/canonTitle"/>
+        app:layout_constraintTop_toTopOf="parent"/>
 
 </android.support.constraint.ConstraintLayout>

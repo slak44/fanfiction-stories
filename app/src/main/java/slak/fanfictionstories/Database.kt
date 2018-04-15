@@ -7,9 +7,14 @@ import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jetbrains.anko.db.*
-import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.fetchers.CategoryLink
+import slak.fanfictionstories.utility.Optional
+import slak.fanfictionstories.utility.Static
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.opt
+import kotlin.collections.set
 
-class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 5) {
+class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 6) {
   companion object {
     private var instance: DatabaseHelper? = null
 
@@ -53,11 +58,20 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         addedTime INTEGER NOT NULL,
         lastReadTime INTEGER NOT NULL
       );
+    """.trimIndent())
+    db.execSQL("""
       CREATE TABLE IF NOT EXISTS colorMarkers (
         storyId INTEGER PRIMARY KEY NOT NULL UNIQUE,
         markerColor INTEGER NOT NULL
       );
-    """)
+    """.trimIndent())
+    db.execSQL("""
+      CREATE TABLE IF NOT EXISTS favoriteCanons (
+        title TEXT NOT NULL,
+        storyCountText TEXT NOT NULL,
+        urlComponent TEXT NOT NULL UNIQUE PRIMARY KEY
+      );
+    """.trimIndent())
   }
 
   override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -131,7 +145,57 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         publishTime, updateTime, storyId, addedTime, lastReadTime FROM storiesBackup;
       """.trimIndent())
       db.execSQL("DROP TABLE storiesBackup;")
+    } else if (oldVersion == 5 && newVersion == 6) {
+      db.execSQL("""
+        CREATE TABLE IF NOT EXISTS favoriteCanons (
+          title TEXT NOT NULL,
+          storyCountText TEXT NOT NULL,
+          urlComponent TEXT NOT NULL UNIQUE PRIMARY KEY
+        );
+      """.trimIndent())
     }
+  }
+
+  /** Fetch all [CategoryLink]s of favorited canons. */
+  fun getFavoriteCanons(): Deferred<List<CategoryLink>> = useAsync {
+    select("favoriteCanons").parseList(object : MapRowParser<CategoryLink> {
+      override fun parseRow(columns: Map<String, Any?>) =
+          CategoryLink(columns["title"]!! as String,
+              columns["urlComponent"]!! as String,
+              columns["storyCountText"]!! as String)
+    })
+  }
+
+  /** Add a new favorite canon. */
+  fun addFavoriteCanon(link: CategoryLink) = useAsync {
+    insertOrThrow("favoriteCanons",
+        "title" to link.text,
+        "urlComponent" to link.urlComponent,
+        "storyCountText" to link.storyCount)
+  }
+
+  /** Update a favorite canon. */
+  fun updateFavoriteCanon(link: CategoryLink) = useAsync {
+    update("favoriteCanons",
+        "title" to link.text,
+        "urlComponent" to link.urlComponent,
+        "storyCountText" to link.storyCount)
+        .whereSimple("urlComponent = ?", link.urlComponent).exec()
+  }
+
+  /** Remove an existing canon from favorites. */
+  fun removeFavoriteCanon(link: CategoryLink) = useAsync {
+    delete("favoriteCanons", "urlComponent = ?", arrayOf(link.urlComponent))
+  }
+
+  /** @returns whether or not the [link] is favorited */
+  fun isCanonFavorite(link: CategoryLink): Deferred<Boolean> = useAsync {
+    val urlComponent = select("favoriteCanons")
+        .whereSimple("urlComponent = ?", link.urlComponent)
+        .column("urlComponent")
+        .limit(1)
+        .parseOpt(StringParser)
+    return@useAsync urlComponent != null
   }
 
   /** Gets the color marker for a story, or 0 if there is none. */

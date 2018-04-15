@@ -5,8 +5,15 @@
 
     <item
         android:id="@+id/filter"
-        android:orderInCategory="20"
         android:icon="@drawable/ic_filter_list_black_24dp"
+        android:orderInCategory="20"
         android:title="@string/filter_by"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/favorite"
+        android:icon="@drawable/ic_favorite_border_black_24dp"
+        android:orderInCategory="30"
+        android:title="@string/add_to_favorites"
         app:showAsAction="ifRoom"/>
 </menu>

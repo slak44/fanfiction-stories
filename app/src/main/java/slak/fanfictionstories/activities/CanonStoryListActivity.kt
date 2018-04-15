@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
@@ -32,11 +33,16 @@ class CanonListViewModel : StoryListViewModel() {
   var metadata = CanonMetadata()
     private set
 
+  var isFavorite: Boolean = false
+
   private var currentPage: MutableLiveData<Int> = MutableLiveData()
   val currPage: LiveData<Int> get() = currentPage
 
   init {
     currentPage.it = 1
+    launch(UI) {
+      isFavorite = Static.database.isCanonFavorite(parentLink).await()
+    }
   }
 
   private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(CommonPool) {
@@ -85,7 +91,7 @@ class CanonStoryListActivity :
     setAppbarText()
 
     if (savedInstanceState == null) {
-      triggerLoadUI()
+      triggerLoadUI().invokeOnCompletion { invalidateOptionsMenu() }
     } else {
       onRestoreInstanceState(savedInstanceState)
       hideLoading()
@@ -102,6 +108,8 @@ class CanonStoryListActivity :
   private fun triggerLoadUI() = launch(UI) {
     showLoading()
     viewModel.addItems(viewModel.getCurrentPage().await())
+    database.updateFavoriteCanon(CategoryLink(
+        title.toString(), viewModel.parentLink.urlComponent, viewModel.parentLink.storyCount))
     setAppbarText()
     hideLoading()
   }
@@ -114,7 +122,11 @@ class CanonStoryListActivity :
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+    menu.findItem(R.id.favorite).icon = resources.getDrawable(
+        if (viewModel.isFavorite) R.drawable.ic_favorite_black_24dp
+        else R.drawable.ic_favorite_border_black_24dp, theme)
     menu.findItem(R.id.filter).iconTint(R.color.white, theme)
+    menu.findItem(R.id.favorite).iconTint(R.color.white, theme)
     return super.onPrepareOptionsMenu(menu)
   }
 
@@ -236,6 +248,25 @@ class CanonStoryListActivity :
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.filter -> viewModel.metadata.pageCount.ifPresent { openFilterDialog() }
+      R.id.favorite -> launch(UI) {
+        if (viewModel.metadata.pageCount is Empty) return@launch
+        if (viewModel.isFavorite) {
+          database.removeFavoriteCanon(viewModel.parentLink).await()
+          Snackbar.make(
+              this@CanonStoryListActivity.root, R.string.unfavorited, Snackbar.LENGTH_SHORT).show()
+        } else {
+          val link = CategoryLink(
+              title.toString(),
+              viewModel.parentLink.urlComponent,
+              viewModel.parentLink.storyCount
+          )
+          database.addFavoriteCanon(link).await()
+          Snackbar.make(this@CanonStoryListActivity.root,
+              str(R.string.favorited_x, title.toString()), Snackbar.LENGTH_SHORT).show()
+        }
+        viewModel.isFavorite = !viewModel.isFavorite
+        invalidateOptionsMenu()
+      }
       android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
     }
