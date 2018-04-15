@@ -127,7 +127,7 @@ object Prefs {
       str(R.string.option_lang_mem_default).toBoolean())
 
   fun preferredLanguage(): Language =
-      Language.values()[Static.defaultPrefs.getInt(REMEMBER_LANG_ID, Language.ALL.ordinal)]
+      Language.values()[Static.prefs.getInt(REMEMBER_LANG_ID, Language.ALL.ordinal)]
 
   fun locale() = Static.defaultPrefs.getString(
       str(R.string.key_option_locale), str(R.string.option_locale_default))
