@@ -108,8 +108,10 @@ class CanonStoryListActivity :
   private fun triggerLoadUI() = launch(UI) {
     showLoading()
     viewModel.addItems(viewModel.getCurrentPage().await())
-    database.updateFavoriteCanon(CategoryLink(
-        title.toString(), viewModel.parentLink.urlComponent, viewModel.parentLink.storyCount))
+    viewModel.metadata.canonTitle.ifPresent {
+      database.updateFavoriteCanon(
+          CategoryLink(it, viewModel.parentLink.urlComponent, viewModel.parentLink.storyCount))
+    }
     setAppbarText()
     hideLoading()
   }
