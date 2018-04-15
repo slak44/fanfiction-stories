@@ -87,6 +87,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="add_to_favorites">Add to Favorites</string>
     <string name="favorited_x">Favorited %s</string>
     <string name="unfavorited">Removed from favorites</string>
+    <string name="no_favorites">There are no favorite canons. You can add them in each canon using the favorite icon in the app bar.</string>
 
     <!-- Settings activity -->
     <string name="title_activity_settings">Settings</string>
