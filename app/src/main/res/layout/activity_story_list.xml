@@ -42,7 +42,8 @@
         android:paddingTop="@dimen/story_list_margin"
         android:scrollbars="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:context="slak.fanfictionstories.activities.StoryListActivity">
+        tools:context="slak.fanfictionstories.activities.StoryListActivity"
+        tools:listitem="@layout/component_story">
 
     </android.support.v7.widget.RecyclerView>
 

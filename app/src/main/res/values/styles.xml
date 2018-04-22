@@ -25,6 +25,16 @@
         <item name="android:background">@color/alpha</item>
     </style>
 
+    <style name="AppTheme.NotTouchable.ListItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">?android:attr/listPreferredItemHeightSmall</item>
+        <item name="android:paddingEnd">?android:attr/listPreferredItemPaddingEnd</item>
+        <item name="android:paddingStart">?android:attr/listPreferredItemPaddingStart</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceListItem</item>
+    </style>
+
     <style name="AppTheme.Touchable">
         <item name="android:listSelector">?android:attr/listSelector</item>
         <item name="android:clickable">true</item>

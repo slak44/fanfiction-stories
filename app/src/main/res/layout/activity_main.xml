@@ -37,12 +37,26 @@
         app:layout_constraintTop_toBottomOf="@+id/appBarLayout"
         tools:layout_editor_absoluteX="0dp">
 
-        <TextView
-            android:id="@+id/resumeBtn"
-            style="@style/AppTheme.Touchable.ListItem.WithDrawable"
-            android:text="@string/nothing_to_resume"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/resumeStoryText"
+                style="@style/AppTheme.NotTouchable.ListItem"
+                android:text="@string/nothing_to_resume"/>
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/storyContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                tools:listitem="@layout/component_story"/>
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/storyListBtn"

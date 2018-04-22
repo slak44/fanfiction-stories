@@ -32,6 +32,7 @@ import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Optional
 import java.util.*
 
 /**
@@ -44,15 +45,13 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
   lateinit var swipeStory: ItemTouchHelper
   swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
     override fun getMovementFlags(recycler: RecyclerView, vh: RecyclerView.ViewHolder): Int =
-        if (vh is StoryAdapter.StoryViewHolder)
-          makeMovementFlags(0, ItemTouchHelper.RIGHT)
-        else 0
+        if (vh is StoryViewHolder) makeMovementFlags(0, ItemTouchHelper.RIGHT) else 0
 
     override fun onMove(recycler: RecyclerView, viewHolder: RecyclerView.ViewHolder,
                         target: RecyclerView.ViewHolder): Boolean = false
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-      if (viewHolder !is StoryAdapter.StoryViewHolder) return
+      if (viewHolder !is StoryViewHolder) return
       val cardView = viewHolder.itemView as StoryCardView
       onSwiped(cardView.currentModel!!)
       startActivity<StoryReaderActivity>(
@@ -257,31 +256,40 @@ class StoryCardView : CardView {
     measure(unspec, unspec)
   }
 
-  /** Binds various children listeners to the correct [StoryModel]/[StoryListViewModel]. */
-  fun setChildrenListeners(model: StoryModel, viewModel: StoryListViewModel) {
+  /**
+   * Binds various children listeners to the correct [StoryModel]/[StoryListViewModel].
+   *
+   * The remove button will not work without the [viewModel].
+   */
+  fun setChildrenListeners(model: StoryModel, viewModel: Optional<StoryListViewModel>) {
     // Disable touching on the progress seek bar
     storyProgress.setOnTouchListener { _, _ -> true }
     // Show/hide details layout when pressing content
     storyMainContent.setOnClickListener { isExtended = !isExtended }
-    removeBtn.setOnClickListener {
-      // Even though we have a model, fetch it from db to make sure there are no inconsistencies
-      val dbModel = runBlocking { Static.database.storyById(model.storyId).await() }
-      if (dbModel is Empty) {
-        errorDialog(R.string.storyid_does_not_exist, R.string.storyid_does_not_exist_tip)
-        return@setOnClickListener
-      }
-      // Hide card
-      viewModel.hideStory(model)
-      // We need this because otherwise the screen gets out of sync with the data
-      viewModel.notifyChanged()
-      undoableAction(this, R.string.removed_story, { viewModel.undoHideStory(model) }) {
-        deleteLocalStory(context, model.storyId).join()
-        context.database.useAsync {
-          val currentResume = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
-          if (currentResume == model.storyId) Prefs.useImmediate { it.remove(Prefs.RESUME_STORY_ID) }
-          delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
-          StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.Removed)
-        }.await()
+    if (viewModel is Empty) removeBtn.visibility = View.GONE
+    viewModel.ifPresent { vm ->
+      removeBtn.setOnClickListener {
+        // Even though we have a model, fetch it from db to make sure there are no inconsistencies
+        val dbModel = runBlocking { Static.database.storyById(model.storyId).await() }
+        if (dbModel is Empty) {
+          errorDialog(R.string.storyid_does_not_exist, R.string.storyid_does_not_exist_tip)
+          return@setOnClickListener
+        }
+        // Hide card
+        vm.hideStory(model)
+        // We need this because otherwise the screen gets out of sync with the data
+        vm.notifyChanged()
+        undoableAction(this, R.string.removed_story, { vm.undoHideStory(model) }) {
+          deleteLocalStory(context, model.storyId).join()
+          context.database.useAsync {
+            val currentResume = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
+            if (currentResume == model.storyId) Prefs.useImmediate {
+              it.remove(Prefs.RESUME_STORY_ID)
+            }
+            delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
+            StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.Removed)
+          }.await()
+        }
       }
     }
     addBtn.setOnClickListener {
@@ -598,6 +606,10 @@ open class StoryListViewModel :
   }
 }
 
+class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
+class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
+class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
+
 /** Adapts [StoryListItem]s to views for a [RecyclerView]. */
 class StoryAdapter(private val viewModel: StoryListViewModel) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -609,10 +621,6 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
     viewModel.registerObserver(vmObserver)
   }
 
-  class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
-  class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
-  class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
-
   @UiThread
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
     val item = viewModel[position]
@@ -622,7 +630,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
         view.onExtendedStateChange = { viewModel.updateStoryState(position, it) }
         view.isExtended = item.isExtended
         view.loadFromModel(item.model)
-        view.setChildrenListeners(item.model, viewModel)
+        view.setChildrenListeners(item.model, viewModel.opt())
       }
       is GroupTitle -> (holder as TitleViewHolder).view.text = item.title
       is LoadingItem -> (holder as ProgressBarHolder).view.id = item.id

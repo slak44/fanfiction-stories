@@ -77,7 +77,7 @@ Untouched Stories: %d (%.2f%%)"
     <!-- Main activity -->
     <string name="action_settings">Settings</string>
     <string name="clear_all_cache">Clear all caches</string>
-    <string name="resume_story"><![CDATA[Resume: <b>%s</b> by <i>%s</i> — Chapter %d/%d]]></string>
+    <string name="resume_story">Resume reading:</string>
     <string name="nothing_to_resume">No story to resume</string>
     <string name="story_browse">Browse Stories</string>
 
