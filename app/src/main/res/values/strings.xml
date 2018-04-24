@@ -276,10 +276,8 @@ Untouched Stories: %d (%.2f%%)"
     <string name="native_char3" tools:ignore="TypographyOther">Character (C)</string>
     <string name="native_char4">Character (D)</string>
 
-    <string name="native_not_genre">Exclude Genre</string>
-    <string name="native_not_world">Exclude World</string>
-    <string name="native_not_char1">Exclude Character (A)</string>
-    <string name="native_not_char2">Exclude Character (B)</string>
+    <string name="native_exclude_header">Exclude</string>
+    <string name="native_not_genre">Genre</string>
 
     <string name="native_filter_btn">Filter</string>
 

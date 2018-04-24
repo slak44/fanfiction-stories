@@ -133,6 +133,12 @@
 
         <TextView
             style="@style/AppTheme.FilterSpinnerLabel"
+            android:layout_columnSpan="2"
+            android:text="@string/native_exclude_header"
+            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"/>
+
+        <TextView
+            style="@style/AppTheme.FilterSpinnerLabel"
             android:text="@string/native_not_genre"/>
 
         <Spinner
@@ -142,7 +148,7 @@
         <TextView
             android:id="@+id/notWorldText"
             style="@style/AppTheme.FilterSpinnerLabel"
-            android:text="@string/native_not_world"/>
+            android:text="@string/native_world"/>
 
         <Spinner
             android:id="@+id/notWorld"
@@ -151,7 +157,7 @@
         <TextView
             android:id="@+id/notChar1Text"
             style="@style/AppTheme.FilterSpinnerLabel"
-            android:text="@string/native_not_char1"/>
+            android:text="@string/native_char1"/>
 
         <Spinner
             android:id="@+id/notChar1"
@@ -160,7 +166,7 @@
         <TextView
             android:id="@+id/notChar2Text"
             style="@style/AppTheme.FilterSpinnerLabel"
-            android:text="@string/native_not_char2"/>
+            android:text="@string/native_char2"/>
 
         <Spinner
             android:id="@+id/notChar2"
