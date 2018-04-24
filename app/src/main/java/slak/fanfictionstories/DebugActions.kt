@@ -25,15 +25,18 @@ private const val TAG = "FFStoriesDebug"
 
 fun injectDebugButtons(activity: MainActivity) {
   activity.debugButtons.visibility = View.VISIBLE
-  debugActions.entries.forEach { kv ->
-    val b = Button(activity)
-    b.text = kv.key
-    b.setOnClickListener { kv.value() }
-    activity.debugButtons.addView(b)
+  activity.debugButtons.setOnClickListener {
+    AlertDialog.Builder(activity)
+        .setItems(debugActions.keys.toTypedArray()) { _, which: Int ->
+          debugActions.values.toTypedArray()[which]()
+        }
+        .setTitle(R.string.debug_dialog_title)
+        .create()
+        .show()
   }
 }
 
-/** Convenience method for debugging. */
+/** Convenience method for debugging. (sometimes printf debugging is king) */
 @Suppress("unused")
 fun printAll(vararg stuff: Any?) = stuff.forEach { println(it) }
 

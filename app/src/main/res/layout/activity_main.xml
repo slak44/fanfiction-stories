@@ -26,76 +26,75 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <LinearLayout
-        style="@style/AppTheme.List"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="0dp"
-        android:orientation="vertical"
+        android:paddingBottom="?attr/actionBarSize"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/appBarLayout"
-        tools:layout_editor_absoluteX="0dp">
+        app:layout_constraintTop_toBottomOf="@+id/appBarLayout">
 
         <LinearLayout
+            style="@style/AppTheme.List"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="0dp"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/resumeStoryText"
-                style="@style/AppTheme.NotTouchable.ListItem"
-                android:text="@string/nothing_to_resume"/>
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/storyContainer"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
-                tools:listitem="@layout/component_story"/>
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/resumeStoryText"
+                    style="@style/AppTheme.NotTouchable.ListItem"
+                    android:text="@string/nothing_to_resume"/>
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/storyContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="8dp"
+                    android:nestedScrollingEnabled="false"
+                    tools:itemCount="1"
+                    tools:listitem="@layout/component_story"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/storyListBtn"
+                style="@style/AppTheme.Touchable.ListItem.WithDrawable"
+                android:drawableStart="@drawable/ic_view_list_black_24dp"
+                android:text="@string/story_list"/>
+
+            <TextView
+                android:id="@+id/storyBrowseBtn"
+                style="@style/AppTheme.Touchable.ListItem.WithDrawable"
+                android:drawableStart="@drawable/ic_library_books_black_24dp"
+                android:text="@string/story_browse"/>
+
+            <TextView
+                android:id="@+id/favoriteCanonsBtn"
+                style="@style/AppTheme.Touchable.ListItem.WithDrawable"
+                android:drawableStart="@drawable/ic_favorite_black_24dp"
+                android:text="@string/favorite_canons"/>
+
+            <TextView
+                android:id="@+id/debugButtons"
+                style="@style/AppTheme.Touchable.ListItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/debug_title"
+                android:textColor="@android:color/holo_red_light"
+                android:textSize="18sp"
+                android:visibility="gone"
+                tools:visibility="visible"/>
 
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/storyListBtn"
-            style="@style/AppTheme.Touchable.ListItem.WithDrawable"
-            android:drawableStart="@drawable/ic_view_list_black_24dp"
-            android:text="@string/story_list"/>
-
-        <TextView
-            android:id="@+id/storyBrowseBtn"
-            style="@style/AppTheme.Touchable.ListItem.WithDrawable"
-            android:drawableStart="@drawable/ic_library_books_black_24dp"
-            android:text="@string/story_browse"/>
-
-        <TextView
-            android:id="@+id/favoriteCanonsBtn"
-            style="@style/AppTheme.Touchable.ListItem.WithDrawable"
-            android:drawableStart="@drawable/ic_favorite_black_24dp"
-            android:text="@string/favorite_canons"/>
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="300dp">
-
-            <LinearLayout
-                android:id="@+id/debugButtons"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/debug_title"
-                    android:textColor="@android:color/holo_red_light"
-                    android:textSize="18sp"/>
-            </LinearLayout>
-
-        </ScrollView>
-    </LinearLayout>
+    </ScrollView>
 
 </android.support.constraint.ConstraintLayout>

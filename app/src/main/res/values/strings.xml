@@ -433,14 +433,15 @@ Untouched Stories: %d (%.2f%%)"
         <item>tv</item>
     </string-array>
 
-    <!-- Default activity titles -->
-    <string name="title_activity_story_reader">StoryReaderActivity</string>
-    <string name="title_activity_browse_category">BrowseCategoryActivity</string>
-    <string name="title_activity_canon_story_list">CanonStoryListActivity</string>
-    <string name="title_activity_reviews">ReviewsActivity</string>
-    <string name="title_activity_author">AuthorActivity</string>
+    <!-- Default (fallback) activity titles -->
+    <string name="title_activity_story_reader" translatable="false">StoryReaderActivity</string>
+    <string name="title_activity_browse_category" translatable="false">BrowseCategoryActivity</string>
+    <string name="title_activity_canon_story_list" translatable="false">CanonStoryListActivity</string>
+    <string name="title_activity_reviews" translatable="false">ReviewsActivity</string>
+    <string name="title_activity_author" translatable="false">AuthorActivity</string>
 
     <!-- These are development strings -->
-    <string name="debug_title">!!! DEBUG !!!</string>
-    <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.</string>
+    <string name="debug_title" translatable="false">!!! DEBUG !!!</string>
+    <string name="debug_dialog_title" translatable="false">REMEMBER THESE ARE NOT FOR NORMAL USE</string>
+    <string name="lorem_ipsum" translatable="false">Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tincidunt, magna ut molestie faucibus, felis neque ullamcorper risus, non gravida velit lacus sed nisi. Integer commodo metus at purus finibus suscipit. In interdum metus non arcu fringilla, at ultricies massa pharetra. Phasellus nec tincidunt eros, condimentum scelerisque lorem.</string>
 </resources>
