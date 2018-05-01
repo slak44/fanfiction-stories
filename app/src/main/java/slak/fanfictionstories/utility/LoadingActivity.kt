@@ -1,5 +1,6 @@
 package slak.fanfictionstories.utility
 
+import android.support.annotation.UiThread
 import android.support.v7.widget.Toolbar
 import android.view.View
 import android.view.ViewGroup
@@ -20,11 +21,13 @@ open class LoadingActivity(private val idxInToolbarLayout: Int = -1) : ActivityW
   }
 
   /** Make the loading bar visible. */
+  @UiThread
   open fun showLoading() {
     activityProgressBar.visibility = View.VISIBLE
   }
 
   /** Hide the loading bar. */
+  @UiThread
   open fun hideLoading() {
     activityProgressBar.visibility = View.GONE
   }
