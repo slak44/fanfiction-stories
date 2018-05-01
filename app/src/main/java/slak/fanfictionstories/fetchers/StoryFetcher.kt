@@ -113,8 +113,6 @@ fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
  * @returns if the update was done, the updated model, otherwise [Empty]
  */
 fun updateStory(oldModel: StoryModel): Deferred<Optional<StoryModel>> = async2(CommonPool) {
-  Notifications.show(
-      Notifications.Kind.UPDATING, defaultIntent(), R.string.checking_story, oldModel.title)
   val newModel = fetchStoryModel(oldModel.storyId).await().orElse {
     return@async2 Empty<StoryModel>()
   }

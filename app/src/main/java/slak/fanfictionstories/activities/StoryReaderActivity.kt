@@ -310,6 +310,8 @@ class StoryReaderActivity : LoadingActivity() {
         model = fetchAndWriteStory(model.storyId).await().orElse(model)
       }
       R.id.checkForUpdate -> launch(CommonPool) {
+        Notifications.show(Notifications.Kind.UPDATING, Notifications.defaultIntent(),
+            R.string.checking_one_story, model.title)
         val newModel = updateStory(model).await()
         if (newModel !is Empty) {
           model = newModel.get()

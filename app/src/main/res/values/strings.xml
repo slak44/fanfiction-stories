@@ -139,14 +139,18 @@ Untouched Stories: %d (%.2f%%)"
     <!-- Notifications -->
     <string name="download_notification_channel">Download Notifications</string>
     <string name="downloading_story">Downloading Story</string>
-    <string name="updating_story">Updating Story</string>
+    <string name="updating_story">Updating</string>
     <string name="waiting_for_connection">Waiting for connection…</string>
     <string name="connecting">Connecting…</string>
     <string name="network_not_available">Network Not Available</string>
     <string name="error_fetching_story_data">Couldn\'t fetch story data (id %s); Retrying…</string>
     <string name="error_fetching_review_data">Couldn\'t fetch reviews (id %s); Retrying…</string>
     <string name="error_fetching_author_data">Couldn\'t fetch author data (id %s); Retrying…</string>
-    <string name="checking_story">Checking %s for updates</string>
+    <string name="checking_one_story">Checking %s for updates</string>
+    <string name="checking_story">
+"Checking %s for updates
+Story %d of %d (%.2f%%)"
+    </string>
     <string name="fetching_chapter">Fetching chapter %d of %d (%.2f%%) for story %s</string>
     <string name="done_story">Done fetching story %s</string>
     <string name="update_failed">Update failed for story %s</string>

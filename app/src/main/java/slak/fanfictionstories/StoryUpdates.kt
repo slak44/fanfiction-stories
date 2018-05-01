@@ -13,6 +13,7 @@ import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
+import android.support.v4.app.NotificationCompat
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Job
@@ -83,10 +84,16 @@ class UpdateService : JobService() {
       val storyModels = applicationContext.database.getLocalStories().await()
       val updatedStories = orderStories(storyModels.toMutableList(),
           Prefs.storyListOrderStrategy,
-          Prefs.storyListOrderDirection).mapNotNull { model ->
+          Prefs.storyListOrderDirection).mapIndexedNotNull { idx, model ->
+        val str = str(R.string.checking_story,
+            model.title, idx + 1, storyModels.size, (idx + 1) * 100F / storyModels.size)
+        Notifications.show(Notifications.Kind.UPDATING,
+            Notifications.create(Notifications.Kind.UPDATING, str, Notifications.defaultIntent())
+                .setStyle(NotificationCompat.BigTextStyle().bigText(str))
+                .setProgress(storyModels.size, idx + 1, false))
         val newModel = updateStory(model).await()
         Log.v(TAG, "Story ${model.storyId} was update performed: ${newModel !is Empty}")
-        return@mapNotNull newModel.orNull()
+        return@mapIndexedNotNull newModel.orNull()
       }
       Notifications.cancel(Notifications.Kind.UPDATING)
       Notifications.updatedStories(updatedStories)
