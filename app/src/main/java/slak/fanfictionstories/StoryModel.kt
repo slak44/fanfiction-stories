@@ -5,16 +5,13 @@ import android.content.Context
 import android.os.Parcelable
 import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
-import android.widget.Switch
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.dialog_order_by_switch.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.fetchers.FetcherUtils.CHAPTER_TITLE_SEPARATOR
 import slak.fanfictionstories.fetchers.Genre
-import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.str
