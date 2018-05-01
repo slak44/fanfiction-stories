@@ -250,48 +250,15 @@ class StoryCardView : CardView {
       markerBtn.bindMarker(model.storyId, Static.database.getMarker(model.storyId).await().toInt())
     }
 
-    // Reset card UI (including the measured size) to default
+    // Reset some card UI (including the measured size) to default
     addBtn.isEnabled = true
     val unspec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
     measure(unspec, unspec)
-  }
 
-  /**
-   * Binds various children listeners to the correct [StoryModel]/[StoryListViewModel].
-   *
-   * The remove button will not work without the [viewModel].
-   */
-  fun setChildrenListeners(model: StoryModel, viewModel: Optional<StoryListViewModel>) {
     // Disable touching on the progress seek bar
     storyProgress.setOnTouchListener { _, _ -> true }
     // Show/hide details layout when pressing content
     storyMainContent.setOnClickListener { isExtended = !isExtended }
-    if (viewModel is Empty) removeBtn.visibility = View.GONE
-    viewModel.ifPresent { vm ->
-      removeBtn.setOnClickListener {
-        // Even though we have a model, fetch it from db to make sure there are no inconsistencies
-        val dbModel = runBlocking { Static.database.storyById(model.storyId).await() }
-        if (dbModel is Empty) {
-          errorDialog(R.string.storyid_does_not_exist, R.string.storyid_does_not_exist_tip)
-          return@setOnClickListener
-        }
-        // Hide card
-        vm.hideStory(model)
-        // We need this because otherwise the screen gets out of sync with the data
-        vm.notifyChanged()
-        undoableAction(this, R.string.removed_story, { vm.undoHideStory(model) }) {
-          deleteLocalStory(context, model.storyId).join()
-          context.database.useAsync {
-            val currentResume = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
-            if (currentResume == model.storyId) Prefs.useImmediate {
-              it.remove(Prefs.RESUME_STORY_ID)
-            }
-            delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
-            StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.Removed)
-          }.await()
-        }
-      }
-    }
     addBtn.setOnClickListener {
       addBtn.isEnabled = false
       addBtn.text = str(R.string.adding___)
@@ -310,6 +277,39 @@ class StoryCardView : CardView {
       startActivity<AuthorActivity>(
           AuthorActivity.INTENT_AUTHOR_ID to model.authorId,
           AuthorActivity.INTENT_AUTHOR_NAME to model.author)
+    }
+  }
+
+  /** The remove button will not work without the [viewModel]. It will be [View.GONE]'d instead. */
+  fun bindRemoveBtn(model: StoryModel, viewModel: Optional<StoryListViewModel>) {
+    val vm = viewModel.orElse {
+      removeBtn.visibility = View.GONE
+      return@bindRemoveBtn
+    }
+    removeBtn.setOnClickListener {
+      launch(UI) {
+        // Even though we have a model, fetch it from db to make sure there are no inconsistencies
+        val dbModel = Static.database.storyById(model.storyId).await()
+        if (dbModel is Empty) {
+          errorDialog(R.string.storyid_does_not_exist, R.string.storyid_does_not_exist_tip)
+          return@launch
+        }
+        // Hide card
+        vm.hideStory(model)
+        // We need this because otherwise the screen gets out of sync with the data
+        vm.notifyChanged()
+        undoableAction(it, R.string.removed_story, { vm.undoHideStory(model) }) {
+          deleteLocalStory(it.context, model.storyId).join()
+          it.context.database.useAsync {
+            val currentResume = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
+            if (currentResume == model.storyId) Prefs.useImmediate {
+              it.remove(Prefs.RESUME_STORY_ID)
+            }
+            delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
+            StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.Removed)
+          }.await()
+        }
+      }
     }
   }
 }
@@ -630,7 +630,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
         view.onExtendedStateChange = { viewModel.updateStoryState(position, it) }
         view.isExtended = item.isExtended
         view.loadFromModel(item.model)
-        view.setChildrenListeners(item.model, viewModel.opt())
+        view.bindRemoveBtn(item.model, viewModel.opt())
       }
       is GroupTitle -> (holder as TitleViewHolder).view.text = item.title
       is LoadingItem -> (holder as ProgressBarHolder).view.id = item.id

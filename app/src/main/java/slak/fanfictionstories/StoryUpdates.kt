@@ -86,8 +86,7 @@ class UpdateService : JobService() {
           Prefs.storyListOrderDirection).mapNotNull { model ->
         val newModel = updateStory(model).await()
         Log.v(TAG, "Story ${model.storyId} was update performed: ${newModel !is Empty}")
-        return@mapNotNull if (newModel !is Empty) Pair(newModel.get().storyId, newModel.get().title)
-        else null
+        return@mapNotNull newModel.orNull()
       }
       Notifications.cancel(Notifications.Kind.UPDATING)
       Notifications.updatedStories(updatedStories)

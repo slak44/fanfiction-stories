@@ -12,7 +12,6 @@ import android.support.annotation.StringRes
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.TaskStackBuilder
 import android.util.Log
-import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.intentFor
 import slak.fanfictionstories.activities.StoryListActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
@@ -58,14 +57,14 @@ object Notifications {
   }
 
   private var downloadedIds = DOWNLOADED_STORIES_ID_BEGIN
-  fun downloadedStory(titleOfStory: String, storyId: Long) {
+  fun downloadedStory(model: StoryModel) {
     // Show group
     show(Kind.DONE_DOWNLOADING,
         create(Kind.DONE_DOWNLOADING, str(R.string.downloaded_stories), defaultIntent())
             .setGroupSummary(true)
             .setGroup(NOTIFICATIONS_DOWNLOADED_STORIES_GROUP))
     // Show actual download notif
-    val notif = create(Kind.DONE_DOWNLOADING, titleOfStory, readerIntent(storyId))
+    val notif = create(Kind.DONE_DOWNLOADING, model.title, readerIntent(model))
         .setContentTitle(str(R.string.downloaded_story))
         .setGroup(NOTIFICATIONS_DOWNLOADED_STORIES_GROUP)
         .build()
@@ -73,7 +72,7 @@ object Notifications {
   }
 
   private var updatedIds = UPDATED_STORIES_ID_BEGIN
-  fun updatedStories(stories: List<Pair<Long, String>>) {
+  fun updatedStories(stories: List<StoryModel>) {
     if (stories.isEmpty()) {
       show(Kind.DONE_UPDATING, defaultIntent(), R.string.no_updates_found)
       return
@@ -85,7 +84,7 @@ object Notifications {
             .setGroup(NOTIFICATIONS_UPDATED_STORIES_GROUP))
     // Show actual title notifs
     stories.forEach {
-      val notif = create(Kind.DONE_UPDATING, it.second, readerIntent(it.first))
+      val notif = create(Kind.DONE_UPDATING, it.title, readerIntent(it))
           .setContentTitle(str(R.string.updated_story))
           .setGroup(NOTIFICATIONS_UPDATED_STORIES_GROUP)
           .build()
@@ -106,12 +105,8 @@ object Notifications {
   }
 
   fun defaultIntent() = Static.currentCtx.intentFor<StoryListActivity>()
-  fun readerIntent(storyId: Long): Intent {
-    val model = runBlocking { Static.database.storyById(storyId).await() }
-        .orElseThrow(IllegalStateException("Story not found in db"))
-    return intentFor<StoryReaderActivity>(
-        StoryReaderActivity.INTENT_STORY_MODEL to model as Parcelable)
-  }
+  fun readerIntent(model: StoryModel) = intentFor<StoryReaderActivity>(
+      StoryReaderActivity.INTENT_STORY_MODEL to model as Parcelable)
 
   private var reqIdCounter = PENDING_INTENT_ID_BEGIN
   fun create(kind: Kind, content: String, target: Intent): NotificationCompat.Builder {

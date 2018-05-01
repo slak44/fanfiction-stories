@@ -6,7 +6,6 @@ import android.app.AlertDialog
 import android.support.v4.app.ActivityCompat
 import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.EditText
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -14,11 +13,15 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
-import org.jetbrains.anko.db.*
+import org.jetbrains.anko.db.MapRowParser
+import org.jetbrains.anko.db.dropTable
+import org.jetbrains.anko.db.select
+import org.jetbrains.anko.db.update
 import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.fetchers.fetchStoryModel
-import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Empty
+import slak.fanfictionstories.utility.Static
 import java.io.File
 
 private const val TAG = "FFStoriesDebug"

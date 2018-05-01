@@ -48,7 +48,7 @@ class MainActivity : ActivityWithStatic() {
       override fun onBindViewHolder(holder: StoryViewHolder, position: Int) {
         if (resumeModel == null) return
         holder.view.loadFromModel(resumeModel!!)
-        holder.view.setChildrenListeners(resumeModel!!, Empty())
+        holder.view.bindRemoveBtn(resumeModel!!, Empty())
       }
     }
     storyContainer.createStorySwipeHelper()

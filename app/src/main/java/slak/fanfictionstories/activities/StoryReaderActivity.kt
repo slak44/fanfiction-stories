@@ -59,17 +59,9 @@ class StoryReaderActivity : LoadingActivity() {
       Log.v(TAG, "Intent extra model: $model")
     }
 
-    // If the story is in the db, use it
-    if (model.status != StoryStatus.LOCAL) {
-      model = runBlocking { database.storyById(model.storyId).await() }.orElse(model)
-    }
-
-    if (model.status == StoryStatus.LOCAL) {
-      // Local stories load fast enough that we do not need this loader
-      hideLoading()
-      // Update last time the story was read
-      database.updateInStory(model.storyId, "lastReadTime" to System.currentTimeMillis())
-    }
+    prevChapterBtn.setOnClickListener { initTextWithLoading(--currentChapter) }
+    nextChapterBtn.setOnClickListener { initTextWithLoading(++currentChapter) }
+    selectChapterBtn.setOnClickListener { showChapterSelectDialog() }
 
     // Save story for the resume button
     // Even for transient stories, because entering the reader means the story became remote
@@ -83,10 +75,22 @@ class StoryReaderActivity : LoadingActivity() {
 
     title = model.title
 
-    initTextWithLoading(currentChapter).invokeOnCompletion { restoreScrollStatus() }
-    prevChapterBtn.setOnClickListener { initTextWithLoading(--currentChapter) }
-    nextChapterBtn.setOnClickListener { initTextWithLoading(++currentChapter) }
-    selectChapterBtn.setOnClickListener { showChapterSelectDialog() }
+    launch(CommonPool) {
+      if (model.status != StoryStatus.LOCAL) {
+        // If the story is in the db, use it
+        model = database.storyById(model.storyId).await().orElse(model)
+      }
+
+      if (model.status == StoryStatus.LOCAL) {
+        // Local stories load fast enough that we do not need this loader
+        launch(UI) { hideLoading() }
+        // Update last time the story was read
+        database.updateInStory(model.storyId, "lastReadTime" to System.currentTimeMillis())
+      }
+
+      initTextWithLoading(currentChapter).join()
+      restoreScrollStatus().join()
+    }
   }
 
   override fun onResume() {
@@ -309,7 +313,7 @@ class StoryReaderActivity : LoadingActivity() {
         val newModel = updateStory(model).await()
         if (newModel !is Empty) {
           model = newModel.get()
-          Notifications.updatedStories(listOf(Pair(model.storyId, model.title)))
+          Notifications.updatedStories(listOf(model))
         } else {
           Notifications.cancel(Notifications.Kind.UPDATING)
           Notifications.updatedStories(emptyList())

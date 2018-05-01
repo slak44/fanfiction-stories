@@ -34,7 +34,7 @@ fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async
   val isWriting: Boolean =
       writeChapters(storyId, fetchChapterRange(Notifications.Kind.DOWNLOADING, model)).await()
   if (isWriting) {
-    Notifications.downloadedStory(model.title, model.storyId)
+    Notifications.downloadedStory(model)
     Notifications.cancel(Notifications.Kind.DOWNLOADING)
   } else {
     // FIXME show something saying we failed
@@ -96,7 +96,7 @@ fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
   val channel = Channel<String>(10)
   launch(CommonPool) {
     for (chapterNr in from..target) {
-      Notifications.show(kind, readerIntent(model.storyId),
+      Notifications.show(kind, readerIntent(model),
           R.string.fetching_chapter, chapterNr, model.fragment.chapterCount,
           chapterNr * 100F / model.fragment.chapterCount, model.title)
       val chapterHtml = fetchChapter(model.storyId, chapterNr).await()
