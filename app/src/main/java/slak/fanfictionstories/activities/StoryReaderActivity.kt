@@ -2,6 +2,8 @@ package slak.fanfictionstories.activities
 
 import android.os.Bundle
 import android.os.Parcelable
+import android.support.annotation.AnyThread
+import android.support.annotation.UiThread
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
@@ -12,11 +14,9 @@ import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.sync.Mutex
 import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
@@ -106,6 +106,7 @@ class StoryReaderActivity : LoadingActivity() {
     currentChapter = savedInstanceState.getLong(RESTORE_CURRENT_CHAPTER)
   }
 
+  @AnyThread
   private fun restoreScrollStatus() = launch(UI) {
     // onResume and others get called before onCreate when the activity is first instantiated
     // Which means we would NPE when the text is inevitably not there
@@ -135,6 +136,7 @@ class StoryReaderActivity : LoadingActivity() {
         }).show()
   }
 
+  @AnyThread
   private fun initTextWithLoading(chapterToRead: Long) = launch(UI) {
     // Show loading things and disable chapter switching
     if (model.status != StoryStatus.LOCAL) showLoading()
@@ -153,6 +155,7 @@ class StoryReaderActivity : LoadingActivity() {
     navButtons.visibility = View.VISIBLE
   }
 
+  @AnyThread
   private fun initText(chapterToRead: Long) = async2(CommonPool) {
     val text: String = readChapter(model.storyId, chapterToRead).await()
     val chapterWordCount = autoSuffixNumber(text.split(" ").size)
@@ -192,6 +195,7 @@ class StoryReaderActivity : LoadingActivity() {
     database.updateInStory(model.storyId, "currentChapter" to chapterToRead).await()
   }
 
+  @UiThread
   private fun setChangeChapterButtonStates(chapterToRead: Long) {
     // Disable buttons if there is nowhere for them to go
     prevChapterBtn.isEnabled = chapterToRead != 1L
@@ -209,6 +213,33 @@ class StoryReaderActivity : LoadingActivity() {
     invalidateOptionsMenu()
   }
 
+  private val scrollSaver = object {
+    private var percentageScrolledVal = 0.0
+    private var scrollAbsoluteVal = 0.0
+    private var saveLock = Mutex()
+    private var hasChanged = false
+
+    @AnyThread
+    fun notifyChanged(percentageScrolled: Double, scrollAbsolute: Double) {
+      percentageScrolledVal = percentageScrolled
+      scrollAbsoluteVal = scrollAbsolute
+      val managedToLock = saveLock.tryLock()
+      hasChanged = true
+      if (!managedToLock) return
+      launch(CommonPool) {
+        while (hasChanged) {
+          hasChanged = false
+          database.updateInStory(model.storyId,
+              "scrollProgress" to percentageScrolledVal,
+              "scrollAbsolute" to scrollAbsoluteVal).join()
+        }
+        // If this method is called right *here* on another thread, that call will be swallowed
+        saveLock.unlock()
+      }
+    }
+  }
+
+  @AnyThread
   private fun updateUiAfterFetchingText(chapterToRead: Long) = launch(UI) {
     setChangeChapterButtonStates(chapterToRead)
 
@@ -217,10 +248,7 @@ class StoryReaderActivity : LoadingActivity() {
 
     // If the text is so short the scroller doesn't need to scroll, max out progress right away
     if (nestedScroller.height > chapterText.staticLayout!!.height) {
-      runBlocking {
-        database.updateInStory(model.storyId,
-            "scrollProgress" to 100.0, "scrollAbsolute" to 99999999.0).await()
-      }
+      scrollSaver.notifyChanged(100.0, 99999999.0)
     }
 
     // Record scroll status
@@ -229,10 +257,7 @@ class StoryReaderActivity : LoadingActivity() {
       // Make sure that values >100 get clamped to 100
       val percentageScrolled = Math.min(rawPercentage, 100.0)
       val scrollAbs = chapterText.scrollStateFromScrollY(scrollY)
-      runBlocking {
-        database.updateInStory(model.storyId,
-            "scrollProgress" to percentageScrolled, "scrollAbsolute" to scrollAbs).await()
-      }
+      scrollSaver.notifyChanged(percentageScrolled, scrollAbs)
     }
   }
 
