@@ -433,7 +433,6 @@ open class StoryListViewModel :
   private val dataSize: MediatorLiveData<Pair<Int, Int>> = MediatorLiveData()
 
   fun getStoryCount(): LiveData<Int> = storyCount
-  fun getFilteredCount(): LiveData<Int> = storyCount
   fun getCounts(): LiveData<Pair<Int, Int>> = dataSize
 
   init {
@@ -514,17 +513,6 @@ open class StoryListViewModel :
     addItems(deferredList.await())
     data.removeAt(loaderIdx)
     notifyItemRangeRemoved(loaderIdx, 1)
-  }
-
-  /**
-   * Update a stored [StoryModel] from the provided [newModel].
-   * @throws IllegalArgumentException when the model is not part of the list
-   */
-  @UiThread
-  fun updateStoryModel(newModel: StoryModel) {
-    val idx = indexOfStoryId(newModel.storyId)
-    if (idx == -1) throw IllegalArgumentException("Model not part of the list")
-    updateStoryModel(idx, newModel)
   }
 
   /**
