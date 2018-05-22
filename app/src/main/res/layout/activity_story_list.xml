@@ -50,6 +50,7 @@
         android:layout_width="@dimen/story_list_scroller_width"
         android:layout_height="match_parent"
         android:layout_gravity="right"
+        android:paddingTop="?attr/actionBarSize"
         tools:ignore="RtlHardcoded"/>
 
 </android.support.design.widget.CoordinatorLayout>

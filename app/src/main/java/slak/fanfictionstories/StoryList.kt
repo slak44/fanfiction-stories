@@ -13,6 +13,8 @@ import android.support.annotation.UiThread
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
+import android.text.SpannableString
+import android.text.style.UnderlineSpan
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
@@ -315,49 +317,6 @@ class StoryCardView : CardView {
   }
 }
 
-/**
- * An underlined [TextView] for use in [StoryAdapter] with [RecyclerView]s.
- * @see StoryListItem
- * @see GroupTitle
- */
-class GroupTitleView : TextView {
-  constructor(context: Context) : super(context)
-  constructor(context: Context, set: AttributeSet) : super(context, set)
-  constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
-
-  companion object {
-    private val borderHeight = Static.res.px(R.dimen.story_list_title_divider_height)
-    private val bottomMargin = Static.res.px(R.dimen.story_list_margin)
-    /**
-     * Make only one instance of those, because they are more or less expensive, and there is no
-     * reason they can't just be shared between all instances of [GroupTitleView].
-     */
-    private val border: Paint by lazy {
-      val border = Paint()
-      border.style = Paint.Style.STROKE
-      border.color = Static.res.getColor(R.color.textDefault, Static.currentCtx.theme)
-      border.strokeWidth = borderHeight.toFloat()
-      border
-    }
-  }
-
-  init {
-    setPadding(0, 0, 0, resources.px(R.dimen.story_list_title_underline_margin))
-  }
-
-  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-    (layoutParams as ViewGroup.MarginLayoutParams).setMargins(0, 0, 0, bottomMargin)
-    requestLayout()
-  }
-
-  override fun onDraw(canvas: Canvas) {
-    super.onDraw(canvas)
-    val width = (parent as RecyclerView).measuredWidth.toFloat()
-    canvas.drawLine(0F, measuredHeight.toFloat(), width, measuredHeight.toFloat(), border)
-  }
-}
-
 /** An abstract item in a list of stories. */
 sealed class StoryListItem : Parcelable {
   /** The data for an actual story in a list of stories. */
@@ -598,7 +557,7 @@ open class StoryListViewModel :
 }
 
 class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
-class TitleViewHolder(val view: GroupTitleView) : RecyclerView.ViewHolder(view)
+class TitleViewHolder(val view: TextView) : RecyclerView.ViewHolder(view)
 class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
 
 /** Adapts [StoryListItem]s to views for a [RecyclerView]. */
@@ -623,7 +582,12 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
         view.loadFromModel(item.model)
         view.bindRemoveBtn(item.model, viewModel.opt())
       }
-      is GroupTitle -> (holder as TitleViewHolder).view.text = item.title
+      is GroupTitle -> {
+        val str = SpannableString(item.title)
+        str.setSpan(UnderlineSpan(), 0, item.title.length, 0)
+        (holder as TitleViewHolder).view.text = str
+
+      }
       is LoadingItem -> (holder as ProgressBarHolder).view.id = item.id
     }
   }
@@ -631,7 +595,15 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
     0 -> StoryViewHolder(LayoutInflater.from(parent.context)
         .inflate(R.layout.component_story, parent, false) as StoryCardView)
-    1 -> TitleViewHolder(GroupTitleView(parent.context))
+    1 -> {
+      val textView = TextView(parent.context)
+      textView.setTextAppearance(android.R.style.TextAppearance_Material_Medium)
+      val lp = ViewGroup.MarginLayoutParams(
+          ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+      lp.setMargins(0, 0, 0, Static.res.px(R.dimen.list_separator_height))
+      textView.layoutParams = lp
+      TitleViewHolder(textView)
+    }
     2 -> ProgressBarHolder(LayoutInflater.from(parent.context)
         .inflate(R.layout.loading_circle_indeterminate, parent, false) as ProgressBar)
     else -> throw IllegalStateException("getItemViewType out of sync with onCreateViewHolder")
