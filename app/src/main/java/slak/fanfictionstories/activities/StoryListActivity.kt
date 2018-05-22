@@ -51,6 +51,8 @@ class StoryListActivity :
     layoutManager = LinearLayoutManager(this)
     storyListView.layoutManager = layoutManager
     storyListView.createStorySwipeHelper()
+    storyListScroller.setRecyclerView(storyListView)
+    storyListView.addOnScrollListener(storyListScroller.onScrollListener)
     viewModel.getCounts().observe(this) {
       if (it.first == StoryListViewModel.UNINITIALIZED) return@observe
       toolbar.subtitle = str(R.string.x_stories_y_filtered, it.first, it.second)
@@ -71,6 +73,7 @@ class StoryListActivity :
   override fun onDestroy() {
     super.onDestroy()
     unregister()
+    storyListView.removeOnScrollListener(storyListScroller.onScrollListener)
   }
 
   private fun addByIdDialog() {

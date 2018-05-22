@@ -26,7 +26,7 @@
         android:id="@+id/canonStoryListView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/story_list_margin"
+        android:layout_margin="8dp"
         android:divider="@color/alpha"
         android:dividerHeight="@dimen/list_separator_height"
         android:paddingBottom="?attr/actionBarSize"

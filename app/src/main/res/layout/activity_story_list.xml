@@ -34,18 +34,22 @@
         android:id="@+id/storyListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginEnd="@dimen/story_list_margin"
-        android:layout_marginStart="@dimen/story_list_margin"
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="8dp"
         android:clipToPadding="false"
         android:divider="@color/alpha"
-        android:dividerHeight="@dimen/story_list_margin"
-        android:paddingTop="@dimen/story_list_margin"
-        android:scrollbars="vertical"
+        android:dividerHeight="8dp"
+        android:paddingTop="8dp"
+        android:scrollbars="none"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:context="slak.fanfictionstories.activities.StoryListActivity"
-        tools:listitem="@layout/component_story">
+        tools:listitem="@layout/component_story"/>
 
-    </android.support.v7.widget.RecyclerView>
-
+    <xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller
+        android:id="@+id/storyListScroller"
+        android:layout_width="@dimen/story_list_scroller_width"
+        android:layout_height="match_parent"
+        android:layout_gravity="right"
+        tools:ignore="RtlHardcoded"/>
 
 </android.support.design.widget.CoordinatorLayout>

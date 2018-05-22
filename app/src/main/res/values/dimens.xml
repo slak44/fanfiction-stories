@@ -11,6 +11,7 @@
     <dimen name="story_list_title_underline_margin">2dip</dimen>
     <dimen name="story_list_title_divider_height">1dip</dimen>
     <dimen name="story_list_margin">8dp</dimen>
+    <dimen name="story_list_scroller_width">16dp</dimen>
 
     <dimen name="native_filter_spinner_min_height">32dp</dimen>
     <dimen name="native_filter_spinner_margin">8dp</dimen>
