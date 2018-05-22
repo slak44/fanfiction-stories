@@ -22,12 +22,17 @@
         app:showAsAction="ifRoom"/>
 
     <item
-        android:id="@+id/statistics"
-        android:title="@string/statistics"
+        android:id="@+id/jumpTo"
+        android:title="@string/jump_to"
+        android:visible="true"
         app:showAsAction="never"/>
-
     <item
         android:id="@+id/addById"
         android:title="@string/add_by_ffid"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/statistics"
+        android:title="@string/statistics"
         app:showAsAction="never"/>
 </menu>

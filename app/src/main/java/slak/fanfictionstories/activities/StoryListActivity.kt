@@ -38,6 +38,8 @@ class StoryListActivity :
     }
   }
 
+  private lateinit var layoutManager: LinearLayoutManager
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
@@ -46,7 +48,8 @@ class StoryListActivity :
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    storyListView.layoutManager = LinearLayoutManager(this)
+    layoutManager = LinearLayoutManager(this)
+    storyListView.layoutManager = layoutManager
     storyListView.createStorySwipeHelper()
     viewModel.getCounts().observe(this) {
       if (it.first == StoryListViewModel.UNINITIALIZED) return@observe
@@ -125,6 +128,20 @@ class StoryListActivity :
         .show()
   }
 
+  private fun jumpToDialog() {
+    // List of (position of title, title text) pairs
+    val items = viewModel.mapIndexedNotNull { idx, item ->
+      if (item !is StoryListItem.GroupTitle) return@mapIndexedNotNull null
+      else Pair(idx, item.title)
+    }
+    AlertDialog.Builder(this)
+        .setTitle(R.string.jump_to)
+        .setItems(items.map { it.second }.toTypedArray(), { _, which ->
+          layoutManager.scrollToPositionWithOffset(items[which].first, 0)
+        })
+        .show()
+  }
+
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     val toTint = arrayOf(
         menu.findItem(R.id.filter),
@@ -155,6 +172,7 @@ class StoryListActivity :
           viewModel.triggerDatabaseLoad()
         }
       }
+      R.id.jumpTo -> jumpToDialog()
       R.id.addById -> addByIdDialog()
       R.id.statistics -> statisticsDialog()
       android.R.id.home -> onBackPressed()

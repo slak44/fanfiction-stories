@@ -8,6 +8,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.os.Parcelable
+import android.support.annotation.AnyThread
 import android.support.annotation.UiThread
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
@@ -319,7 +320,7 @@ class StoryCardView : CardView {
  * @see StoryListItem
  * @see GroupTitle
  */
-class StoryGroupTitle : TextView {
+class GroupTitleView : TextView {
   constructor(context: Context) : super(context)
   constructor(context: Context, set: AttributeSet) : super(context, set)
   constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
@@ -329,7 +330,7 @@ class StoryGroupTitle : TextView {
     private val bottomMargin = Static.res.px(R.dimen.story_list_margin)
     /**
      * Make only one instance of those, because they are more or less expensive, and there is no
-     * reason they can't just be shared between all instances of [StoryGroupTitle].
+     * reason they can't just be shared between all instances of [GroupTitleView].
      */
     private val border: Paint by lazy {
       val border = Paint()
@@ -506,6 +507,7 @@ open class StoryListViewModel :
   }
 
   /** Asynchronously add a bunch of items to the recycler, adding a loader until they show up. */
+  @AnyThread
   fun addDeferredItems(deferredList: Deferred<List<StoryListItem>>) = launch(UI) {
     addItem(LoadingItem())
     val loaderIdx = data.size - 1
@@ -590,6 +592,7 @@ open class StoryListViewModel :
   /**
    * Filter, group, sort [stories] according to the [arrangement], and put the results in [data].
    */
+  @AnyThread
   fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) = launch(UI) {
     // Ignore currently pending stories, the user might have rearranged before the db was updated
     val storiesNotPending = stories.filter { (storyId) ->
@@ -607,7 +610,7 @@ open class StoryListViewModel :
 }
 
 class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
-class TitleViewHolder(val view: StoryGroupTitle) : RecyclerView.ViewHolder(view)
+class TitleViewHolder(val view: GroupTitleView) : RecyclerView.ViewHolder(view)
 class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
 
 /** Adapts [StoryListItem]s to views for a [RecyclerView]. */
@@ -640,7 +643,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
     0 -> StoryViewHolder(LayoutInflater.from(parent.context)
         .inflate(R.layout.component_story, parent, false) as StoryCardView)
-    1 -> TitleViewHolder(StoryGroupTitle(parent.context))
+    1 -> TitleViewHolder(GroupTitleView(parent.context))
     2 -> ProgressBarHolder(LayoutInflater.from(parent.context)
         .inflate(R.layout.loading_circle_indeterminate, parent, false) as ProgressBar)
     else -> throw IllegalStateException("getItemViewType out of sync with onCreateViewHolder")
