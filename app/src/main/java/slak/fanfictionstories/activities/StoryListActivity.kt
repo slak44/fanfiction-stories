@@ -123,6 +123,7 @@ class StoryListActivity :
             R.string.statistics_template,
             autoSuffixNumber(totalWords),
             autoSuffixNumber(passedApprox), passedApprox * 100.0 / totalWords,
+            autoSuffixNumber(totalWords / totalStories),
             totalStories,
             storiesRead, storiesRead * 100.0 / totalStories,
             storiesInProgress, storiesInProgress * 100.0 / totalStories,

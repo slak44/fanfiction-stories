@@ -37,6 +37,7 @@
     <string name="statistics_template">
 "Total Word Count: %s
 Words Read: approx. %s (%.2f%%)
+Average Word Count: %d
 Story Count: %d
 Stories Read: %d (%.2f%%)
 Stories Still Reading: %d (%.2f%%)
