@@ -61,10 +61,10 @@ fun errorDialog(title: String, msg: String) = launch(UI) {
   AlertDialog.Builder(Static.currentCtx)
       .setTitle(title)
       .setMessage(msg)
-      .setPositiveButton(R.string.got_it, { dialogInterface, _ ->
+      .setPositiveButton(R.string.got_it) { dialogInterface, _ ->
         // User acknowledged error
         dialogInterface.dismiss()
-      }).create().show()
+      }.create().show()
 }
 
 /** Same as [errorDialog], but with [StringRes] texts. */
