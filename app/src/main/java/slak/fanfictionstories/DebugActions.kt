@@ -67,14 +67,14 @@ val debugActions = mapOf(
     },
     "Test notification" to {
       AlertDialog.Builder(Static.currentCtx).setItems(
-          Notifications.Kind.values().map { it.toString() }.toTypedArray(), { _, which ->
+          Notifications.Kind.values().map { it.toString() }.toTypedArray()) { _, which ->
         val picked = Notifications.Kind.values()[which]
         Notifications.show(picked, Notifications.defaultIntent(), "TEST")
         launch(UI) {
           delay(2500)
           Notifications.cancel(picked)
         }
-      }).create().show()
+      }.create().show()
     },
     "Dump stories table to stdout" to {
       val r = Static.database.readableDatabase.select("stories")
@@ -125,9 +125,9 @@ val debugActions = mapOf(
     "Run SQL" to {
       val editText = EditText(Static.currentCtx)
       val dialog = AlertDialog.Builder(Static.currentCtx)
-          .setPositiveButton("run", { _, _ ->
+          .setPositiveButton("run") { _, _ ->
             Static.database.writableDatabase.execSQL(editText.text.toString())
-          })
+          }
           .create()
       dialog.setView(editText)
       dialog.show()
@@ -159,5 +159,10 @@ val debugActions = mapOf(
           fetchAndWriteStory(it.storyId).await()
         }
       }
+    },
+    "Load existing sqlite db" to {
+      val db = Static.currentCtx.getDatabasePath(Static.database.databaseName)
+      db.writeBytes(File("/sdcard/Download/FFStories").readBytes())
+      Notifications.show(Notifications.Kind.DONE_UPDATING, Notifications.defaultIntent(), "Done")
     }
 )
