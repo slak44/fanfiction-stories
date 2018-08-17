@@ -7,12 +7,15 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import slak.fanfictionstories.Notifications
+import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
-import slak.fanfictionstories.utility.*
-import slak.fanfictionstories.Notifications.defaultIntent
+import slak.fanfictionstories.utility.Cache
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.patientlyFetchURL
+import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
 
@@ -45,7 +48,7 @@ fun getReviews(storyId: StoryId,
                chapter: Int, page: Int): Deferred<ReviewPage> = async2(CommonPool) {
   reviewCache.hit("$storyId/$chapter/$page").ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
-    Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
+    Notifications.ERROR.show(defaultIntent(),
         R.string.error_fetching_review_data, storyId.toString())
   }.await()
   Log.v(TAG, "storyId=($storyId), chapter=($chapter), page=($page)")

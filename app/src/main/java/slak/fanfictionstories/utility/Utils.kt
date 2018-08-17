@@ -32,7 +32,7 @@ import kotlinx.coroutines.experimental.sync.Mutex
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.Notifications
-import slak.fanfictionstories.Notifications.defaultIntent
+import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.R
 import java.io.File
 import java.io.FileOutputStream
@@ -84,17 +84,17 @@ fun waitForNetwork() = async2(CommonPool) {
     // FIXME figure out network status even when app is not focused
     if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
       // No connection; wait
-      Notifications.show(Notifications.Kind.NETWORK, defaultIntent(), R.string.waiting_for_connection)
+      Notifications.NETWORK.show(defaultIntent(), R.string.waiting_for_connection)
       Log.w(NET_TAG, "No connection")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else if (activeNetwork.isConnecting()) {
       // We're connecting; wait
-      Notifications.show(Notifications.Kind.NETWORK, defaultIntent(), R.string.connecting)
+      Notifications.NETWORK.show(defaultIntent(), R.string.connecting)
       Log.i(NET_TAG, "Connecting...")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else {
       // We're connected!
-      Notifications.cancel(Notifications.Kind.NETWORK)
+      Notifications.NETWORK.cancel()
       Log.i(NET_TAG, "We have a connection")
       break
     }
@@ -121,7 +121,7 @@ fun patientlyFetchURL(url: String,
   delay(RATE_LIMIT_MS)
   return@async2 try {
     val text = URL(url).readText()
-    Notifications.cancel(Notifications.Kind.ERROR)
+    Notifications.ERROR.cancel()
     text
   } catch (t: Throwable) {
     // Something happened; retry

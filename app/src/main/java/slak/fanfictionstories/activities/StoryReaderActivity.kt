@@ -22,6 +22,7 @@ import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
+import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.fetchers.extractChapterText
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
@@ -131,13 +132,13 @@ class StoryReaderActivity : LoadingActivity() {
         .setTitle(R.string.select_chapter)
         .setSingleChoiceItems(model.chapterTitles().mapIndexed { idx, chapterTitle ->
           "${idx + 1}. $chapterTitle"
-        }.toTypedArray(), (currentChapter - 1).toInt(), { dialog, which: Int ->
+        }.toTypedArray(), (currentChapter - 1).toInt()) { dialog, which: Int ->
           dialog.dismiss()
           // This means 'go to same chapter', so do nothing
           if (currentChapter == which + 1L) return@setSingleChoiceItems
           currentChapter = which + 1L
           initTextWithLoading(currentChapter)
-        }).show()
+        }.show()
   }
 
   @AnyThread
@@ -310,14 +311,13 @@ class StoryReaderActivity : LoadingActivity() {
         model = fetchAndWriteStory(model.storyId).await().orElse(model)
       }
       R.id.checkForUpdate -> launch(CommonPool) {
-        Notifications.show(Notifications.Kind.UPDATING, Notifications.defaultIntent(),
-            R.string.checking_one_story, model.title)
+        Notifications.UPDATING.show(defaultIntent(), R.string.checking_one_story, model.title)
         val newModel = updateStory(model).await()
         if (newModel !is Empty) {
           model = newModel.get()
           Notifications.updatedStories(listOf(model))
         } else {
-          Notifications.cancel(Notifications.Kind.UPDATING)
+          Notifications.UPDATING.cancel()
           Notifications.updatedStories(emptyList())
         }
       }

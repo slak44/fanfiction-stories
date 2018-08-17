@@ -9,10 +9,10 @@ import org.jetbrains.anko.db.replaceOrThrow
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import slak.fanfictionstories.*
+import slak.fanfictionstories.Notifications.Companion.defaultIntent
+import slak.fanfictionstories.Notifications.Companion.readerIntent
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
-import slak.fanfictionstories.Notifications.defaultIntent
-import slak.fanfictionstories.Notifications.readerIntent
 import java.util.concurrent.TimeUnit
 
 private const val TAG = "StoryFetcher"
@@ -32,10 +32,10 @@ fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async
   }
   Static.database.upsertStory(model).await()
   val isWriting: Boolean =
-      writeChapters(storyId, fetchChapterRange(Notifications.Kind.DOWNLOADING, model)).await()
+      writeChapters(storyId, fetchChapterRange(Notifications.DOWNLOADING, model)).await()
   if (isWriting) {
     Notifications.downloadedStory(model)
-    Notifications.cancel(Notifications.Kind.DOWNLOADING)
+    Notifications.DOWNLOADING.cancel()
   } else {
     // FIXME show something saying we failed
     Static.database.updateInStory(storyId, "status" to "remote").await()
@@ -55,7 +55,7 @@ fun fetchChapter(storyId: StoryId, chapter: Long): Deferred<String> = async2(Com
   val cacheKey = "id$storyId-ch$chapter"
   storyCache.hit(cacheKey).ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
-    Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
+    Notifications.ERROR.show(defaultIntent(),
         R.string.error_fetching_story_data, storyId.toString())
   }.await()
   storyCache.update(cacheKey, html)
@@ -84,21 +84,25 @@ fun fetchStoryModel(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(C
 
 /**
  * Get html of story chapters in given range.
- * @param kind what [Notifications.Kind] to show for each chapter that's fetched
+ * @param kind what [Notifications] to show for each chapter that's fetched
  * @param from start index of chapters to fetch (1-indexed)
  * @param to end index of chapters to fetch (1-indexed). If -1, the end idx is the chapter count
  * @returns a [Channel] that supplies the html text
  */
-fun fetchChapterRange(kind: Notifications.Kind, model: StoryModel,
+fun fetchChapterRange(kind: Notifications, model: StoryModel,
                       from: Long = 1, to: Long = -1): Channel<String> {
   val target = if (to != -1L) to else model.fragment.chapterCount
   // The buffer size is completely arbitrary
   val channel = Channel<String>(10)
   launch(CommonPool) {
     for (chapterNr in from..target) {
-      Notifications.show(kind, readerIntent(model),
-          R.string.fetching_chapter, chapterNr, model.fragment.chapterCount,
-          chapterNr * 100F / model.fragment.chapterCount, model.title)
+      kind.show(
+          readerIntent(model),
+          R.string.fetching_chapter,
+          chapterNr,
+          model.fragment.chapterCount,
+          chapterNr * 100F / model.fragment.chapterCount,
+          model.title)
       val chapterHtml = fetchChapter(model.storyId, chapterNr).await()
       channel.send(extractChapterText(Jsoup.parse(chapterHtml)))
     }
@@ -146,8 +150,8 @@ fun updateStory(oldModel: StoryModel): Deferred<Optional<StoryModel>> = async2(C
   val channel: Channel<String> = when {
   // Special case when there is only one chapter
     newModel.fragment.chapterCount == 1L -> {
-      Notifications.show(Notifications.Kind.UPDATING,
-          defaultIntent(), R.string.fetching_chapter, 1, 1, 0F, newModel.title)
+      Notifications.UPDATING.show(defaultIntent(),
+          R.string.fetching_chapter, 1, 1, 0F, newModel.title)
       val channel = Channel<String>(1)
       channel.send(fetchChapter(newModel.storyId, 1).await())
       channel.close()
@@ -155,10 +159,10 @@ fun updateStory(oldModel: StoryModel): Deferred<Optional<StoryModel>> = async2(C
     }
   // Try being smart, and only download delta when chapters were added
     newModel.fragment.chapterCount > oldModel.fragment.chapterCount ->
-      fetchChapterRange(Notifications.Kind.UPDATING, oldModel,
+      fetchChapterRange(Notifications.UPDATING, oldModel,
           oldModel.fragment.chapterCount + 1, newModel.fragment.chapterCount)
   // If nothing else, just re-download everything
-    else -> fetchChapterRange(Notifications.Kind.UPDATING, oldModel)
+    else -> fetchChapterRange(Notifications.UPDATING, oldModel)
   }
   val isWriting = writeChapters(newModel.storyId, channel).await()
   if (!isWriting) {
@@ -168,6 +172,6 @@ fun updateStory(oldModel: StoryModel): Deferred<Optional<StoryModel>> = async2(C
     Log.e(TAG, "Had to revert update to ${oldModel.storyId}")
     return@async2 Empty<StoryModel>()
   }
-  Notifications.cancel(Notifications.Kind.UPDATING)
+  Notifications.UPDATING.cancel()
   return@async2 newModel.opt()
 }

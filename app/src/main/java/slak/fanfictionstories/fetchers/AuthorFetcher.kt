@@ -1,13 +1,14 @@
 package slak.fanfictionstories.fetchers
 
 import android.os.Parcelable
-import android.util.Log
 import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
+import slak.fanfictionstories.Notifications
+import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.StoryProgress
@@ -16,15 +17,11 @@ import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
 import slak.fanfictionstories.fetchers.FetcherUtils.unescape
 import slak.fanfictionstories.utility.Cache
-import slak.fanfictionstories.Notifications
-import slak.fanfictionstories.Notifications.defaultIntent
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.patientlyFetchURL
 import java.util.concurrent.TimeUnit
 
 val authorCache = Cache<Author>("Author", TimeUnit.DAYS.toMillis(1))
-
-private const val TAG = "AuthorFetcher"
 
 /**
  * A data class representing an author's metadata.
@@ -49,7 +46,7 @@ data class Author(val name: String,
 fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
   authorCache.hit(authorId.toString()).ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
-    Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
+    Notifications.ERROR.show(defaultIntent(),
         R.string.error_fetching_author_data, authorId.toString())
   }.await()
   val doc = Jsoup.parse(html)

@@ -1,19 +1,18 @@
 package slak.fanfictionstories.fetchers
 
 import android.os.Parcelable
-import android.util.Log
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
+import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
 import slak.fanfictionstories.fetchers.FetcherUtils.unescape
 import slak.fanfictionstories.utility.*
-import slak.fanfictionstories.Notifications.defaultIntent
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
@@ -179,8 +178,6 @@ data class CanonPage(val storyList: List<StoryModel>,
 // It is unlikely that an update would invalidate the cache within 15 minutes
 val canonListCache = Cache<CanonPage>("CanonPage", TimeUnit.MINUTES.toMillis(15))
 
-private const val TAG = "CanonPage"
-
 /**
  * Fetches a [CanonPage] for the canon pointed at by [parentLink], using the filters provided by
  * [filters].
@@ -191,7 +188,7 @@ fun getCanonPage(parentLink: CategoryLink,
   val pathAndQuery = "${parentLink.urlComponent}/?p=$page&${filters.queryParams()}"
   canonListCache.hit(pathAndQuery).ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {
-    Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
+    Notifications.ERROR.show(defaultIntent(),
         R.string.error_with_canon_stories, parentLink.displayName)
   }.await()
   val pageData = parseHtml(html)

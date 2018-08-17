@@ -138,7 +138,18 @@ Untouched Stories: %d (%.2f%%)"
     <string name="option_locale_default">Default</string>
 
     <!-- Notifications -->
-    <string name="download_notification_channel">Download Notifications</string>
+    <string name="channel_title_download">Download Progress</string>
+    <string name="channel_desc_download">The notifications shown when downloading a story</string>
+    <string name="channel_title_update">Update Progress</string>
+    <string name="channel_desc_update">The notifications shown when updating stories</string>
+    <string name="channel_title_done_downloading">Downloaded Stories</string>
+    <string name="channel_desc_done_downloading">List of downloaded stories</string>
+    <string name="channel_title_done_updating">Updated Stories</string>
+    <string name="channel_desc_done_updating">List of updated stories</string>
+    <string name="channel_title_network">Connection</string>
+    <string name="channel_desc_network">Connection status related notifications</string>
+    <string name="channel_title_error">Errors</string>
+    <string name="channel_desc_error">Error notifications</string>
     <string name="downloading_story">Downloading Story</string>
     <string name="updating_story">Updating</string>
     <string name="waiting_for_connection">Waiting for connection…</string>

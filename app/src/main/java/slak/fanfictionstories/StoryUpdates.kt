@@ -21,6 +21,7 @@ import kotlinx.coroutines.experimental.launch
 import org.threeten.bp.Duration
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
+import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.fetchers.updateStory
 import slak.fanfictionstories.utility.*
 import java.util.concurrent.TimeUnit
@@ -87,15 +88,15 @@ class UpdateService : JobService() {
           Prefs.storyListOrderDirection).mapIndexedNotNull { idx, model ->
         val str = str(R.string.checking_story,
             model.title, idx + 1, storyModels.size, (idx + 1) * 100F / storyModels.size)
-        Notifications.show(Notifications.Kind.UPDATING,
-            Notifications.create(Notifications.Kind.UPDATING, str, Notifications.defaultIntent())
-                .setStyle(NotificationCompat.BigTextStyle().bigText(str))
-                .setProgress(storyModels.size, idx + 1, false))
+        Notifications.UPDATING.show(defaultIntent(), str) {
+          setStyle(NotificationCompat.BigTextStyle().bigText(str))
+          setProgress(storyModels.size, idx + 1, false)
+        }
         val newModel = updateStory(model).await()
         Log.v(TAG, "Story ${model.storyId} was update performed: ${newModel !is Empty}")
         return@mapIndexedNotNull newModel.orNull()
       }
-      Notifications.cancel(Notifications.Kind.UPDATING)
+      Notifications.UPDATING.cancel()
       Notifications.updatedStories(updatedStories)
       jobFinished(params, false)
     }
@@ -105,7 +106,7 @@ class UpdateService : JobService() {
   override fun onStopJob(params: JobParameters?): Boolean {
     Log.w(TAG, "Update job was cancelled")
     coroutineJob?.cancel()
-    Notifications.cancel(Notifications.Kind.UPDATING)
+    Notifications.UPDATING.cancel()
     coroutineJob = null
     return true
   }

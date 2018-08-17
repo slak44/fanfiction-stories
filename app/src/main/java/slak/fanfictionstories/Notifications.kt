@@ -1,6 +1,5 @@
 package slak.fanfictionstories
 
-import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -15,107 +14,78 @@ import android.util.Log
 import org.jetbrains.anko.intentFor
 import slak.fanfictionstories.activities.StoryListActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
-import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.intentFor
-import slak.fanfictionstories.utility.str
+import slak.fanfictionstories.utility.*
 
-object Notifications {
-  const val DOWNLOAD_CHANNEL = "download_channel"
-
-  const val ERROR_NOTIFICATION_ID = 1
-  const val DOWNLOAD_NOTIFICATION_ID = 2
-  const val UPDATE_NOTIFICATION_ID = 3
-  const val DONE_UPDATING_NOTIFICATION_ID = 4
-  const val DONE_DOWNLOADING_NOTIFICATION_ID = 5
-  const val NETWORK_NOTIFICATION_ID = 6
-
-  const val DOWNLOADED_STORIES_ID_BEGIN = 0xA000000
-  const val UPDATED_STORIES_ID_BEGIN = 0xB000000
-  const val PENDING_INTENT_ID_BEGIN = 0xC000000
-
-  const val NOTIFICATIONS_DOWNLOADED_STORIES_GROUP = "stories_list_downloaded"
-  const val NOTIFICATIONS_UPDATED_STORIES_GROUP = "stories_list_updated"
-
-  private enum class Duration {
-    TRANSIENT, ONGOING
-  }
-
-  enum class Kind(val duration: Duration, @StringRes val titleStringId: Int,
-                  @DrawableRes val icon: Int, val reqId: Int, val sortKey: String) {
-    DOWNLOADING(Duration.ONGOING, R.string.downloading_story,
-        R.drawable.ic_file_download_black_24dp, DOWNLOAD_NOTIFICATION_ID, "A"),
-    UPDATING(Duration.ONGOING, R.string.updating_story,
-        R.drawable.ic_update_black_24dp, UPDATE_NOTIFICATION_ID, "B"),
-    DONE_UPDATING(Duration.TRANSIENT, R.string.updated_stories,
-        R.drawable.ic_done_all_black_24dp, DONE_UPDATING_NOTIFICATION_ID, "D"),
-    DONE_DOWNLOADING(Duration.TRANSIENT, R.string.downloaded_stories,
-        R.drawable.ic_done_all_black_24dp, DONE_DOWNLOADING_NOTIFICATION_ID, "C"),
-    NETWORK(Duration.ONGOING, R.string.network_not_available,
-        R.drawable.ic_signal_wifi_off_black_24dp, NETWORK_NOTIFICATION_ID, "E"),
-    ERROR(Duration.ONGOING, R.string.accessing_data,
-        R.drawable.ic_cloud_download_black_24dp, ERROR_NOTIFICATION_ID, "F")
-  }
-
-  private var downloadedIds = DOWNLOADED_STORIES_ID_BEGIN
-  fun downloadedStory(model: StoryModel) {
-    // Show group
-    show(Kind.DONE_DOWNLOADING,
-        create(Kind.DONE_DOWNLOADING, str(R.string.downloaded_stories), defaultIntent())
-            .setGroupSummary(true)
-            .setGroup(NOTIFICATIONS_DOWNLOADED_STORIES_GROUP))
-    // Show actual download notif
-    val notif = create(Kind.DONE_DOWNLOADING, model.title, readerIntent(model))
-        .setContentTitle(str(R.string.downloaded_story))
-        .setGroup(NOTIFICATIONS_DOWNLOADED_STORIES_GROUP)
-        .build()
-    Static.notifManager.notify(++downloadedIds, notif)
-  }
-
-  private var updatedIds = UPDATED_STORIES_ID_BEGIN
-  fun updatedStories(stories: List<StoryModel>) {
-    if (stories.isEmpty()) {
-      show(Kind.DONE_UPDATING, defaultIntent(), R.string.no_updates_found)
-      return
-    }
-    // Show group
-    show(Kind.DONE_UPDATING,
-        create(Kind.DONE_UPDATING, str(R.string.x_stories_updated, stories.size), defaultIntent())
-            .setGroupSummary(true)
-            .setGroup(NOTIFICATIONS_UPDATED_STORIES_GROUP))
-    // Show actual title notifs
-    stories.forEach {
-      val notif = create(Kind.DONE_UPDATING, it.title, readerIntent(it))
-          .setContentTitle(str(R.string.updated_story))
-          .setGroup(NOTIFICATIONS_UPDATED_STORIES_GROUP)
-          .build()
-      Static.notifManager.notify(++updatedIds, notif)
-    }
-    updatedIds = UPDATED_STORIES_ID_BEGIN
-  }
+enum class Notifications(val duration: Duration,
+                         @StringRes val titleStringId: Int,
+                         @DrawableRes val icon: Int,
+                         @StringRes val channelTitleId: Int,
+                         @StringRes val channelDescId: Int,
+                         val group: Optional<String> = Empty()) {
+  DOWNLOADING(
+      Duration.ONGOING,
+      R.string.downloading_story,
+      R.drawable.ic_file_download_black_24dp,
+      R.string.channel_title_download,
+      R.string.channel_desc_download),
+  UPDATING(
+      Duration.ONGOING,
+      R.string.updating_story,
+      R.drawable.ic_update_black_24dp,
+      R.string.channel_title_update,
+      R.string.channel_desc_update),
+  DONE_UPDATING(
+      Duration.TRANSIENT,
+      R.string.updated_story,
+      R.drawable.ic_done_all_black_24dp,
+      R.string.channel_title_done_updating,
+      R.string.channel_desc_done_updating,
+      "stories_list_updated".opt()),
+  DONE_DOWNLOADING(
+      Duration.TRANSIENT,
+      R.string.downloaded_story,
+      R.drawable.ic_done_all_black_24dp,
+      R.string.channel_title_done_downloading,
+      R.string.channel_desc_done_downloading,
+      "stories_list_downloaded".opt()),
+  NETWORK(
+      Duration.ONGOING,
+      R.string.network_not_available,
+      R.drawable.ic_signal_wifi_off_black_24dp,
+      R.string.channel_title_network,
+      R.string.channel_desc_network),
+  ERROR(
+      Duration.ONGOING,
+      R.string.accessing_data,
+      R.drawable.ic_cloud_download_black_24dp,
+      R.string.channel_title_error,
+      R.string.channel_desc_error);
 
   init {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      val channel = NotificationChannel(
-          DOWNLOAD_CHANNEL,
-          str(R.string.download_notification_channel),
-          NotificationManager.IMPORTANCE_DEFAULT)
-      Static.notifManager.createNotificationChannel(channel)
+      values().forEach {
+        val channel = NotificationChannel(
+            it.channelKey,
+            str(it.channelTitleId),
+            NotificationManager.IMPORTANCE_LOW)
+        channel.description = str(it.channelDescId)
+        Static.notifManager.createNotificationChannel(channel)
+      }
     }
   }
 
-  fun defaultIntent() = Static.currentCtx.intentFor<StoryListActivity>()
-  fun readerIntent(model: StoryModel) = intentFor<StoryReaderActivity>(
-      StoryReaderActivity.INTENT_STORY_MODEL to model as Parcelable)
+  private val reqId = ordinal
+  private val channelKey = "${name.toLowerCase()}_channel"
 
-  private var reqIdCounter = PENDING_INTENT_ID_BEGIN
-  fun create(kind: Kind, content: String, target: Intent): NotificationCompat.Builder {
-    val builder = NotificationCompat.Builder(Static.currentCtx, DOWNLOAD_CHANNEL)
-        .setSmallIcon(kind.icon)
-        .setContentTitle(str(kind.titleStringId))
+  private var reqIdCounter = 0xC000000
+  fun create(target: Intent, content: String): NotificationCompat.Builder {
+    val builder = NotificationCompat.Builder(Static.currentCtx, channelKey)
+        .setSmallIcon(icon)
+        .setContentTitle(str(titleStringId))
         .setContentText(content)
-        .setSortKey(kind.sortKey)
-        .setOngoing(kind.duration == Duration.ONGOING)
-        .setChannelId(DOWNLOAD_CHANNEL)
+        .setOngoing(duration == Duration.ONGOING)
+        .setChannelId(channelKey)
+    group.ifPresent { builder.setGroup(it) }
     val stack = TaskStackBuilder.create(Static.currentCtx)
     stack.addParentStack(target.component)
     stack.addNextIntent(target)
@@ -124,24 +94,73 @@ object Notifications {
     return builder
   }
 
-  fun show(kind: Kind, target: Intent, content: String) {
-    Static.notifManager.notify(kind.reqId, create(kind, content, target).build())
+  fun create(@StringRes content: Int, target: Intent) = create(target, str(content))
+
+  fun show(target: Intent, content: String) {
+    Static.notifManager.notify(reqId, create(target, content).build())
   }
 
-  fun show(kind: Kind, target: Intent, @StringRes id: Int) {
-    Static.notifManager.notify(kind.reqId, create(kind, str(id), target).build())
+  fun show(target: Intent, @StringRes id: Int) {
+    Static.notifManager.notify(reqId, create(id, target).build())
   }
 
-  fun show(kind: Kind, target: Intent, @StringRes id: Int, vararg format: Any) {
-    Static.notifManager.notify(kind.reqId, create(kind, str(id, *format), target).build())
+  fun show(target: Intent, @StringRes id: Int, vararg format: Any) {
+    Static.notifManager.notify(reqId, create(target, str(id, *format)).build())
   }
 
-  fun show(kind: Kind, b: NotificationCompat.Builder) {
-    Static.notifManager.notify(kind.reqId, b.build())
+  fun show(target: Intent,
+           content: String,
+           builder: NotificationCompat.Builder.() -> NotificationCompat.Builder) {
+    Static.notifManager.notify(reqId, builder(create(target, content)).build())
+  }
+  fun show(target: Intent,
+           @StringRes content: Int,
+           builder: NotificationCompat.Builder.() -> NotificationCompat.Builder) {
+    show(target, str(content), builder)
   }
 
-  fun cancel(kind: Kind) {
-    Log.d("Notifications", "killed $kind")
-    Static.notifManager.cancel(kind.reqId)
+  fun cancel() {
+    Log.d("Notifications", "killed $this")
+    Static.notifManager.cancel(reqId)
+  }
+
+  companion object {
+    private enum class Duration { TRANSIENT, ONGOING }
+
+    private var downloadedIds = 0xA000000
+    fun downloadedStory(model: StoryModel) {
+      // Show group
+      Notifications.DONE_DOWNLOADING.show(defaultIntent(), R.string.downloaded_stories) {
+        setGroupSummary(true)
+        setContentTitle(str(R.string.downloaded_stories))
+      }
+      // Show actual download notif
+      val notif = Notifications.DONE_DOWNLOADING.create(readerIntent(model), model.title).build()
+      Static.notifManager.notify(++downloadedIds, notif)
+    }
+
+    private const val UPDATED_STORIES_ID_BEGIN = 0xB000000
+    private var updatedIds = UPDATED_STORIES_ID_BEGIN
+    fun updatedStories(stories: List<StoryModel>) {
+      if (stories.isEmpty()) {
+        Notifications.DONE_UPDATING.show(defaultIntent(), R.string.no_updates_found)
+        return
+      }
+      // Show group
+      Notifications.DONE_UPDATING.show(defaultIntent(), str(R.string.x_stories_updated, stories.size)) {
+        setGroupSummary(true)
+        setContentTitle(str(R.string.updated_stories))
+      }
+      // Show actual title notifs
+      stories.forEach {
+        val notif = Notifications.DONE_UPDATING.create(readerIntent(it), it.title).build()
+        Static.notifManager.notify(++updatedIds, notif)
+      }
+      updatedIds = UPDATED_STORIES_ID_BEGIN
+    }
+
+    fun defaultIntent() = Static.currentCtx.intentFor<StoryListActivity>()
+    fun readerIntent(model: StoryModel) = intentFor<StoryReaderActivity>(
+        StoryReaderActivity.INTENT_STORY_MODEL to model as Parcelable)
   }
 }

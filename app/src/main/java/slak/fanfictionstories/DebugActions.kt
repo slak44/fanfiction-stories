@@ -17,6 +17,7 @@ import org.jetbrains.anko.db.MapRowParser
 import org.jetbrains.anko.db.dropTable
 import org.jetbrains.anko.db.select
 import org.jetbrains.anko.db.update
+import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.fetchers.fetchStoryModel
@@ -67,12 +68,12 @@ val debugActions = mapOf(
     },
     "Test notification" to {
       AlertDialog.Builder(Static.currentCtx).setItems(
-          Notifications.Kind.values().map { it.toString() }.toTypedArray()) { _, which ->
-        val picked = Notifications.Kind.values()[which]
-        Notifications.show(picked, Notifications.defaultIntent(), "TEST")
+          Notifications.values().map { it.toString() }.toTypedArray()) { _, which ->
+        val picked = Notifications.values()[which]
+        picked.show(defaultIntent(), "TEST")
         launch(UI) {
           delay(2500)
-          Notifications.cancel(picked)
+          picked.cancel()
         }
       }.create().show()
     },
@@ -163,6 +164,6 @@ val debugActions = mapOf(
     "Load existing sqlite db" to {
       val db = Static.currentCtx.getDatabasePath(Static.database.databaseName)
       db.writeBytes(File("/sdcard/Download/FFStories").readBytes())
-      Notifications.show(Notifications.Kind.DONE_UPDATING, Notifications.defaultIntent(), "Done")
+      Notifications.DONE_UPDATING.show(defaultIntent(), "Done")
     }
 )

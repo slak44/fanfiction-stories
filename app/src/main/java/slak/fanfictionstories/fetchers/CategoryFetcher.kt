@@ -1,16 +1,18 @@
 package slak.fanfictionstories.fetchers
 
 import android.os.Parcelable
-import android.util.Log
 import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import slak.fanfictionstories.Notifications
+import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categoryUrl
-import slak.fanfictionstories.utility.*
-import slak.fanfictionstories.Notifications.defaultIntent
+import slak.fanfictionstories.utility.Cache
+import slak.fanfictionstories.utility.async2
+import slak.fanfictionstories.utility.patientlyFetchURL
+import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
 
@@ -42,8 +44,6 @@ data class CategoryLink(val text: String,
 
 val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMillis(7))
 
-private const val TAG = "CategoryFetcher"
-
 /**
  * Fetches the list of [CategoryLink]s at the target [categoryUrlComponent].
  * @see CategoryLink
@@ -52,8 +52,7 @@ fun fetchCategoryData(categoryUrlComponent: String):
     Deferred<Array<CategoryLink>> = async2(CommonPool) {
   categoryCache.hit(categoryUrlComponent).ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
-    Notifications.show(Notifications.Kind.ERROR, defaultIntent(),
-        R.string.error_with_categories, categoryUrlComponent)
+    Notifications.ERROR.show(defaultIntent(), R.string.error_with_categories, categoryUrlComponent)
   }.await()
   val doc = Jsoup.parse(html)
   val result = doc.select("#list_output div").map {
