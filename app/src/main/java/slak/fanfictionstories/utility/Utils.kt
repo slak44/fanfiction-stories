@@ -95,7 +95,7 @@ fun waitForNetwork() = async2(CommonPool) {
     } else {
       // We're connected!
       Notifications.NETWORK.cancel()
-      Log.i(NET_TAG, "We have a connection")
+      Log.v(NET_TAG, "We have a connection")
       break
     }
   }
