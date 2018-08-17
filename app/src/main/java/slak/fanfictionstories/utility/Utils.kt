@@ -265,9 +265,6 @@ fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage:
   })
 }
 
-/** A [PrintWriter] instance that overwrites the target file. */
-fun File.overwritePrintWriter() = PrintWriter(FileOutputStream(this, false))
-
 /**
  * Shows a snack with an undo button. If  the undo button wasn't pressed, execute the provided
  * action in a coroutine.

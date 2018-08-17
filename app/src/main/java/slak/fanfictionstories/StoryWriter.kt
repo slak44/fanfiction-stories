@@ -7,9 +7,12 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.consumeEach
+import kotlinx.coroutines.experimental.channels.consumeEachIndexed
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.utility.*
 import java.io.File
+import java.io.FileOutputStream
+import java.util.zip.DeflaterOutputStream
 
 /** @returns whether or not we have external storage available */
 fun haveExternalStorage() = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()
@@ -49,10 +52,11 @@ fun writeChapters(storyId: StoryId,
     }
   }
   innerAsync@ async2(CommonPool) {
-    var idx = 1
-    chapters.consumeEach { chapterText: String ->
-      File(targetDir, "$idx.html").overwritePrintWriter().use { it.print(chapterText) }
-      idx++
+    chapters.consumeEachIndexed { chapterText ->
+      DeflaterOutputStream(
+          FileOutputStream(File(targetDir, "${chapterText.index + 1}.html.deflated"), false)).use {
+        it.write(chapterText.value.toByteArray())
+      }
     }
     return@innerAsync true
   }.await()

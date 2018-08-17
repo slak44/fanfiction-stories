@@ -25,6 +25,7 @@ import slak.fanfictionstories.fetchers.fetchStoryModel
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.Static
 import java.io.File
+import java.util.zip.DeflaterOutputStream
 
 private const val TAG = "FFStoriesDebug"
 
@@ -170,6 +171,33 @@ val debugActions = mapOf(
     "Delete legacy notification channel" to {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         Static.notifManager.deleteNotificationChannel("download_channel")
+      }
+    },
+    "Deflate all chapter text data" to {
+      var initialByteCount = 0L
+      var finalByteCount = 0L
+      File(getStorageDir(Static.currentCtx).get(), "storiesData").listFiles().forEach { story ->
+        story.listFiles().forEach {chapter ->
+          initialByteCount += chapter.length()
+          val outFile = File("${story.absolutePath}/${chapter.name.split('.')[0]}.html.deflated")
+          val stream = DeflaterOutputStream(outFile.outputStream())
+          stream.use {
+            it.write(chapter.readBytes())
+            it.flush()
+          }
+          finalByteCount += outFile.length()
+          chapter.delete()
+        }
+      }
+      println(initialByteCount)
+      println(finalByteCount)
+      println("${finalByteCount * 100 / initialByteCount}%")
+    },
+    "Fix chapter numbers" to {
+      File(getStorageDir(Static.currentCtx).get(), "storiesData").listFiles().forEach { story ->
+        story.listFiles().sortedBy { it.name.split('.')[0].toInt() }.reversed().forEach { chapter ->
+          chapter.renameTo(File("${story.absolutePath}/${chapter.name.split('.')[0].toInt() + 1}.html.deflated"))
+        }
       }
     }
 )

@@ -30,6 +30,9 @@ import slak.fanfictionstories.fetchers.fetchChapter
 import slak.fanfictionstories.fetchers.updateStory
 import slak.fanfictionstories.utility.*
 import java.io.File
+import java.io.FileOutputStream
+import java.util.zip.DeflaterOutputStream
+import java.util.zip.InflaterInputStream
 
 /** Shows a chapter of a story for reading. */
 class StoryReaderActivity : LoadingActivity() {
@@ -336,7 +339,7 @@ class StoryReaderActivity : LoadingActivity() {
                               chapter: Long, target: File): Deferred<String> = async2(CommonPool) {
     val chapterHtmlText = fetchChapter(storyId, chapter).await()
     val text = extractChapterText(Jsoup.parse(chapterHtmlText))
-    target.printWriter().use { it.print(text) }
+    DeflaterOutputStream(FileOutputStream(target, false)).use { it.write(text.toByteArray()) }
     if (model.status == StoryStatus.TRANSIENT) {
       model = parseStoryModel(chapterHtmlText, storyId)
       database.upsertStory(model).await()
@@ -348,7 +351,7 @@ class StoryReaderActivity : LoadingActivity() {
     val storyDir = storyDir(this@StoryReaderActivity, storyId)
         .orElseThrow(IllegalStateException("Cannot read $storyId dir"))
     if (!storyDir.exists()) storyDir.mkdirs()
-    val chapterFile = File(storyDir, "$chapter.html")
+    val chapterFile = File(storyDir, "$chapter.html.deflated")
     if (!chapterFile.exists()) {
       val text = downloadChapter(storyId, chapter, chapterFile).await()
       launch(CommonPool) {
@@ -360,7 +363,7 @@ class StoryReaderActivity : LoadingActivity() {
       }
       return@async2 text
     } else {
-      return@async2 chapterFile.readText()
+      return@async2 InflaterInputStream(chapterFile.inputStream()).bufferedReader().readText()
     }
   }
 }
