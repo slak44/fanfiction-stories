@@ -3,6 +3,7 @@ package slak.fanfictionstories
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.os.Build
 import android.support.v4.app.ActivityCompat
 import android.util.Log
 import android.view.View
@@ -165,5 +166,10 @@ val debugActions = mapOf(
       val db = Static.currentCtx.getDatabasePath(Static.database.databaseName)
       db.writeBytes(File("/sdcard/Download/FFStories").readBytes())
       Notifications.DONE_UPDATING.show(defaultIntent(), "Done")
+    },
+    "Delete legacy notification channel" to {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        Static.notifManager.deleteNotificationChannel("download_channel")
+      }
     }
 )
