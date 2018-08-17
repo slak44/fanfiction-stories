@@ -26,10 +26,11 @@ import android.widget.TextView
 import com.takisoft.colorpicker.ColorPickerDialog
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.component_story.view.*
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
-import slak.fanfictionstories.MarkerButton.Companion.markerSize
-import slak.fanfictionstories.MarkerButton.Companion.thisBtnSize
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
@@ -76,26 +77,11 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
  * A button that is rendered as a story's color marker, which is a colored triangle on the top-right
  * corner.
  * @see StoryCardView
- * @see markerSize
- * @see thisBtnSize
  */
 class MarkerButton : Button, View.OnClickListener {
   constructor(context: Context) : super(context)
   constructor(context: Context, set: AttributeSet) : super(context, set)
   constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
-
-  companion object {
-    /** Marker cathetus length. */
-    private val markerSize by lazy {
-      if (!Static.isInitialized) return@lazy 64F
-      Static.res.px(R.dimen.story_component_marker_size).toFloat()
-    }
-    /** Button is square, this is its length. */
-    private val thisBtnSize by lazy {
-      if (!Static.isInitialized) return@lazy 128F
-      Static.res.px(R.dimen.story_component_marker_button_size).toFloat()
-    }
-  }
 
   fun bindMarker(storyId: StoryId, markerColor: Int) {
     this.storyId = storyId
@@ -139,7 +125,8 @@ class MarkerButton : Button, View.OnClickListener {
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-    setMeasuredDimension(thisBtnSize.toInt(), thisBtnSize.toInt())
+    val btnSize = Static.res.px(R.dimen.story_component_marker_button_size)
+    setMeasuredDimension(btnSize, btnSize)
   }
 
   private fun createPaint(color: Int): Paint {
@@ -152,6 +139,10 @@ class MarkerButton : Button, View.OnClickListener {
   private var paint: Paint = createPaint(resources.getColor(R.color.alpha, context.theme))
 
   private val path by lazy {
+    // Marker cathetus length
+    val markerSize = Static.res.px(R.dimen.story_component_marker_size).toFloat()
+    // Button is square, this is its length
+    val thisBtnSize = Static.res.px(R.dimen.story_component_marker_button_size).toFloat()
     val p = Path()
     p.moveTo(thisBtnSize, 0F)
     p.lineTo(thisBtnSize - markerSize, 0F)
@@ -289,7 +280,7 @@ class StoryCardView : CardView {
       removeBtn.visibility = View.GONE
       return@bindRemoveBtn
     }
-    removeBtn.setOnClickListener {
+    removeBtn.setOnClickListener { btn ->
       launch(UI) {
         // Even though we have a model, fetch it from db to make sure there are no inconsistencies
         val dbModel = Static.database.storyById(model.storyId).await()
@@ -301,9 +292,9 @@ class StoryCardView : CardView {
         vm.hideStory(model)
         // We need this because otherwise the screen gets out of sync with the data
         vm.notifyChanged()
-        undoableAction(it, R.string.removed_story, { vm.undoHideStory(model) }) {
-          deleteLocalStory(it.context, model.storyId).join()
-          it.context.database.useAsync {
+        undoableAction(btn, R.string.removed_story, { vm.undoHideStory(model) }) {
+          deleteLocalStory(btn.context, model.storyId).join()
+          btn.context.database.useAsync {
             val currentResume = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
             if (currentResume == model.storyId) Prefs.useImmediate {
               it.remove(Prefs.RESUME_STORY_ID)
@@ -398,12 +389,12 @@ open class StoryListViewModel :
     storyCount.it = UNINITIALIZED
     filteredCount.it = UNINITIALIZED
     dataSize.it = Pair(UNINITIALIZED, UNINITIALIZED)
-    dataSize.addSource(storyCount, {
+    dataSize.addSource(storyCount) {
       dataSize.it = Pair(it!!, dataSize.it.second)
-    })
-    dataSize.addSource(filteredCount, {
+    }
+    dataSize.addSource(filteredCount) {
       dataSize.it = Pair(dataSize.it.first, it!!)
-    })
+    }
   }
 
   /** Get the [StoryListItem] at the given index. */
@@ -547,9 +538,9 @@ open class StoryListViewModel :
     }
     clearData()
     val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
-    groupStories(toData, arrangement.groupStrategy).await().toSortedMap().forEach {
-      val ordered = orderStories(it.value, arrangement.orderStrategy, arrangement.orderDirection)
-      addItems(listOf(GroupTitle(it.key), *ordered.map { StoryCardData(it) }.toTypedArray()))
+    groupStories(toData, arrangement.groupStrategy).await().toSortedMap().forEach { e ->
+      val ordered = orderStories(e.value, arrangement.orderStrategy, arrangement.orderDirection)
+      addItems(listOf(GroupTitle(e.key), *ordered.map { StoryCardData(it) }.toTypedArray()))
     }
     filteredCount.it = storiesNotPending.size - toData.size
     storyCount.it = storiesNotPending.size
