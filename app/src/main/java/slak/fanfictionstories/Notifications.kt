@@ -94,7 +94,6 @@ object Notifications {
   }
 
   init {
-    @SuppressLint("NewAPI")
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       val channel = NotificationChannel(
           DOWNLOAD_CHANNEL,
