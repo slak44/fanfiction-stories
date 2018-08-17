@@ -58,7 +58,7 @@ class StoryListActivity :
       toolbar.subtitle = str(R.string.x_stories_y_filtered, it.first, it.second)
     }
     viewModel.getStoryCount().observe(this) {
-      if (it == 0) nothingHere.visibility = View.VISIBLE
+      if (it == 0 && !viewModel.hasPending()) nothingHere.visibility = View.VISIBLE
       else nothingHere.visibility = View.GONE
     }
     storyListView.adapter = StoryAdapter(viewModel)

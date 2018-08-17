@@ -7,6 +7,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PorterDuff
 import android.os.Parcelable
 import android.support.annotation.AnyThread
 import android.support.annotation.UiThread
@@ -317,7 +318,9 @@ sealed class StoryListItem : Parcelable {
 
   /** The title for a story group in a list of stories. */
   @Parcelize
-  data class GroupTitle(val title: String) : StoryListItem()
+  data class GroupTitle(val title: String,
+                        var isCollapsed: Boolean = false,
+                        var collapsedModels: List<StoryModel> = emptyList()) : StoryListItem()
 
   /** A loading bar in a list of stories. */
   @Parcelize
@@ -489,10 +492,16 @@ open class StoryListViewModel :
   }
 
   /**
-   * Pending items are items that have been hidden with [hideStory], and can be reinstated using
-   * [undoHideStory]. This maps a [StoryModel] to its current adapter position.
+   * Pending items are items that have been hidden with [hideStory]/[hideStoryRange], and can be
+   * reinstated using [undoHideStory]. This maps a [StoryModel] to its current adapter position.
    */
   private val pendingItems = mutableMapOf<StoryModel, Int>()
+
+  /**
+   * Whether or not items have been hidden.
+   * @see pendingItems
+   */
+  fun hasPending(): Boolean = pendingItems.isNotEmpty()
 
   /**
    * Remove the story from the model, but keep track of its data.
@@ -512,10 +521,33 @@ open class StoryListViewModel :
   }
 
   /**
+   * Remove stories from the model, but keep track of their data.
+   * @param range which items to hide
+   * @see pendingItems
+   * @see undoHideStory
+   */
+  @UiThread
+  fun hideStoryRange(range: IntRange) {
+    if (range.first < 0 || range.first >= size || range.first > range.last || range.last > size)
+      throw IllegalArgumentException("Illegal range for list")
+    if (subList(range.first, range.last).any { it !is StoryCardData })
+      throw IllegalArgumentException("Range contains non-stories")
+    Log.v(TAG, "hideStoryRange: range=$range")
+    subList(range.first, range.last).forEachIndexed { idx, it ->
+      pendingItems[(it as StoryCardData).model] = range.first + idx
+    }
+    val toRemove = subList(range.first, range.last).toList()
+    data.removeAll(toRemove)
+    notifyItemRangeRemoved(range.first, toRemove.size)
+    storyCount.it -= toRemove.size
+  }
+
+  /**
    * Reverses the effects of [hideStory].
    * @param model a model that was previously passed to [hideStory]
    * @see pendingItems
    * @see hideStory
+   * @see hideStoryRange
    */
   @UiThread
   fun undoHideStory(model: StoryModel) {
@@ -574,10 +606,37 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
         view.bindRemoveBtn(item.model, viewModel.opt())
       }
       is GroupTitle -> {
+        fun setDrawable(textView: TextView) {
+          val drawableId =
+              if (item.isCollapsed) R.drawable.ic_keyboard_arrow_up_black_24dp
+              else R.drawable.ic_keyboard_arrow_down_black_24dp
+          val drawable = Static.res.getDrawable(drawableId, textView.context.theme)
+          drawable.setColorFilter(textView.currentTextColor, PorterDuff.Mode.SRC_IN)
+          textView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
+        }
         val str = SpannableString(item.title)
         str.setSpan(UnderlineSpan(), 0, item.title.length, 0)
-        (holder as TitleViewHolder).view.text = str
-
+        val textView = (holder as TitleViewHolder).view
+        textView.text = str
+        setDrawable(textView)
+        textView.setOnClickListener { _ ->
+          if (item.isCollapsed) {
+            item.collapsedModels.forEach { viewModel.undoHideStory(it) }
+            item.isCollapsed = false
+            setDrawable(textView)
+            return@setOnClickListener
+          }
+          val headerPos = viewModel.indexOf(item)
+          if (headerPos < 0) throw IllegalStateException("GroupTitle not part of viewModel")
+          val nextItemPos =
+              viewModel.subList(headerPos + 1, viewModel.size).indexOfFirst { it !is StoryCardData }
+          val hideEnd = if (nextItemPos < 0) viewModel.size - 1 else headerPos + nextItemPos
+          val itemsToHide = viewModel.subList(headerPos + 1, hideEnd + 1).toList()
+          item.collapsedModels = itemsToHide.map { (it as StoryCardData).model }
+          viewModel.hideStoryRange(headerPos + 1..hideEnd + 1)
+          item.isCollapsed = true
+          setDrawable(textView)
+        }
       }
       is LoadingItem -> (holder as ProgressBarHolder).view.id = item.id
     }
