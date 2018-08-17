@@ -265,7 +265,7 @@ class AuthorActivity :
       viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
       launch(CommonPool) {
-        val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES).map {
+        val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES)!!.map {
           val model = Static.database.storyById(it.storyId).await()
               .orNull() ?: return@map it
           it.progress = model.progress

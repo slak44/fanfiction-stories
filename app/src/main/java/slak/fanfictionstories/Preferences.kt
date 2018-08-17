@@ -64,7 +64,7 @@ object Prefs {
       Arrangement(authorOrderStrategy, authorOrderDirection, authorGroupStrategy)
 
   fun textSize() = Static.defaultPrefs.getString(
-      str(R.string.key_option_size), str(R.string.option_size_default)).toFloat()
+      str(R.string.key_option_size), str(R.string.option_size_default))!!.toFloat()
 
   fun textColor(theme: Resources.Theme) = Static.defaultPrefs.getInt(
       str(R.string.key_option_color), Static.res.getColor(R.color.textDefault, theme))
@@ -117,7 +117,7 @@ object Prefs {
 
   fun autoUpdateMoment(): ZonedDateTime {
     val updateTime: String = Static.defaultPrefs.getString(
-        str(R.string.key_option_update_time), str(R.string.option_update_time_default))
+        str(R.string.key_option_update_time), str(R.string.option_update_time_default))!!
     val (hour, minute) = updateTime.split(":").map { it.toInt() }
     val now = ZonedDateTime.now(ZoneId.systemDefault())
     return ZonedDateTime.of(now.toLocalDate(), LocalTime.of(hour, minute), ZoneId.systemDefault())

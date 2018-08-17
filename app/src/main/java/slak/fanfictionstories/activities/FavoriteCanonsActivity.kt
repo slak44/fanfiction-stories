@@ -88,7 +88,7 @@ class FavoriteCanonsActivity : AppCompatActivity() {
   @UiThread
   private fun updateNoFavoritesText() {
     noFavoritesText.visibility =
-        if (canonListRecycler.adapter.itemCount == 0) View.VISIBLE
+        if (canonListRecycler.adapter!!.itemCount == 0) View.VISIBLE
         else View.GONE
   }
 

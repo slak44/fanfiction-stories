@@ -60,7 +60,7 @@ class FastTextView : View {
     }
 
     textPaint = Prefs.textPaint(theme)
-    staticLayout = StaticLayout.Builder.obtain(s, 0, s.length, textPaint, width).build()
+    staticLayout = StaticLayout.Builder.obtain(s, 0, s.length, textPaint!!, width).build()
 
     async2(UI) {
       this@FastTextView.layoutParams.height = staticLayout!!.height

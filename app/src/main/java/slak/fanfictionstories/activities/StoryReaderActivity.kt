@@ -107,7 +107,7 @@ class StoryReaderActivity : LoadingActivity() {
 
   override fun onRestoreInstanceState(savedInstanceState: Bundle) {
     super.onRestoreInstanceState(savedInstanceState)
-    model = savedInstanceState.getParcelable(RESTORE_STORY_MODEL)
+    model = savedInstanceState.getParcelable(RESTORE_STORY_MODEL)!!
     currentChapter = savedInstanceState.getLong(RESTORE_CURRENT_CHAPTER)
   }
 

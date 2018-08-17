@@ -246,7 +246,7 @@ fun autoSuffixNumber(value: Int): String = autoSuffixNumber(value.toLong())
 fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage: () -> Job) {
   recycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
     private val addPageLock = Mutex()
-    override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
       // We only want scroll downs
       if (dy <= 0) return
       val visibleItemCount = lm.childCount

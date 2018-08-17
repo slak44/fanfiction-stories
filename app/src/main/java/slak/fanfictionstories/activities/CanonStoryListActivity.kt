@@ -26,7 +26,7 @@ import slak.fanfictionstories.utility.*
 /** Stores the data required for a [CanonStoryListActivity]. */
 class CanonListViewModel : StoryListViewModel() {
   val parentLink: CategoryLink by lazy {
-    intent!!.extras.getParcelable<CategoryLink>(INTENT_LINK_DATA)
+    intent!!.extras!!.getParcelable<CategoryLink>(INTENT_LINK_DATA)
   }
   val filters = CanonFilters()
 

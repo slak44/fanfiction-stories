@@ -67,7 +67,7 @@ class MainActivity : ActivityWithStatic() {
     launch(UI) {
       resumeModel = database.storyById(storyId).await().orNull()
       storyContainer.visibility = View.VISIBLE
-      storyContainer.adapter.notifyItemChanged(0)
+      storyContainer.adapter!!.notifyItemChanged(0)
       resumeStoryText.text = str(R.string.resume_story)
     }
   }
