@@ -3,29 +3,14 @@ package slak.fanfictionstories
 import android.app.Application
 import android.util.Log
 import com.jakewharton.threetenabp.AndroidThreeTen
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.fetchers.*
-import slak.fanfictionstories.utility.ScheduleResult
 import slak.fanfictionstories.utility.Static
-import java.util.concurrent.TimeUnit
 
 /** Runs a whole bunch of static initializers in [onCreate]. */
 @Suppress("unused")
 class StoriesApplication : Application() {
   companion object {
     private const val TAG = "StoriesApplication"
-    fun scheduleInitUpdate(): Job = launch(CommonPool) {
-      val areJobsPending = Static.jobScheduler.allPendingJobs.size > 0
-      if (areJobsPending) return@launch
-      if (scheduleInitialUpdateJob() == ScheduleResult.FAILURE) {
-        Log.e(TAG, "Failed to schedule initial job")
-        delay(5, TimeUnit.MINUTES)
-        scheduleInitUpdate()
-      }
-    }
   }
 
   override fun onCreate() {
@@ -45,7 +30,7 @@ class StoriesApplication : Application() {
     canonListCache.deserialize()
     authorCache.deserialize()
     reviewCache.deserialize()
-    // Schedule initial update job if no update job exists
-    scheduleInitUpdate()
+    // Schedule first update job
+    scheduleUpdate()
   }
 }

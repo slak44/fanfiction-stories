@@ -5,7 +5,7 @@ import android.os.Bundle
 import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
 import kotlinx.android.synthetic.main.activity_settings.*
 import slak.fanfictionstories.R
-import slak.fanfictionstories.StoriesApplication
+import slak.fanfictionstories.scheduleUpdate
 import slak.fanfictionstories.utility.ActivityWithStatic
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.str
@@ -15,7 +15,7 @@ class SettingsActivity : ActivityWithStatic(), SharedPreferences.OnSharedPrefere
   override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
     if (key != str(R.string.key_option_update_time)) return
     Static.jobScheduler.cancelAll()
-    StoriesApplication.scheduleInitUpdate()
+    scheduleUpdate()
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {

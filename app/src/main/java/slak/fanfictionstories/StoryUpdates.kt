@@ -2,8 +2,7 @@ package slak.fanfictionstories
 
 /**
  * Updates can be forced via adb for testing:
- * Initial: `adb shell cmd jobscheduler run -f slak.fanfictionstories 909729`
- * Periodic: `adb shell cmd jobscheduler run -f slak.fanfictionstories 662035`
+ * `adb shell cmd jobscheduler run -f slak.fanfictionstories 909729`
  */
 
 import android.app.Service
@@ -17,6 +16,7 @@ import android.support.v4.app.NotificationCompat
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import org.threeten.bp.Duration
 import org.threeten.bp.ZoneId
@@ -26,40 +26,42 @@ import slak.fanfictionstories.fetchers.updateStory
 import slak.fanfictionstories.utility.*
 import java.util.concurrent.TimeUnit
 
-private const val UPDATE_INIT_DELAY_JOB_INFO_ID = 0xDE1A1
-private const val UPDATE_JOB_INFO_ID = 0xA1A13
+private const val TAG = "StoryUpdates"
+private const val UPDATE_JOB_INFO_ID = 0xDE1A1
 private val updateComponent = ComponentName(Static.currentCtx, UpdateService::class.java)
 
 /**
- * Schedule a job that waits until the specified update time, so it can do the update and launch the
- * periodic update job.
+ * Schedule a job that waits until the specified update time to run the update and schedule the next
+ * update job. The update has a +-30 minute window to complete.
  */
-fun scheduleInitialUpdateJob(): ScheduleResult {
+private fun scheduleUpdateJob(initTarget: ZonedDateTime): ScheduleResult {
   val now = ZonedDateTime.now(ZoneId.systemDefault())
-  val target = Prefs.autoUpdateMoment()
-  // If it's negative, we're past that moment today, so schedule it for tomorrow
-  if (Duration.between(now, target).isNegative) target.plusDays(1)
-  val builder = JobInfo.Builder(UPDATE_INIT_DELAY_JOB_INFO_ID, updateComponent)
-      .setMinimumLatency(Duration.between(now, target).toMillis())
-      .setOverrideDeadline(Duration.between(now, target).toMillis() + 1)
+  // If we're past the target today, schedule it for tomorrow
+  val target =
+      if (now.isAfter(initTarget)) initTarget.plusDays(1)
+      else initTarget
+  val timeUntilUpdate = Duration.between(now, target)
+  val lowerBound = timeUntilUpdate.minusMinutes(30)
+  val upperBound = timeUntilUpdate.plusMinutes(30)
+  val builder = JobInfo.Builder(UPDATE_JOB_INFO_ID, updateComponent)
+      .setMinimumLatency(lowerBound.toMillis())
+      .setOverrideDeadline(upperBound.toMillis())
       .setBackoffCriteria(1000, BackoffPolicy.LINEAR)
       .setRequiredNetworkType(Prefs.autoUpdateReqNetType())
       .setPersisted(true)
+  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) builder.setRequiresBatteryNotLow(true)
   return ScheduleResult.from(Static.jobScheduler.schedule(builder.build()))
 }
 
-/** Schedule the periodic update job. */
-fun schedulePeriodicUpdateJob(): ScheduleResult {
-  val builder = JobInfo.Builder(UPDATE_JOB_INFO_ID, updateComponent)
-      .setPeriodic(TimeUnit.DAYS.toMillis(1), TimeUnit.MINUTES.toMillis(100))
-      .setBackoffCriteria(1000, BackoffPolicy.LINEAR)
-      .setRequiredNetworkType(Prefs.autoUpdateReqNetType())
-      .setPersisted(true)
-
-  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-    builder.setRequiresBatteryNotLow(true)
+/** Schedule update job if one doesn't exists. */
+fun scheduleUpdate(): Job = launch(CommonPool) {
+  val areJobsPending = Static.jobScheduler.allPendingJobs.size > 0
+  if (areJobsPending) return@launch
+  if (scheduleUpdateJob(Prefs.autoUpdateMoment()) == ScheduleResult.FAILURE) {
+    Log.e(TAG, "Failed to schedule initial job")
+    delay(5, TimeUnit.MINUTES)
+    scheduleUpdate()
   }
-  return ScheduleResult.from(Static.jobScheduler.schedule(builder.build()))
 }
 
 /** The service invoked periodically to update the local stories. */
@@ -75,11 +77,6 @@ class UpdateService : JobService() {
   private var coroutineJob: Job? = null
 
   override fun onStartJob(params: JobParameters): Boolean {
-    if (params.jobId == UPDATE_INIT_DELAY_JOB_INFO_ID) {
-      if (schedulePeriodicUpdateJob() == ScheduleResult.FAILURE) {
-        Log.e(TAG, "Failed to schedule repeating job")
-      }
-    }
     Log.i(TAG, "Update job started")
     coroutineJob = launch(CommonPool) {
       val storyModels = applicationContext.database.getLocalStories().await()
@@ -98,6 +95,7 @@ class UpdateService : JobService() {
       }
       Notifications.UPDATING.cancel()
       Notifications.updatedStories(updatedStories)
+      scheduleUpdateJob(Prefs.autoUpdateMoment().plusDays(1))
       jobFinished(params, false)
     }
     return true
