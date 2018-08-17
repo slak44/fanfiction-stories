@@ -81,16 +81,10 @@ private const val NET_TAG = "waitForNetwork"
 fun waitForNetwork() = async2(CommonPool) {
   while (true) {
     val activeNetwork = Static.cm.activeNetworkInfo
-    // FIXME figure out network status even when app is not focused
-    if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting) {
+    if (activeNetwork == null || !activeNetwork.isConnected) {
       // No connection; wait
       Notifications.NETWORK.show(defaultIntent(), R.string.waiting_for_connection)
       Log.w(NET_TAG, "No connection")
-      delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
-    } else if (activeNetwork.isConnecting()) {
-      // We're connecting; wait
-      Notifications.NETWORK.show(defaultIntent(), R.string.connecting)
-      Log.i(NET_TAG, "Connecting...")
       delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
     } else {
       // We're connected!
@@ -100,9 +94,6 @@ fun waitForNetwork() = async2(CommonPool) {
     }
   }
 }
-
-/** Shorthand for `isConnectedOrConnecting && !isConnected`. */
-fun NetworkInfo.isConnecting() = isConnectedOrConnecting && !isConnected
 
 private const val RATE_LIMIT_MS = 300L
 private const val URL_TAG = "patientlyFetchURL"
