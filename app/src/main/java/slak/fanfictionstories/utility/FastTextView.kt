@@ -17,14 +17,12 @@ import slak.fanfictionstories.Prefs
  * Like [android.widget.TextView], but with faster, asynchronous layout creation, meant for large
  * blocks of static text.
  */
-class FastTextView : View {
+class FastTextView @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
   companion object {
     private const val TAG = "FastTextView"
   }
-
-  constructor(ctx: Context) : super(ctx)
-  constructor(ctx: Context, set: AttributeSet) : super(ctx, set)
-  constructor(ctx: Context, set: AttributeSet, defStyle: Int) : super(ctx, set, defStyle)
 
   /**
    * This view's layout. Is null unless [setText] was called.

@@ -79,18 +79,10 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
  * corner.
  * @see StoryCardView
  */
-class MarkerButton : Button, View.OnClickListener {
-  constructor(context: Context) : super(context)
-  constructor(context: Context, set: AttributeSet) : super(context, set)
-  constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
-
-  fun bindMarker(storyId: StoryId, markerColor: Int) {
-    this.storyId = storyId
-    this.markerColor = markerColor
-  }
-
+class MarkerButton @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : Button(context, attrs, defStyleAttr), View.OnClickListener {
   private var storyId: StoryId = 0
-
   private var markerColor: Int = 0
     set(value) {
       field = value
@@ -102,6 +94,11 @@ class MarkerButton : Button, View.OnClickListener {
 
   init {
     super.setOnClickListener(this)
+  }
+
+  fun bindMarker(storyId: StoryId, markerColor: Int) {
+    this.storyId = storyId
+    this.markerColor = markerColor
   }
 
   override fun setOnClickListener(l: OnClickListener?) {} // Don't
@@ -164,11 +161,9 @@ class MarkerButton : Button, View.OnClickListener {
  * @see R.layout.component_story
  * @see StoryAdapter
  */
-class StoryCardView : CardView {
-  constructor(context: Context) : super(context)
-  constructor(context: Context, set: AttributeSet) : super(context, set)
-  constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
-
+class StoryCardView @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : CardView(context, attrs, defStyleAttr) {
   companion object {
     const val DEFAULT_ELEVATION = 7F
     const val CLICK_ELEVATION = 20F
@@ -372,6 +367,7 @@ sealed class StoryListItem : Parcelable {
       viewModel.hideStoryRange(headerPos + 1..hideEnd + 1)
       isCollapsed = true
     }
+
     fun uncollapse(viewModel: StoryListViewModel) {
       if (!isCollapsed) throw IllegalStateException("Trying to show already visible header")
       collapsedModels.forEach { viewModel.undoHideStory(it) }

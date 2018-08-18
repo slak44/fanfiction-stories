@@ -10,11 +10,9 @@ import slak.fanfictionstories.R
 
 /** Wrap [AutoSummaryEditTextPreference] due to bug. */
 @Suppress("unused")
-class AutoSummaryEditTextPreference : AutoSummaryEditTextPreference {
-  constructor(context: Context) : super(context)
-  constructor(context: Context, set: AttributeSet) : super(context, set)
-  constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
-
+class AutoSummaryEditTextPreference @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : AutoSummaryEditTextPreference(context, attrs, defStyleAttr) {
   init {
     widgetLayoutResource = R.layout.preference_widget_2line_text
     dialogLayoutResource = R.layout.preference_dialog_edit_text
@@ -30,11 +28,9 @@ class AutoSummaryEditTextPreference : AutoSummaryEditTextPreference {
 
 /** Wrap [EditTextPreference] due to bug. */
 @Suppress("unused")
-class EditTextPreference : EditTextPreference {
-  constructor(context: Context) : super(context)
-  constructor(context: Context, set: AttributeSet) : super(context, set)
-  constructor(context: Context, set: AttributeSet, defStyle: Int) : super(context, set, defStyle)
-
+class EditTextPreference @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : EditTextPreference(context, attrs, defStyleAttr) {
   init {
     widgetLayoutResource = R.layout.preference_widget_2line_text
     dialogLayoutResource = R.layout.preference_dialog_edit_text
