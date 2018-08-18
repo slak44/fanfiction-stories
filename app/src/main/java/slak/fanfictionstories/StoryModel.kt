@@ -322,10 +322,10 @@ fun groupByDialog(context: Context, defaultStrategy: GroupStrategy,
                   action: (GroupStrategy) -> Unit) {
   AlertDialog.Builder(context)
       .setTitle(R.string.group_by)
-      .setSingleChoiceItems(GroupStrategy.uiItems(), defaultStrategy.ordinal, { d, which ->
+      .setSingleChoiceItems(GroupStrategy.uiItems(), defaultStrategy.ordinal) { d, which ->
         d.dismiss()
         action(GroupStrategy[which])
-      }).show()
+      }.show()
 }
 
 /** Shows a dialog presenting [OrderStrategy] and [OrderDirection] choices for ordering. */
@@ -340,11 +340,11 @@ fun orderByDialog(context: Context,
   AlertDialog.Builder(context)
       .setTitle(R.string.sort_by)
       .setView(layout)
-      .setSingleChoiceItems(OrderStrategy.uiItems(), defaultStrategy.ordinal, { d, which ->
+      .setSingleChoiceItems(OrderStrategy.uiItems(), defaultStrategy.ordinal) { d, which ->
         d.dismiss()
         action(OrderStrategy[which],
             if (layout.reverseOrderSw.isChecked) OrderDirection.ASC else OrderDirection.DESC)
-      })
+      }
       .show()
 }
 

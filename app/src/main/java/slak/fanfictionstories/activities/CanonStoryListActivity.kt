@@ -178,8 +178,8 @@ class CanonStoryListActivity :
       genreWithout.ifPresent { layout.notGenre.setSelection(Genre.values().indexOf(it)) }
 
       with(viewModel.metadata) {
-        charList.ifPresent {
-          val charNameList = it.map { it.name }.toMutableList()
+        charList.ifPresent { list ->
+          val charNameList = list.map { it.name }.toMutableList()
           charNameList[0] = strAny
           layout.char1.setEntries(charNameList)
           layout.char2.setEntries(charNameList)
@@ -237,12 +237,12 @@ class CanonStoryListActivity :
     AlertDialog.Builder(this)
         .setTitle(R.string.filter_by)
         .setOnDismissListener { dialogOpened = false }
-        .setPositiveButton(R.string.native_filter_btn, { dialog, _ ->
+        .setPositiveButton(R.string.native_filter_btn) { dialog, _ ->
           viewModel.clearData()
           viewModel.resetPagination()
           triggerLoadUI()
           dialog.dismiss()
-        })
+        }
         .setView(layout)
         .show()
   }

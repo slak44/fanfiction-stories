@@ -145,12 +145,12 @@ class AuthorActivity :
         AlertDialog.Builder(this)
             .setTitle(R.string.favorite_authors)
             .setItems(
-                viewModel.author!!.favoriteAuthors.map { it.second }.toTypedArray(), { d, which ->
+                viewModel.author!!.favoriteAuthors.map { it.second }.toTypedArray()) { d, which ->
               d.dismiss()
               startActivity<AuthorActivity>(
                   INTENT_AUTHOR_NAME to viewModel.author!!.favoriteAuthors[which].second,
                   INTENT_AUTHOR_ID to viewModel.author!!.favoriteAuthors[which].first)
-            }).show()
+            }.show()
       }
       android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
@@ -252,7 +252,7 @@ class AuthorActivity :
           viewModel.arrangeStories(stories, Prefs.authorArrangement())
         }
       }
-      rootView.groupBy.setOnClickListener {
+      rootView.groupBy.setOnClickListener { _ ->
         groupByDialog(getContext()!!, Prefs.authorGroupStrategy) {
           Prefs.authorGroupStrategy = it
           viewModel.arrangeStories(stories, Prefs.authorArrangement())

@@ -23,6 +23,7 @@ typealias CacheMap<T> = ConcurrentHashMap<String, Pair<T, ExpirationEpoch>>
 class Cache<T : Serializable>(val name: String, val cacheTimeMs: Long) {
   private var cache = CacheMap<T>()
   private val cacheMapFile = File(Static.cacheDir, "$name.cached-map")
+  @Suppress("PrivatePropertyName")
   private val TAG = "Cache[$name]"
 
   /**

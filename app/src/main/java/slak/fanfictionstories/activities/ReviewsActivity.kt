@@ -146,13 +146,13 @@ class ReviewsActivity :
         ).toTypedArray()
         AlertDialog.Builder(this)
             .setTitle(R.string.select_chapter)
-            .setSingleChoiceItems(items, viewModel.chapter.value!! - 1, { dialog, which: Int ->
+            .setSingleChoiceItems(items, viewModel.chapter.value!! - 1) { dialog, which: Int ->
               dialog.dismiss()
               if (viewModel.chapter.value == which) return@setSingleChoiceItems
               viewModel.changeChapter(which)
               viewModel.loadPage()
               setSubtitle()
-            }).show()
+            }.show()
       }
       android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
@@ -214,9 +214,9 @@ class ReviewAdapter(
       AlertDialog.Builder(context)
           .setTitle(R.string.dialog_report_abuse)
           .setView(layout)
-          .setPositiveButton(R.string.report, { _, _ ->
+          .setPositiveButton(R.string.report) { _, _ ->
             // FIXME: send report
-          })
+          }
           .show()
     }
     forceLayout()
