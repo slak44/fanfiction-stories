@@ -20,6 +20,7 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.StoryListItem.GroupTitle
 import slak.fanfictionstories.StoryListItem.StoryCardData
+import slak.fanfictionstories.data.database
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
 

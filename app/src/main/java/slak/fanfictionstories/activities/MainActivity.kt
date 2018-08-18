@@ -10,6 +10,7 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.*
+import slak.fanfictionstories.data.database
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.ActivityWithStatic
 import slak.fanfictionstories.utility.Empty

@@ -9,7 +9,7 @@ import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categoryUrl
-import slak.fanfictionstories.utility.Cache
+import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.patientlyFetchURL
 import slak.fanfictionstories.utility.str

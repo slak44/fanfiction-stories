@@ -1,8 +1,9 @@
-package slak.fanfictionstories.utility
+package slak.fanfictionstories.data
 
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
+import slak.fanfictionstories.utility.*
 import java.io.*
 import java.util.concurrent.ConcurrentHashMap
 

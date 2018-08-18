@@ -3,6 +3,7 @@ package slak.fanfictionstories
 import android.database.Observable
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
+import slak.fanfictionstories.data.database
 import slak.fanfictionstories.utility.Static
 import java.util.concurrent.LinkedBlockingQueue
 

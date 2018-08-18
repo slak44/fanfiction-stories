@@ -16,7 +16,7 @@ import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
 import slak.fanfictionstories.fetchers.FetcherUtils.unescape
-import slak.fanfictionstories.utility.Cache
+import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.patientlyFetchURL
 import java.util.concurrent.TimeUnit

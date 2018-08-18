@@ -20,6 +20,7 @@ import org.jetbrains.anko.db.select
 import org.jetbrains.anko.db.update
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.activities.MainActivity
+import slak.fanfictionstories.data.database
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.fetchers.fetchStoryModel
 import slak.fanfictionstories.utility.Empty

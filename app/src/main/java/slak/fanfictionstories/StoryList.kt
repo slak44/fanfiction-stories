@@ -35,6 +35,8 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
+import slak.fanfictionstories.data.database
+import slak.fanfictionstories.data.useAsync
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Optional

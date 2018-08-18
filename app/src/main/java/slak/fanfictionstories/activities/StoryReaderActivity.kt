@@ -25,6 +25,8 @@ import org.jetbrains.anko.db.select
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
+import slak.fanfictionstories.data.database
+import slak.fanfictionstories.data.useAsync
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.fetchers.extractChapterText
 import slak.fanfictionstories.fetchers.fetchAndWriteStory

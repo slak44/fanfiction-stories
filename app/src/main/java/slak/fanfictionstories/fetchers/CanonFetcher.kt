@@ -8,6 +8,7 @@ import kotlinx.coroutines.experimental.Deferred
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
+import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata

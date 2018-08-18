@@ -12,7 +12,7 @@ import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
-import slak.fanfictionstories.utility.Cache
+import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.patientlyFetchURL
 import slak.fanfictionstories.utility.str

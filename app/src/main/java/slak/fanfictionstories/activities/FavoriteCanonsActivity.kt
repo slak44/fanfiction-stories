@@ -17,7 +17,7 @@ import kotlinx.android.synthetic.main.component_favorite_canon.view.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
-import slak.fanfictionstories.database
+import slak.fanfictionstories.data.database
 import slak.fanfictionstories.fetchers.CategoryLink
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.startActivity
