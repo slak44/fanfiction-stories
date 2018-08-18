@@ -309,22 +309,81 @@ class StoryCardView : CardView {
   }
 }
 
+/** A pretty [TextView] that shows the title for a group. For use with [GroupTitle]. */
+class GroupTitleView @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : TextView(context, attrs, defStyleAttr) {
+  init {
+    val lp = ViewGroup.MarginLayoutParams(
+        ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    lp.setMargins(0, 0, 0, Static.res.px(R.dimen.list_separator_height))
+    layoutParams = lp
+    setTextAppearance(android.R.style.TextAppearance_Material_Medium)
+  }
+
+  /** Bind this view to its respective [GroupTitle]. */
+  fun bindGroupTitle(item: GroupTitle, viewModel: StoryListViewModel) {
+    setDrawable(item.isCollapsed)
+    setOnClickListener { _ ->
+      if (item.isCollapsed) item.uncollapse(viewModel)
+      else item.collapse(viewModel)
+      setDrawable(item.isCollapsed)
+    }
+  }
+
+  /** Show a drawable with the correct collapse status. */
+  fun setDrawable(isCollapsed: Boolean) {
+    val drawableId =
+        if (isCollapsed) R.drawable.ic_keyboard_arrow_up_black_24dp
+        else R.drawable.ic_keyboard_arrow_down_black_24dp
+    val drawable = Static.res.getDrawable(drawableId, context.theme)
+    drawable.setColorFilter(currentTextColor, PorterDuff.Mode.SRC_IN)
+    setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
+  }
+}
+
 /** An abstract item in a list of stories. */
 sealed class StoryListItem : Parcelable {
+  abstract val id: Long
+
   /** The data for an actual story in a list of stories. */
   @Parcelize
   data class StoryCardData(var model: StoryModel,
-                           var isExtended: Boolean = false) : StoryListItem()
+                           var isExtended: Boolean = false) : StoryListItem() {
+    override val id get() = model.storyId + (1 shl 15)
+  }
 
   /** The title for a story group in a list of stories. */
   @Parcelize
   data class GroupTitle(val title: String,
                         var isCollapsed: Boolean = false,
-                        var collapsedModels: List<StoryModel> = emptyList()) : StoryListItem()
+                        var collapsedModels: List<StoryModel> = emptyList()) : StoryListItem() {
+    override val id get() = title.hashCode().toLong() + (2 shl 15)
+
+    fun collapse(viewModel: StoryListViewModel) {
+      if (isCollapsed) throw IllegalStateException("Trying to collapse already collapsed header")
+      val headerPos = viewModel.indexOf(this)
+      if (headerPos < 0) throw IllegalStateException("GroupTitle not part of viewModel")
+      val nextItemPos =
+          viewModel.subList(headerPos + 1, viewModel.size).indexOfFirst { it !is StoryCardData }
+      val hideEnd = if (nextItemPos < 0) viewModel.size - 1 else headerPos + nextItemPos
+      val itemsToHide = viewModel.subList(headerPos + 1, hideEnd + 1).toList()
+      collapsedModels = itemsToHide.map { (it as StoryCardData).model }
+      viewModel.hideStoryRange(headerPos + 1..hideEnd + 1)
+      isCollapsed = true
+    }
+    fun uncollapse(viewModel: StoryListViewModel) {
+      if (!isCollapsed) throw IllegalStateException("Trying to show already visible header")
+      collapsedModels.forEach { viewModel.undoHideStory(it) }
+      isCollapsed = false
+    }
+  }
 
   /** A loading bar in a list of stories. */
   @Parcelize
-  data class LoadingItem(val id: Int = ++counter) : StoryListItem()
+  data class LoadingItem(val idx: Int = ++counter) : StoryListItem() {
+    override val id get() = idx.toLong() + (3 shl 15)
+  }
 
   companion object {
     private var counter: Int = 0xF000000
@@ -580,7 +639,7 @@ open class StoryListViewModel :
 }
 
 class StoryViewHolder(val view: StoryCardView) : RecyclerView.ViewHolder(view)
-class TitleViewHolder(val view: TextView) : RecyclerView.ViewHolder(view)
+class TitleViewHolder(val view: GroupTitleView) : RecyclerView.ViewHolder(view)
 class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
 
 /** Adapts [StoryListItem]s to views for a [RecyclerView]. */
@@ -606,69 +665,27 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
         view.bindRemoveBtn(item.model, viewModel.opt())
       }
       is GroupTitle -> {
-        fun setDrawable(textView: TextView) {
-          val drawableId =
-              if (item.isCollapsed) R.drawable.ic_keyboard_arrow_up_black_24dp
-              else R.drawable.ic_keyboard_arrow_down_black_24dp
-          val drawable = Static.res.getDrawable(drawableId, textView.context.theme)
-          drawable.setColorFilter(textView.currentTextColor, PorterDuff.Mode.SRC_IN)
-          textView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
-        }
         val str = SpannableString(item.title)
         str.setSpan(UnderlineSpan(), 0, item.title.length, 0)
-        val textView = (holder as TitleViewHolder).view
-        textView.text = str
-        setDrawable(textView)
-        textView.setOnClickListener { _ ->
-          if (item.isCollapsed) {
-            item.collapsedModels.forEach { viewModel.undoHideStory(it) }
-            item.isCollapsed = false
-            setDrawable(textView)
-            return@setOnClickListener
-          }
-          val headerPos = viewModel.indexOf(item)
-          if (headerPos < 0) throw IllegalStateException("GroupTitle not part of viewModel")
-          val nextItemPos =
-              viewModel.subList(headerPos + 1, viewModel.size).indexOfFirst { it !is StoryCardData }
-          val hideEnd = if (nextItemPos < 0) viewModel.size - 1 else headerPos + nextItemPos
-          val itemsToHide = viewModel.subList(headerPos + 1, hideEnd + 1).toList()
-          item.collapsedModels = itemsToHide.map { (it as StoryCardData).model }
-          viewModel.hideStoryRange(headerPos + 1..hideEnd + 1)
-          item.isCollapsed = true
-          setDrawable(textView)
-        }
+        val titleView = (holder as TitleViewHolder).view
+        titleView.text = str
+        titleView.bindGroupTitle(item, viewModel)
       }
-      is LoadingItem -> (holder as ProgressBarHolder).view.id = item.id
+      is LoadingItem -> (holder as ProgressBarHolder).view.id = item.idx
     }
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
     0 -> StoryViewHolder(LayoutInflater.from(parent.context)
         .inflate(R.layout.component_story, parent, false) as StoryCardView)
-    1 -> {
-      val textView = TextView(parent.context)
-      textView.setTextAppearance(android.R.style.TextAppearance_Material_Medium)
-      val lp = ViewGroup.MarginLayoutParams(
-          ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-      lp.setMargins(0, 0, 0, Static.res.px(R.dimen.list_separator_height))
-      textView.layoutParams = lp
-      TitleViewHolder(textView)
-    }
+    1 -> TitleViewHolder(GroupTitleView(parent.context))
     2 -> ProgressBarHolder(LayoutInflater.from(parent.context)
         .inflate(R.layout.loading_circle_indeterminate, parent, false) as ProgressBar)
     else -> throw IllegalStateException("getItemViewType out of sync with onCreateViewHolder")
   }
 
   override fun getItemCount(): Int = viewModel.size
-  override fun getItemId(position: Int): Long {
-    val item = viewModel[position]
-    return when (item) {
-      is StoryCardData -> item.model.storyId + (1 shl 15)
-      is GroupTitle -> item.title.hashCode().toLong() + (2 shl 15)
-      is LoadingItem -> item.id.toLong() + (3 shl 15)
-    }
-  }
-
+  override fun getItemId(position: Int): Long = viewModel[position].id
   override fun getItemViewType(position: Int): Int = when (viewModel[position]) {
     is StoryCardData -> 0
     is GroupTitle -> 1

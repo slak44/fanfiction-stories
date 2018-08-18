@@ -80,7 +80,7 @@ class StoryListActivity :
     AlertDialog.Builder(this)
         .setTitle(R.string.story_by_id_title)
         .setView(R.layout.dialog_add_story_view)
-        .setPositiveButton(R.string.add, { dialog, _ ->
+        .setPositiveButton(R.string.add) { dialog, _ ->
           val editText = (dialog as AlertDialog).findViewById<EditText>(R.id.dialogStoryId)!!
           val idText = editText.text.toString()
           val list = idText.split(",").map {
@@ -97,7 +97,7 @@ class StoryListActivity :
             val modelsFetched = models.count { it !is Empty }
             if (modelsFetched > 0) viewModel.triggerDatabaseLoad()
           }
-        })
+        }
         .show()
   }
 
@@ -140,9 +140,9 @@ class StoryListActivity :
     }
     AlertDialog.Builder(this)
         .setTitle(R.string.jump_to)
-        .setItems(items.map { it.second }.toTypedArray(), { _, which ->
+        .setItems(items.map { it.second }.toTypedArray()) { _, which ->
           layoutManager.scrollToPositionWithOffset(items[which].first, 0)
-        })
+        }
         .show()
   }
 
@@ -177,6 +177,16 @@ class StoryListActivity :
         }
       }
       R.id.jumpTo -> jumpToDialog()
+      R.id.collapseAll -> {
+        viewModel.filter { it is StoryListItem.GroupTitle && !it.isCollapsed }.forEach {
+          it as StoryListItem.GroupTitle
+          it.collapse(viewModel)
+          val vh = storyListView.findViewHolderForItemId(it.id)
+          val titleView = vh?.itemView ?: return@forEach
+          titleView as GroupTitleView
+          titleView.setDrawable(it.isCollapsed)
+        }
+      }
       R.id.addById -> addByIdDialog()
       R.id.statistics -> statisticsDialog()
       android.R.id.home -> onBackPressed()

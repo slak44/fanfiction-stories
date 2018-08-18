@@ -27,6 +27,11 @@
         android:visible="true"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/collapseAll"
+        android:title="@string/collapse_all"
+        android:visible="true"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/addById"
         android:title="@string/add_by_ffid"
         app:showAsAction="never"/>
