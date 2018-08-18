@@ -8,7 +8,6 @@ import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
-import android.net.NetworkInfo
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.annotation.StringRes
@@ -34,9 +33,6 @@ import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.R
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintWriter
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit

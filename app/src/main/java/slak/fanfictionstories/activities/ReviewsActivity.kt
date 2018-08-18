@@ -10,8 +10,8 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
 import kotlinx.android.synthetic.main.activity_reviews.*
-import kotlinx.android.synthetic.main.dialog_report_review.view.*
 import kotlinx.android.synthetic.main.component_review.view.*
+import kotlinx.android.synthetic.main.dialog_report_review.view.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.Prefs

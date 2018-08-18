@@ -34,6 +34,7 @@ class MainActivity : ActivityWithStatic() {
     favoriteCanonsBtn.setOnClickListener { startActivity<FavoriteCanonsActivity>() }
 
     // Using a RecyclerView is a massive hack so we don't reimplement createStorySwipeHelper()
+    // START HACK
     storyContainer.layoutManager = object : LinearLayoutManager(this) {
       // The entire layout is also wrapped in a [ScrollView] so we don't care about overflow
       override fun canScrollVertically(): Boolean = false
@@ -52,6 +53,7 @@ class MainActivity : ActivityWithStatic() {
       }
     }
     storyContainer.createStorySwipeHelper()
+    // END HACK
 
     if (BuildConfig.DEBUG) injectDebugButtons(this)
   }
