@@ -10,7 +10,7 @@ import android.net.ConnectivityManager
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
-import slak.fanfictionstories.Prefs
+import slak.fanfictionstories.data.Prefs
 import java.io.File
 
 // We don't leak anything here; the 2 static fields stored here are kept always up to date

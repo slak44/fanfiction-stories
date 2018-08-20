@@ -20,6 +20,7 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.StoryListItem.GroupTitle
 import slak.fanfictionstories.StoryListItem.StoryCardData
+import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.*
@@ -87,7 +88,7 @@ class CanonStoryListActivity :
       viewModel.addDeferredItems(viewModel.getNextPage())
     }
 
-    if (Prefs.filterLanguage()) viewModel.filters.lang = Prefs.preferredLanguage()
+    if (Prefs.filterLanguage()) viewModel.filters.lang = Prefs.preferredLanguage
 
     setAppbarText()
 
@@ -165,7 +166,7 @@ class CanonStoryListActivity :
       layout.notGenre.onSelect { _, pos -> genreWithout = Genre.values()[pos].opt() }
       layout.language.onSelect { _, pos ->
         lang = Language.values()[pos]
-        Prefs.use { it.putInt(Prefs.REMEMBER_LANG_ID, pos) }
+        Prefs.preferredLanguage = lang
       }
 
       layout.sort.setSelection(Sort.values().indexOf(sort))

@@ -10,11 +10,11 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.*
+import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.fetchers.*
 import slak.fanfictionstories.utility.ActivityWithStatic
 import slak.fanfictionstories.utility.Empty
-import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.str
 
 /** The main menu. Allows navigation to other sections of the app. */
@@ -61,14 +61,13 @@ class MainActivity : ActivityWithStatic() {
 
   override fun onResume() {
     super.onResume()
-    val storyId = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
-    if (storyId == -1L) {
+    if (Prefs.resumeStoryId == Prefs.NO_RESUME_STORY) {
       storyContainer.visibility = View.GONE
       resumeStoryText.text = str(R.string.nothing_to_resume)
       return
     }
     launch(UI) {
-      resumeModel = database.storyById(storyId).await().orNull()
+      resumeModel = database.storyById(Prefs.resumeStoryId).await().orNull()
       storyContainer.visibility = View.VISIBLE
       storyContainer.adapter!!.notifyItemChanged(0)
       resumeStoryText.text = str(R.string.resume_story)

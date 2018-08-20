@@ -35,6 +35,7 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
+import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.deleteStory
 import slak.fanfictionstories.data.useAsync
@@ -294,10 +295,7 @@ class StoryCardView @JvmOverloads constructor(
         undoableAction(btn, R.string.removed_story, { vm.undoHideStory(model) }) {
           deleteStory(model.storyId).join()
           btn.context.database.useAsync {
-            val currentResume = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
-            if (currentResume == model.storyId) Prefs.useImmediate {
-              it.remove(Prefs.RESUME_STORY_ID)
-            }
+            if (Prefs.resumeStoryId == model.storyId) Prefs.resumeStoryId = Prefs.NO_RESUME_STORY
             delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
             StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.Removed)
           }.await()

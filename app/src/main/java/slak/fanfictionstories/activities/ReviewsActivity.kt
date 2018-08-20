@@ -14,7 +14,7 @@ import kotlinx.android.synthetic.main.component_review.view.*
 import kotlinx.android.synthetic.main.dialog_report_review.view.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import slak.fanfictionstories.Prefs
+import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.fetchers.NO_PAGES

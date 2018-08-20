@@ -22,6 +22,7 @@ import org.threeten.bp.Duration
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
+import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.fetchers.updateStory
 import slak.fanfictionstories.utility.*

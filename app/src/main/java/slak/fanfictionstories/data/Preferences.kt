@@ -1,4 +1,4 @@
-package slak.fanfictionstories
+package slak.fanfictionstories.data
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
@@ -10,6 +10,7 @@ import android.util.TypedValue
 import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
+import slak.fanfictionstories.*
 import slak.fanfictionstories.fetchers.Language
 import slak.fanfictionstories.utility.NetworkType
 import slak.fanfictionstories.utility.Static
@@ -24,14 +25,12 @@ object Prefs {
 
   const val PREFS_FILE = "slak.fanfictionstories.SHARED_PREFERENCES"
 
-  const val RESUME_STORY_ID = "resume_story_id"
-  const val REMEMBER_LANG_ID = "remember_lang_id"
-  const val LIST_GROUP_STRATEGY = "list_group_strategy"
-  const val LIST_ORDER_STRATEGY = "list_order_strategy"
-  const val LIST_ORDER_IS_REVERSE = "list_order_strategy_rev"
-  const val AUTHOR_LIST_GROUP_STRATEGY = "author_list_group_strategy"
-  const val AUTHOR_LIST_ORDER_STRATEGY = "author_list_order_strategy"
-  const val AUTHOR_LIST_ORDER_IS_REVERSE = "author_list_order_strategy_rev"
+  private const val LIST_ORDER_IS_REVERSE = "list_order_strategy_rev"
+  private const val LIST_GROUP_STRATEGY = "list_group_strategy"
+  private const val LIST_ORDER_STRATEGY = "list_order_strategy"
+  private const val AUTHOR_LIST_GROUP_STRATEGY = "author_list_group_strategy"
+  private const val AUTHOR_LIST_ORDER_STRATEGY = "author_list_order_strategy"
+  private const val AUTHOR_LIST_ORDER_IS_REVERSE = "author_list_order_strategy_rev"
 
   var storyListGroupStrategy
     get() = GroupStrategy[Static.prefs.getInt(LIST_GROUP_STRATEGY, GroupStrategy.NONE.ordinal)]
@@ -63,16 +62,27 @@ object Prefs {
   fun authorArrangement() =
       Arrangement(authorOrderStrategy, authorOrderDirection, authorGroupStrategy)
 
+  private const val RESUME_STORY_ID = "resume_story_id"
+  const val NO_RESUME_STORY = -3954L
+  var resumeStoryId: StoryId
+    get() = Static.prefs.getLong(Prefs.RESUME_STORY_ID, NO_RESUME_STORY)
+    set(new) = use { it.putLong(Prefs.RESUME_STORY_ID, new) }
+
+  private const val REMEMBER_LANG_ID = "remember_lang_id"
+  var preferredLanguage: Language
+    get() = Language.values()[Static.prefs.getInt(REMEMBER_LANG_ID, Language.ALL.ordinal)]
+    set(new) = use { it.putInt(REMEMBER_LANG_ID, new.ordinal) }
+
   fun textSize() = Static.defaultPrefs.getString(
       str(R.string.key_option_size), str(R.string.option_size_default))!!.toFloat()
 
   fun textColor(theme: Resources.Theme) = Static.defaultPrefs.getInt(
       str(R.string.key_option_color), Static.res.getColor(R.color.textDefault, theme))
 
-  fun textFontName() = Static.defaultPrefs.getString(
-      str(R.string.key_option_font), str(R.string.option_font_default))
+  fun textFontName(): String = Static.defaultPrefs.getString(
+      str(R.string.key_option_font), str(R.string.option_font_default))!!
 
-  fun textFont() = Typeface.create(textFontName(), Typeface.NORMAL)
+  fun textFont(): Typeface = Typeface.create(textFontName(), Typeface.NORMAL)
 
   fun textAntiAlias() = Static.defaultPrefs.getBoolean(
       str(R.string.key_option_antialias), str(R.string.option_antialias_default).toBoolean())
@@ -126,11 +136,8 @@ object Prefs {
   fun filterLanguage() = Static.defaultPrefs.getBoolean(str(R.string.key_option_lang_mem),
       str(R.string.option_lang_mem_default).toBoolean())
 
-  fun preferredLanguage(): Language =
-      Language.values()[Static.prefs.getInt(REMEMBER_LANG_ID, Language.ALL.ordinal)]
-
-  fun locale() = Static.defaultPrefs.getString(
-      str(R.string.key_option_locale), str(R.string.option_locale_default))
+  fun locale(): String = Static.defaultPrefs.getString(
+      str(R.string.key_option_locale), str(R.string.option_locale_default))!!
 
   val simpleDateFormatter: DateFormat
     get() {

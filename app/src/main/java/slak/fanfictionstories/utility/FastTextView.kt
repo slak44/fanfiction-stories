@@ -11,7 +11,7 @@ import android.util.Log
 import android.view.View
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
-import slak.fanfictionstories.Prefs
+import slak.fanfictionstories.data.Prefs
 
 /**
  * Like [android.widget.TextView], but with faster, asynchronous layout creation, meant for large

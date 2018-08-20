@@ -67,7 +67,7 @@ class StoryReaderActivity : LoadingActivity() {
 
     // Save story for the resume button
     // Even for transient stories, because entering the reader means the story became remote
-    Prefs.use { it.putLong(Prefs.RESUME_STORY_ID, model.storyId) }
+    Prefs.resumeStoryId = model.storyId
 
     // Long titles require _even more_ space than CollapsibleToolbar already gives
     // The 35 character limit is completely arbitrary
