@@ -22,8 +22,8 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
-import slak.fanfictionstories.fetchers.Author
-import slak.fanfictionstories.fetchers.getAuthor
+import slak.fanfictionstories.data.fetchers.Author
+import slak.fanfictionstories.data.fetchers.getAuthor
 import slak.fanfictionstories.utility.*
 import java.util.*
 

@@ -1,4 +1,4 @@
-package slak.fanfictionstories.fetchers
+package slak.fanfictionstories.data.fetchers
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
@@ -13,9 +13,9 @@ import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.StoryProgress
 import slak.fanfictionstories.StoryStatus
-import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
-import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
-import slak.fanfictionstories.fetchers.FetcherUtils.unescape
+import slak.fanfictionstories.data.fetchers.FetcherUtils.authorIdFromAuthor
+import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryMetadata
+import slak.fanfictionstories.data.fetchers.FetcherUtils.unescape
 import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.patientlyFetchURL

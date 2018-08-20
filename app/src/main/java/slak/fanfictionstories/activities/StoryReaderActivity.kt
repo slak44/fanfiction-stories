@@ -25,11 +25,11 @@ import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.data.*
-import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
-import slak.fanfictionstories.fetchers.extractChapterText
-import slak.fanfictionstories.fetchers.fetchAndWriteStory
-import slak.fanfictionstories.fetchers.fetchChapter
-import slak.fanfictionstories.fetchers.updateStory
+import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryModel
+import slak.fanfictionstories.data.fetchers.extractChapterText
+import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
+import slak.fanfictionstories.data.fetchers.fetchChapter
+import slak.fanfictionstories.data.fetchers.updateStory
 import slak.fanfictionstories.utility.*
 
 /** Shows a chapter of a story for reading. */

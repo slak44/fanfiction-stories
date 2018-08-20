@@ -22,7 +22,7 @@ import slak.fanfictionstories.StoryListItem.GroupTitle
 import slak.fanfictionstories.StoryListItem.StoryCardData
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
-import slak.fanfictionstories.fetchers.*
+import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.utility.*
 
 /** Stores the data required for a [CanonStoryListActivity]. */

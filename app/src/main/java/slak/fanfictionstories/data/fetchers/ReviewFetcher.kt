@@ -1,4 +1,4 @@
-package slak.fanfictionstories.fetchers
+package slak.fanfictionstories.data.fetchers
 
 import android.os.Parcelable
 import android.util.Log
@@ -10,8 +10,8 @@ import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryId
-import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
-import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
+import slak.fanfictionstories.data.fetchers.FetcherUtils.authorIdFromAuthor
+import slak.fanfictionstories.data.fetchers.FetcherUtils.getPageCountFromNav
 import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.patientlyFetchURL

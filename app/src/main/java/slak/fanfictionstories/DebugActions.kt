@@ -22,8 +22,8 @@ import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
-import slak.fanfictionstories.fetchers.fetchAndWriteStory
-import slak.fanfictionstories.fetchers.fetchStoryModel
+import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
+import slak.fanfictionstories.data.fetchers.fetchStoryModel
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.Static
 import java.io.File

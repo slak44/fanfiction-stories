@@ -18,7 +18,7 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
 import slak.fanfictionstories.data.database
-import slak.fanfictionstories.fetchers.CategoryLink
+import slak.fanfictionstories.data.fetchers.CategoryLink
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.startActivity
 import slak.fanfictionstories.utility.str

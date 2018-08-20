@@ -1,4 +1,4 @@
-package slak.fanfictionstories.fetchers
+package slak.fanfictionstories.data.fetchers
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize

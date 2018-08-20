@@ -1,4 +1,4 @@
-package slak.fanfictionstories.fetchers
+package slak.fanfictionstories.data.fetchers
 
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
@@ -13,7 +13,7 @@ import slak.fanfictionstories.Notifications.Companion.readerIntent
 import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.writeChapters
-import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
+import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
 import java.util.concurrent.TimeUnit
 

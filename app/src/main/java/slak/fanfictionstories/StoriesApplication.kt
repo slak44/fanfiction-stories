@@ -3,7 +3,7 @@ package slak.fanfictionstories
 import android.app.Application
 import android.util.Log
 import com.jakewharton.threetenabp.AndroidThreeTen
-import slak.fanfictionstories.fetchers.*
+import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.utility.Static
 
 /** Runs a whole bunch of static initializers in [onCreate]. */

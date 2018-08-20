@@ -17,9 +17,9 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
-import slak.fanfictionstories.fetchers.NO_PAGES
-import slak.fanfictionstories.fetchers.Review
-import slak.fanfictionstories.fetchers.getReviews
+import slak.fanfictionstories.data.fetchers.NO_PAGES
+import slak.fanfictionstories.data.fetchers.Review
+import slak.fanfictionstories.data.fetchers.getReviews
 import slak.fanfictionstories.utility.*
 import java.util.*
 

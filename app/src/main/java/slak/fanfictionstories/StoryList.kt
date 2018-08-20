@@ -39,7 +39,7 @@ import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.deleteStory
 import slak.fanfictionstories.data.useAsync
-import slak.fanfictionstories.fetchers.fetchAndWriteStory
+import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Optional
 import java.util.*

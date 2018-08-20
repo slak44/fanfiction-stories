@@ -16,7 +16,7 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
-import slak.fanfictionstories.fetchers.fetchAndWriteStory
+import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 
 /** The list of stories the user has started reading, or has downloaded. */

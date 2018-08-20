@@ -11,8 +11,8 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.data.database
-import slak.fanfictionstories.fetchers.FetcherUtils.CHAPTER_TITLE_SEPARATOR
-import slak.fanfictionstories.fetchers.Genre
+import slak.fanfictionstories.data.fetchers.FetcherUtils.CHAPTER_TITLE_SEPARATOR
+import slak.fanfictionstories.data.fetchers.Genre
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.str

@@ -12,7 +12,7 @@ import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
-import slak.fanfictionstories.fetchers.*
+import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.utility.ActivityWithStatic
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.str

@@ -1,4 +1,4 @@
-package slak.fanfictionstories.fetchers
+package slak.fanfictionstories.data.fetchers
 
 import android.util.Log
 import org.jsoup.Jsoup

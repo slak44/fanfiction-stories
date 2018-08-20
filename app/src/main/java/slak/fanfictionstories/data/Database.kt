@@ -11,7 +11,7 @@ import slak.fanfictionstories.StoryEventKind
 import slak.fanfictionstories.StoryEventNotifier
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.StoryModel
-import slak.fanfictionstories.fetchers.CategoryLink
+import slak.fanfictionstories.data.fetchers.CategoryLink
 import slak.fanfictionstories.utility.Optional
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.async2

@@ -11,7 +11,7 @@ import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import slak.fanfictionstories.*
-import slak.fanfictionstories.fetchers.Language
+import slak.fanfictionstories.data.fetchers.Language
 import slak.fanfictionstories.utility.NetworkType
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.str

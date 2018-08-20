@@ -1,4 +1,4 @@
-package slak.fanfictionstories.fetchers
+package slak.fanfictionstories.data.fetchers
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
@@ -9,10 +9,10 @@ import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.data.Cache
-import slak.fanfictionstories.fetchers.FetcherUtils.authorIdFromAuthor
-import slak.fanfictionstories.fetchers.FetcherUtils.getPageCountFromNav
-import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryMetadata
-import slak.fanfictionstories.fetchers.FetcherUtils.unescape
+import slak.fanfictionstories.data.fetchers.FetcherUtils.authorIdFromAuthor
+import slak.fanfictionstories.data.fetchers.FetcherUtils.getPageCountFromNav
+import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryMetadata
+import slak.fanfictionstories.data.fetchers.FetcherUtils.unescape
 import slak.fanfictionstories.utility.*
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
