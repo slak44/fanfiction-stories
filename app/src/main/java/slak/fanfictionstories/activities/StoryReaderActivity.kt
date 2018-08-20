@@ -329,7 +329,7 @@ class StoryReaderActivity : LoadingActivity() {
         }
       }
       R.id.deleteLocal -> undoableAction(contentView!!, R.string.data_deleted) {
-        deleteLocalStory(this, model.storyId)
+        deleteLocalStory(model.storyId)
         database.updateInStory(model.storyId, "status" to "remote")
         model.status = StoryStatus.REMOTE
       }
@@ -352,7 +352,7 @@ class StoryReaderActivity : LoadingActivity() {
   }
 
   private fun readChapter(storyId: Long, chapter: Long): Deferred<String> = async2(CommonPool) {
-    val storyDir = storyDir(this@StoryReaderActivity, storyId)
+    val storyDir = storyDir(storyId)
         .orElseThrow(IllegalStateException("Cannot read $storyId dir"))
     if (!storyDir.exists()) storyDir.mkdirs()
     val chapterFile = File(storyDir, "$chapter.html.deflated")

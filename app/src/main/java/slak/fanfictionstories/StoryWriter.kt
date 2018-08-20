@@ -1,6 +1,5 @@
 package slak.fanfictionstories
 
-import android.content.Context
 import android.os.Environment
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
@@ -17,12 +16,12 @@ import java.util.zip.DeflaterOutputStream
 fun haveExternalStorage() = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()
 
 /** @returns a [File] representing the external storage dir, or [Empty] if it's unavailable */
-fun getStorageDir(ctx: Context): Optional<File> =
-    if (haveExternalStorage()) ctx.getExternalFilesDir(null).opt() else Empty()
+fun getStorageDir(): Optional<File> =
+    if (haveExternalStorage()) Static.currentCtx.getExternalFilesDir(null).opt() else Empty()
 
 /** @returns a [File] representing the stories dir, or [Empty] if it's unavailable */
-fun storyDir(ctx: Context, storyId: Long): Optional<File> {
-  val storage = getStorageDir(ctx).orElse {
+fun storyDir(storyId: Long): Optional<File> {
+  val storage = getStorageDir().orElse {
     Log.e("StoryWriter#storyDir", "no ext storage")
     errorDialog(R.string.ext_store_unavailable, R.string.ext_store_unavailable_tip)
     return Empty()
@@ -38,7 +37,7 @@ fun storyDir(ctx: Context, storyId: Long): Optional<File> {
  */
 fun writeChapters(storyId: StoryId,
                   chapters: Channel<String>): Deferred<Boolean> = async2(CommonPool) {
-  val targetDir = storyDir(Static.currentCtx, storyId).orElse { return@async2 false }
+  val targetDir = storyDir(storyId).orElse { return@async2 false }
   if (targetDir.exists()) {
     Log.i("StoryWriter#writeChapters", "Target dir already exists")
   } else {
@@ -62,8 +61,8 @@ fun writeChapters(storyId: StoryId,
 }
 
 /** Deletes the story chapter data directory. */
-fun deleteLocalStory(ctx: Context, storyId: StoryId) = launch(CommonPool) {
-  val targetDir = storyDir(ctx, storyId).orElseThrow(IllegalStateException("Storage missing"))
+fun deleteLocalStory(storyId: StoryId) = launch(CommonPool) {
+  val targetDir = storyDir(storyId).orElseThrow(IllegalStateException("Storage missing"))
   if (!targetDir.exists()) {
     Log.w("StoryWriter#deleteLocalStory", "Tried to delete a story that does not exist")
     // Our job here is done ¯\_(ツ)_/¯

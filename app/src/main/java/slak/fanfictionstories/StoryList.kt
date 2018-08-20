@@ -291,7 +291,7 @@ class StoryCardView @JvmOverloads constructor(
         // We need this because otherwise the screen gets out of sync with the data
         vm.notifyChanged()
         undoableAction(btn, R.string.removed_story, { vm.undoHideStory(model) }) {
-          deleteLocalStory(btn.context, model.storyId).join()
+          deleteLocalStory(model.storyId).join()
           btn.context.database.useAsync {
             val currentResume = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
             if (currentResume == model.storyId) Prefs.useImmediate {
