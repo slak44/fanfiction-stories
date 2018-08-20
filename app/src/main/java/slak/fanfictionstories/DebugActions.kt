@@ -56,7 +56,7 @@ val debugActions = mapOf(
       Log.i(TAG, "REINITED STORIES TABLE")
     },
     "Wipe disk data" to {
-      val deleted = File(getStorageDir(Static.currentCtx).get(), "storiesData")
+      val deleted = File(Static.currentCtx.getExternalFilesDir(null), "storiesData")
           .deleteRecursively()
       if (deleted) Log.i(TAG, "SUCCESSFULLY DELETED")
       else Log.e(TAG, "DELETE FAILED")
@@ -177,7 +177,7 @@ val debugActions = mapOf(
     "Deflate all chapter text data" to {
       var initialByteCount = 0L
       var finalByteCount = 0L
-      File(getStorageDir(Static.currentCtx).get(), "storiesData").listFiles().forEach { story ->
+      File(Static.currentCtx.getExternalFilesDir(null), "storiesData").listFiles().forEach { story ->
         story.listFiles().forEach {chapter ->
           initialByteCount += chapter.length()
           val outFile = File("${story.absolutePath}/${chapter.name.split('.')[0]}.html.deflated")
@@ -195,7 +195,7 @@ val debugActions = mapOf(
       println("${finalByteCount * 100 / initialByteCount}%")
     },
     "Fix chapter numbers" to {
-      File(getStorageDir(Static.currentCtx).get(), "storiesData").listFiles().forEach { story ->
+      File(Static.currentCtx.getExternalFilesDir(null), "storiesData").listFiles().forEach { story ->
         story.listFiles().sortedBy { it.name.split('.')[0].toInt() }.reversed().forEach { chapter ->
           chapter.renameTo(File("${story.absolutePath}/${chapter.name.split('.')[0].toInt() + 1}.html.deflated"))
         }

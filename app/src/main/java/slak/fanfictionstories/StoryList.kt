@@ -36,6 +36,7 @@ import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.data.database
+import slak.fanfictionstories.data.deleteStory
 import slak.fanfictionstories.data.useAsync
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
@@ -291,7 +292,7 @@ class StoryCardView @JvmOverloads constructor(
         // We need this because otherwise the screen gets out of sync with the data
         vm.notifyChanged()
         undoableAction(btn, R.string.removed_story, { vm.undoHideStory(model) }) {
-          deleteLocalStory(model.storyId).join()
+          deleteStory(model.storyId).join()
           btn.context.database.useAsync {
             val currentResume = Static.prefs.getLong(Prefs.RESUME_STORY_ID, -1)
             if (currentResume == model.storyId) Prefs.useImmediate {

@@ -5,7 +5,6 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
-import org.jetbrains.anko.db.replaceOrThrow
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import slak.fanfictionstories.*
@@ -13,6 +12,7 @@ import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.Notifications.Companion.readerIntent
 import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.data.database
+import slak.fanfictionstories.data.writeChapters
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
 import java.util.concurrent.TimeUnit
@@ -33,15 +33,9 @@ fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async
     model.progress = existingModel.progress
   }
   Static.database.upsertStory(model).await()
-  val isWriting: Boolean =
-      writeChapters(storyId, fetchChapterRange(Notifications.DOWNLOADING, model)).await()
-  if (isWriting) {
-    Notifications.downloadedStory(model)
-    Notifications.DOWNLOADING.cancel()
-  } else {
-    // FIXME show something saying we failed
-    Static.database.updateInStory(storyId, "status" to "remote").await()
-  }
+  writeChapters(storyId, fetchChapterRange(Notifications.DOWNLOADING, model)).join()
+  Notifications.downloadedStory(model)
+  Notifications.DOWNLOADING.cancel()
   return@async2 model.opt()
 }
 
@@ -135,7 +129,7 @@ fun updateStory(oldModel: StoryModel): Deferred<Optional<StoryModel>> = async2(C
     return@async2 Empty<StoryModel>()
 
   newModel.progress = if (oldModel.progress.currentChapter > newModel.fragment.chapterCount) {
-    Log.i(TAG, "Had to discard progress for id ${oldModel.storyId} because oldModel current" +
+    Log.w(TAG, "Had to discard progress for id ${oldModel.storyId} because oldModel current" +
         "chapter value exceeds newModel chapter count")
     StoryProgress(currentChapter = newModel.fragment.chapterCount)
   } else {
@@ -166,14 +160,7 @@ fun updateStory(oldModel: StoryModel): Deferred<Optional<StoryModel>> = async2(C
   // If nothing else, just re-download everything
     else -> fetchChapterRange(Notifications.UPDATING, oldModel)
   }
-  val isWriting = writeChapters(newModel.storyId, channel).await()
-  if (!isWriting) {
-    // Revert model to old values
-    Static.database.use { replaceOrThrow("stories", *oldModel.toPairs()) }
-    StoryEventNotifier.notifyStoryChanged(listOf(oldModel), StoryEventKind.Changed)
-    Log.e(TAG, "Had to revert update to ${oldModel.storyId}")
-    return@async2 Empty<StoryModel>()
-  }
+  writeChapters(newModel.storyId, channel)
   Notifications.UPDATING.cancel()
   return@async2 newModel.opt()
 }

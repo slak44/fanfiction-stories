@@ -15,7 +15,6 @@ import android.view.View
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.sync.Mutex
@@ -25,18 +24,13 @@ import org.jetbrains.anko.db.select
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
-import slak.fanfictionstories.data.database
-import slak.fanfictionstories.data.useAsync
+import slak.fanfictionstories.data.*
 import slak.fanfictionstories.fetchers.FetcherUtils.parseStoryModel
 import slak.fanfictionstories.fetchers.extractChapterText
 import slak.fanfictionstories.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.fetchers.fetchChapter
 import slak.fanfictionstories.fetchers.updateStory
 import slak.fanfictionstories.utility.*
-import java.io.File
-import java.io.FileOutputStream
-import java.util.zip.DeflaterOutputStream
-import java.util.zip.InflaterInputStream
 
 /** Shows a chapter of a story for reading. */
 class StoryReaderActivity : LoadingActivity() {
@@ -169,7 +163,22 @@ class StoryReaderActivity : LoadingActivity() {
 
   @AnyThread
   private fun initText(chapterToRead: Long) = async2(CommonPool) {
-    val text: String = readChapter(model.storyId, chapterToRead).await()
+    val text: String = readChapter(model.storyId, chapterToRead).orElse {
+      val chapterHtmlText = fetchChapter(model.storyId, chapterToRead).await()
+      val text = extractChapterText(Jsoup.parse(chapterHtmlText))
+      writeChapter(model.storyId, chapterToRead, text)
+      // Get the model too if we need it
+      if (model.status == StoryStatus.TRANSIENT) {
+        model = parseStoryModel(chapterHtmlText, model.storyId)
+        database.upsertStory(model).await()
+      }
+      // If all chapters are on disk, set to local
+      if (chapterCount(model.storyId) == model.fragment.chapterCount.toInt()) {
+        model.status = StoryStatus.LOCAL
+        database.updateInStory(model.storyId, "status" to "local")
+      }
+      return@orElse text
+    }
     val chapterWordCount = autoSuffixNumber(text.split(" ").size)
 
     launch(UI) {
@@ -315,7 +324,7 @@ class StoryReaderActivity : LoadingActivity() {
             AuthorActivity.INTENT_AUTHOR_NAME to model.author)
       }
       R.id.downloadLocal -> launch(CommonPool) {
-        model = fetchAndWriteStory(model.storyId).await().orElse(model)
+        fetchAndWriteStory(model.storyId).await().ifPresent { model = it }
       }
       R.id.checkForUpdate -> launch(CommonPool) {
         Notifications.UPDATING.show(defaultIntent(), R.string.checking_one_story, model.title)
@@ -329,7 +338,7 @@ class StoryReaderActivity : LoadingActivity() {
         }
       }
       R.id.deleteLocal -> undoableAction(contentView!!, R.string.data_deleted) {
-        deleteLocalStory(model.storyId)
+        deleteStory(model.storyId)
         database.updateInStory(model.storyId, "status" to "remote")
         model.status = StoryStatus.REMOTE
       }
@@ -337,37 +346,5 @@ class StoryReaderActivity : LoadingActivity() {
       else -> return super.onOptionsItemSelected(item)
     }
     return true
-  }
-
-  private fun downloadChapter(storyId: Long,
-                              chapter: Long, target: File): Deferred<String> = async2(CommonPool) {
-    val chapterHtmlText = fetchChapter(storyId, chapter).await()
-    val text = extractChapterText(Jsoup.parse(chapterHtmlText))
-    DeflaterOutputStream(FileOutputStream(target, false)).use { it.write(text.toByteArray()) }
-    if (model.status == StoryStatus.TRANSIENT) {
-      model = parseStoryModel(chapterHtmlText, storyId)
-      database.upsertStory(model).await()
-    }
-    return@async2 text
-  }
-
-  private fun readChapter(storyId: Long, chapter: Long): Deferred<String> = async2(CommonPool) {
-    val storyDir = storyDir(storyId)
-        .orElseThrow(IllegalStateException("Cannot read $storyId dir"))
-    if (!storyDir.exists()) storyDir.mkdirs()
-    val chapterFile = File(storyDir, "$chapter.html.deflated")
-    if (!chapterFile.exists()) {
-      val text = downloadChapter(storyId, chapter, chapterFile).await()
-      launch(CommonPool) {
-        // If all chapters are on disk, set to local
-        if (storyDir.list().size == model.fragment.chapterCount.toInt()) {
-          model.status = StoryStatus.LOCAL
-          database.updateInStory(storyId, "status" to "local")
-        }
-      }
-      return@async2 text
-    } else {
-      return@async2 InflaterInputStream(chapterFile.inputStream()).bufferedReader().readText()
-    }
   }
 }
