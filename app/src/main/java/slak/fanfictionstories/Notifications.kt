@@ -122,7 +122,7 @@ enum class Notifications(val duration: Duration,
   }
 
   fun cancel() {
-    Log.d("Notifications", "killed $this")
+    Log.v("Notifications", "killed $this")
     Static.notifManager.cancel(reqId)
   }
 
