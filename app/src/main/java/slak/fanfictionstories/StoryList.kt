@@ -579,12 +579,14 @@ open class StoryListViewModel :
 
   /**
    * Remove stories from the model, but keep track of their data.
-   * @param range which items to hide
+   * @param range which items to hide (must contain only [StoryCardData])
+   * @throws IllegalArgumentException if the range makes no sense or has other items
    * @see pendingItems
    * @see undoHideStory
    */
   @UiThread
   fun hideStoryRange(range: IntRange) {
+    if (range.first == range.last) return // Nothing to do here
     if (range.first < 0 || range.first >= size || range.first > range.last || range.last > size)
       throw IllegalArgumentException("Illegal range for list")
     if (subList(range.first, range.last).any { it !is StoryCardData })
