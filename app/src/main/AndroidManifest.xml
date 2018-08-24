@@ -92,12 +92,25 @@
         </activity>
         <activity
             android:name=".activities.ReviewsActivity"
-            android:label="@string/title_activity_reviews"
+            android:label="@string/app_name"
             android:parentActivityName=".activities.StoryReaderActivity"
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="slak.fanfictionstories.activities.StoryReaderActivity"/>
+
+            <intent-filter>
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+                <data android:host="www.fanfiction.net"/>
+                <data android:host="fanfiction.net"/>
+                <data android:pathPrefix="/r"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <action android:name="android.intent.action.VIEW"/>
+            </intent-filter>
         </activity>
         <activity
             android:name=".activities.AuthorActivity"

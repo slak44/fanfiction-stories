@@ -3,6 +3,8 @@ package slak.fanfictionstories.activities
 import android.annotation.SuppressLint
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
+import android.content.Intent
+import android.content.Intent.ACTION_VIEW
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.CardView
@@ -14,11 +16,13 @@ import kotlinx.android.synthetic.main.component_review.view.*
 import kotlinx.android.synthetic.main.dialog_report_review.view.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.data.fetchers.NO_PAGES
 import slak.fanfictionstories.data.fetchers.Review
+import slak.fanfictionstories.data.fetchers.fetchStoryModel
 import slak.fanfictionstories.data.fetchers.getReviews
 import slak.fanfictionstories.utility.*
 import java.util.*
@@ -34,7 +38,13 @@ class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by Adapte
   val loadingEvent: LiveData<LoadEvent> get() = loadingEventsData
 
   val model: StoryModel by lazy {
-    intent!!.getParcelableExtra<StoryModel>(ReviewsActivity.INTENT_STORY_MODEL)
+    if (intent!!.action == Intent.ACTION_VIEW) runBlocking {
+      val pathSegments = intent?.data?.pathSegments
+          ?: throw IllegalArgumentException("Missing intent data")
+      changeChapter(if (pathSegments.size < 3) ReviewsActivity.ALL_CHAPTERS else pathSegments[2].toInt())
+      return@runBlocking fetchStoryModel(pathSegments[1].toLong()).await()
+          .orElseThrow(IllegalArgumentException("Story doesn't exist"))
+    } else intent!!.getParcelableExtra(ReviewsActivity.INTENT_STORY_MODEL)
   }
 
   private var currentPage = 0
@@ -79,7 +89,7 @@ class ReviewsActivity :
   companion object {
     const val INTENT_STORY_MODEL = "story_model_extra"
     const val INTENT_TARGET_CHAPTER = "target_chapter_extra"
-    private const val ALL_CHAPTERS = 0
+    const val ALL_CHAPTERS = 0
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,7 +100,8 @@ class ReviewsActivity :
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    viewModel.changeChapter(intent.getIntExtra(INTENT_TARGET_CHAPTER, ALL_CHAPTERS))
+    if (intent.action != ACTION_VIEW)
+      viewModel.changeChapter(intent.getIntExtra(INTENT_TARGET_CHAPTER, ALL_CHAPTERS))
 
     title = str(R.string.reviews_for, viewModel.model.title)
 
