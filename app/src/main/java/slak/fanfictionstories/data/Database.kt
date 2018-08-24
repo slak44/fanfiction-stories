@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.StoryEventKind
 import slak.fanfictionstories.StoryEventNotifier
@@ -264,7 +265,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     return@useAsync int
   }
 
-  /** Upsert a story in the DB. */
+  /** Upsert a story in the DB unconditionally. */
   fun upsertStory(model: StoryModel) = useAsync {
     if (!model.isPersistable()) {
       Log.e("upsertStory", model.toString())
@@ -283,6 +284,18 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.Changed)
       }
     }
+  }
+
+  /** Upsert a story in the DB, keeping some properties. */
+  fun upsertModel(model: StoryModel) = launch(CommonPool) {
+    val existingModel = Static.database.storyById(model.storyId).await().orNull()
+    if (existingModel != null) {
+      model.addedTime = existingModel.addedTime
+      model.lastReadTime = existingModel.lastReadTime
+      model.progress = existingModel.progress
+      model.status = existingModel.status
+    }
+    Static.database.upsertStory(model).await()
   }
 }
 

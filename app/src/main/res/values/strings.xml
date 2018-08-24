@@ -449,7 +449,6 @@ Story %d of %d (%.2f%%)"
     </string-array>
 
     <!-- Default (fallback) activity titles -->
-    <string name="title_activity_story_reader" translatable="false">StoryReaderActivity</string>
     <string name="title_activity_browse_category" translatable="false">BrowseCategoryActivity</string>
     <string name="title_activity_canon_story_list" translatable="false">CanonStoryListActivity</string>
     <string name="title_activity_reviews" translatable="false">ReviewsActivity</string>

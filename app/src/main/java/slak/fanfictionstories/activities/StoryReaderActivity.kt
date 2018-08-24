@@ -1,5 +1,6 @@
 package slak.fanfictionstories.activities
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
 import android.support.annotation.AnyThread
@@ -17,19 +18,20 @@ import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.sync.Mutex
 import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
 import org.jsoup.Jsoup
-import slak.fanfictionstories.*
+import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
+import slak.fanfictionstories.R
+import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.data.*
+import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryModel
-import slak.fanfictionstories.data.fetchers.extractChapterText
-import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
-import slak.fanfictionstories.data.fetchers.fetchChapter
-import slak.fanfictionstories.data.fetchers.updateStory
 import slak.fanfictionstories.utility.*
 
 /** Shows a chapter of a story for reading. */
@@ -44,22 +46,38 @@ class StoryReaderActivity : LoadingActivity() {
   private lateinit var model: StoryModel
   private var currentChapter: Long = 0
 
+  @AnyThread
+  private fun obtainModel(savedInstanceState: Bundle?) = when {
+    savedInstanceState != null -> {
+      onRestoreInstanceState(savedInstanceState)
+      restoreScrollStatus()
+      Log.v(TAG, "Model from savedInstanceState: $model")
+    }
+    intent.action == Intent.ACTION_VIEW -> runBlocking {
+      val pathSegments = intent.data?.pathSegments
+          ?: throw IllegalArgumentException("Intent data is empty")
+      model = fetchStoryModel(pathSegments[1].toLong()).await()
+          .orElseThrow(IllegalArgumentException("Story not found at target link"))
+      Static.database.upsertModel(model).join()
+      currentChapter = pathSegments[2].toLong()
+      Log.v(TAG, "Model from link: $intent, resolved model: $model")
+    }
+    else -> {
+      model = intent.getParcelableExtra(INTENT_STORY_MODEL)
+          ?: throw IllegalArgumentException("Story model missing from extras")
+      currentChapter =
+          if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
+      Log.v(TAG, "Model from intent extra: $model")
+    }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_story_reader)
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    if (savedInstanceState != null) {
-      onRestoreInstanceState(savedInstanceState)
-      restoreScrollStatus()
-      Log.v(TAG, "Restore model in onCreate: $model")
-    } else {
-      model = intent.getParcelableExtra(INTENT_STORY_MODEL) ?: return
-      currentChapter =
-          if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
-      Log.v(TAG, "Intent extra model: $model")
-    }
+    obtainModel(savedInstanceState)
 
     prevChapterBtn.setOnClickListener { initTextWithLoading(--currentChapter) }
     nextChapterBtn.setOnClickListener { initTextWithLoading(++currentChapter) }
