@@ -56,6 +56,7 @@ class StoryReaderActivity : LoadingActivity() {
     intent.action == Intent.ACTION_VIEW -> runBlocking {
       val pathSegments = intent.data?.pathSegments
           ?: throw IllegalArgumentException("Intent data is empty")
+      title = pathSegments[2]
       model = fetchStoryModel(pathSegments[1].toLong()).await()
           .orElseThrow(IllegalArgumentException("Story not found at target link"))
       Static.database.upsertModel(model).join()
