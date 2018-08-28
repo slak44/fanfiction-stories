@@ -1,11 +1,8 @@
 package slak.fanfictionstories.activities
 
 import android.annotation.SuppressLint
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
 import android.os.Bundle
 import android.support.annotation.AnyThread
-import android.support.annotation.UiThread
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
