@@ -341,13 +341,17 @@ class GroupTitleView @JvmOverloads constructor(
 
 /** An abstract item in a list of stories. */
 sealed class StoryListItem : Parcelable {
+  /** Unique, stable id, for use in the adapter. */
   abstract val id: Long
+  /** Binds each subclass to an int, for use in the adapter. */
+  abstract val type: Int
 
   /** The data for an actual story in a list of stories. */
   @Parcelize
   data class StoryCardData(var model: StoryModel,
                            var isExtended: Boolean = false) : StoryListItem() {
     override val id get() = model.storyId + (1 shl 15)
+    override val type get() = 0
   }
 
   /** The title for a story group in a list of stories. */
@@ -356,6 +360,7 @@ sealed class StoryListItem : Parcelable {
                         var isCollapsed: Boolean = false,
                         var collapsedModels: List<StoryModel> = emptyList()) : StoryListItem() {
     override val id get() = title.hashCode().toLong() + (2 shl 15)
+    override val type get() = 1
 
     fun collapse(viewModel: StoryListViewModel) {
       if (isCollapsed) throw IllegalStateException("Trying to collapse already collapsed header")
@@ -381,6 +386,7 @@ sealed class StoryListItem : Parcelable {
   @Parcelize
   data class LoadingItem(val idx: Int = ++counter) : StoryListItem() {
     override val id get() = idx.toLong() + (3 shl 15)
+    override val type get() = 2
   }
 
   companion object {
@@ -686,9 +692,5 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
 
   override fun getItemCount(): Int = viewModel.size
   override fun getItemId(position: Int): Long = viewModel[position].id
-  override fun getItemViewType(position: Int): Int = when (viewModel[position]) {
-    is StoryCardData -> 0
-    is GroupTitle -> 1
-    is LoadingItem -> 2
-  }
+  override fun getItemViewType(position: Int): Int = viewModel[position].type
 }
