@@ -2,6 +2,7 @@ package slak.fanfictionstories.activities
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent.ACTION_VIEW
 import android.os.Bundle
@@ -29,26 +30,15 @@ import slak.fanfictionstories.utility.*
 import java.util.*
 
 /** Stores and loads the data required for an author page. */
-class AuthorViewModel : ViewModelWithIntent() {
-  val authorId: Long by lazy {
-    if (intent!!.action == ACTION_VIEW) {
-      val pathSegments = intent?.data?.pathSegments
-          ?: throw IllegalArgumentException("Missing intent data")
-      return@lazy pathSegments[1].toLong()
+@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+class AuthorViewModel(authorId: java.lang.Long) : ViewModel() {
+  init {
+    launch(UI) {
+      author = getAuthor(authorId.toLong()).await()
+      loadEventsData.value = LoadEvent.LOADED
     }
-    val id = intent!!.getLongExtra(AuthorActivity.INTENT_AUTHOR_ID, -1L)
-    if (id == -1L) throw IllegalArgumentException("Intent has no author id")
-    id
   }
-  val authorName: String by lazy {
-    if (intent!!.action == ACTION_VIEW) {
-      val pathSegments = intent?.data?.pathSegments
-          ?: throw IllegalArgumentException("Missing intent data")
-      return@lazy pathSegments[2]
-    }
-    intent!!.getStringExtra(AuthorActivity.INTENT_AUTHOR_NAME)
-        ?: throw IllegalArgumentException("Intent has no author name")
-  }
+
   var author: Author? = null
     private set
 
@@ -56,13 +46,6 @@ class AuthorViewModel : ViewModelWithIntent() {
 
   private val loadEventsData = MutableLiveData<LoadEvent>()
   val loadEvents: LiveData<LoadEvent> get() = loadEventsData
-
-  init {
-    launch(UI) {
-      author = getAuthor(authorId).await()
-      loadEventsData.value = LoadEvent.LOADED
-    }
-  }
 }
 
 /**
@@ -87,14 +70,23 @@ class AuthorActivity :
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
-    viewModel = obtainViewModel()
-
     setContentView(R.layout.activity_author)
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    title = viewModel.authorName
+    val (authorName, authorId) = if (intent.action == ACTION_VIEW) {
+      val pathSegments = intent?.data?.pathSegments
+          ?: throw IllegalArgumentException("Missing intent data")
+      pathSegments[2] to pathSegments[1].toLong()
+    } else {
+      val name = intent.getStringExtra(AuthorActivity.INTENT_AUTHOR_NAME)
+      val id = intent.getLongExtra(AuthorActivity.INTENT_AUTHOR_ID, -1L)
+      if (id == -1L) throw IllegalArgumentException("Intent has no author id")
+      name to id
+    }
+
+    viewModel = obtainViewModel(authorId)
+    title = authorName
 
     container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
     tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))

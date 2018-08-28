@@ -2,7 +2,9 @@ package slak.fanfictionstories.utility
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.arch.lifecycle.*
+import android.arch.lifecycle.LifecycleOwner
+import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.MutableLiveData
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Canvas
@@ -12,7 +14,6 @@ import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.annotation.StringRes
 import android.support.design.widget.Snackbar
-import android.support.v4.app.FragmentActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Html
@@ -206,7 +207,7 @@ fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage:
 }
 
 /**
- * Shows a snack with an undo button. If  the undo button wasn't pressed, execute the provided
+ * Shows a snack with an undo button. If the undo button wasn't pressed, execute the provided
  * action in a coroutine.
  * @param view snackbar target
  */
@@ -266,39 +267,11 @@ var <T> MutableLiveData<T>.it: T
     value = newVal
   }
 
+/** Convenience access property for non-nullable types. */
+val <T> LiveData<T>.it: T
+  get() = value!!
+
 /** Sugar over [LiveData.observe] for non-nullable types. */
 fun <T> LiveData<T>.observe(owner: LifecycleOwner, observer: (T) -> Unit) {
   observe(owner, android.arch.lifecycle.Observer { observer(it!!) })
-}
-
-/**
- * A [ViewModelProvider] that also includes the intent used to start the activity.
- * @see ViewModelWithIntent
- */
-open class ViewModelWithIntentProvider(store: ViewModelStore,
-                                       factory: Factory,
-                                       val withIntent: Intent) : ViewModelProvider(store, factory) {
-  inline fun <reified T : ViewModelWithIntent> viewModelFrom(): T {
-    val viewModel = super.get(T::class.java)
-    viewModel.intent = withIntent
-    return viewModel
-  }
-}
-
-/** A [ViewModel] that also stores an intent. */
-abstract class ViewModelWithIntent : ViewModel() {
-  @PublishedApi
-  internal var intent: Intent? = null
-}
-
-/** Get a [ViewModelWithIntentProvider] that gets a [ViewModelWithIntent]. */
-fun FragmentActivity.viewModelProvider(): ViewModelWithIntentProvider {
-  val factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application
-      ?: throw IllegalStateException("The FragmentActivity is not attached to an Application yet"))
-  return ViewModelWithIntentProvider(ViewModelStores.of(this), factory, intent)
-}
-
-/** Sugar for `viewModelProvider().viewModelFrom()`. */
-inline fun <reified T : ViewModelWithIntent> FragmentActivity.obtainViewModel(): T {
-  return viewModelProvider().viewModelFrom()
 }

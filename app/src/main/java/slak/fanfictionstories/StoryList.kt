@@ -3,6 +3,7 @@ package slak.fanfictionstories
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MediatorLiveData
 import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -416,7 +417,7 @@ sealed class StoryListItem : Parcelable {
  * Can also be used as an abstract list of [StoryListItem]s.
  */
 open class StoryListViewModel :
-    ViewModelWithIntent(),
+    ViewModel(),
     IAdapterDataObservable by AdapterDataObservable(),
     List<StoryListItem> {
   companion object {

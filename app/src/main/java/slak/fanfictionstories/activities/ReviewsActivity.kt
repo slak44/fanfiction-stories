@@ -3,8 +3,8 @@ package slak.fanfictionstories.activities
 import android.annotation.SuppressLint
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.ViewModel
 import android.content.Intent
-import android.content.Intent.ACTION_VIEW
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.CardView
@@ -28,24 +28,17 @@ import slak.fanfictionstories.utility.*
 import java.util.*
 
 /** Stores and fetches the data required for a [ReviewsActivity]. */
-class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by AdapterDataObservable() {
-  private val chapterData = MutableLiveData<Int>()
-  val chapter: LiveData<Int> get() = chapterData
+@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer) :
+    ViewModel(),
+    IAdapterDataObservable by AdapterDataObservable() {
+  private val _chapter = MutableLiveData<Int>()
+  val chapter: LiveData<Int> get() = _chapter
 
   enum class LoadEvent { LOADING, DONE_LOADING }
 
   private val loadingEventsData = MutableLiveData<LoadEvent>()
   val loadingEvent: LiveData<LoadEvent> get() = loadingEventsData
-
-  val model: StoryModel by lazy {
-    if (intent!!.action == Intent.ACTION_VIEW) runBlocking {
-      val pathSegments = intent?.data?.pathSegments
-          ?: throw IllegalArgumentException("Missing intent data")
-      changeChapter(if (pathSegments.size < 3) ReviewsActivity.ALL_CHAPTERS else pathSegments[2].toInt())
-      return@runBlocking fetchStoryModel(pathSegments[1].toLong()).await()
-          .orElseThrow(IllegalArgumentException("Story doesn't exist"))
-    } else intent!!.getParcelableExtra(ReviewsActivity.INTENT_STORY_MODEL)
-  }
 
   private var currentPage = 0
   var pageCount = 0
@@ -53,16 +46,20 @@ class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by Adapte
   var reviewCount = 0
     private set
 
+  private val reviewsList: MutableList<Review> = mutableListOf()
+  val reviews: List<Review> get() = reviewsList
+
+  init {
+    changeChapter(initialChapter.toInt())
+  }
+
   fun changeChapter(newChapter: Int) {
     clear()
     currentPage = 1
     pageCount = 0
     reviewCount = 0
-    chapterData.it = newChapter
+    _chapter.it = newChapter
   }
-
-  private val reviewsList: MutableList<Review> = mutableListOf()
-  val reviews: List<Review> get() = reviewsList
 
   fun clear() {
     val size = reviewsList.size
@@ -73,7 +70,7 @@ class ReviewsViewModel : ViewModelWithIntent(), IAdapterDataObservable by Adapte
   fun loadPage() = launch(UI) {
     if (pageCount != 0 && currentPage >= pageCount) return@launch
     loadingEventsData.it = LoadEvent.LOADING
-    val (list, pages, reviews) = getReviews(model.storyId, chapterData.it, currentPage).await()
+    val (list, pages, reviews) = getReviews(model.storyId, _chapter.it, currentPage).await()
     if (pageCount == 0) pageCount = pages
     if (reviewCount == 0) reviewCount = reviews
     reviewsList.addAll(list)
@@ -89,19 +86,31 @@ class ReviewsActivity :
   companion object {
     const val INTENT_STORY_MODEL = "story_model_extra"
     const val INTENT_TARGET_CHAPTER = "target_chapter_extra"
-    const val ALL_CHAPTERS = 0
+    private const val ALL_CHAPTERS = 0
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = obtainViewModel()
-
     setContentView(R.layout.activity_reviews)
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    if (intent.action != ACTION_VIEW)
-      viewModel.changeChapter(intent.getIntExtra(INTENT_TARGET_CHAPTER, ALL_CHAPTERS))
+    // runBlocking is fine here, because the loading bar is already in place, and so the user
+    // already expects to wait
+    val (model, chapter) = if (intent.action == Intent.ACTION_VIEW) runBlocking {
+      val pathSegments = intent?.data?.pathSegments
+          ?: throw IllegalArgumentException("Missing intent data")
+      val chapter = if (pathSegments.size < 3) ALL_CHAPTERS else pathSegments[2].toInt()
+      val model = fetchStoryModel(pathSegments[1].toLong()).await()
+          .orElseThrow(IllegalArgumentException("Story doesn't exist"))
+      return@runBlocking model to chapter
+    } else {
+      val chapter = intent.getIntExtra(INTENT_TARGET_CHAPTER, ALL_CHAPTERS)
+      val model: StoryModel = intent.getParcelableExtra(ReviewsActivity.INTENT_STORY_MODEL)
+      model to chapter
+    }
+
+    viewModel = obtainViewModel(model, chapter)
 
     title = str(R.string.reviews_for, viewModel.model.title)
 

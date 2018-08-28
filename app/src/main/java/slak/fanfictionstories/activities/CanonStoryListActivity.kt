@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.os.Bundle
+import android.support.annotation.AnyThread
+import android.support.annotation.UiThread
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
@@ -15,6 +17,7 @@ import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
@@ -26,26 +29,43 @@ import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.utility.*
 
 /** Stores the data required for a [CanonStoryListActivity]. */
-class CanonListViewModel : StoryListViewModel() {
-  val parentLink: CategoryLink by lazy {
-    intent!!.extras!!.getParcelable<CategoryLink>(INTENT_LINK_DATA)
-  }
-  val filters = CanonFilters()
+class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
+  private var currentPage: Int = 1
+
+  var isFavorite: Boolean = false
+    private set
 
   var metadata = CanonMetadata()
     private set
 
-  var isFavorite: Boolean = false
-
-  private var currentPage: MutableLiveData<Int> = MutableLiveData()
-  val currPage: LiveData<Int> get() = currentPage
+  val filters = CanonFilters()
 
   init {
-    currentPage.it = 1
-    launch(UI) {
+    launch(CommonPool) {
       isFavorite = Static.database.isCanonFavorite(parentLink).await()
     }
   }
+
+  @AnyThread
+  fun toggleFavorite(): Job {
+    val link = CategoryLink(
+        metadata.canonTitle.orElseThrow(IllegalStateException("Actual canon title missing")),
+        parentLink.urlComponent,
+        parentLink.storyCount
+    )
+    return launch(UI) {
+      isFavorite = !isFavorite
+      if (isFavorite) Static.database.removeFavoriteCanon(link).await()
+      else Static.database.addFavoriteCanon(link).await()
+    }
+  }
+
+  fun resetPagination() {
+    currentPage = 1
+  }
+
+  fun getCurrentPage() = getPage(currentPage)
+  fun getNextPage() = async2(UI) { getPage(++currentPage).await() }
 
   private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(CommonPool) {
     val canonPage = getCanonPage(parentLink, filters, page).await()
@@ -60,13 +80,6 @@ class CanonListViewModel : StoryListViewModel() {
     if (storyData.isEmpty()) return@async2 emptyList<StoryListItem>()
     return@async2 listOf(GroupTitle(str(R.string.page_x, page)), *storyData.toTypedArray())
   }
-
-  fun resetPagination() {
-    currentPage.it = 1
-  }
-
-  fun getCurrentPage() = getPage(currentPage.it)
-  fun getNextPage() = async2(UI) { getPage(++currentPage.it).await() }
 }
 
 /** A list of stories within a canon. */
@@ -74,11 +87,11 @@ class CanonStoryListActivity :
     ViewModelWorkaroundLoadingActivity<CanonListViewModel>(CanonListViewModel::class) {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = obtainViewModel()
-
     setContentView(R.layout.activity_canon_story_list)
     setSupportActionBar(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+    viewModel = obtainViewModel(intent.getParcelableExtra(INTENT_LINK_DATA)!!)
 
     canonStoryListView.adapter = StoryAdapter(viewModel)
     val layoutManager = LinearLayoutManager(this)
@@ -252,24 +265,19 @@ class CanonStoryListActivity :
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.filter -> viewModel.metadata.pageCount.ifPresent { openFilterDialog() }
-      R.id.favorite -> launch(UI) {
-        if (viewModel.metadata.pageCount is Empty) return@launch
-        if (viewModel.isFavorite) {
-          database.removeFavoriteCanon(viewModel.parentLink).await()
-          Snackbar.make(
-              this@CanonStoryListActivity.root, R.string.unfavorited, Snackbar.LENGTH_SHORT).show()
-        } else {
-          val link = CategoryLink(
-              title.toString(),
-              viewModel.parentLink.urlComponent,
-              viewModel.parentLink.storyCount
-          )
-          database.addFavoriteCanon(link).await()
-          Snackbar.make(this@CanonStoryListActivity.root,
-              str(R.string.favorited_x, title.toString()), Snackbar.LENGTH_SHORT).show()
+      R.id.favorite -> {
+        if (viewModel.metadata.pageCount is Empty) return true
+        viewModel.toggleFavorite().invokeOnCompletion {
+          // It's already toggled at this point
+          if (!viewModel.isFavorite) {
+            Snackbar.make(this@CanonStoryListActivity.root,
+                R.string.unfavorited, Snackbar.LENGTH_SHORT).show()
+          } else {
+            Snackbar.make(this@CanonStoryListActivity.root,
+                str(R.string.favorited_x, title.toString()), Snackbar.LENGTH_SHORT).show()
+          }
+          invalidateOptionsMenu()
         }
-        viewModel.isFavorite = !viewModel.isFavorite
-        invalidateOptionsMenu()
       }
       android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
