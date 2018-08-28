@@ -11,6 +11,7 @@ import android.graphics.PorterDuff
 import android.os.Parcelable
 import android.support.annotation.AnyThread
 import android.support.annotation.UiThread
+import android.support.v7.view.ContextThemeWrapper
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -21,6 +22,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Button
 import android.widget.ProgressBar
@@ -39,8 +41,8 @@ import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.deleteStory
-import slak.fanfictionstories.data.useAsync
 import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
+import slak.fanfictionstories.data.useAsync
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Optional
 import java.util.*
@@ -336,6 +338,19 @@ class GroupTitleView @JvmOverloads constructor(
     val drawable = Static.res.getDrawable(drawableId, context.theme)
     drawable.setColorFilter(currentTextColor, PorterDuff.Mode.SRC_IN)
     setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
+  }
+}
+
+/** An indeterminate [ProgressBar] for use with [LoadingItem]. */
+class LoadingView @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : ProgressBar(
+    ContextThemeWrapper(context, R.style.Widget_AppCompat_ProgressBar), attrs, defStyleAttr) {
+  init {
+    val lp = ViewGroup.MarginLayoutParams(MATCH_PARENT, WRAP_CONTENT)
+    lp.margins(bottom = resources.px(R.dimen.list_separator_height))
+    layoutParams = lp
+    isIndeterminate = true
   }
 }
 
@@ -685,8 +700,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
     0 -> StoryViewHolder(LayoutInflater.from(parent.context)
         .inflate(R.layout.component_story, parent, false) as StoryCardView)
     1 -> TitleViewHolder(GroupTitleView(parent.context))
-    2 -> ProgressBarHolder(LayoutInflater.from(parent.context)
-        .inflate(R.layout.loading_circle_indeterminate, parent, false) as ProgressBar)
+    2 -> ProgressBarHolder(LoadingView(parent.context))
     else -> throw IllegalStateException("getItemViewType out of sync with onCreateViewHolder")
   }
 
