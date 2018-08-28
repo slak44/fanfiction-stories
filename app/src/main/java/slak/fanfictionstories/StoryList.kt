@@ -611,7 +611,7 @@ open class StoryListViewModel :
   @UiThread
   fun undoHideStory(model: StoryModel) {
     val pos = pendingItems[model] ?: throw IllegalArgumentException("This model was never hidden")
-    Log.v(TAG, "undoHideStory: pos=$pos, model: $model")
+    Log.v(TAG, "undoHideStory: pos=$pos, storyId: ${model.storyId}")
     data.add(pos, StoryCardData(model))
     pendingItems.remove(model)
     notifyItemRangeInserted(pos, 1)
