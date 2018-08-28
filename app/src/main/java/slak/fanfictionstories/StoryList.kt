@@ -21,6 +21,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -311,9 +312,8 @@ class GroupTitleView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : TextView(context, attrs, defStyleAttr) {
   init {
-    val lp = ViewGroup.MarginLayoutParams(
-        ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-    lp.setMargins(0, 0, 0, Static.res.px(R.dimen.list_separator_height))
+    val lp = ViewGroup.MarginLayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+    lp.margins(bottom = resources.px(R.dimen.list_separator_height))
     layoutParams = lp
     setTextAppearance(android.R.style.TextAppearance_Material_Medium)
   }

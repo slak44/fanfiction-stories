@@ -21,6 +21,7 @@ import android.util.Log
 import android.util.SparseBooleanArray
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup.MarginLayoutParams
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
@@ -242,6 +243,11 @@ fun str(@StringRes i: Int, vararg format: Any?): String = Static.res.getString(i
 
 /** Sugar for [Resources.getDimensionPixelSize]. */
 fun Resources.px(@DimenRes d: Int): Int = getDimensionPixelSize(d)
+
+/** Sugar for [MarginLayoutParams.setMargins]. */
+fun MarginLayoutParams.margins(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
+  setMargins(left, top, right, bottom)
+}
 
 /** Call [org.jetbrains.anko.startActivity] from anywhere using [Static.currentActivity]. */
 inline fun <reified T : Activity> startActivity(vararg params: Pair<String, Any?>) {
