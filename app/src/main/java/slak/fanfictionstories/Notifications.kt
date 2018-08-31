@@ -87,6 +87,11 @@ enum class Notifications(val duration: Duration,
         .setContentText(content)
         .setOngoing(duration == Duration.ONGOING)
         .setChannelId(channelKey)
+    if (duration == Duration.ONGOING) {
+      builder
+          .setShowWhen(true)
+          .setOnlyAlertOnce(true)
+    }
     group.ifPresent { builder.setGroup(it) }
     val stack = TaskStackBuilder.create(Static.currentCtx)
     stack.addParentStack(target.component)

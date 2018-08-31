@@ -88,12 +88,14 @@ class UpdateService : JobService() {
       val storiesToUpdate = orderStories(storyModels.toMutableList(),
           Prefs.storyListOrderStrategy, Prefs.storyListOrderDirection)
       val idxDelta = resumeIndex.orElse(0)
+      val startTime = System.currentTimeMillis()
       val updatedStories = storiesToUpdate.subList(resumeIndex.orElse(0), storyModels.size)
           .mapIndexedNotNull { idx, model ->
             val realIdx = idxDelta + idx
             val str = str(R.string.checking_story,
                 model.title, realIdx + 1, storyModels.size, (realIdx + 1) * 100F / storyModels.size)
             Notifications.UPDATING.show(defaultIntent(), str) {
+              setWhen(startTime)
               setStyle(NotificationCompat.BigTextStyle().bigText(str))
               setProgress(storyModels.size, realIdx + 1, false)
             }
