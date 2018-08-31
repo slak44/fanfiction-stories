@@ -221,6 +221,7 @@ Story %d of %d (%.2f%%)"
     <string name="next">Next</string>
     <string name="prev">Prev</string>
     <string name="approx_x_words_left">Approx. %s words left</string>
+    <string name="story_not_found">Story not found</string>
 
     <!-- Story reviews -->
     <string name="reviews_for">Reviews for %s</string>

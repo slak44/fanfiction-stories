@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.coroutines.experimental.CommonPool
@@ -56,9 +57,12 @@ class StoryReaderActivity : LoadingActivity() {
     intent.action == Intent.ACTION_VIEW -> runBlocking {
       val pathSegments = intent.data?.pathSegments
           ?: throw IllegalArgumentException("Intent data is empty")
-      title = pathSegments[2]
-      model = fetchStoryModel(pathSegments[1].toLong()).await()
-          .orElseThrow(IllegalArgumentException("Story not found at target link"))
+      if (pathSegments.size > 3) title = pathSegments[3]
+      model = fetchStoryModel(pathSegments[1].toLong()).await().orElse {
+        Toast.makeText(this@StoryReaderActivity, R.string.story_not_found, Toast.LENGTH_LONG).show()
+        finish()
+        return@runBlocking null
+      }
       Static.database.upsertModel(model).join()
       currentChapter = pathSegments[2].toLong()
       Log.v(TAG, "Model from link: $intent, resolved model: $model")
@@ -79,6 +83,9 @@ class StoryReaderActivity : LoadingActivity() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     obtainModel(savedInstanceState)
+
+    // If obtainModel finished, return here
+    if (isFinishing) return
 
     prevChapterBtn.setOnClickListener { initTextWithLoading(--currentChapter) }
     nextChapterBtn.setOnClickListener { initTextWithLoading(++currentChapter) }
