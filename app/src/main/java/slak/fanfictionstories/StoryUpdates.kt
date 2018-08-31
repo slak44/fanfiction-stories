@@ -85,10 +85,10 @@ class UpdateService : JobService() {
     resumeIndex = Prefs.updateResumeIndex
     coroutine = launch(CommonPool) {
       val storyModels = applicationContext.database.getLocalStories().await()
-      val updatedStories = orderStories(storyModels.toMutableList(),
+      val storiesToUpdate = orderStories(storyModels.toMutableList(),
           Prefs.storyListOrderStrategy, Prefs.storyListOrderDirection)
       val idxDelta = resumeIndex.orElse(0)
-      updatedStories.subList(resumeIndex.orElse(0), storyModels.size)
+      val updatedStories = storiesToUpdate.subList(resumeIndex.orElse(0), storyModels.size)
           .mapIndexedNotNull { idx, model ->
             val realIdx = idxDelta + idx
             val str = str(R.string.checking_story,
