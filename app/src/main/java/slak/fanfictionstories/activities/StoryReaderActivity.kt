@@ -19,7 +19,6 @@ import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.sync.Mutex
 import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
@@ -42,30 +41,38 @@ class StoryReaderActivity : LoadingActivity() {
     const val INTENT_STORY_MODEL = "bundle"
     private const val RESTORE_STORY_MODEL = "story_model"
     private const val RESTORE_CURRENT_CHAPTER = "current_chapter"
+    private const val UNINITIALIZED_CHAPTER = -642L
   }
 
   private lateinit var model: StoryModel
-  private var currentChapter: Long = 0
+  private var currentChapter: Long = UNINITIALIZED_CHAPTER
 
-  @AnyThread
-  private fun obtainModel(savedInstanceState: Bundle?) = when {
+  /**
+   * Fills in the lateinit [model] property. It will load from the savedInstanceState (resume
+   * existing), from the intent URI (cliked linked to story), or from the intent extras (in-app
+   * navigation).
+   */
+  @UiThread
+  private suspend fun obtainModel(savedInstanceState: Bundle?): Unit = when {
     savedInstanceState != null -> {
       onRestoreInstanceState(savedInstanceState)
       restoreScrollStatus()
       Log.v(TAG, "Model from savedInstanceState: $model")
+      Unit
     }
-    intent.action == Intent.ACTION_VIEW -> runBlocking {
+    intent.action == Intent.ACTION_VIEW -> {
       val pathSegments = intent.data?.pathSegments
           ?: throw IllegalArgumentException("Intent data is empty")
       if (pathSegments.size > 3) title = pathSegments[3]
       model = fetchStoryModel(pathSegments[1].toLong()).await().orElse {
-        Toast.makeText(this@StoryReaderActivity, R.string.story_not_found, Toast.LENGTH_LONG).show()
+        Toast.makeText(this, R.string.story_not_found, Toast.LENGTH_LONG).show()
         finish()
-        return@runBlocking null
+        return
       }
       Static.database.upsertModel(model).join()
       currentChapter = pathSegments[2].toLong()
       Log.v(TAG, "Model from link: $intent, resolved model: $model")
+      Unit
     }
     else -> {
       model = intent.getParcelableExtra(INTENT_STORY_MODEL)
@@ -73,19 +80,15 @@ class StoryReaderActivity : LoadingActivity() {
       currentChapter =
           if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
       Log.v(TAG, "Model from intent extra: $model")
+      Unit
     }
   }
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_story_reader)
-    setSupportActionBar(toolbar)
-    supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-    obtainModel(savedInstanceState)
-
-    // If obtainModel finished, return here
-    if (isFinishing) return
+  /** Code that would have ran in [onCreate] but doesn't to avoid excessive indents. */
+  @AnyThread
+  fun create() = launch(UI) {
+    // If the activity is already finished, don't do anything because it will crash otherwise
+    if (isFinishing) return@launch
 
     prevChapterBtn.setOnClickListener { initTextWithLoading(--currentChapter) }
     nextChapterBtn.setOnClickListener { initTextWithLoading(++currentChapter) }
@@ -101,23 +104,33 @@ class StoryReaderActivity : LoadingActivity() {
       appBar.layoutParams.height = resources.px(R.dimen.app_bar_large_text_height)
     }
 
-    title = model.title
+    toolbarLayout.title = model.title
 
-    launch(CommonPool) {
-      if (model.status != StoryStatus.LOCAL) {
-        // If the story is in the db, use it
-        model = database.storyById(model.storyId).await().orElse(model)
-      }
+    if (model.status != StoryStatus.LOCAL) {
+      // If the story is in the db, use it
+      model = database.storyById(model.storyId).await().orElse(model)
+    }
 
-      if (model.status == StoryStatus.LOCAL) {
-        // Local stories load fast enough that we do not need this loader
-        launch(UI) { hideLoading() }
-        // Update last time the story was read
-        database.updateInStory(model.storyId, "lastReadTime" to System.currentTimeMillis())
-      }
+    if (model.status == StoryStatus.LOCAL) {
+      // Local stories load fast enough that we do not need this loader
+      launch(UI) { hideLoading() }
+      // Update last time the story was read
+      database.updateInStory(model.storyId, "lastReadTime" to System.currentTimeMillis())
+    }
 
-      initTextWithLoading(currentChapter).join()
-      restoreScrollStatus().join()
+    initTextWithLoading(currentChapter).join()
+    restoreScrollStatus().join()
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContentView(R.layout.activity_story_reader)
+    setSupportActionBar(toolbar)
+    supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+    launch(UI) {
+      obtainModel(savedInstanceState)
+      create().join()
     }
   }
 
@@ -309,6 +322,7 @@ class StoryReaderActivity : LoadingActivity() {
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+    if (currentChapter == UNINITIALIZED_CHAPTER) return false
     menu.findItem(R.id.goToTop).iconTint(R.color.white, theme)
     menu.findItem(R.id.goToBottom).iconTint(R.color.white, theme)
     menu.findItem(R.id.nextChapter).isEnabled = nextChapterBtn.isEnabled
