@@ -19,7 +19,7 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-/** A metric ton of boilerplate with interfacing with various [SharedPreferences] data. */
+/** A metric ton of boilerplate for interfacing with various [SharedPreferences] data. */
 object Prefs {
   private const val TAG = "PrefsObject"
 
