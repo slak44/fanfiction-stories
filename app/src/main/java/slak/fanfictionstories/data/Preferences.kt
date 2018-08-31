@@ -12,9 +12,8 @@ import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.fetchers.Language
-import slak.fanfictionstories.utility.NetworkType
-import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.str
+import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Optional
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -148,6 +147,17 @@ object Prefs {
         Locale(localeStr)
       }
       return SimpleDateFormat.getDateInstance(SimpleDateFormat.DEFAULT, locale)
+    }
+
+  private const val UPDATE_RESUME_INDEX = "update_resume_index"
+  var updateResumeIndex: Optional<Int>
+    get() {
+      val idx = Static.prefs.getInt(UPDATE_RESUME_INDEX, -1)
+      return if (idx == -1) Empty() else idx.opt()
+    }
+    set(new) {
+      val newIdx = new.orElse { return }
+      use { it.putInt(UPDATE_RESUME_INDEX, newIdx) }
     }
 
   /**

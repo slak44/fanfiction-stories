@@ -76,25 +76,33 @@ class UpdateService : JobService() {
     return Service.START_NOT_STICKY
   }
 
-  private var coroutineJob: Job? = null
+  private var coroutine: Job? = null
+  /** The index to continue from, in case the update was previously interrupted. */
+  private var resumeIndex: Optional<Int> = Empty()
 
   override fun onStartJob(params: JobParameters): Boolean {
     Log.i(TAG, "Update job started")
-    coroutineJob = launch(CommonPool) {
+    resumeIndex = Prefs.updateResumeIndex
+    coroutine = launch(CommonPool) {
       val storyModels = applicationContext.database.getLocalStories().await()
       val updatedStories = orderStories(storyModels.toMutableList(),
-          Prefs.storyListOrderStrategy,
-          Prefs.storyListOrderDirection).mapIndexedNotNull { idx, model ->
-        val str = str(R.string.checking_story,
-            model.title, idx + 1, storyModels.size, (idx + 1) * 100F / storyModels.size)
-        Notifications.UPDATING.show(defaultIntent(), str) {
-          setStyle(NotificationCompat.BigTextStyle().bigText(str))
-          setProgress(storyModels.size, idx + 1, false)
-        }
-        val newModel = updateStory(model).await()
-        Log.v(TAG, "Story ${model.storyId} was update performed: ${newModel !is Empty}")
-        return@mapIndexedNotNull newModel.orNull()
-      }
+          Prefs.storyListOrderStrategy, Prefs.storyListOrderDirection)
+      val idxDelta = resumeIndex.orElse(0)
+      updatedStories.subList(resumeIndex.orElse(0), storyModels.size)
+          .mapIndexedNotNull { idx, model ->
+            val realIdx = idxDelta + idx
+            val str = str(R.string.checking_story,
+                model.title, realIdx + 1, storyModels.size, (realIdx + 1) * 100F / storyModels.size)
+            Notifications.UPDATING.show(defaultIntent(), str) {
+              setStyle(NotificationCompat.BigTextStyle().bigText(str))
+              setProgress(storyModels.size, realIdx + 1, false)
+            }
+            val newModel = updateStory(model).await()
+            Log.v(TAG, "Story ${model.storyId} was update performed: ${newModel !is Empty}")
+            resumeIndex = realIdx.opt()
+            return@mapIndexedNotNull newModel.orNull()
+          }
+      resumeIndex = Empty()
       Notifications.UPDATING.cancel()
       Notifications.updatedStories(updatedStories)
       scheduleUpdateJob(Prefs.autoUpdateMoment().plusDays(1))
@@ -105,9 +113,10 @@ class UpdateService : JobService() {
 
   override fun onStopJob(params: JobParameters?): Boolean {
     Log.w(TAG, "Update job was cancelled")
-    coroutineJob?.cancel()
+    coroutine?.cancel()
+    Prefs.updateResumeIndex = resumeIndex
     Notifications.UPDATING.cancel()
-    coroutineJob = null
+    coroutine = null
     return true
   }
 }
