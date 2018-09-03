@@ -58,7 +58,7 @@ object FetcherUtils {
     val reviews = Regex("Reviews: (?:<a.*?>)?([0-9,]+)(?:</a>)?", regexOpts).find(metadata)
 
     // Disambiguate genres/characters
-    val split = metadata.split(" - ").let { it.slice(stripLeading..it.size) }.toMutableList()
+    val split = metadata.split(" - ").let { it.slice(stripLeading until it.size) }.toMutableList()
     val findGenres = split.filter {
       it.contains(Regex("Adventure|Angst|Drama|Fantasy|Friendship|Humor|Hurt/Comfort|" +
           "Poetry|Romance|Sci-Fi|Supernatural|Tragedy"))
