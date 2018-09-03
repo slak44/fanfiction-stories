@@ -9,7 +9,7 @@ import slak.fanfictionstories.*
 import slak.fanfictionstories.utility.str
 import java.util.*
 
-/** Utility functions common to everyone in the [slak.fanfictionstories.fetchers] package. */
+/** Utility functions common to everyone in the [slak.fanfictionstories.data.fetchers] package. */
 object FetcherUtils {
   private val regexOpts: Set<RegexOption> = hashSetOf(
       RegexOption.MULTILINE,
