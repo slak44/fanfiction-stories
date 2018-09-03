@@ -91,7 +91,7 @@ private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?)
   val authorAnchor = it.select("a:not(.reviews)").last()
   return StoryModel(
       storyId = it.attr("data-storyid").toLong(),
-      fragment = parseStoryMetadata(it.children().last().children().last()),
+      fragment = parseStoryMetadata(it.children().last().children().last(), 3),
       progress = StoryProgress(),
       status = StoryStatus.TRANSIENT,
       // FFnet category is our canon

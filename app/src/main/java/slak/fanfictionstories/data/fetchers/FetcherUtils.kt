@@ -7,7 +7,6 @@ import org.jsoup.nodes.TextNode
 import org.jsoup.parser.Parser
 import slak.fanfictionstories.*
 import slak.fanfictionstories.utility.str
-import java.util.*
 
 /** Utility functions common to everyone in the [slak.fanfictionstories.data.fetchers] package. */
 object FetcherUtils {
@@ -33,8 +32,12 @@ object FetcherUtils {
         .replace("\\\"", "\"")
   }
 
-  /** Parses just the story metadata from the metadata div text. */
-  fun parseStoryMetadata(element: Element): StoryModelFragment {
+  /**
+   * Parses just the story metadata from the metadata div text.
+   * @param element the [Element] that contains the metadata HTML.
+   * @param stripLeading remove this many leading items delimited by '-'
+   */
+  fun parseStoryMetadata(element: Element, stripLeading: Int): StoryModelFragment {
     val metadata: String = element.html()
     val ratingLang = Regex("Rated: (?:<a .*?>Fiction[ ]+?)?(.*?)(?:</a>)? - (.*?) -", regexOpts)
         .find(metadata) ?: {
@@ -55,7 +58,7 @@ object FetcherUtils {
     val reviews = Regex("Reviews: (?:<a.*?>)?([0-9,]+)(?:</a>)?", regexOpts).find(metadata)
 
     // Disambiguate genres/characters
-    val split = ArrayList(metadata.split(" - "))
+    val split = metadata.split(" - ").let { it.slice(stripLeading..it.size) }.toMutableList()
     val findGenres = split.filter {
       it.contains(Regex("Adventure|Angst|Drama|Fantasy|Friendship|Humor|Hurt/Comfort|" +
           "Poetry|Romance|Sci-Fi|Supernatural|Tragedy"))
@@ -140,7 +143,7 @@ object FetcherUtils {
         if (navLinks.size == 1) str(R.string.crossovers)
         else unescape(navLinks.dropLast(1).last().text())
 
-    val meta = parseStoryMetadata(doc.select("#profile_top > span.xgray")[0])
+    val meta = parseStoryMetadata(doc.select("#profile_top > span.xgray")[0], 0)
 
     // Parse chapter titles only if there are any chapters to name
     val chapterTitles: String? = if (meta.chapterCount == 1L) {
