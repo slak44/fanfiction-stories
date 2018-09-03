@@ -233,8 +233,7 @@ private fun parseHtml(html: String): CanonPage {
     // There is only one such div
     val summaryMetaDiv = it.select("div.z-indent.z-padtop")[0]
     val summary = unescape(summaryMetaDiv.textNodes()[0].toString()).trim()
-    val metaStuff = summaryMetaDiv.child(0)
-    val meta = parseStoryMetadata(metaStuff.html(), metaStuff)
+    val meta = parseStoryMetadata(summaryMetaDiv.child(0))
 
     return@map StoryModel(
         storyId = storyId,

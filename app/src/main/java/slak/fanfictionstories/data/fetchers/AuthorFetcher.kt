@@ -88,11 +88,10 @@ fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
 }
 
 private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?): StoryModel {
-  val meta = it.children().last().children().last()
   val authorAnchor = it.select("a:not(.reviews)").last()
   return StoryModel(
       storyId = it.attr("data-storyid").toLong(),
-      fragment = parseStoryMetadata(meta.html(), meta),
+      fragment = parseStoryMetadata(it.children().last().children().last()),
       progress = StoryProgress(),
       status = StoryStatus.TRANSIENT,
       // FFnet category is our canon

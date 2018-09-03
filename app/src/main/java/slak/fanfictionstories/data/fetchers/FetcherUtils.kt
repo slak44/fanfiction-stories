@@ -34,7 +34,8 @@ object FetcherUtils {
   }
 
   /** Parses just the story metadata from the metadata div text. */
-  fun parseStoryMetadata(metadata: String, element: Element): StoryModelFragment {
+  fun parseStoryMetadata(element: Element): StoryModelFragment {
+    val metadata: String = element.html()
     val ratingLang = Regex("Rated: (?:<a .*?>Fiction[ ]+?)?(.*?)(?:</a>)? - (.*?) -", regexOpts)
         .find(metadata) ?: {
       val ex = IllegalStateException("Can't match rating/language")
@@ -139,8 +140,7 @@ object FetcherUtils {
         if (navLinks.size == 1) str(R.string.crossovers)
         else unescape(navLinks.dropLast(1).last().text())
 
-    val metaElem = doc.select("#profile_top > span.xgray")[0]
-    val meta = parseStoryMetadata(metaElem.html(), metaElem)
+    val meta = parseStoryMetadata(doc.select("#profile_top > span.xgray")[0])
 
     // Parse chapter titles only if there are any chapters to name
     val chapterTitles: String? = if (meta.chapterCount == 1L) {
