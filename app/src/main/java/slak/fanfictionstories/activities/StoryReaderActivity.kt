@@ -32,7 +32,7 @@ import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.activities.ReaderViewModel.Companion.UNINITIALIZED_CHAPTER
-import slak.fanfictionstories.activities.ReaderViewModel.LoadEvent.*
+import slak.fanfictionstories.activities.ReaderViewModel.ChapterEvent.*
 import slak.fanfictionstories.data.*
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryModel
@@ -49,13 +49,14 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
   lateinit var chapterText: String
     private set
 
-  enum class LoadEvent {
+  enum class ChapterEvent {
     CHAPTER_LOAD_STARTED,
+    CHAPTER_FIRST_LOAD,
     CHAPTER_CHANGED,
     CHAPTER_RELOADED
   }
-  private var _loadEvents = MutableLiveData<LoadEvent>()
-  val loadEvents: LiveData<LoadEvent> get() = _loadEvents
+  private var _chapterEvents = MutableLiveData<ChapterEvent>()
+  val chapterEvents: LiveData<ChapterEvent> get() = _chapterEvents
 
   init {
     storyModel = sModel
@@ -68,11 +69,14 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
   /** Load a particular chapter. */
   @AnyThread
   fun changeChapter(chapterToRead: Long) = launch(UI) {
-    _loadEvents.it = CHAPTER_LOAD_STARTED
+    _chapterEvents.it = CHAPTER_LOAD_STARTED
+    if (chapterToRead != currentChapter) chapterText = getChapterText().await()
+    _chapterEvents.it = when {
+      currentChapter == UNINITIALIZED_CHAPTER -> CHAPTER_FIRST_LOAD
+      chapterToRead == currentChapter -> CHAPTER_RELOADED
+      else -> CHAPTER_CHANGED
+    }
     currentChapter = chapterToRead
-    chapterText = getChapterText().await()
-    _loadEvents.it =
-        if (chapterToRead == currentChapter) CHAPTER_RELOADED else CHAPTER_CHANGED
   }
 
   @AnyThread
@@ -218,7 +222,7 @@ class StoryReaderActivity : LoadingActivity() {
         return@launch
       }
 
-      viewModel.loadEvents.observe(this@StoryReaderActivity) {
+      viewModel.chapterEvents.observe(this@StoryReaderActivity) {
         when (it) {
           CHAPTER_LOAD_STARTED -> {
             // Show loading things and disable chapter switching
@@ -231,7 +235,7 @@ class StoryReaderActivity : LoadingActivity() {
             invalidateOptionsMenu()
           }
           CHAPTER_CHANGED -> onChapterLoadFinished(false)
-          CHAPTER_RELOADED -> onChapterLoadFinished(true)
+          CHAPTER_FIRST_LOAD, CHAPTER_RELOADED -> onChapterLoadFinished(true)
         }
       }
 
@@ -256,7 +260,7 @@ class StoryReaderActivity : LoadingActivity() {
         viewModel.tryLoadingModelFromDatabase().join()
       }
       viewModel.changeChapter(initialChapter).join()
-      initSearch()
+//      initSearch()
     }
   }
 
@@ -364,7 +368,7 @@ class StoryReaderActivity : LoadingActivity() {
 
   @UiThread
   private fun chapterScroll(y: Int) {
-    if (y > resources.px(R.dimen.app_bar_height)) appBar.setExpanded(false)
+    appBar.setExpanded(y <= resources.px(R.dimen.app_bar_height))
     nestedScroller.scrollTo(0, y)
   }
 
