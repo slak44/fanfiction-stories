@@ -16,18 +16,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import kotlinx.android.synthetic.main.fragment_search_ui.view.*
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
+import slak.fanfictionstories.printAll
 
 /** A class that implements this interface can be searched using [SearchHighlighter]. */
 interface Searchable {
-  /** This property provides the raw text to search into. */
-  val text: String
+  var text: SpannableString
 
-  /** Set the new text that may include the search highlights as spans. */
   @AnyThread
-  suspend fun setText(s: CharSequence)
+  suspend fun commit()
 
   /** Scroll to the specified [Area] within the text element. */
   fun scrollTo(area: Area)
@@ -37,19 +36,44 @@ data class Area(val startPosition: Int, val length: Int) {
   val endPosition: Int get() = startPosition + length
 }
 
+data class Match(val area: Area, val searchable: Searchable) {
+  fun highlightAsCurrent() {
+    current.ifPresent { searchable.text.removeSpan(it) }
+    current = this.opt()
+    highlight()
+    scrollIntoView()
+  }
+
+  fun highlight() {
+    printAll(this, current.orNull(), this == current.orNull())
+    val span = BackgroundColorSpan(if (this === current.orNull()) currentColor else defaultColor)
+    searchable.text.setSpan(span,
+        area.startPosition, area.endPosition, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+  }
+
+  fun scrollIntoView() = searchable.scrollTo(area)
+
+  companion object {
+    private val currentColor by lazy {
+      Static.res.getColor(R.color.textHighlightCurrent, Static.currentCtx.theme)
+    }
+    private val defaultColor by lazy {
+      Static.res.getColor(R.color.textHighlightDefault, Static.currentCtx.theme)
+    }
+    var current: Optional<Match> = Empty()
+      private set
+  }
+}
+
 /** This class stores search state and provides logic for interacting with it. */
 class SearchHighlighter : Fragment() {
-  private var currentHighlight: Optional<BackgroundColorSpan> = Empty()
-  private var currentMatch: Int = 0
-  private val matches: MutableList<Area> = mutableListOf()
+  private var currentHighlightIdx: Int = 0
+  private var matches: List<Match> = emptyList()
 
-  private lateinit var searchLayout: ConstraintLayout
   private lateinit var searchable: Searchable
-  private lateinit var spannableText: SpannableString
 
   fun setSearchable(s: Searchable) {
     searchable = s
-    spannableText = SpannableString(searchable.text)
   }
 
   companion object {
@@ -61,18 +85,44 @@ class SearchHighlighter : Fragment() {
     retainInstance = true
   }
 
+  private lateinit var searchLayout: ConstraintLayout
+
   override fun onCreateView(inflater: LayoutInflater,
                             container: ViewGroup?, savedInstanceState: Bundle?): View? {
     searchLayout = inflater.inflate(
         R.layout.fragment_search_ui, container, false) as ConstraintLayout
     Log.v(TAG, "Search UI inflated")
-    searchLayout.searchNextMatchBtn.setOnClickListener { highlightNextMatch() }
-    searchLayout.searchPrevMatchBtn.setOnClickListener { highlightPrevMatch() }
+    fun updateMatchText() {
+      searchLayout.editorSearchMatches.text =
+          str(R.string.found_x_matches_current_y, matches.size, currentHighlightIdx + 1)
+    }
+    searchLayout.searchNextMatchBtn.setOnClickListener {
+      if (matches.isEmpty()) return@setOnClickListener
+      launch(UI) {
+        if (currentHighlightIdx + 1 != matches.size) currentHighlightIdx++
+        else currentHighlightIdx = 0
+        matches[currentHighlightIdx].highlightAsCurrent()
+        updateMatchText()
+        searchable.commit()
+      }
+    }
+    searchLayout.searchPrevMatchBtn.setOnClickListener {
+      if (matches.isEmpty()) return@setOnClickListener
+      launch(UI) {
+        if (currentHighlightIdx > 0) currentHighlightIdx--
+        else currentHighlightIdx = matches.size - 1
+        matches[currentHighlightIdx].highlightAsCurrent()
+        updateMatchText()
+        searchable.commit()
+      }
+    }
     searchLayout.searchCloseBtn.setOnClickListener {
-      searchLayout.visibility = View.GONE
-      spannableText = SpannableString(searchable.text)
-      commitSpans()
-      Static.imm.hideSoftInputFromWindow(searchLayout.windowToken, 0)
+      launch(UI) {
+        searchLayout.visibility = View.GONE
+        searchable.text.removeAllSpans()
+        searchable.commit()
+        Static.imm.hideSoftInputFromWindow(searchLayout.windowToken, 0)
+      }
     }
     return searchLayout
   }
@@ -86,13 +136,12 @@ class SearchHighlighter : Fragment() {
     super.onViewStateRestored(savedInstanceState)
     if (savedInstanceState != null) {
       searchLayout.visibility = savedInstanceState.getInt(RESTORE_LAYOUT_VISIBILITY, View.GONE)
-      if (searchLayout.visibility == View.VISIBLE && matches.size > 0) {
-        searchable.scrollTo(matches[currentMatch])
+      if (searchLayout.visibility == View.VISIBLE && matches.isNotEmpty()) {
+        Match.current.ifPresent { it.scrollIntoView() }
       }
     }
     searchLayout.editorSearch.setOnEditorActionListener { _, actionId, _ ->
       if (actionId != EditorInfo.IME_ACTION_SEARCH) return@setOnEditorActionListener false
-      currentMatch = 0
       searchAndHighlight()
       return@setOnEditorActionListener true
     }
@@ -108,7 +157,6 @@ class SearchHighlighter : Fragment() {
           if (before > count) clear()
           return
         }
-        currentMatch = 0
         searchAndHighlight()
       }
     })
@@ -119,100 +167,54 @@ class SearchHighlighter : Fragment() {
     outState.putInt(RESTORE_LAYOUT_VISIBILITY, searchLayout.visibility)
   }
 
-  private fun commitSpans() = launch(CommonPool) {
-    searchable.setText(spannableText)
+  /** Go through the text and return the [Match]es of the [searchQuery]. */
+  @AnyThread
+  private fun searchText(searchQuery: String): List<Match> {
+    if (searchQuery.isEmpty()) throw IllegalArgumentException("Search query is empty string")
+    var startIdx = searchable.text.indexOf(searchQuery)
+    val results = mutableListOf<Match>()
+    while (startIdx != -1) {
+      val p = Area(startIdx, searchQuery.length)
+      results.add(Match(p, searchable))
+      startIdx = searchable.text.indexOf(searchQuery, p.endPosition)
+    }
+    return results
   }
 
-  private fun searchAndHighlight() {
+  @AnyThread
+  private fun searchAndHighlight() = launch(UI) {
     clear()
-    val text = searchable.text
     val toFind = searchLayout.editorSearch.text.toString()
-    // Empty string means there are no results
     if (toFind.isEmpty()) {
+      // Empty query means there are no matches, but that's obvious, so just leave this text empty
       searchLayout.editorSearchMatches.text = ""
-      return
+      return@launch
     }
-    var startIdx = text.indexOf(toFind)
-    while (startIdx != -1) {
-      val p = Area(startIdx, toFind.length)
-      matches.add(p)
-      startIdx = text.indexOf(toFind, p.endPosition)
-    }
-    highlightMatches()
-    if (matches.size != 0) {
+    matches = searchText(toFind)
+    matches.forEach { it.highlight() }
+    if (matches.isNotEmpty()) {
       searchLayout.editorSearchMatches.text =
-          str(R.string.found_x_matches_current_y, matches.size, currentMatch + 1)
-      searchable.scrollTo(matches[currentMatch])
+          str(R.string.found_x_matches_current_y, matches.size, 1)
+      matches[0].highlightAsCurrent()
+      searchable.commit()
     } else {
       searchLayout.editorSearchMatches.text = str(R.string.no_matches_found)
     }
   }
 
   /** Make the searching UI visible, and bring it into focus. */
+  @UiThread
   fun show() {
     searchLayout.visibility = View.VISIBLE
     searchLayout.editorSearch.requestFocus()
-    highlightMatches()
-  }
-
-  /**
-   * Highlights the next matching [Area] in the text. Wraps to the beginning after the last match.
-   */
-  fun highlightNextMatch() {
-    if (matches.size == 0) return
-    if (currentMatch + 1 != matches.size) currentMatch++
-    else currentMatch = 0
-    highlightCurrent()
-  }
-
-  /**
-   * Highlights the previous matching [Area] in the text. Wraps to the end before the first match.
-   */
-  fun highlightPrevMatch() {
-    if (matches.size == 0) return
-    if (currentMatch > 0) currentMatch--
-    else currentMatch = matches.size - 1
-    highlightCurrent()
-  }
-
-  private fun highlightCurrent() {
-    highlight(matches[currentMatch], true)
-    commitSpans()
-    searchable.scrollTo(matches[currentMatch])
-  }
-
-  @UiThread
-  private fun highlightMatches() {
-    matches.forEachIndexed { idx, area ->
-      highlight(area, false)
-      if (currentMatch == idx) highlight(area, true)
-    }
-    commitSpans()
-  }
-
-  @UiThread
-  private fun highlight(area: Area, isCurrentHighlight: Boolean) {
-    val color = resources.getColor(
-        if (isCurrentHighlight) R.color.textHighlightCurrent else R.color.textHighlightDefault,
-        activity!!.theme)
-    val span = BackgroundColorSpan(color)
-    spannableText.setSpan(
-        span, area.startPosition, area.endPosition, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-    if (isCurrentHighlight) {
-      searchLayout.editorSearchMatches.text =
-          str(R.string.found_x_matches_current_y, matches.size, currentMatch + 1)
-      currentHighlight.ifPresent { spannableText.removeSpan(it) }
-      currentHighlight = span.opt()
-    }
   }
 
   @UiThread
   private fun clear() {
     searchLayout.editorSearchMatches.text = ""
-    currentMatch = 0
-    matches.clear()
-    currentHighlight = Empty()
-    spannableText = SpannableString(searchable.text)
-    commitSpans()
+    currentHighlightIdx = 0
+    matches = emptyList()
+//    currentHighlight = Empty()
+    searchable.text.removeAllSpans()
   }
 }

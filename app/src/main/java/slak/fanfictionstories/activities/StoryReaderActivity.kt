@@ -9,6 +9,7 @@ import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
 import android.text.Html
+import android.text.SpannableString
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -137,9 +138,11 @@ class StoryReaderActivity : LoadingActivity() {
           .add(R.id.rootLayout, highlighter.get(), TAG_SEARCH_FRAGMENT).commit()
     }
     highlighter.get().setSearchable(object : Searchable {
-      override val text: String = chapterText.staticLayout!!.text.toString()
+      override var text = SpannableString(chapterText.staticLayout!!.text)
 
-      override suspend fun setText(s: CharSequence) = chapterText.setText(s, theme).await()
+      override suspend fun commit() {
+        chapterText.setText(text, theme).await()
+      }
 
       override fun scrollTo(area: Area) {
         chapterText.staticLayout?.iterateDisplayedLines { lineIdx, lineRange ->

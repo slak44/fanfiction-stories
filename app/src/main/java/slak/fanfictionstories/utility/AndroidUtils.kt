@@ -18,6 +18,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Html
 import android.text.Layout
+import android.text.Spannable
 import android.text.style.ReplacementSpan
 import android.util.Log
 import android.util.SparseBooleanArray
@@ -291,4 +292,9 @@ fun Layout.iterateDisplayedLines(block: (lineIdx: Int, lineRange: IntRange) -> B
     lineStart = lineEnd
     lineIdx++
   }
+}
+
+/** Remove all spans from a [Spannable] regardless of their type. */
+fun Spannable.removeAllSpans() {
+  getSpans(0, length, Object::class.java).forEach { removeSpan(it) }
 }
