@@ -17,9 +17,9 @@ import kotlinx.android.synthetic.main.dialog_report_review.view.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
-import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.fetchers.NO_PAGES
 import slak.fanfictionstories.data.fetchers.Review
 import slak.fanfictionstories.data.fetchers.fetchStoryModel
@@ -81,13 +81,14 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer)
 }
 
 /** Presents a story's reviews. */
-class ReviewsActivity :
-    ViewModelWorkaroundLoadingActivity<ReviewsViewModel>(ReviewsViewModel::class) {
+class ReviewsActivity : LoadingActivity() {
   companion object {
     const val INTENT_STORY_MODEL = "story_model_extra"
     const val INTENT_TARGET_CHAPTER = "target_chapter_extra"
     private const val ALL_CHAPTERS = 0
   }
+
+  private lateinit var viewModel: ReviewsViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

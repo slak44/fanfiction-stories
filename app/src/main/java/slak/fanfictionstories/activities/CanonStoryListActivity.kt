@@ -80,8 +80,9 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
 }
 
 /** A list of stories within a canon. */
-class CanonStoryListActivity :
-    ViewModelWorkaroundLoadingActivity<CanonListViewModel>(CanonListViewModel::class) {
+class CanonStoryListActivity : LoadingActivity() {
+  private lateinit var viewModel: CanonListViewModel
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_canon_story_list)
