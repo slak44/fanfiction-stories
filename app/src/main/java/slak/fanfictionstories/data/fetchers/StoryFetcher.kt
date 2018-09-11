@@ -21,7 +21,7 @@ private const val TAG = "StoryFetcher"
 
 /**
  * Download metadata and every chapter, then store them in the database and on disk.
- * @returns the model we just fetched, or an empty optional if the story already exists
+ * @returns the model we just fetched, or an empty optional if that story doesn't exist
  */
 fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(CommonPool) {
   val model = fetchStoryModel(storyId).await().orElse { return@async2 Empty<StoryModel>() }
