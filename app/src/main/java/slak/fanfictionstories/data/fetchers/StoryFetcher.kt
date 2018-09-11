@@ -12,8 +12,8 @@ import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.Notifications.Companion.readerIntent
 import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.data.database
-import slak.fanfictionstories.data.writeChapters
 import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryModel
+import slak.fanfictionstories.data.writeChapters
 import slak.fanfictionstories.utility.*
 import java.util.concurrent.TimeUnit
 
