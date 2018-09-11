@@ -13,8 +13,6 @@ import android.support.v4.app.FragmentActivity
 internal class ViewModelFactory(private vararg val parameters: Any) :
     ViewModelProvider.NewInstanceFactory() {
   override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    println(modelClass.constructors[0].parameterTypes[0].simpleName)
-    println(parameters.map { it::class.java }.toTypedArray<Class<*>>()[0].simpleName)
     return modelClass
         .getConstructor(*parameters.map { it::class.java }.toTypedArray())
         .newInstance(*parameters)
