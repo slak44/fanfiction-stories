@@ -77,19 +77,16 @@ class UpdateService : JobService() {
   }
 
   private var coroutine: Job? = null
-  /** The index to continue from, in case the update was previously interrupted. */
-  private var resumeIndex: Optional<Int> = Empty()
 
   override fun onStartJob(params: JobParameters): Boolean {
     Log.i(TAG, "Update job started")
-    resumeIndex = Prefs.updateResumeIndex
     coroutine = launch(CommonPool) {
       val storyModels = applicationContext.database.getLocalStories().await()
       val storiesToUpdate = orderStories(storyModels.toMutableList(),
           Prefs.storyListOrderStrategy, Prefs.storyListOrderDirection)
-      val idxDelta = resumeIndex.orElse(0)
+      val idxDelta = Prefs.updateResumeIndex.orElse(0)
       val startTime = System.currentTimeMillis()
-      val updatedStories = storiesToUpdate.subList(resumeIndex.orElse(0), storyModels.size)
+      val updatedStories = storiesToUpdate.subList(Prefs.updateResumeIndex.orElse(0), storyModels.size)
           .mapIndexedNotNull { idx, model ->
             val realIdx = idxDelta + idx
             val str = str(R.string.checking_story,
@@ -101,10 +98,10 @@ class UpdateService : JobService() {
             }
             val newModel = updateStory(model).await()
             Log.v(TAG, "Story ${model.storyId} was update performed: ${newModel !is Empty}")
-            resumeIndex = realIdx.opt()
+            Prefs.updateResumeIndex = realIdx.opt()
             return@mapIndexedNotNull newModel.orNull()
           }
-      resumeIndex = Empty()
+      Prefs.updateResumeIndex = Empty()
       Notifications.UPDATING.cancel()
       Notifications.updatedStories(updatedStories)
       scheduleUpdateJob(Prefs.autoUpdateMoment().plusDays(1))
@@ -116,7 +113,6 @@ class UpdateService : JobService() {
   override fun onStopJob(params: JobParameters?): Boolean {
     Log.w(TAG, "Update job was cancelled")
     coroutine?.cancel()
-    Prefs.updateResumeIndex = resumeIndex
     Notifications.UPDATING.cancel()
     coroutine = null
     return true

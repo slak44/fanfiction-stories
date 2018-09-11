@@ -150,15 +150,13 @@ object Prefs {
     }
 
   private const val UPDATE_RESUME_INDEX = "update_resume_index"
+  private const val NO_RESUME = -982
   var updateResumeIndex: Optional<Int>
     get() {
-      val idx = Static.prefs.getInt(UPDATE_RESUME_INDEX, -1)
-      return if (idx == -1) Empty() else idx.opt()
+      val idx = Static.prefs.getInt(UPDATE_RESUME_INDEX, NO_RESUME)
+      return if (idx == NO_RESUME) Empty() else idx.opt()
     }
-    set(new) {
-      val newIdx = new.orElse { return }
-      use { it.putInt(UPDATE_RESUME_INDEX, newIdx) }
-    }
+    set(new) = use { it.putInt(UPDATE_RESUME_INDEX, new.orElse { NO_RESUME }) }
 
   /**
    * Like [use], but uses [SharedPreferences.Editor.commit] instead of apply.
