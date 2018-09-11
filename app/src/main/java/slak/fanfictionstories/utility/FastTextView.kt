@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.View
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.data.Prefs
 
 /**
@@ -46,26 +47,27 @@ class FastTextView @JvmOverloads constructor(
   var onTextChange: (CharSequence) -> Unit = {}
 
   /**
-   * Lays out the given [CharSequence], and creates [staticLayout]. We use [async2] so that layout
-   * creation (the most expensive operation when there's lots of text) does not block the UI.
+   * Lays out the given [CharSequence], and creates [staticLayout]. We use a coroutine so that
+   * layout creation (the most expensive operation when there's lots of text) does not block the UI.
    */
   @AnyThread
-  fun setText(s: CharSequence, theme: Resources.Theme) = async2(CommonPool) {
+  fun setText(s: CharSequence, theme: Resources.Theme) = launch(CommonPool) {
     if (!ViewCompat.isLaidOut(this@FastTextView)) {
       Log.w(TAG, "Forcing layout, setText was called before we were laid out")
-      async2(UI) {
+      launch(UI) {
         // This is done because we *need* the correct width when building the layout
-        this@FastTextView.forceLayout()
-      }.await()
+        this@FastTextView.requestLayout()
+      }.join()
     }
 
     textPaint = Prefs.textPaint(theme)
     staticLayout = StaticLayout.Builder.obtain(s, 0, s.length, textPaint!!, width).build()
 
-    async2(UI) {
+    launch(UI) {
       this@FastTextView.layoutParams.height = staticLayout!!.height
+      this@FastTextView.requestLayout()
       this@FastTextView.invalidate()
-    }.await()
+    }.join()
 
     onTextChange(s)
   }

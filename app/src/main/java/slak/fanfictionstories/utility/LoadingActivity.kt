@@ -20,6 +20,10 @@ open class LoadingActivity(private val idxInToolbarLayout: Int = -1) : ActivityW
     (toolbar.parent as ViewGroup).addView(progress, idxInToolbarLayout)
   }
 
+  /** Returns whether or not the loading bar is currently visible. */
+  @UiThread
+  open fun isLoading(): Boolean = activityProgressBar.visibility == View.VISIBLE
+
   /** Make the loading bar visible. */
   @UiThread
   open fun showLoading() {
