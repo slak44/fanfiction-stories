@@ -70,7 +70,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
   @AnyThread
   fun changeChapter(chapterToRead: Long) = launch(UI) {
     _chapterEvents.it = CHAPTER_LOAD_STARTED
-    if (chapterToRead != currentChapter) chapterText = getChapterText().await()
+    if (chapterToRead != currentChapter) chapterText = getChapterText(chapterToRead).await()
     _chapterEvents.it = when {
       currentChapter == UNINITIALIZED_CHAPTER -> CHAPTER_FIRST_LOAD
       chapterToRead == currentChapter -> CHAPTER_RELOADED
@@ -80,11 +80,11 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
   }
 
   @AnyThread
-  private fun getChapterText(): Deferred<String> = async2(CommonPool) {
-    readChapter(storyModel.storyId, currentChapter).orElse {
-      val chapterHtmlText = fetchChapter(storyModel.storyId, currentChapter).await()
+  private fun getChapterText(chapterToRead: Long): Deferred<String> = async2(CommonPool) {
+    readChapter(storyModel.storyId, chapterToRead).orElse {
+      val chapterHtmlText = fetchChapter(storyModel.storyId, chapterToRead).await()
       val text = extractChapterText(Jsoup.parse(chapterHtmlText))
-      writeChapter(storyModel.storyId, currentChapter, text)
+      writeChapter(storyModel.storyId, chapterToRead, text)
       // Get the model too if we need it
       if (storyModel.status == StoryStatus.TRANSIENT) {
         storyModel = parseStoryModel(chapterHtmlText, storyModel.storyId)
