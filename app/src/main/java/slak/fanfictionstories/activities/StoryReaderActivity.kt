@@ -52,7 +52,7 @@ class StoryReaderActivity : LoadingActivity() {
 
   /**
    * Fills in the lateinit [model] property. It will load from the savedInstanceState (resume
-   * existing), from the intent URI (cliked linked to story), or from the intent extras (in-app
+   * existing), from the intent URI (clicked linked to story), or from the intent extras (in-app
    * navigation).
    */
   @UiThread
