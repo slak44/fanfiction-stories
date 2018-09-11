@@ -1,5 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Generic -->
+    <!-- General -->
     <string name="app_name">Fanfiction Stories</string>
     <string name="add">Add</string>
     <string name="remove">Remove</string>
@@ -19,6 +19,8 @@
     <string name="cancel">Cancel</string>
     <string name="favorite_canons">Favorite Canons</string>
     <string name="x_stories">%s stories</string>
+    <string name="next">Next</string>
+    <string name="prev">Prev</string>
 
     <!-- Canon story list -->
     <string name="error_with_canon_stories">Can\'t access %s stories; Retrying…</string>
@@ -218,10 +220,15 @@ Story %d of %d (%.2f%%)"
     <string name="check_for_updates">Check For Updates</string>
     <string name="delete_local">Remove Local Data</string>
     <string name="data_deleted">Story data deleted</string>
-    <string name="next">Next</string>
-    <string name="prev">Prev</string>
     <string name="approx_x_words_left">Approx. %s words left</string>
     <string name="story_not_found">Story not found</string>
+
+    <!-- Search highlighter -->
+    <string name="search_chapter">Search In Chapter</string>
+    <string name="search_text_hint">Search…</string>
+    <string name="found_x_matches_current_y">Found %d matches (current: %d)</string>
+    <string name="no_matches_found">No matches found</string>
+    <string name="close_search">Close Search</string>
 
     <!-- Story reviews -->
     <string name="reviews_for">Reviews for %s</string>

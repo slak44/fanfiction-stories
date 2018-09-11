@@ -9,6 +9,8 @@
     <color name="dividerColor">#C7C7C7</color>
     <color name="textDisabled">#808080</color>
     <color name="textDefault">#BEBEBE</color>
+    <color name="textHighlightCurrent">#CC00CCCC</color>
+    <color name="textHighlightDefault">#6600CCCC</color>
 
     <array name="textColors">
         <item>@color/textDefault</item>

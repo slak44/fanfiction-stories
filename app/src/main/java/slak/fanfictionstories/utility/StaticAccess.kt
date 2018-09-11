@@ -10,6 +10,7 @@ import android.net.ConnectivityManager
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
+import android.view.inputmethod.InputMethodManager
 import slak.fanfictionstories.data.Prefs
 import java.io.File
 
@@ -33,6 +34,7 @@ object Static {
   private var thisCtx: Context? = null
   private var notificationManager: NotificationManager? = null
   private var jobSchedulerProp: JobScheduler? = null
+  private var immProp: InputMethodManager? = null
 
   val prefs: SharedPreferences get() = sharedPref!!
   val defaultPrefs: SharedPreferences get() = defaultPref!!
@@ -42,6 +44,7 @@ object Static {
   val currentCtx: Context get() = thisCtx!!
   val notifManager: NotificationManager get() = notificationManager!!
   val jobScheduler: JobScheduler get() = jobSchedulerProp!!
+  val imm: InputMethodManager get() = immProp!!
 
   /**
    * Returns whether or not this class' properties are usable. Static replacement for
@@ -66,6 +69,8 @@ object Static {
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     if (jobSchedulerProp == null) jobSchedulerProp = context.applicationContext
         .getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+    if (immProp == null) immProp = context.applicationContext
+        .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
   }
 }
 

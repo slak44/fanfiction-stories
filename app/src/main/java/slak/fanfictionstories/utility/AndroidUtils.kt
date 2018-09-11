@@ -17,6 +17,7 @@ import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.Html
+import android.text.Layout
 import android.text.style.ReplacementSpan
 import android.util.Log
 import android.util.SparseBooleanArray
@@ -274,4 +275,20 @@ val <T> LiveData<T>.it: T
 /** Sugar over [LiveData.observe] for non-nullable types. */
 fun <T> LiveData<T>.observe(owner: LifecycleOwner, observer: (T) -> Unit) {
   observe(owner, android.arch.lifecycle.Observer { observer(it!!) })
+}
+
+/**
+ * Iterate over the lines of a text layout (each on-screen line).
+ * @param block code to execute on each line. Return true to break the iteration.
+ */
+fun Layout.iterateDisplayedLines(block: (lineIdx: Int, lineRange: IntRange) -> Boolean) {
+  var lineIdx = 0
+  var lineStart = 0
+  while (lineIdx < lineCount) {
+    val lineEnd = getLineEnd(lineIdx)
+    val `break` = block(lineIdx, lineStart..lineEnd)
+    if (`break`) break
+    lineStart = lineEnd
+    lineIdx++
+  }
 }

@@ -41,11 +41,13 @@ class StoryReaderActivity : LoadingActivity() {
     const val INTENT_STORY_MODEL = "bundle"
     private const val RESTORE_STORY_MODEL = "story_model"
     private const val RESTORE_CURRENT_CHAPTER = "current_chapter"
+    private const val TAG_SEARCH_FRAGMENT = "search"
     private const val UNINITIALIZED_CHAPTER = -642L
   }
 
   private lateinit var model: StoryModel
   private var currentChapter: Long = UNINITIALIZED_CHAPTER
+  private var highlighter: Optional<SearchHighlighter> = Empty()
 
   /**
    * Fills in the lateinit [model] property. It will load from the savedInstanceState (resume
@@ -86,7 +88,7 @@ class StoryReaderActivity : LoadingActivity() {
 
   /** Code that would have ran in [onCreate] but doesn't to avoid excessive indents. */
   @AnyThread
-  fun create() = launch(UI) {
+  private fun create() = launch(UI) {
     // If the activity is already finished, don't do anything because it will crash otherwise
     if (isFinishing) return@launch
 
@@ -122,6 +124,36 @@ class StoryReaderActivity : LoadingActivity() {
     restoreScrollStatus().join()
   }
 
+  /** Initializes the [SearchHighlighter] fragment. */
+  @UiThread
+  private fun initSearch() {
+    val oldHighlighter = supportFragmentManager
+        .findFragmentByTag(TAG_SEARCH_FRAGMENT) as? SearchHighlighter
+    if (oldHighlighter != null) {
+      highlighter = oldHighlighter.opt()
+    } else {
+      highlighter = SearchHighlighter().opt()
+      supportFragmentManager.beginTransaction()
+          .add(R.id.rootLayout, highlighter.get(), TAG_SEARCH_FRAGMENT).commit()
+    }
+    highlighter.get().setSearchable(object : Searchable {
+      override val text: String = chapterText.staticLayout!!.text.toString()
+
+      override suspend fun setText(s: CharSequence) = chapterText.setText(s, theme).await()
+
+      override fun scrollTo(area: Area) {
+        chapterText.staticLayout?.iterateDisplayedLines { lineIdx, lineRange ->
+          if (area.startPosition in lineRange) {
+            val baseline = chapterText.staticLayout!!.getLineBounds(lineIdx, null)
+            chapterScroll(baseline)
+            return@iterateDisplayedLines true
+          }
+          return@iterateDisplayedLines false
+        }
+      }
+    })
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_story_reader)
@@ -131,6 +163,7 @@ class StoryReaderActivity : LoadingActivity() {
     launch(UI) {
       obtainModel(savedInstanceState)
       create().join()
+      initSearch()
     }
   }
 
@@ -151,6 +184,12 @@ class StoryReaderActivity : LoadingActivity() {
     currentChapter = savedInstanceState.getLong(RESTORE_CURRENT_CHAPTER)
   }
 
+  @UiThread
+  private fun chapterScroll(y: Int) {
+    if (y > resources.px(R.dimen.app_bar_height)) appBar.setExpanded(false)
+    nestedScroller.scrollTo(0, y)
+  }
+
   @AnyThread
   private fun restoreScrollStatus() = launch(UI) {
     // onResume and others get called before onCreate when the activity is first instantiated
@@ -162,9 +201,7 @@ class StoryReaderActivity : LoadingActivity() {
           .whereSimple("storyId = ?", model.storyId.toString())
           .parseOpt(DoubleParser)
     }.await() ?: return@launch
-    val y = chapterText.scrollYFromScrollState(scrollAbs)
-    if (y > resources.px(R.dimen.app_bar_height)) appBar.setExpanded(false)
-    nestedScroller.scrollTo(0, y)
+    chapterScroll(chapterText.scrollYFromScrollState(scrollAbs))
   }
 
   private fun showChapterSelectDialog() {
@@ -250,6 +287,8 @@ class StoryReaderActivity : LoadingActivity() {
         null, HrSpan.tagHandlerFactory(chapterText.width))
 
     chapterText.setText(html, theme).await()
+
+    highlighter.ifPresent { if (it.isVisible) it.show() }
 
     updateUiAfterFetchingText(chapterToRead)
     database.updateInStory(model.storyId, "currentChapter" to chapterToRead).await()
@@ -353,6 +392,8 @@ class StoryReaderActivity : LoadingActivity() {
       R.id.selectChapter -> showChapterSelectDialog()
       R.id.nextChapter -> nextChapterBtn.callOnClick()
       R.id.prevChapter -> prevChapterBtn.callOnClick()
+      R.id.searchChapter -> highlighter
+          .orElseThrow(IllegalStateException("Highlighter missing")).show()
       R.id.storyReviews -> {
         startActivity<ReviewsActivity>(
             ReviewsActivity.INTENT_STORY_MODEL to model as Parcelable,

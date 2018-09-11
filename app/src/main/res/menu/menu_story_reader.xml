@@ -31,6 +31,11 @@
         android:visible="true"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/searchChapter"
+        android:title="@string/search_chapter"
+        android:visible="true"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/checkForUpdate"
         android:title="@string/check_for_updates"
         android:visible="true"

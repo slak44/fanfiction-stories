@@ -3,6 +3,7 @@ package slak.fanfictionstories.utility
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Canvas
+import android.support.annotation.AnyThread
 import android.support.v4.view.ViewCompat
 import android.text.StaticLayout
 import android.text.TextPaint
@@ -48,6 +49,7 @@ class FastTextView @JvmOverloads constructor(
    * Lays out the given [CharSequence], and creates [staticLayout]. We use [async2] so that layout
    * creation (the most expensive operation when there's lots of text) does not block the UI.
    */
+  @AnyThread
   fun setText(s: CharSequence, theme: Resources.Theme) = async2(CommonPool) {
     if (!ViewCompat.isLaidOut(this@FastTextView)) {
       Log.w(TAG, "Forcing layout, setText was called before we were laid out")
