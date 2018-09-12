@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Typeface
+import android.text.Layout
 import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
@@ -80,6 +81,14 @@ object Prefs {
 
   fun textAntiAlias() = Static.defaultPrefs.getBoolean(
       str(R.string.key_option_antialias), str(R.string.option_antialias_default).toBoolean())
+
+  fun textBreakStrategy() = when (Static.defaultPrefs.getString(
+      str(R.string.key_option_break_strategy), str(R.string.option_break_strategy_default))) {
+    "simple" -> Layout.BREAK_STRATEGY_SIMPLE
+    "balanced" -> Layout.BREAK_STRATEGY_BALANCED
+    "high_quality" -> Layout.BREAK_STRATEGY_HIGH_QUALITY
+    else -> throw IllegalStateException("The string values are out of sync with this function")
+  }
 
   fun autoUpdateReqNetType(): NetworkType = when (Static.defaultPrefs.getString(
       str(R.string.key_option_net_type), str(R.string.option_net_type_default))) {

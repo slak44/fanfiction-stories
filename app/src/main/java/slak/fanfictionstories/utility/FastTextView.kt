@@ -61,8 +61,10 @@ class FastTextView @JvmOverloads constructor(
 
     spannable = s
     textPaint = obtainTextPaint(theme)
-    textLayout = StaticLayout.Builder.obtain(
-        spannable!!, 0, spannable!!.length, textPaint!!, width).build()
+    textLayout =
+        StaticLayout.Builder.obtain(spannable!!, 0, spannable!!.length, textPaint!!, width)
+            .setBreakStrategy(Prefs.textBreakStrategy())
+            .build()
 
     withContext(UI) {
       this@FastTextView.layoutParams.height = textLayout!!.height

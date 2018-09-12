@@ -100,6 +100,18 @@ Untouched Stories: %d (%.2f%%)"
     <string name="text_option_size">Font Size (sp)</string>
     <string name="text_option_color">Text Color</string>
     <string name="text_option_antialiasing">Enable Anti-Aliasing</string>
+    <string name="text_option_break_strategy_title">Break Strategy</string>
+    <string name="text_option_break_strategy_summary">Controls the strategy used for breaking text up into lines</string>
+    <string-array name="break_strategies">
+        <item>Simple</item>
+        <item>Balanced</item>
+        <item>High quality</item>
+    </string-array>
+    <string-array name="break_strategies_values">
+        <item>simple</item>
+        <item>balanced</item>
+        <item>high_quality</item>
+    </string-array>
     <string name="network_type_title">Required network status</string>
     <string name="network_type_summary">Avoid updating on limited networks</string>
     <string-array name="network_types">
@@ -125,6 +137,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="key_option_size" translatable="false">font_option_size</string>
     <string name="key_option_color" translatable="false">font_option_color</string>
     <string name="key_option_antialias" translatable="false">font_option_antialias</string>
+    <string name="key_option_break_strategy" translatable="false">font_option_break</string>
     <string name="key_option_update_time" translatable="false">auto_updates_time</string>
     <string name="key_option_net_type" translatable="false">auto_updates_network_type</string>
     <string name="key_option_lang_mem" translatable="false">remember_language</string>
@@ -134,6 +147,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="option_font_default" translatable="false">Roboto</string>
     <string name="option_size_default" translatable="false">14</string>
     <string name="option_antialias_default" translatable="false">true</string>
+    <string name="option_break_strategy_default" translatable="false">simple</string>
     <string name="option_update_time_default" translatable="false">23:00</string>
     <string name="option_net_type_default" translatable="false">not_roaming</string>
     <string name="option_lang_mem_default" translatable="false">true</string>
