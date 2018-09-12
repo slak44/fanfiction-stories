@@ -14,7 +14,7 @@ import android.view.inputmethod.EditorInfo
 import kotlinx.android.synthetic.main.fragment_search_ui.view.*
 import slak.fanfictionstories.R
 
-/** An activity that implements this interface can be searched using [SearchHighlighter]. */
+/** An activity that implements this interface can be searched using [SearchUIFragment]. */
 interface SearchableActivity {
   /** Get the index of the current highlight. */
   fun getCurrentHighlight(): Int
@@ -38,8 +38,8 @@ data class Area(val startPosition: Int, val length: Int) {
   val endPosition: Int get() = startPosition + length
 }
 
-/** This class stores search state and provides logic for interacting with it. */
-class SearchHighlighter : Fragment() {
+/** This fragment provides a search UI. Its activity MUST implement [SearchableActivity]. */
+class SearchUIFragment : Fragment() {
   companion object {
     private const val TAG = "SearchHighlighter"
     private const val RESTORE_LAYOUT_VISIBILITY = "search_is_visible"

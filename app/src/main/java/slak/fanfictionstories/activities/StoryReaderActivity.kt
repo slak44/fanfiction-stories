@@ -15,7 +15,6 @@ import android.text.Html
 import android.text.Spanned
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import android.text.style.BackgroundColorSpan
-import android.text.style.CharacterStyle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -168,7 +167,7 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
   }
 
   private lateinit var viewModel: ReaderViewModel
-  private lateinit var highlighter: SearchHighlighter
+  private lateinit var searchUI: SearchUIFragment
 
   /**
    * Gets the data required for the [ViewModel]. It will load from the intent URI (clicked link to
@@ -202,17 +201,17 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
     }
   }
 
-  /** Initializes the [SearchHighlighter] fragment. */
+  /** Initializes the [SearchUIFragment] fragment. */
   @UiThread
   private fun initSearch() {
     val oldHighlighter = supportFragmentManager
-        .findFragmentByTag(TAG_SEARCH_FRAGMENT) as? SearchHighlighter
+        .findFragmentByTag(TAG_SEARCH_FRAGMENT) as? SearchUIFragment
     if (oldHighlighter != null) {
-      highlighter = oldHighlighter
+      searchUI = oldHighlighter
     } else {
-      highlighter = SearchHighlighter()
+      searchUI = SearchUIFragment()
       supportFragmentManager.beginTransaction()
-          .add(R.id.rootLayout, highlighter, TAG_SEARCH_FRAGMENT).commit()
+          .add(R.id.rootLayout, searchUI, TAG_SEARCH_FRAGMENT).commit()
     }
   }
 
@@ -245,7 +244,7 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
           CHAPTER_CHANGED -> onChapterLoadFinished(false)
           CHAPTER_FIRST_LOAD, CHAPTER_RELOADED -> {
             onChapterLoadFinished(true).invokeOnCompletion { err ->
-              if (err == null) highlighter.restoreState()
+              if (err == null) searchUI.restoreState()
             }
           }
         }
@@ -461,7 +460,7 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
       R.id.selectChapter -> showChapterSelectDialog()
       R.id.nextChapter -> nextChapterBtn.callOnClick()
       R.id.prevChapter -> prevChapterBtn.callOnClick()
-      R.id.searchChapter -> highlighter.show()
+      R.id.searchChapter -> searchUI.show()
       R.id.storyReviews -> {
         startActivity<ReviewsActivity>(
             ReviewsActivity.INTENT_STORY_MODEL to viewModel.storyModel as Parcelable,
