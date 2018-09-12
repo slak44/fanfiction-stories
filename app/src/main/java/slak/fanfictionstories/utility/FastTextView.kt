@@ -14,6 +14,7 @@ import android.view.View
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 import slak.fanfictionstories.data.Prefs
 
 /**
@@ -63,11 +64,11 @@ class FastTextView @JvmOverloads constructor(
     textLayout = StaticLayout.Builder.obtain(
         spannable!!, 0, spannable!!.length, textPaint!!, width).build()
 
-    launch(UI) {
+    withContext(UI) {
       this@FastTextView.layoutParams.height = textLayout!!.height
       this@FastTextView.requestLayout()
       this@FastTextView.invalidate()
-    }.join()
+    }
   }
 
   /** @see setText */

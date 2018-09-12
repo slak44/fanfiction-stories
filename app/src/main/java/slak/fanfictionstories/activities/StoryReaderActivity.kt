@@ -330,14 +330,12 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
 
   @AnyThread
   private fun onChapterLoadFinished(restoreScroll: Boolean) = launch(UI) {
-    setChapterMetaText()
-
-    // We use the width for the <hr> elements
+    // We use the width for the <hr> elements, so the layout should be done
     if (!ViewCompat.isLaidOut(chapterText)) chapterText.requestLayout()
-    if (chapterText.width == 0) Log.w(TAG, "chapterText.width is 0!")
 
-    // FIXME move into CommonPool if it proves too slow
     chapterText.setText(parseChapterHTML(), theme).join()
+
+    setChapterMetaText()
 
     // Scroll to where we left off if we just entered, or at the beginning for further navigation
     if (restoreScroll) restoreScrollStatus()
