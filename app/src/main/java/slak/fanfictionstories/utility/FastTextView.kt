@@ -4,12 +4,12 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.support.annotation.AnyThread
-import android.support.v4.view.ViewCompat
 import android.text.SpannableString
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.Log
+import android.util.TypedValue
 import android.view.View
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -23,10 +23,6 @@ import slak.fanfictionstories.data.Prefs
 class FastTextView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
-  companion object {
-    private const val TAG = "FastTextView"
-  }
-
   /**
    * The backing string for the [textLayout]. Its content is immutable (use [setText] for that), but
    * markup can be freely added/removed. Is null unless [setText] was called.
@@ -48,7 +44,8 @@ class FastTextView @JvmOverloads constructor(
     private set
 
   /**
-   * This is fetched from preferences, but we keep a reference to calculate some text properties.
+   * A [TextPaint] instance is created with data fetched from preferences, but we keep a reference
+   * to calculate some text properties.
    * @see lineHeight
    */
   private var textPaint: TextPaint? = null
@@ -59,16 +56,10 @@ class FastTextView @JvmOverloads constructor(
    */
   @AnyThread
   fun setText(s: SpannableString, theme: Resources.Theme) = launch(CommonPool) {
-    if (!ViewCompat.isLaidOut(this@FastTextView)) {
-      Log.w(TAG, "Forcing layout, setText was called before we were laid out")
-      launch(UI) {
-        // This is done because we *need* the correct width when building the layout
-        this@FastTextView.requestLayout()
-      }.join()
-    }
+    if (width == 0) Log.e(TAG, "Creating StaticLayout with 0 width!")
 
     spannable = s
-    textPaint = Prefs.textPaint(theme)
+    textPaint = obtainTextPaint(theme)
     textLayout = StaticLayout.Builder.obtain(
         spannable!!, 0, spannable!!.length, textPaint!!, width).build()
 
@@ -133,5 +124,41 @@ class FastTextView @JvmOverloads constructor(
     canvas.save()
     textLayout?.draw(canvas) ?: Log.d(TAG, "Drawing view without layout")
     canvas.restore()
+  }
+
+  companion object {
+    private const val TAG = "FastTextView"
+
+    private var textPaintCache: TextPaint? = null
+    private var fontNameCache: String? = null
+
+    /**
+     * Create a [TextPaint] instance for drawing the chapter text.
+     * We try to return the same instance if its params haven't changed, because
+     * [android.graphics.Paint] uses native calls, and these are (annoyingly) slow.
+     */
+    private fun obtainTextPaint(theme: Resources.Theme): TextPaint {
+      val color = Prefs.textColor(theme)
+      val size = TypedValue.applyDimension(
+          TypedValue.COMPLEX_UNIT_SP, Prefs.textSize(), Static.res.displayMetrics)
+      val antialias = Prefs.textAntiAlias()
+      val fontName = Prefs.textFontName()
+      if (textPaintCache != null &&
+          textPaintCache!!.textSize == size &&
+          textPaintCache!!.color == color &&
+          textPaintCache!!.isAntiAlias == antialias &&
+          fontNameCache == fontName) {
+        Log.v(TAG, "Reusing TextPaint instance $textPaintCache")
+        return textPaintCache!!
+      }
+      val tp = TextPaint()
+      tp.color = color
+      tp.typeface = Prefs.textFont()
+      tp.textSize = size
+      tp.isAntiAlias = antialias
+      fontNameCache = fontName
+      textPaintCache = tp
+      return tp
+    }
   }
 }

@@ -4,9 +4,6 @@ import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Typeface
-import android.text.TextPaint
-import android.util.Log
-import android.util.TypedValue
 import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
@@ -20,8 +17,6 @@ import java.util.*
 
 /** A metric ton of boilerplate for interfacing with various [SharedPreferences] data. */
 object Prefs {
-  private const val TAG = "PrefsObject"
-
   const val PREFS_FILE = "slak.fanfictionstories.SHARED_PREFERENCES"
 
   private const val LIST_ORDER_IS_REVERSE = "list_order_strategy_rev"
@@ -85,36 +80,6 @@ object Prefs {
 
   fun textAntiAlias() = Static.defaultPrefs.getBoolean(
       str(R.string.key_option_antialias), str(R.string.option_antialias_default).toBoolean())
-
-  private var textPaintCache: TextPaint? = null
-  private var fontNameCache: String? = null
-
-  fun textPaint(theme: Resources.Theme): TextPaint {
-    val color = textColor(theme)
-    val size =
-        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textSize(), Static.res.displayMetrics)
-    val antialias = textAntiAlias()
-    val fontName = textFontName()
-    // Try to return the same instance if its params haven't changed, because [Paint] uses native
-    // calls, and these are annoyingly slow, plus returning a new instance every time breaks
-    // equality
-    if (textPaintCache != null &&
-        textPaintCache!!.textSize == size &&
-        textPaintCache!!.color == color &&
-        textPaintCache!!.isAntiAlias == antialias &&
-        fontNameCache == fontName) {
-      Log.v(TAG, "Reusing TextPaint instance $textPaintCache")
-      return textPaintCache!!
-    }
-    val tp = TextPaint()
-    tp.color = color
-    tp.typeface = textFont()
-    tp.textSize = size
-    tp.isAntiAlias = antialias
-    fontNameCache = fontName
-    textPaintCache = tp
-    return tp
-  }
 
   fun autoUpdateReqNetType(): NetworkType = when (Static.defaultPrefs.getString(
       str(R.string.key_option_net_type), str(R.string.option_net_type_default))) {
