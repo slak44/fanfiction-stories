@@ -5,6 +5,7 @@ import android.content.res.Resources
 import android.graphics.Canvas
 import android.support.annotation.AnyThread
 import android.support.v4.view.ViewCompat
+import android.text.SpannableString
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
@@ -27,12 +28,21 @@ class FastTextView @JvmOverloads constructor(
   }
 
   /**
-   * This view's layout. Is null unless [setText] was called.
+   * The backing string for the [textLayout]. Its content is immutable (use [setText] for that), but
+   * markup can be freely added/removed. Is null unless [setText] was called.
+   *
+   * Warning: accessing this property *while* [setText] runs is unwise, due to the possibility of a
+   * race condition.
+   */
+  var spannable: SpannableString? = null
+    private set
+
+  /**
+   * The layout used to lay out and draw the text. Is null unless [setText] was called.
    *
    * Warning: accessing this property *while* [setText] runs is unwise, due to the possibility of a
    * race condition.
    * @see setText
-   * @see onTextChange
    */
   var textLayout: StaticLayout? = null
     private set
@@ -43,15 +53,12 @@ class FastTextView @JvmOverloads constructor(
    */
   private var textPaint: TextPaint? = null
 
-  /** @see setText */
-  var onTextChange: (CharSequence) -> Unit = {}
-
   /**
-   * Lays out the given [CharSequence], and creates [textLayout]. We use a coroutine so that
+   * Lays out the given [SpannableString], and creates [textLayout]. We use a coroutine so that
    * layout creation (the most expensive operation when there's lots of text) does not block the UI.
    */
   @AnyThread
-  fun setText(s: CharSequence, theme: Resources.Theme) = launch(CommonPool) {
+  fun setText(s: SpannableString, theme: Resources.Theme) = launch(CommonPool) {
     if (!ViewCompat.isLaidOut(this@FastTextView)) {
       Log.w(TAG, "Forcing layout, setText was called before we were laid out")
       launch(UI) {
@@ -60,17 +67,21 @@ class FastTextView @JvmOverloads constructor(
       }.join()
     }
 
+    spannable = s
     textPaint = Prefs.textPaint(theme)
-    textLayout = StaticLayout.Builder.obtain(s, 0, s.length, textPaint!!, width).build()
+    textLayout = StaticLayout.Builder.obtain(
+        spannable!!, 0, spannable!!.length, textPaint!!, width).build()
 
     launch(UI) {
       this@FastTextView.layoutParams.height = textLayout!!.height
       this@FastTextView.requestLayout()
       this@FastTextView.invalidate()
     }.join()
-
-    onTextChange(s)
   }
+
+  /** @see setText */
+  @AnyThread
+  fun setText(s: CharSequence, theme: Resources.Theme) = setText(SpannableString(s), theme)
 
   /**
    * Should be equivalent to [android.widget.TextView.getLineHeight].
