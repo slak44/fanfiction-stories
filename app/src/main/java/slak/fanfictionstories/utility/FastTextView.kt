@@ -34,7 +34,7 @@ class FastTextView @JvmOverloads constructor(
    * @see setText
    * @see onTextChange
    */
-  var staticLayout: StaticLayout? = null
+  var textLayout: StaticLayout? = null
     private set
 
   /**
@@ -47,7 +47,7 @@ class FastTextView @JvmOverloads constructor(
   var onTextChange: (CharSequence) -> Unit = {}
 
   /**
-   * Lays out the given [CharSequence], and creates [staticLayout]. We use a coroutine so that
+   * Lays out the given [CharSequence], and creates [textLayout]. We use a coroutine so that
    * layout creation (the most expensive operation when there's lots of text) does not block the UI.
    */
   @AnyThread
@@ -61,10 +61,10 @@ class FastTextView @JvmOverloads constructor(
     }
 
     textPaint = Prefs.textPaint(theme)
-    staticLayout = StaticLayout.Builder.obtain(s, 0, s.length, textPaint!!, width).build()
+    textLayout = StaticLayout.Builder.obtain(s, 0, s.length, textPaint!!, width).build()
 
     launch(UI) {
-      this@FastTextView.layoutParams.height = staticLayout!!.height
+      this@FastTextView.layoutParams.height = textLayout!!.height
       this@FastTextView.requestLayout()
       this@FastTextView.invalidate()
     }.join()
@@ -90,7 +90,7 @@ class FastTextView @JvmOverloads constructor(
    * @see scrollYFromScrollState
    */
   fun scrollStateFromScrollY(scrollY: Int): Double {
-    val layout = staticLayout!!
+    val layout = textLayout!!
     val topPadding = -layout.topPadding
     return if (scrollY <= topPadding) {
       (topPadding - scrollY) / lineHeight.toDouble()
@@ -110,7 +110,7 @@ class FastTextView @JvmOverloads constructor(
    * @see scrollStateFromScrollY
    */
   fun scrollYFromScrollState(state: Double): Int {
-    val layout = staticLayout!!
+    val layout = textLayout!!
     val offset = state.toInt()
     val above = ((state - offset) * lineHeight).toInt()
     val line = layout.getLineForOffset(offset)
@@ -120,7 +120,7 @@ class FastTextView @JvmOverloads constructor(
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
     canvas.save()
-    staticLayout?.draw(canvas) ?: Log.d(TAG, "Drawing view without layout")
+    textLayout?.draw(canvas) ?: Log.d(TAG, "Drawing view without layout")
     canvas.restore()
   }
 }

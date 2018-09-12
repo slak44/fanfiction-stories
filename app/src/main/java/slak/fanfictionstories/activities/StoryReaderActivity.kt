@@ -160,9 +160,9 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
   override fun getCurrentHighlight(): Int = viewModel.searchCurrentMatchIdx
 
   override fun navigateToHighlight(idx: Int) {
-    chapterText.staticLayout?.iterateDisplayedLines { lineIdx, lineRange ->
+    chapterText.textLayout?.iterateDisplayedLines { lineIdx, lineRange ->
       if (viewModel.searchMatches[idx].startPosition in lineRange) {
-        val baseline = chapterText.staticLayout!!.getLineBounds(lineIdx, null)
+        val baseline = chapterText.textLayout!!.getLineBounds(lineIdx, null)
         chapterScroll(baseline)
         return@iterateDisplayedLines true
       }
@@ -344,7 +344,7 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
 
   @UiThread
   private suspend fun restoreScrollStatus() {
-    if (chapterText.staticLayout == null) {
+    if (chapterText.textLayout == null) {
       Log.w(TAG, "Cannot restore scroll status because layout is null")
       return
     }
@@ -396,7 +396,7 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
     invalidateOptionsMenu()
 
     // If the text is so short the scroller doesn't need to scroll, max out progress right away
-    if (nestedScroller.height > chapterText.staticLayout!!.height) {
+    if (nestedScroller.height > chapterText.textLayout!!.height) {
       scrollSaver.notifyChanged(100.0, 99999999.0)
     }
 
