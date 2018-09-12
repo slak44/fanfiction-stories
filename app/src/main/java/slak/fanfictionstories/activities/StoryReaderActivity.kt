@@ -161,49 +161,6 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
 
 /** Shows a chapter of a story for reading. */
 class StoryReaderActivity : LoadingActivity(), SearchableActivity {
-  private inner class SearchHighlightSpan(isCurrent: Boolean) : BackgroundColorSpan(
-      getColor(if (isCurrent) R.color.textHighlightCurrent else R.color.textHighlightDefault))
-
-  override fun getMatchCount(): Int = viewModel.searchMatches.size
-  override fun getCurrentHighlight(): Int = viewModel.searchCurrentMatchIdx
-
-  override fun navigateToHighlight(idx: Int) {
-    chapterText.textLayout?.iterateDisplayedLines { lineIdx, lineRange ->
-      if (viewModel.searchMatches[idx].startPosition in lineRange) {
-        val baseline = chapterText.textLayout!!.getLineBounds(lineIdx, null)
-        chapterScroll(baseline)
-        return@iterateDisplayedLines true
-      }
-      return@iterateDisplayedLines false
-    }
-  }
-
-  override fun setSearchQuery(query: String) = viewModel.searchInChapter(parseChapterHTML(), query)
-
-  override fun updateCurrentHighlight(idx: Int) {
-    viewModel.searchCurrentMatchIdx = idx
-    highlightMatches()
-  }
-
-  override fun highlightMatches() {
-    if (chapterText.spannable == null) throw IllegalStateException("Can't highlight missing text")
-    viewModel.searchMatches.forEach {
-      chapterText.spannable!!.setSpan(SearchHighlightSpan(false),
-          it.startPosition, it.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
-    }
-    if (viewModel.searchMatches.isNotEmpty()) {
-      val curr = viewModel.searchMatches[viewModel.searchCurrentMatchIdx]
-      chapterText.spannable!!.setSpan(SearchHighlightSpan(true),
-          curr.startPosition, curr.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
-    }
-    chapterText.invalidate()
-  }
-
-  override fun clearHighlights() {
-    chapterText.spannable?.removeAllSpans(SearchHighlightSpan::class.java)
-    chapterText.invalidate()
-  }
-
   companion object {
     private const val TAG = "StoryReaderActivity"
     const val INTENT_STORY_MODEL = "bundle"
@@ -526,5 +483,47 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
       else -> return super.onOptionsItemSelected(item)
     }
     return true
+  }
+
+  override fun getMatchCount(): Int = viewModel.searchMatches.size
+  override fun getCurrentHighlight(): Int = viewModel.searchCurrentMatchIdx
+
+  override fun navigateToHighlight(idx: Int) {
+    chapterText.textLayout?.iterateDisplayedLines { lineIdx, lineRange ->
+      if (viewModel.searchMatches[idx].startPosition in lineRange) {
+        val baseline = chapterText.textLayout!!.getLineBounds(lineIdx, null)
+        chapterScroll(baseline)
+        return@iterateDisplayedLines true
+      }
+      return@iterateDisplayedLines false
+    }
+  }
+
+  override fun setSearchQuery(query: String) = viewModel.searchInChapter(parseChapterHTML(), query)
+
+  override fun updateCurrentHighlight(idx: Int) {
+    viewModel.searchCurrentMatchIdx = idx
+    highlightMatches()
+  }
+
+  private inner class SearchHighlightSpan(isCurrent: Boolean) : BackgroundColorSpan(
+      getColor(if (isCurrent) R.color.textHighlightCurrent else R.color.textHighlightDefault))
+  override fun highlightMatches() {
+    if (chapterText.spannable == null) throw IllegalStateException("Can't highlight missing text")
+    viewModel.searchMatches.forEach {
+      chapterText.spannable!!.setSpan(SearchHighlightSpan(false),
+          it.startPosition, it.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+    if (viewModel.searchMatches.isNotEmpty()) {
+      val curr = viewModel.searchMatches[viewModel.searchCurrentMatchIdx]
+      chapterText.spannable!!.setSpan(SearchHighlightSpan(true),
+          curr.startPosition, curr.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+    chapterText.invalidate()
+  }
+
+  override fun clearHighlights() {
+    chapterText.spannable?.removeAllSpans(SearchHighlightSpan::class.java)
+    chapterText.invalidate()
   }
 }
