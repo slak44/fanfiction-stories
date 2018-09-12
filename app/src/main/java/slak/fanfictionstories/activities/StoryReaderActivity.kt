@@ -11,8 +11,9 @@ import android.support.annotation.UiThread
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
-import android.text.Html
-import android.text.SpannableString
+import android.text.*
+import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+import android.text.style.BackgroundColorSpan
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -46,7 +47,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
   var currentChapter: Long = UNINITIALIZED_CHAPTER
     private set
 
-  lateinit var chapterText: String
+  lateinit var chapterHtml: String
     private set
 
   enum class ChapterEvent {
@@ -58,19 +59,39 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
   private var _chapterEvents = MutableLiveData<ChapterEvent>()
   val chapterEvents: LiveData<ChapterEvent> get() = _chapterEvents
 
+  var searchMatches = listOf<Area>()
+    private set
+
+  var searchCurrentMatchIdx: Int = 0
+
+  companion object {
+    const val UNINITIALIZED_CHAPTER = -454L
+  }
+
   init {
     storyModel = sModel
   }
 
-  companion object {
-    const val UNINITIALIZED_CHAPTER = -454L
+  /** Update the [searchMatches] according to the new search string. */
+  @AnyThread
+  fun searchInChapter(chapterSpanned: Spanned, searchQuery: String) {
+    searchCurrentMatchIdx = 0
+    if (searchQuery.isEmpty()) searchMatches = listOf()
+    var startIdx = chapterSpanned.indexOf(searchQuery)
+    val results = mutableListOf<Area>()
+    while (startIdx != -1) {
+      val p = Area(startIdx, searchQuery.length)
+      results.add(p)
+      startIdx = chapterSpanned.indexOf(searchQuery, p.endPosition)
+    }
+    searchMatches = results
   }
 
   /** Load a particular chapter. */
   @AnyThread
   fun changeChapter(chapterToRead: Long) = launch(UI) {
     _chapterEvents.it = CHAPTER_LOAD_STARTED
-    if (chapterToRead != currentChapter) chapterText = getChapterText(chapterToRead).await()
+    if (chapterToRead != currentChapter) chapterHtml = getChapterHtml(chapterToRead).await()
     _chapterEvents.it = when {
       currentChapter == UNINITIALIZED_CHAPTER -> CHAPTER_FIRST_LOAD
       chapterToRead == currentChapter -> CHAPTER_RELOADED
@@ -80,7 +101,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
   }
 
   @AnyThread
-  private fun getChapterText(chapterToRead: Long): Deferred<String> = async2(CommonPool) {
+  private fun getChapterHtml(chapterToRead: Long): Deferred<String> = async2(CommonPool) {
     readChapter(storyModel.storyId, chapterToRead).orElse {
       val chapterHtmlText = fetchChapter(storyModel.storyId, chapterToRead).await()
       val text = extractChapterText(Jsoup.parse(chapterHtmlText))
@@ -134,7 +155,45 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
 }
 
 /** Shows a chapter of a story for reading. */
-class StoryReaderActivity : LoadingActivity() {
+class StoryReaderActivity : LoadingActivity(), SearchableActivity {
+  override fun getMatchCount(): Int = viewModel.searchMatches.size
+  override fun getCurrentHighlight(): Int = viewModel.searchCurrentMatchIdx
+
+  override fun navigateToHighlight(idx: Int) {
+    chapterText.staticLayout?.iterateDisplayedLines { lineIdx, lineRange ->
+      if (viewModel.searchMatches[idx].startPosition in lineRange) {
+        val baseline = chapterText.staticLayout!!.getLineBounds(lineIdx, null)
+        chapterScroll(baseline)
+        return@iterateDisplayedLines true
+      }
+      return@iterateDisplayedLines false
+    }
+  }
+
+  override fun setSearchQuery(query: String) = viewModel.searchInChapter(parseChapterHTML(), query)
+
+  override suspend fun updateCurrentHighlight(idx: Int) {
+    viewModel.searchCurrentMatchIdx = idx
+    highlightMatches()
+  }
+
+  override suspend fun highlightMatches() {
+    val spannable = SpannableString(parseChapterHTML())
+    val span = BackgroundColorSpan(getColor(R.color.textHighlightDefault))
+    viewModel.searchMatches.forEach {
+      spannable.setSpan(BackgroundColorSpan.wrap(span),
+          it.startPosition, it.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+    if (viewModel.searchMatches.isNotEmpty()) {
+      val curr = viewModel.searchMatches[viewModel.searchCurrentMatchIdx]
+      spannable.setSpan(BackgroundColorSpan(getColor(R.color.textHighlightCurrent)),
+          curr.startPosition, curr.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+    chapterText.setText(spannable, theme).join()
+  }
+
+  override suspend fun clearHighlights() = chapterText.setText(parseChapterHTML(), theme).join()
+
   companion object {
     private const val TAG = "StoryReaderActivity"
     const val INTENT_STORY_MODEL = "bundle"
@@ -188,24 +247,6 @@ class StoryReaderActivity : LoadingActivity() {
       supportFragmentManager.beginTransaction()
           .add(R.id.rootLayout, highlighter.get(), TAG_SEARCH_FRAGMENT).commit()
     }
-    highlighter.get().setSearchable(object : Searchable {
-      override var text = SpannableString(chapterText.staticLayout!!.text)
-
-      override suspend fun commit() {
-        chapterText.setText(text, theme).join()
-      }
-
-      override fun scrollTo(area: Area) {
-        chapterText.staticLayout?.iterateDisplayedLines { lineIdx, lineRange ->
-          if (area.startPosition in lineRange) {
-            val baseline = chapterText.staticLayout!!.getLineBounds(lineIdx, null)
-            chapterScroll(baseline)
-            return@iterateDisplayedLines true
-          }
-          return@iterateDisplayedLines false
-        }
-      }
-    })
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -234,8 +275,12 @@ class StoryReaderActivity : LoadingActivity() {
             selectChapterBtn.isEnabled = false
             invalidateOptionsMenu()
           }
-          CHAPTER_CHANGED -> onChapterLoadFinished(false)
-          CHAPTER_FIRST_LOAD, CHAPTER_RELOADED -> onChapterLoadFinished(true)
+          CHAPTER_CHANGED -> {
+            onChapterLoadFinished(false)
+          }
+          CHAPTER_FIRST_LOAD, CHAPTER_RELOADED -> {
+            onChapterLoadFinished(true)
+          }
         }
       }
 
@@ -260,7 +305,7 @@ class StoryReaderActivity : LoadingActivity() {
         viewModel.tryLoadingModelFromDatabase().join()
       }
       viewModel.changeChapter(initialChapter).join()
-//      initSearch()
+      initSearch()
     }
   }
 
@@ -275,7 +320,7 @@ class StoryReaderActivity : LoadingActivity() {
 
   @UiThread
   private fun setChapterMetaText() = with(viewModel.storyModel) {
-    val chapterWordCount = autoSuffixNumber(viewModel.chapterText.split(" ").size)
+    val chapterWordCount = autoSuffixNumber(viewModel.chapterHtml.split(" ").size)
     chapterWordCountText.text = str(R.string.x_words, chapterWordCount)
     currentChapterText.text = str(R.string.chapter_progress,
         viewModel.currentChapter, fragment.chapterCount)
@@ -311,6 +356,12 @@ class StoryReaderActivity : LoadingActivity() {
     chapterScroll(chapterText.scrollYFromScrollState(scrollAbs))
   }
 
+  @UiThread
+  private fun parseChapterHTML(): Spanned {
+    return Html.fromHtml(viewModel.chapterHtml, Html.FROM_HTML_MODE_LEGACY,
+        null, HrSpan.tagHandlerFactory(chapterText.width))
+  }
+
   @AnyThread
   private fun onChapterLoadFinished(restoreScroll: Boolean) = launch(UI) {
     setChapterMetaText()
@@ -320,9 +371,7 @@ class StoryReaderActivity : LoadingActivity() {
     if (chapterText.width == 0) Log.w(TAG, "chapterText.width is 0!")
 
     // FIXME move into CommonPool if it proves too slow
-    val html = Html.fromHtml(viewModel.chapterText, Html.FROM_HTML_MODE_LEGACY,
-        null, HrSpan.tagHandlerFactory(chapterText.width))
-    chapterText.setText(html, theme).join()
+    chapterText.setText(parseChapterHTML(), theme).join()
 
     // Scroll to where we left off if we just entered, or at the beginning for further navigation
     if (restoreScroll) restoreScrollStatus()
