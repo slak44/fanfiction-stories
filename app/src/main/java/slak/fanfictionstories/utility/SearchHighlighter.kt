@@ -1,7 +1,6 @@
 package slak.fanfictionstories.utility
 
 import android.os.Bundle
-import android.support.annotation.AnyThread
 import android.support.annotation.UiThread
 import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
@@ -13,8 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import kotlinx.android.synthetic.main.fragment_search_ui.view.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
 
 /** An activity that implements this interface can be searched using [SearchHighlighter]. */
@@ -28,11 +25,11 @@ interface SearchableActivity {
   /** Search for [query] and update the stored matches. */
   fun setSearchQuery(query: String)
   /** Change the currently highlighted match. */
-  suspend fun updateCurrentHighlight(idx: Int)
+  fun updateCurrentHighlight(idx: Int)
   /** Highlight the found matches, and the currently selected one. */
-  suspend fun highlightMatches()
+  fun highlightMatches()
   /** Remove all highlights. */
-  suspend fun clearHighlights()
+  fun clearHighlights()
 }
 fun SearchableActivity.hasMatches() = getMatchCount() > 0
 fun SearchableActivity.hasNoMatches() = !hasMatches()
@@ -58,36 +55,30 @@ class SearchHighlighter : Fragment() {
     Log.v(TAG, "Search UI inflated")
     searchLayout.searchNextMatchBtn.setOnClickListener {
       if (sActivity.hasNoMatches()) return@setOnClickListener
-      launch(UI) {
-        val newCurrent = if (sActivity.getCurrentHighlight() + 1 != sActivity.getMatchCount()) {
-          sActivity.getCurrentHighlight() + 1
-        } else {
-          0
-        }
-        sActivity.navigateToHighlight(newCurrent)
-        updateMatchText(newCurrent + 1)
-        sActivity.updateCurrentHighlight(newCurrent)
+      val newCurrent = if (sActivity.getCurrentHighlight() + 1 != sActivity.getMatchCount()) {
+        sActivity.getCurrentHighlight() + 1
+      } else {
+        0
       }
+      sActivity.navigateToHighlight(newCurrent)
+      updateMatchText(newCurrent + 1)
+      sActivity.updateCurrentHighlight(newCurrent)
     }
     searchLayout.searchPrevMatchBtn.setOnClickListener {
       if (sActivity.hasNoMatches()) return@setOnClickListener
-      launch(UI) {
-        val newCurrent = if (sActivity.getCurrentHighlight() > 0) {
-          sActivity.getCurrentHighlight() - 1
-        } else {
-          sActivity.getMatchCount() - 1
-        }
-        sActivity.navigateToHighlight(newCurrent)
-        updateMatchText(newCurrent + 1)
-        sActivity.updateCurrentHighlight(newCurrent)
+      val newCurrent = if (sActivity.getCurrentHighlight() > 0) {
+        sActivity.getCurrentHighlight() - 1
+      } else {
+        sActivity.getMatchCount() - 1
       }
+      sActivity.navigateToHighlight(newCurrent)
+      updateMatchText(newCurrent + 1)
+      sActivity.updateCurrentHighlight(newCurrent)
     }
     searchLayout.searchCloseBtn.setOnClickListener {
-      launch(UI) {
-        searchLayout.visibility = View.GONE
-        Static.imm.hideSoftInputFromWindow(searchLayout.windowToken, 0)
-        sActivity.clearHighlights()
-      }
+      searchLayout.visibility = View.GONE
+      hideSoftKeyboard(searchLayout.windowToken)
+      sActivity.clearHighlights()
     }
     return searchLayout
   }
@@ -113,21 +104,18 @@ class SearchHighlighter : Fragment() {
       override fun afterTextChanged(s: Editable) {}
       override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
       override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-        launch(UI) {
-          // Searching for stuff less than ~3 chars long gets so many matches that we lag hard
-          // If the user wants to search for something like that, he can press search manually
-          if (s.length < 3) {
-            // If characters were removed, we're going from 3+ letters to less than that
-            // And we'd like to not have existing highlights loiter around, so clear them
-            if (before > count) {
-              searchLayout.editorSearchMatches.text = ""
-              sActivity.setSearchQuery("")
-              sActivity.clearHighlights()
-            }
-            return@launch
+        // Searching for stuff less than ~3 chars long gets so many matches that we lag hard
+        // If the user wants to search for something like that, he can press search manually
+        if (s.length < 3) {
+          // If characters were removed, we're going from 3+ letters to less than that
+          // And we'd like to not have existing highlights loiter around, so clear them
+          if (before > count) {
+            searchLayout.editorSearchMatches.text = ""
+            sActivity.clearHighlights()
           }
-          searchAndHighlight()
+          return
         }
+        searchAndHighlight()
       }
     })
   }
@@ -137,14 +125,14 @@ class SearchHighlighter : Fragment() {
     outState.putInt(RESTORE_LAYOUT_VISIBILITY, searchLayout.visibility)
   }
 
-  @AnyThread
-  private fun searchAndHighlight() = launch(UI) {
+  @UiThread
+  private fun searchAndHighlight() {
     val toFind = searchLayout.editorSearch.text.toString()
     sActivity.setSearchQuery(toFind)
     if (toFind.isEmpty()) {
       // Empty query means there are no matches, but that's obvious, so just leave this text empty
       searchLayout.editorSearchMatches.text = ""
-      return@launch
+      return
     }
     sActivity.highlightMatches()
     if (sActivity.hasMatches()) {
@@ -163,9 +151,17 @@ class SearchHighlighter : Fragment() {
 
   /** Make the searching UI visible, and bring it into focus. */
   @UiThread
-  fun show() = launch(UI) {
+  fun show() {
     searchLayout.visibility = View.VISIBLE
     searchLayout.editorSearch.requestFocus()
     sActivity.highlightMatches()
+  }
+
+  /** Call after reinitializing this fragment. */
+  @UiThread
+  fun restoreState() {
+    if (searchLayout.visibility != View.VISIBLE) return
+    sActivity.highlightMatches()
+    if (sActivity.hasMatches()) updateMatchText(sActivity.getCurrentHighlight() + 1)
   }
 }

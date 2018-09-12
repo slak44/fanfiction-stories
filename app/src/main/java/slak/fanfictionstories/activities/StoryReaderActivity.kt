@@ -11,9 +11,11 @@ import android.support.annotation.UiThread
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
-import android.text.*
+import android.text.Html
+import android.text.Spanned
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import android.text.style.BackgroundColorSpan
+import android.text.style.CharacterStyle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -30,10 +32,13 @@ import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
 import org.jsoup.Jsoup
-import slak.fanfictionstories.*
+import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
-import slak.fanfictionstories.activities.ReaderViewModel.Companion.UNINITIALIZED_CHAPTER
+import slak.fanfictionstories.R
+import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.activities.ReaderViewModel.ChapterEvent.*
+import slak.fanfictionstories.activities.ReaderViewModel.Companion.UNINITIALIZED_CHAPTER
 import slak.fanfictionstories.data.*
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryModel
@@ -156,6 +161,9 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
 
 /** Shows a chapter of a story for reading. */
 class StoryReaderActivity : LoadingActivity(), SearchableActivity {
+  private inner class SearchHighlightSpan(isCurrent: Boolean) : BackgroundColorSpan(
+      getColor(if (isCurrent) R.color.textHighlightCurrent else R.color.textHighlightDefault))
+
   override fun getMatchCount(): Int = viewModel.searchMatches.size
   override fun getCurrentHighlight(): Int = viewModel.searchCurrentMatchIdx
 
@@ -172,27 +180,29 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
 
   override fun setSearchQuery(query: String) = viewModel.searchInChapter(parseChapterHTML(), query)
 
-  override suspend fun updateCurrentHighlight(idx: Int) {
+  override fun updateCurrentHighlight(idx: Int) {
     viewModel.searchCurrentMatchIdx = idx
     highlightMatches()
   }
 
-  override suspend fun highlightMatches() {
-    val spannable = SpannableString(parseChapterHTML())
-    val span = BackgroundColorSpan(getColor(R.color.textHighlightDefault))
+  override fun highlightMatches() {
+    if (chapterText.spannable == null) throw IllegalStateException("Can't highlight missing text")
     viewModel.searchMatches.forEach {
-      spannable.setSpan(BackgroundColorSpan.wrap(span),
+      chapterText.spannable!!.setSpan(SearchHighlightSpan(false),
           it.startPosition, it.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
     }
     if (viewModel.searchMatches.isNotEmpty()) {
       val curr = viewModel.searchMatches[viewModel.searchCurrentMatchIdx]
-      spannable.setSpan(BackgroundColorSpan(getColor(R.color.textHighlightCurrent)),
+      chapterText.spannable!!.setSpan(SearchHighlightSpan(true),
           curr.startPosition, curr.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
     }
-    chapterText.setText(spannable, theme).join()
+    chapterText.invalidate()
   }
 
-  override suspend fun clearHighlights() = chapterText.setText(parseChapterHTML(), theme).join()
+  override fun clearHighlights() {
+    chapterText.spannable?.removeAllSpans(SearchHighlightSpan::class.java)
+    chapterText.invalidate()
+  }
 
   companion object {
     private const val TAG = "StoryReaderActivity"
@@ -201,7 +211,7 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
   }
 
   private lateinit var viewModel: ReaderViewModel
-  private var highlighter: Optional<SearchHighlighter> = Empty()
+  private lateinit var highlighter: SearchHighlighter
 
   /**
    * Gets the data required for the [ViewModel]. It will load from the intent URI (clicked link to
@@ -241,11 +251,11 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
     val oldHighlighter = supportFragmentManager
         .findFragmentByTag(TAG_SEARCH_FRAGMENT) as? SearchHighlighter
     if (oldHighlighter != null) {
-      highlighter = oldHighlighter.opt()
+      highlighter = oldHighlighter
     } else {
-      highlighter = SearchHighlighter().opt()
+      highlighter = SearchHighlighter()
       supportFragmentManager.beginTransaction()
-          .add(R.id.rootLayout, highlighter.get(), TAG_SEARCH_FRAGMENT).commit()
+          .add(R.id.rootLayout, highlighter, TAG_SEARCH_FRAGMENT).commit()
     }
   }
 
@@ -275,11 +285,11 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
             selectChapterBtn.isEnabled = false
             invalidateOptionsMenu()
           }
-          CHAPTER_CHANGED -> {
-            onChapterLoadFinished(false)
-          }
+          CHAPTER_CHANGED -> onChapterLoadFinished(false)
           CHAPTER_FIRST_LOAD, CHAPTER_RELOADED -> {
-            onChapterLoadFinished(true)
+            onChapterLoadFinished(true).invokeOnCompletion { err ->
+              if (err == null) highlighter.restoreState()
+            }
           }
         }
       }
@@ -494,8 +504,7 @@ class StoryReaderActivity : LoadingActivity(), SearchableActivity {
       R.id.selectChapter -> showChapterSelectDialog()
       R.id.nextChapter -> nextChapterBtn.callOnClick()
       R.id.prevChapter -> prevChapterBtn.callOnClick()
-      R.id.searchChapter -> highlighter
-          .orElseThrow(IllegalStateException("Highlighter missing")).show()
+      R.id.searchChapter -> highlighter.show()
       R.id.storyReviews -> {
         startActivity<ReviewsActivity>(
             ReviewsActivity.INTENT_STORY_MODEL to viewModel.storyModel as Parcelable,

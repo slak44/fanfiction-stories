@@ -10,6 +10,7 @@ import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
+import android.os.IBinder
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.annotation.StringRes
@@ -38,6 +39,7 @@ import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.R
 import java.net.URL
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.KClass
 
 /**
  * Create an error dialog with a title, message and a dismiss button.
@@ -294,7 +296,12 @@ fun Layout.iterateDisplayedLines(block: (lineIdx: Int, lineRange: IntRange) -> B
   }
 }
 
-/** Remove all spans from a [Spannable] regardless of their type. */
-fun Spannable.removeAllSpans() {
-  getSpans(0, length, Object::class.java).forEach { removeSpan(it) }
+/** Remove all spans from a [Spannable] depending on their type. */
+fun <T> Spannable.removeAllSpans(kind: Class<T>) {
+  getSpans(0, length, kind).forEach { removeSpan(it) }
+}
+
+/** Hides the on-screen keyboard. */
+fun hideSoftKeyboard(windowToken: IBinder) {
+  Static.imm.hideSoftInputFromWindow(windowToken, 0)
 }
