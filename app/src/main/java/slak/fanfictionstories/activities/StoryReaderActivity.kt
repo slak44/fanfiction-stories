@@ -159,7 +159,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
 }
 
 /** Shows a chapter of a story for reading. */
-class StoryReaderActivity : LoadingActivity(), SearchableActivity {
+class StoryReaderActivity : LoadingActivity(), ISearchableActivity {
   companion object {
     private const val TAG = "StoryReaderActivity"
     const val INTENT_STORY_MODEL = "bundle"

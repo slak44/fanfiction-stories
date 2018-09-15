@@ -15,7 +15,7 @@ import kotlinx.android.synthetic.main.fragment_search_ui.view.*
 import slak.fanfictionstories.R
 
 /** An activity that implements this interface can be searched using [SearchUIFragment]. */
-interface SearchableActivity {
+interface ISearchableActivity {
   /** Get the index of the current highlight. */
   fun getCurrentHighlight(): Int
   /** Get the total match count. */
@@ -31,21 +31,21 @@ interface SearchableActivity {
   /** Remove all highlights. */
   fun clearHighlights()
 }
-fun SearchableActivity.hasMatches() = getMatchCount() > 0
-fun SearchableActivity.hasNoMatches() = !hasMatches()
+fun ISearchableActivity.hasMatches() = getMatchCount() > 0
+fun ISearchableActivity.hasNoMatches() = !hasMatches()
 
 data class Area(val startPosition: Int, val length: Int) {
   val endPosition: Int get() = startPosition + length
 }
 
-/** This fragment provides a search UI. Its activity MUST implement [SearchableActivity]. */
+/** This fragment provides a search UI. Its activity MUST implement [ISearchableActivity]. */
 class SearchUIFragment : Fragment() {
   companion object {
     private const val TAG = "SearchHighlighter"
     private const val RESTORE_LAYOUT_VISIBILITY = "search_is_visible"
   }
 
-  private lateinit var sActivity: SearchableActivity
+  private lateinit var sActivity: ISearchableActivity
   private lateinit var searchLayout: ConstraintLayout
 
   override fun onCreateView(inflater: LayoutInflater,
@@ -85,7 +85,7 @@ class SearchUIFragment : Fragment() {
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-    val a = activity as? SearchableActivity
+    val a = activity as? ISearchableActivity
         ?: throw IllegalStateException("Activity must implement SearchableActivity")
     sActivity = a
   }
