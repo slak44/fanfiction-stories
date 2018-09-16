@@ -106,12 +106,16 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
 
   @AnyThread
   private fun getChapterHtml(chapterToRead: Long): Deferred<String> = async2(CommonPool) {
+    // If the story is remote and it gets updated, the downloaded chapters may be outdated, so delete and re-download
+    if (storyModel.status == StoryStatus.REMOTE && storyModel.fragment.updateTime > storyModel.lastReadTime ?: 0) {
+      deleteStory(storyModel.storyId).join()
+    }
     readChapter(storyModel.storyId, chapterToRead).orElse {
       val chapterHtmlText = fetchChapter(storyModel.storyId, chapterToRead).await()
       val text = extractChapterText(Jsoup.parse(chapterHtmlText))
       writeChapter(storyModel.storyId, chapterToRead, text)
       // Get the model too if we need it
-      if (storyModel.status == StoryStatus.TRANSIENT) {
+      if (storyModel.status != StoryStatus.LOCAL) {
         storyModel = parseStoryModel(chapterHtmlText, storyModel.storyId)
         Static.database.upsertStory(storyModel).await()
       }
