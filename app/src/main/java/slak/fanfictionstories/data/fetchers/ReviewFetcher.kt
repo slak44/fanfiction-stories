@@ -14,7 +14,6 @@ import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.data.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.data.fetchers.FetcherUtils.getPageCountFromNav
 import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.patientlyFetchURL
 import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.concurrent.TimeUnit

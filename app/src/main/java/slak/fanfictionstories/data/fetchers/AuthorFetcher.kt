@@ -18,7 +18,6 @@ import slak.fanfictionstories.data.fetchers.FetcherUtils.authorIdFromAuthor
 import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryMetadata
 import slak.fanfictionstories.data.fetchers.FetcherUtils.unescape
 import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.patientlyFetchURL
 import java.util.concurrent.TimeUnit
 
 val authorCache = Cache<Author>("Author", TimeUnit.DAYS.toMillis(1))

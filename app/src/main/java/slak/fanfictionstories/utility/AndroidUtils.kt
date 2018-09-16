@@ -21,7 +21,6 @@ import android.text.Html
 import android.text.Layout
 import android.text.Spannable
 import android.text.style.ReplacementSpan
-import android.util.Log
 import android.util.SparseBooleanArray
 import android.view.MenuItem
 import android.view.View
@@ -30,15 +29,14 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.sync.Mutex
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.startActivity
-import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.R
-import java.net.URL
-import java.util.concurrent.TimeUnit
 
 /**
  * Create an error dialog with a title, message and a dismiss button.
@@ -56,58 +54,6 @@ fun errorDialog(title: String, msg: String) = launch(UI) {
 
 /** Same as [errorDialog], but with [StringRes] texts. */
 fun errorDialog(@StringRes title: Int, @StringRes msg: Int) = errorDialog(str(title), str(msg))
-
-private const val NETWORK_WAIT_DELAY_MS = 500L
-private const val NET_TAG = "waitForNetwork"
-
-/**
- * Suspends until there is an active connection.
- *
- * Shows notifications about connection status.
- */
-fun waitForNetwork() = async2(CommonPool) {
-  while (true) {
-    val activeNetwork = Static.cm.activeNetworkInfo
-    if (activeNetwork == null || !activeNetwork.isConnected) {
-      // No connection; wait
-      Notifications.NETWORK.show(Notifications.defaultIntent(), R.string.waiting_for_connection)
-      Log.w(NET_TAG, "No connection")
-      delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
-    } else {
-      // We're connected!
-      Notifications.NETWORK.cancel()
-      Log.v(NET_TAG, "We have a connection")
-      break
-    }
-  }
-}
-
-private const val RATE_LIMIT_MS = 300L
-private const val URL_TAG = "patientlyFetchURL"
-
-/**
- * Fetches the resource at the specified url, patiently.
- *
- * Waits for the network using [waitForNetwork], then waits for the rate limit [RATE_LIMIT_MS].
- *
- * If the download fails, call the [onError] callback, wait for the rate limit again, and then call
- * this function recursively.
- */
-fun patientlyFetchURL(url: String,
-                      onError: (t: Throwable) -> Unit): Deferred<String> = async2(CommonPool) {
-  waitForNetwork().await()
-  delay(RATE_LIMIT_MS)
-  return@async2 try {
-    val text = URL(url).readText()
-    Notifications.ERROR.cancel()
-    text
-  } catch (t: Throwable) {
-    // Something happened; retry
-    onError(t)
-    Log.e(URL_TAG, "Failed to fetch url ($url)", t)
-    patientlyFetchURL(url, onError).await()
-  }
-}
 
 /** Emulates android:iconTint. Must be called in onPrepareOptionsMenu for each icon. */
 fun MenuItem.iconTint(@ColorRes colorRes: Int, theme: Resources.Theme) {

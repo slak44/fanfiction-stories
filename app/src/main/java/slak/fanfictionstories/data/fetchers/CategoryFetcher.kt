@@ -11,7 +11,6 @@ import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categoryUrl
 import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.utility.async2
-import slak.fanfictionstories.utility.patientlyFetchURL
 import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
