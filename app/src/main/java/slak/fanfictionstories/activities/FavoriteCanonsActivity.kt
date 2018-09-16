@@ -43,28 +43,27 @@ class FavoriteCanonsActivity : AppCompatActivity() {
 
     override fun getItemCount(): Int = linkList.size
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-      with(holder.itemView as ConstraintLayout) {
-        setOnClickListener {
-          startActivity<CanonStoryListActivity>(INTENT_LINK_DATA to linkList[position])
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder,
+                                  position: Int) = with(holder.itemView as ConstraintLayout) {
+      setOnClickListener {
+        startActivity<CanonStoryListActivity>(INTENT_LINK_DATA to linkList[position])
+      }
+      canonTitle.text = linkList[position].text
+      storyCountText.text = str(R.string.x_stories, linkList[position].storyCount)
+      removeBtn.setOnClickListener {
+        removeSnackbar?.dismiss()
+        val removed = linkList.removeAt(position)
+        launch(UI) {
+          notifyItemRemoved(position)
+          activity.updateNoFavoritesText()
         }
-        canonTitle.text = linkList[position].text
-        storyCountText.text = str(R.string.x_stories, linkList[position].storyCount)
-        removeBtn.setOnClickListener {
-          removeSnackbar?.dismiss()
-          val removed = linkList.removeAt(position)
+        removeSnackbar = undoableAction(this, R.string.removed_favorite_snack, { _ ->
+          linkList.add(position, removed)
           launch(UI) {
-            notifyItemRemoved(position)
+            notifyItemInserted(position)
             activity.updateNoFavoritesText()
           }
-          removeSnackbar = undoableAction(this, R.string.removed_favorite_snack, { _ ->
-            linkList.add(position, removed)
-            launch(UI) {
-              notifyItemInserted(position)
-              activity.updateNoFavoritesText()
-            }
-          }) { Static.database.removeFavoriteCanon(removed).await() }
-        }
+        }) { Static.database.removeFavoriteCanon(removed).await() }
       }
     }
   }
