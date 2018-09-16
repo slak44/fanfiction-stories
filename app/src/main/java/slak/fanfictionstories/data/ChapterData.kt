@@ -78,7 +78,7 @@ fun writeChapters(storyId: StoryId, chapters: ReceiveChannel<String>) = launch(C
   chapters.consumeEachIndexed { writeChapterImpl(storyDir, it.index + 1L, it.value) }
 }
 
-/** Deletes the story chapter data directory. */
+/** Deletes the chapter data directory for a story. */
 fun deleteStory(storyId: StoryId) = launch(CommonPool) {
   val targetDir = storyDir(storyId)
   if (!targetDir.exists()) {
@@ -86,8 +86,8 @@ fun deleteStory(storyId: StoryId) = launch(CommonPool) {
     // Our job here is done ¯\_(ツ)_/¯
     return@launch
   }
-  val deleted = targetDir.deleteRecursively()
-  if (!deleted) {
+  val wasDeleted = targetDir.deleteRecursively()
+  if (!wasDeleted) {
     Log.e(TAG, "Failed to delete story dir")
     return@launch
   }
