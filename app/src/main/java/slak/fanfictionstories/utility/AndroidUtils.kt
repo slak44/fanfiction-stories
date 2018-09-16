@@ -39,7 +39,6 @@ import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.R
 import java.net.URL
 import java.util.concurrent.TimeUnit
-import kotlin.reflect.KClass
 
 /**
  * Create an error dialog with a title, message and a dismiss button.
