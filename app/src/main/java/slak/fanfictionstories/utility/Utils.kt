@@ -31,8 +31,9 @@ private val siSuffixes = TreeMap(mapOf(
 /**
  * Truncate a number and append the respective SI suffix.
  *
- * Something like: 12345 -> 12K, 5257274 -> 5M
- * Original Java Source: https://stackoverflow.com/a/30661479/3329467
+ * Examples: 12345 -> 12K, 5257274 -> 5M
+ *
+ * Original Java Source: [https://stackoverflow.com/a/30661479/3329467]
  */
 fun autoSuffixNumber(value: Long): String {
   // Long.MIN_VALUE == -Long.MIN_VALUE so we need an adjustment here
