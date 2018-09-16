@@ -11,8 +11,8 @@ import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.data.Cache
-import slak.fanfictionstories.data.fetchers.FetcherUtils.authorIdFromAuthor
-import slak.fanfictionstories.data.fetchers.FetcherUtils.getPageCountFromNav
+import slak.fanfictionstories.data.fetchers.ParserUtils.authorIdFromAuthor
+import slak.fanfictionstories.data.fetchers.ParserUtils.getPageCountFromNav
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.str
 import java.io.Serializable

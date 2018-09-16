@@ -8,8 +8,8 @@ import org.jsoup.parser.Parser
 import slak.fanfictionstories.*
 import slak.fanfictionstories.utility.str
 
-/** Utility functions common to everyone in the [slak.fanfictionstories.data.fetchers] package. */
-object FetcherUtils {
+/** Common parsing utilities for ffnet data fetchers. */
+object ParserUtils {
   private val regexOpts: Set<RegexOption> = hashSetOf(
       RegexOption.MULTILINE,
       RegexOption.UNIX_LINES,

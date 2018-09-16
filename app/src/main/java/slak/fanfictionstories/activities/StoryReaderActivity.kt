@@ -40,7 +40,7 @@ import slak.fanfictionstories.activities.ReaderViewModel.ChapterEvent.*
 import slak.fanfictionstories.activities.ReaderViewModel.Companion.UNINITIALIZED_CHAPTER
 import slak.fanfictionstories.data.*
 import slak.fanfictionstories.data.fetchers.*
-import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryModel
+import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
 
 /** Handles the data required to display story chapters. */

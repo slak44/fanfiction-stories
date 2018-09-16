@@ -9,10 +9,10 @@ import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.data.Cache
-import slak.fanfictionstories.data.fetchers.FetcherUtils.authorIdFromAuthor
-import slak.fanfictionstories.data.fetchers.FetcherUtils.getPageCountFromNav
-import slak.fanfictionstories.data.fetchers.FetcherUtils.parseStoryMetadata
-import slak.fanfictionstories.data.fetchers.FetcherUtils.unescape
+import slak.fanfictionstories.data.fetchers.ParserUtils.authorIdFromAuthor
+import slak.fanfictionstories.data.fetchers.ParserUtils.getPageCountFromNav
+import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryMetadata
+import slak.fanfictionstories.data.fetchers.ParserUtils.unescape
 import slak.fanfictionstories.utility.*
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
