@@ -1,67 +1,36 @@
 package slak.fanfictionstories
 
 import android.database.Observable
-import kotlinx.coroutines.experimental.CommonPool
+import android.support.annotation.AnyThread
+import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
-import slak.fanfictionstories.data.database
-import slak.fanfictionstories.utility.Static
-import java.util.concurrent.LinkedBlockingQueue
 
-/** Describes what happened to the stories in an [StoryChangeEvent]. */
-sealed class StoryEventKind {
+/** Describes what happened to some models. */
+sealed class StoriesChangeEvent {
+  abstract val models: List<StoryModel>
+
   /** Stories were added. */
-  object New : StoryEventKind()
+  data class New(override val models: List<StoryModel>) : StoriesChangeEvent()
 
   /** Stories were modified. */
-  object Changed : StoryEventKind()
+  data class Changed(override val models: List<StoryModel>) : StoriesChangeEvent()
 
   /** Stories were removed. */
-  object Removed : StoryEventKind()
+  data class Removed(override val models: List<StoryModel>) : StoriesChangeEvent()
 }
 
-/**
- * Holds what models were affected by an event, and what happened to them.
- * @see StoryEventKind
- * @see StoryEventNotifier.notifyStoryChanged
- * @see IStoryEventObserver
- */
-data class StoryChangeEvent(val kind: StoryEventKind, val models: List<StoryModel>)
-
-/**
- * Handles [StoryChangeEvent]s, can be observed by [IStoryEventObserver]s to receive events.
- * @see StoryChangeEvent
- * @see IStoryEventObserver
- */
+/** Handles [StoriesChangeEvent]s, can be observed by [IStoryEventObserver]s to receive events. */
 object StoryEventNotifier : Observable<IStoryEventObserver>() {
-  private val evtQueue = LinkedBlockingQueue<StoryChangeEvent>()
-
-  init {
-    launch(CommonPool) {
-      while (true) {
-        val evt = evtQueue.take()
-        mObservers.forEach { it.onStoriesChanged(evt) }
-      }
-    }
-  }
-
   /** @returns whether or not the provided object is registered in this object */
   fun isRegistered(obj: IStoryEventObserver) = obj in mObservers
 
   /**
    * Notify all observers about a change in stories.
-   * @param models the new story data
+   * @param event the data to send to the observers
    */
-  fun notifyStoryChanged(models: List<StoryModel>, kind: StoryEventKind) {
-    evtQueue.add(StoryChangeEvent(kind, models))
-  }
-
-  /**
-   * Notify all observers about a change in stories.
-   * @param ids fetch the [StoryModel]s referred to by the ids
-   * @see notifyStoryChanged
-   */
-  fun notifyStoryChanged(ids: List<StoryId>, kind: StoryEventKind) = launch(CommonPool) {
-    notifyStoryChanged(Static.database.storiesById(ids).await(), kind)
+  @AnyThread
+  fun notify(event: StoriesChangeEvent) = launch(UI) {
+    mObservers.forEach { it.onStoriesChanged(event) }
   }
 }
 
@@ -82,5 +51,5 @@ interface IStoryEventObserver {
    * To be overridden by implementations to receive events. Is called with each received event.
    * @param t the new event that has to be processed by the implementation
    */
-  fun onStoriesChanged(t: StoryChangeEvent)
+  fun onStoriesChanged(t: StoriesChangeEvent)
 }

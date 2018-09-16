@@ -302,7 +302,7 @@ class StoryCardView @JvmOverloads constructor(
           btn.context.database.useAsync {
             if (Prefs.resumeStoryId == model.storyId) Prefs.resumeStoryId = Prefs.NO_RESUME_STORY
             delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))
-            StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.Removed)
+            StoryEventNotifier.notify(StoriesChangeEvent.Removed(listOf(model)))
           }.await()
         }
       }
@@ -433,7 +433,7 @@ open class StoryListViewModel :
    * observer somewhere else.
    */
   val defaultStoryListObserver = object : IStoryEventObserver {
-    override fun onStoriesChanged(t: StoryChangeEvent) {
+    override fun onStoriesChanged(t: StoriesChangeEvent) {
       launch(UI) {
         // We just update the stories that might have changed, regardless of what happened
         t.models.forEach {

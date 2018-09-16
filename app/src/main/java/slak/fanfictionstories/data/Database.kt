@@ -8,7 +8,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.db.*
-import slak.fanfictionstories.StoryEventKind
+import slak.fanfictionstories.StoriesChangeEvent
 import slak.fanfictionstories.StoryEventNotifier
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.StoryModel
@@ -224,10 +224,12 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   }
 
   /** Sets the color marker for the given story. */
-  fun setMarker(storyId: StoryId, color: Int) = useAsync {
-    val long = replaceOrThrow("colorMarkers", "storyId" to storyId, "markerColor" to color)
-    StoryEventNotifier.notifyStoryChanged(listOf(storyId), StoryEventKind.Changed)
-    return@useAsync long
+  fun setMarker(storyId: StoryId, color: Int): Deferred<Long> = async2(CommonPool) {
+    val result = writableDatabase
+        .replaceOrThrow("colorMarkers", "storyId" to storyId, "markerColor" to color)
+    val storyModel = storyById(storyId).await().orElse { return@async2 result }
+    StoryEventNotifier.notify(StoriesChangeEvent.Changed(listOf(storyModel)))
+    return@async2 result
   }
 
   /**
@@ -259,10 +261,13 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   }
 
   /** Update some particular columns for a particular storyId. */
-  fun updateInStory(storyId: StoryId, vararg pairs: Pair<String, Any>): Deferred<Int> = useAsync {
-    val int = update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
-    StoryEventNotifier.notifyStoryChanged(listOf(storyId), StoryEventKind.Changed)
-    return@useAsync int
+  fun updateInStory(storyId: StoryId,
+                    vararg pairs: Pair<String, Any>): Deferred<Int> = async2(CommonPool) {
+    val result = writableDatabase
+        .update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
+    val storyModel = storyById(storyId).await().orElse { return@async2 result }
+    StoryEventNotifier.notify(StoriesChangeEvent.Changed(listOf(storyModel)))
+    return@async2 result
   }
 
   /** Upsert a story in the DB unconditionally. */
@@ -274,14 +279,14 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     transaction {
       try {
         insertOrThrow("stories", *model.toPairs())
-        StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.New)
+        StoryEventNotifier.notify(StoriesChangeEvent.New(listOf(model)))
       } catch (err: SQLiteConstraintException) {
         // Rethrow if it isn't a unique violation
         if (err.errCode() != SQLiteResultCode.CONSTRAINT_UNIQUE) throw err
         // Unique broken => story already exists, so update it
         update("stories", *model.toPairs())
             .whereSimple("storyId = ?", model.storyId.toString()).exec()
-        StoryEventNotifier.notifyStoryChanged(listOf(model), StoryEventKind.Changed)
+        StoryEventNotifier.notify(StoriesChangeEvent.Changed(listOf(model)))
       }
     }
   }

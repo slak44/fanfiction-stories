@@ -21,19 +21,17 @@ import slak.fanfictionstories.utility.*
 
 /** The list of stories the user has started reading, or has downloaded. */
 class StoryListActivity : LoadingActivity(), IStoryEventObserver {
-  override fun onStoriesChanged(t: StoryChangeEvent) {
-    launch(UI) {
-      if (t.kind === StoryEventKind.New) {
-        viewModel.triggerDatabaseLoad()
-        return@launch
-      }
-      t.models.forEach {
-        val idx = viewModel.indexOfStoryId(it.storyId)
-        if (idx == -1) return@forEach
-        when (t.kind) {
-          is StoryEventKind.Changed -> viewModel.updateStoryModel(idx, it)
-          is StoryEventKind.Removed -> viewModel.hideStory(it)
-        }
+  override fun onStoriesChanged(t: StoriesChangeEvent) {
+    if (t is StoriesChangeEvent.New) {
+      viewModel.triggerDatabaseLoad()
+      return
+    }
+    t.models.forEach {
+      val idx = viewModel.indexOfStoryId(it.storyId)
+      if (idx == -1) return@forEach
+      when (t) {
+        is StoriesChangeEvent.Changed -> viewModel.updateStoryModel(idx, it)
+        is StoriesChangeEvent.Removed -> viewModel.hideStory(it)
       }
     }
   }
