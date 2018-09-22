@@ -11,6 +11,7 @@ import android.support.annotation.StringRes
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.TaskStackBuilder
 import android.util.Log
+import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.intentFor
@@ -64,7 +65,7 @@ enum class Notifications(val duration: Duration,
       R.string.channel_desc_error);
 
   init {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) launch(UI) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) GlobalScope.launch(UI) {
       Notifications.values().forEach {
         val channel = NotificationChannel(
             it.channelKey,

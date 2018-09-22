@@ -2,10 +2,9 @@ package slak.fanfictionstories.data
 
 import android.os.Environment
 import android.util.Log
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import kotlinx.coroutines.experimental.channels.consumeEachIndexed
-import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.utility.*
@@ -73,13 +72,13 @@ fun writeChapter(storyId: StoryId, chapter: Long, chapterText: String) =
     writeChapterImpl(storyDir(storyId), chapter, chapterText)
 
 /** Writes received chapter data to disk asynchronously. */
-fun writeChapters(storyId: StoryId, chapters: ReceiveChannel<String>) = launch(CommonPool) {
+fun CoroutineScope.writeChapters(storyId: StoryId, chapters: ReceiveChannel<String>) = launch(Dispatchers.IO) {
   val storyDir = storyDir(storyId)
   chapters.consumeEachIndexed { writeChapterImpl(storyDir, it.index + 1L, it.value) }
 }
 
 /** Deletes the chapter data directory for a story. */
-fun deleteStory(storyId: StoryId) = launch(CommonPool) {
+fun CoroutineScope.deleteStory(storyId: StoryId) = launch(Dispatchers.IO) {
   val targetDir = storyDir(storyId)
   if (!targetDir.exists()) {
     Log.w(TAG, "Tried to delete a story that does not exist")

@@ -12,11 +12,8 @@ import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.StoryListItem.GroupTitle
 import slak.fanfictionstories.StoryListItem.StoryCardData
@@ -24,6 +21,7 @@ import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.utility.*
+import kotlin.coroutines.experimental.CoroutineContext
 
 /** Stores the data required for a [CanonStoryListActivity]. */
 class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
@@ -38,7 +36,7 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
   val filters = CanonFilters()
 
   init {
-    launch(CommonPool) {
+    launch(Dispatchers.Default) {
       isFavorite = Static.database.isCanonFavorite(parentLink).await()
     }
   }
@@ -64,7 +62,7 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
   fun getCurrentPage() = getPage(currentPage)
   fun getNextPage() = async2(UI) { getPage(++currentPage).await() }
 
-  private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(CommonPool) {
+  private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(Dispatchers.Default) {
     val canonPage = getCanonPage(parentLink, filters, page).await()
     metadata = canonPage.metadata
     val storyData = canonPage.storyList.map {
@@ -80,7 +78,9 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
 }
 
 /** A list of stories within a canon. */
-class CanonStoryListActivity : LoadingActivity() {
+class CanonStoryListActivity : LoadingActivity(), CoroutineScope {
+  override val coroutineContext: CoroutineContext
+    get() = Dispatchers.Default
   private lateinit var viewModel: CanonListViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -192,7 +192,7 @@ class CanonStoryListActivity : LoadingActivity() {
 
       with(viewModel.metadata) {
         charList.ifPresent { list ->
-          val charNameList = list.map { it.name }.toMutableList()
+          val charNameList = list.mapTo(mutableListOf()) { it.name }
           charNameList[0] = strAny
           layout.char1.setEntries(charNameList)
           layout.char2.setEntries(charNameList)
@@ -223,7 +223,7 @@ class CanonStoryListActivity : LoadingActivity() {
       }
 
       viewModel.metadata.worldList.ifPresent { wl ->
-        val worldNameList = wl.map { it.name }.toMutableList()
+        val worldNameList = wl.mapTo(mutableListOf()) { it.name }
 
         worldNameList[0] = strAny
         layout.world.setEntries(worldNameList)

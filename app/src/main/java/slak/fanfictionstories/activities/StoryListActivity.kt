@@ -1,6 +1,5 @@
 package slak.fanfictionstories.activities
 
-import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
@@ -10,7 +9,8 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import kotlinx.android.synthetic.main.activity_story_list.*
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
@@ -18,9 +18,10 @@ import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
+import kotlin.coroutines.experimental.CoroutineContext
 
 /** The list of stories the user has started reading, or has downloaded. */
-class StoryListActivity : LoadingActivity(), IStoryEventObserver {
+class StoryListActivity : LoadingActivity(), IStoryEventObserver, CoroutineScope {
   override fun onStoriesChanged(t: StoriesChangeEvent) {
     if (t is StoriesChangeEvent.New) {
       viewModel.triggerDatabaseLoad()
@@ -39,9 +40,12 @@ class StoryListActivity : LoadingActivity(), IStoryEventObserver {
   private lateinit var viewModel: StoryListViewModel
   private lateinit var layoutManager: LinearLayoutManager
 
+  override val coroutineContext: CoroutineContext
+    get() = Dispatchers.Default
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
+    viewModel = obtainViewModel()
 
     setContentView(R.layout.activity_story_list)
     setSupportActionBar(toolbar)
@@ -91,7 +95,7 @@ class StoryListActivity : LoadingActivity(), IStoryEventObserver {
             }
           }.filter { it != -1L }
           dialog.dismiss()
-          launch(CommonPool) {
+          launch(Dispatchers.Default) {
             val models = list.map { fetchAndWriteStory(it).await() }
             val modelsFetched = models.count { it !is Empty }
             if (modelsFetched > 0) viewModel.triggerDatabaseLoad()

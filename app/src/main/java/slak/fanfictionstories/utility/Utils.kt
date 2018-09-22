@@ -8,7 +8,7 @@ import java.util.*
 import kotlin.coroutines.experimental.CoroutineContext
 
 /** Wraps [async], except it also rethrows exceptions synchronously on completion (rather than just on `await()`). */
-fun <T> async2(
+fun <T> CoroutineScope.async2(
     context: CoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> T

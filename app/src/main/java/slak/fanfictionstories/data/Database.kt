@@ -4,9 +4,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.*
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.StoriesChangeEvent
 import slak.fanfictionstories.StoryEventNotifier
@@ -224,7 +222,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   }
 
   /** Sets the color marker for the given story. */
-  fun setMarker(storyId: StoryId, color: Int): Deferred<Long> = async2(CommonPool) {
+  fun setMarker(storyId: StoryId, color: Int): Deferred<Long> = GlobalScope.async2(Dispatchers.Default) {
     val result = writableDatabase
         .replaceOrThrow("colorMarkers", "storyId" to storyId, "markerColor" to color)
     val storyModel = storyById(storyId).await().orElse { return@async2 result }
@@ -262,7 +260,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
 
   /** Update some particular columns for a particular storyId. */
   fun updateInStory(storyId: StoryId,
-                    vararg pairs: Pair<String, Any>): Deferred<Int> = async2(CommonPool) {
+                    vararg pairs: Pair<String, Any>): Deferred<Int> = GlobalScope.async2(Dispatchers.Default) {
     val result = writableDatabase
         .update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
     val storyModel = storyById(storyId).await().orElse { return@async2 result }
@@ -292,7 +290,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   }
 
   /** Upsert a story in the DB, keeping some properties. */
-  fun upsertModel(model: StoryModel) = launch(CommonPool) {
+  fun upsertModel(model: StoryModel) = GlobalScope.launch(Dispatchers.Default) {
     val existingModel = Static.database.storyById(model.storyId).await().orNull()
     if (existingModel != null) {
       model.addedTime = existingModel.addedTime
@@ -435,4 +433,4 @@ val Static.database: DatabaseHelper
 
 /** Like [ManagedSQLiteOpenHelper.use], but using [async2] and [CommonPool]. */
 fun <T> ManagedSQLiteOpenHelper.useAsync(f: SQLiteDatabase.() -> T): Deferred<T> =
-    async2(CommonPool) { this@useAsync.use(f) }
+    GlobalScope.async2(Dispatchers.Default) { this@useAsync.use(f) }

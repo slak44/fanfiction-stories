@@ -6,6 +6,8 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.*
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.startActivity
@@ -16,12 +18,16 @@ import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.utility.ActivityWithStatic
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.str
+import kotlin.coroutines.experimental.CoroutineContext
 
 /** The main menu. Allows navigation to other sections of the app. */
-class MainActivity : ActivityWithStatic() {
+class MainActivity : ActivityWithStatic(), CoroutineScope {
   companion object {
     private const val TAG = "MainActivity"
   }
+
+  override val coroutineContext: CoroutineContext
+    get() = Dispatchers.Default
 
   private var resumeModel: StoryModel? = null
 

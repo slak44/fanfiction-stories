@@ -22,8 +22,9 @@ import android.view.View
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.sync.Mutex
@@ -42,9 +43,13 @@ import slak.fanfictionstories.data.*
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
+import kotlin.coroutines.experimental.CoroutineContext
 
 /** Handles the data required to display story chapters. */
-class ReaderViewModel(sModel: StoryModel) : ViewModel() {
+class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
+  override val coroutineContext: CoroutineContext
+    get() = Dispatchers.Default
+
   var storyModel: StoryModel
     private set
 
@@ -105,7 +110,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
   }
 
   @AnyThread
-  private fun getChapterHtml(chapterToRead: Long): Deferred<String> = async2(CommonPool) {
+  private fun getChapterHtml(chapterToRead: Long): Deferred<String> = async2(Dispatchers.Default) {
     // If the story is remote and it gets updated, the downloaded chapters may be outdated, so delete and re-download
     if (storyModel.status == StoryStatus.REMOTE && storyModel.fragment.updateTime > storyModel.lastReadTime ?: 0) {
       deleteStory(storyModel.storyId).join()
@@ -133,14 +138,14 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
    * This ensures that the [StoryStatus.TRANSIENT] models get replaced with real ones.
    */
   @AnyThread
-  fun tryLoadingModelFromDatabase() = launch(CommonPool) {
+  fun tryLoadingModelFromDatabase() = launch(Dispatchers.Default) {
     // If the story is in the db, use it
     storyModel = Static.database.storyById(storyModel.storyId).await().orElse(storyModel)
   }
 
   /** @see fetchAndWriteStory */
   @AnyThread
-  fun downloadStoryLocally() = launch(CommonPool) {
+  fun downloadStoryLocally() = launch(Dispatchers.Default) {
     storyModel = fetchAndWriteStory(storyModel.storyId).await().orElse {
       Toast.makeText(Static.currentActivity, R.string.story_not_found, Toast.LENGTH_LONG).show()
       return@launch
@@ -149,7 +154,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
 
   /** @see slak.fanfictionstories.data.fetchers.updateStory */
   @AnyThread
-  fun updateStory() = launch(CommonPool) {
+  fun updateStory() = launch(Dispatchers.Default) {
     Notifications.UPDATING.show(defaultIntent(), R.string.checking_one_story, storyModel.title)
     val newModel = updateStory(storyModel).await()
     if (newModel !is Empty) {
@@ -163,7 +168,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel() {
 }
 
 /** Shows a chapter of a story for reading. */
-class StoryReaderActivity : LoadingActivity(), ISearchableActivity {
+class StoryReaderActivity : LoadingActivity(), ISearchableActivity, CoroutineScope {
   companion object {
     private const val TAG = "StoryReaderActivity"
     const val INTENT_STORY_MODEL = "bundle"
@@ -172,6 +177,9 @@ class StoryReaderActivity : LoadingActivity(), ISearchableActivity {
 
   private lateinit var viewModel: ReaderViewModel
   private lateinit var searchUI: SearchUIFragment
+
+  override val coroutineContext: CoroutineContext
+    get() = Dispatchers.Default
 
   /**
    * Gets the data required for the [ViewModel]. It will load from the intent URI (clicked link to
@@ -403,7 +411,7 @@ class StoryReaderActivity : LoadingActivity(), ISearchableActivity {
       val managedToLock = saveLock.tryLock()
       hasChanged = true
       if (!managedToLock) return
-      launch(CommonPool) {
+      launch(Dispatchers.Default) {
         while (hasChanged) {
           hasChanged = false
           database.updateInStory(viewModel.storyModel.storyId,

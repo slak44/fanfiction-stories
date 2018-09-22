@@ -2,8 +2,9 @@ package slak.fanfictionstories.data.fetchers
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Dispatchers
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
@@ -42,7 +43,7 @@ data class Author(val name: String,
  * Get author data for specified id.
  * @see Author
  */
-fun getAuthor(authorId: Long): Deferred<Author> = async2(CommonPool) {
+fun CoroutineScope.getAuthor(authorId: Long): Deferred<Author> = async2(Dispatchers.Default) {
   authorCache.hit(authorId.toString()).ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
     Notifications.ERROR.show(defaultIntent(),

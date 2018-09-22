@@ -3,8 +3,9 @@ package slak.fanfictionstories.data.fetchers
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Dispatchers
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
@@ -19,7 +20,7 @@ import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
 
 /** Describes ffnet sort options. */
-enum class Sort(val ffnetValue: String) {
+enum class Sort(private val ffnetValue: String) {
   UPDATE_DATE("1"), PUBLISH_DATE("2"),
   REVIEWS("3"), FAVORITES("4"), FOLLOWS("5");
 
@@ -27,7 +28,7 @@ enum class Sort(val ffnetValue: String) {
 }
 
 /** Describes publish time/update time filters. */
-enum class TimeRange(val ffnetValue: String) {
+enum class TimeRange(private val ffnetValue: String) {
   ALL("0"),
   UPD_LAST_DAY("1"), UPD_LAST_WEEK("2"), UPD_LAST_MONTH("3"), UPD_LAST_6_MONTHS("4"),
   UPD_LAST_YEAR("5"),
@@ -39,7 +40,7 @@ enum class TimeRange(val ffnetValue: String) {
 }
 
 /** Describes language filters */
-enum class Language(val ffnetValue: String) {
+enum class Language(private val ffnetValue: String) {
   ALL(""), ENGLISH("1"), SPANISH("2"), FRENCH("3"), GERMAN("4"), CHINESE("5"), DUTCH("7"),
   PORTUGUESE("8"), RUSSIAN("10"), ITALIAN("11"), POLISH("13"), HUNGARIAN("14"), FINNISH("20"),
   CZECH("31"), UKRAINIAN("44"), SWEDISH("17"), INDONESIAN("32"),
@@ -53,7 +54,7 @@ enum class Language(val ffnetValue: String) {
 }
 
 /** Describes genres filters. */
-enum class Genre(val ffnetValue: String) {
+enum class Genre(private val ffnetValue: String) {
   ALL("0"), ADVENTURE("6"), ANGST("10"), CRIME("18"), DRAMA("4"), FAMILY("19"), FANTASY("14"),
   FRIENDSHIP("21"), GENERAL("1"), HORROR("8"), HUMOR("3"), HURT_COMFORT("20"), MYSTERY("7"),
   PARODY("9"), POETRY("5"), ROMANCE("2"), SCI_FI("13"), SPIRITUAL("15"), SUPERNATURAL("11"),
@@ -92,7 +93,7 @@ enum class Genre(val ffnetValue: String) {
 }
 
 /** Describes ffnet ratings. */
-enum class Rating(val ffnetValue: String) {
+enum class Rating(private val ffnetValue: String) {
   ALL("10"),
   K_TO_T("103"), K_TO_K_PLUS("102"), K("1"), K_PLUS("2"), T("3"), M("4");
 
@@ -100,14 +101,14 @@ enum class Rating(val ffnetValue: String) {
 }
 
 /** Describes story completion filters. */
-enum class Status(val ffnetValue: String) {
+enum class Status(private val ffnetValue: String) {
   ALL("0"), IN_PROGRESS("1"), COMPLETE("2");
 
   fun queryParam(): String = "s=$ffnetValue"
 }
 
 /** Describes word count filters. */
-enum class WordCount(val ffnetValue: String) {
+enum class WordCount(private val ffnetValue: String) {
   ALL("0"),
   UNDER_1K("11"), UNDER_5K("51"), OVER_1K("1"), OVER_5K("5"), OVER_10K("10"), OVER_20K("20"),
   OVER_40K("40"), OVER_60K("60"), OVER_100K("100");
@@ -153,7 +154,7 @@ data class CanonFilters(var sort: Sort = Sort.UPDATE_DATE,
       if (worldWithout !is Empty) "_v1=${worldWithout.get()}" else "",
       if (char1Without !is Empty) "_c1=${char1Without.get()}" else "",
       if (char2Without !is Empty) "_c2=${char2Without.get()}" else ""
-  ).filter { it.isNotEmpty() }.joinToString("&")
+  ).asSequence().filter { it.isNotEmpty() }.joinToString("&")
 }
 
 @Parcelize
@@ -184,8 +185,8 @@ val canonListCache = Cache<CanonPage>("CanonPage", TimeUnit.MINUTES.toMillis(15)
  * [filters].
  * @see CanonFilters
  */
-fun getCanonPage(parentLink: CategoryLink,
-                 filters: CanonFilters, page: Int): Deferred<CanonPage> = async2(CommonPool) {
+fun CoroutineScope.getCanonPage(parentLink: CategoryLink,
+                 filters: CanonFilters, page: Int): Deferred<CanonPage> = async2(Dispatchers.Default) {
   val pathAndQuery = "${parentLink.urlComponent}/?p=$page&${filters.queryParams()}"
   canonListCache.hit(pathAndQuery).ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {

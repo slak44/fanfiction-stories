@@ -1,8 +1,9 @@
 package slak.fanfictionstories.data.fetchers
 
 import android.util.Log
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
 import org.jsoup.Jsoup
@@ -23,7 +24,7 @@ private const val TAG = "StoryFetcher"
  * Download metadata and every chapter, then store them in the database and on disk.
  * @returns the model we just fetched, or an empty optional if that story doesn't exist
  */
-fun fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(CommonPool) {
+fun CoroutineScope.fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(Dispatchers.Default) {
   val model = fetchStoryModel(storyId).await().orElse { return@async2 Empty<StoryModel>() }
   model.status = StoryStatus.LOCAL
   val existingModel = Static.database.storyById(storyId).await().orNull()
@@ -47,7 +48,7 @@ val storyCache = Cache<String>("StoryChapter", TimeUnit.MINUTES.toMillis(15))
  * @param storyId what story
  * @param chapter what chapter
  */
-fun fetchChapter(storyId: StoryId, chapter: Long): Deferred<String> = async2(CommonPool) {
+fun CoroutineScope.fetchChapter(storyId: StoryId, chapter: Long): Deferred<String> = async2(Dispatchers.Default) {
   val cacheKey = "id$storyId-ch$chapter"
   storyCache.hit(cacheKey).ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
@@ -72,7 +73,7 @@ fun extractChapterText(doc: Document): String {
  * Just download metadata for the [storyId].
  * @returns the [StoryModel] if it was there, or [Empty] if the story was not found
  */
-fun fetchStoryModel(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(CommonPool) {
+fun CoroutineScope.fetchStoryModel(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(Dispatchers.Default) {
   val chapterHtml = fetchChapter(storyId, 1).await()
   if (chapterHtml.contains("Story Not Found")) return@async2 Empty<StoryModel>()
   return@async2 parseStoryModel(chapterHtml, storyId).opt()
@@ -85,12 +86,12 @@ fun fetchStoryModel(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(C
  * @param to end index of chapters to fetch (1-indexed). If -1, the end idx is the chapter count
  * @returns a [Channel] that supplies the html text
  */
-fun fetchChapterRange(kind: Notifications, model: StoryModel,
+fun CoroutineScope.fetchChapterRange(kind: Notifications, model: StoryModel,
                       from: Long = 1, to: Long = -1): Channel<String> {
   val target = if (to != -1L) to else model.fragment.chapterCount
   // The buffer size is completely arbitrary
   val channel = Channel<String>(10)
-  launch(CommonPool) {
+  launch(Dispatchers.Default) {
     for (chapterNr in from..target) {
       kind.show(
           readerIntent(model),
@@ -112,7 +113,7 @@ fun fetchChapterRange(kind: Notifications, model: StoryModel,
  * @param oldModel the EXISTING [StoryModel], fetched from db
  * @returns if the update was done, the updated model, otherwise [Empty]
  */
-fun updateStory(oldModel: StoryModel): Deferred<Optional<StoryModel>> = async2(CommonPool) {
+fun CoroutineScope.updateStory(oldModel: StoryModel): Deferred<Optional<StoryModel>> = async2(Dispatchers.Default) {
   val newModel = fetchStoryModel(oldModel.storyId).await().orElse {
     return@async2 Empty<StoryModel>()
   }

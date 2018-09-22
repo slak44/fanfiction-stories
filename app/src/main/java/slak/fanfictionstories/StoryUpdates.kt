@@ -14,10 +14,7 @@ import android.content.Intent
 import android.os.Build
 import android.support.v4.app.NotificationCompat
 import android.util.Log
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.*
 import org.threeten.bp.Duration
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
@@ -27,6 +24,7 @@ import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.updateStory
 import slak.fanfictionstories.utility.*
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.experimental.CoroutineContext
 
 private const val TAG = "StoryUpdates"
 private const val UPDATE_JOB_INFO_ID = 0xDE1A1
@@ -56,7 +54,7 @@ private fun scheduleUpdateJob(initTarget: ZonedDateTime): ScheduleResult {
 }
 
 /** Schedule update job if one doesn't exists. */
-fun scheduleUpdate(): Job = launch(CommonPool) {
+fun scheduleUpdate(): Job = GlobalScope.launch(Dispatchers.Default) {
   val areJobsPending = Static.jobScheduler.allPendingJobs.size > 0
   if (areJobsPending) return@launch
   if (scheduleUpdateJob(Prefs.autoUpdateMoment()) == ScheduleResult.FAILURE) {
@@ -67,20 +65,22 @@ fun scheduleUpdate(): Job = launch(CommonPool) {
 }
 
 /** The service invoked periodically to update the local stories. */
-class UpdateService : JobService() {
+class UpdateService : JobService(), CoroutineScope {
   companion object {
     private const val TAG = "UpdateService"
   }
+
+  private var coroutine: Job? = null
+  override val coroutineContext: CoroutineContext
+    get() = Dispatchers.Default
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     return Service.START_NOT_STICKY
   }
 
-  private var coroutine: Job? = null
-
   override fun onStartJob(params: JobParameters): Boolean {
     Log.i(TAG, "Update job started")
-    coroutine = launch(CommonPool) {
+    coroutine = launch {
       val storyModels = applicationContext.database.getLocalStories().await()
       val storiesToUpdate = orderStories(storyModels.toMutableList(),
           Prefs.storyListOrderStrategy, Prefs.storyListOrderDirection)

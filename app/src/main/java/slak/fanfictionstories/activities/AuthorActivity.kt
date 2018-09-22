@@ -18,7 +18,8 @@ import android.view.*
 import kotlinx.android.synthetic.main.activity_author.*
 import kotlinx.android.synthetic.main.fragment_author_bio.view.*
 import kotlinx.android.synthetic.main.fragment_author_stories.view.*
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
@@ -28,12 +29,16 @@ import slak.fanfictionstories.data.fetchers.Author
 import slak.fanfictionstories.data.fetchers.getAuthor
 import slak.fanfictionstories.utility.*
 import java.util.*
+import kotlin.coroutines.experimental.CoroutineContext
 
 /** Stores and loads the data required for an author page. */
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-class AuthorViewModel(authorId: java.lang.Long) : ViewModel() {
+class AuthorViewModel(authorId: java.lang.Long) : ViewModel(), CoroutineScope {
+  override val coroutineContext: CoroutineContext
+    get() = UI
+
   init {
-    launch(UI) {
+    launch {
       author = getAuthor(authorId.toLong()).await()
       loadEventsData.value = LoadEvent.LOADED
     }
@@ -221,7 +226,7 @@ class AuthorActivity : LoadingActivity(1) {
    * Fragment that lists stories using a [android.support.v7.widget.RecyclerView] and
    * [StoryAdapter].
    */
-  internal class StoryListFragment : Fragment() {
+  internal class StoryListFragment : Fragment(), CoroutineScope {
     companion object {
       private const val ARG_STORIES = "stories"
 
@@ -235,10 +240,13 @@ class AuthorActivity : LoadingActivity(1) {
       }
     }
 
+    override val coroutineContext: CoroutineContext
+      get() = Dispatchers.Default
+
     private lateinit var viewModel: StoryListViewModel
 
     private fun initLayout(rootView: View, stories: List<StoryModel>) = launch(UI) {
-      rootView.stories.layoutManager = LinearLayoutManager(getContext())
+      rootView.stories.layoutManager = LinearLayoutManager(context)
       rootView.stories.createStorySwipeHelper()
       rootView.stories.adapter = StoryAdapter(viewModel)
       if (stories.isEmpty()) {
@@ -252,7 +260,7 @@ class AuthorActivity : LoadingActivity(1) {
         viewModel.arrangeStories(stories, Prefs.authorArrangement())
       }
       rootView.orderBy.setOnClickListener {
-        orderByDialog(getContext()!!,
+        orderByDialog(context!!,
             Prefs.authorOrderStrategy, Prefs.authorOrderDirection) { str, dir ->
           Prefs.authorOrderDirection = dir
           Prefs.authorOrderStrategy = str
@@ -260,7 +268,7 @@ class AuthorActivity : LoadingActivity(1) {
         }
       }
       rootView.groupBy.setOnClickListener { _ ->
-        groupByDialog(getContext()!!, Prefs.authorGroupStrategy) {
+        groupByDialog(context!!, Prefs.authorGroupStrategy) {
           Prefs.authorGroupStrategy = it
           viewModel.arrangeStories(stories, Prefs.authorArrangement())
         }
@@ -271,7 +279,7 @@ class AuthorActivity : LoadingActivity(1) {
                               savedInstanceState: Bundle?): View? {
       viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
-      launch(CommonPool) {
+      launch {
         val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES)!!.map {
           val model = Static.database.storyById(it.storyId).await()
               .orNull() ?: return@map it

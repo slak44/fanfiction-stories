@@ -29,10 +29,8 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.sync.Mutex
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.startActivity
@@ -42,7 +40,7 @@ import slak.fanfictionstories.R
  * Create an error dialog with a title, message and a dismiss button.
  * @see AlertDialog
  */
-fun errorDialog(title: String, msg: String) = launch(UI) {
+fun errorDialog(title: String, msg: String) = GlobalScope.launch(UI) {
   AlertDialog.Builder(Static.currentCtx)
       .setTitle(title)
       .setMessage(msg)
@@ -133,7 +131,7 @@ fun <T> Spinner.setEntries(entries: List<T>) {
  * function to add more content when at the end. Attaches a [RecyclerView.OnScrollListener] to the
  * recycler.
  */
-fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage: () -> Job) {
+fun CoroutineScope.infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage: () -> Job) {
   recycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
     private val addPageLock = Mutex()
     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -145,7 +143,7 @@ fun infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutManager, addPage:
       if ((visibleItemCount + pastVisibleItems) >= totalItemCount - 1) {
         // There are lots of scroll events, so use a lock to make sure we don't overdo it
         if (addPageLock.isLocked) return
-        launch(CommonPool) {
+        launch(Dispatchers.Default) {
           addPageLock.lock()
           addPage().join()
           addPageLock.unlock()
@@ -167,7 +165,7 @@ fun undoableAction(view: View, snackText: String,
   snack.addCallback(object : Snackbar.Callback() {
     override fun onDismissed(transientBottomBar: Snackbar, event: Int) {
       // The user clicking undo does not trigger this
-      if (event != DISMISS_EVENT_ACTION) launch(CommonPool) { action() }
+      if (event != DISMISS_EVENT_ACTION) GlobalScope.launch(Dispatchers.Default) { action() }
     }
   })
   snack.show()

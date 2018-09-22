@@ -3,8 +3,9 @@ package slak.fanfictionstories.data.fetchers
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Dispatchers
 import org.jsoup.Jsoup
 import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
@@ -43,8 +44,8 @@ val reviewCache = Cache<ReviewPage>("ReviewPage", TimeUnit.DAYS.toMillis(1))
  * returns `ReviewPage(emptyList(), NO_PAGES, 0)`
  * @see NO_PAGES
  */
-fun getReviews(storyId: StoryId,
-               chapter: Int, page: Int): Deferred<ReviewPage> = async2(CommonPool) {
+fun CoroutineScope.getReviews(storyId: StoryId,
+               chapter: Int, page: Int): Deferred<ReviewPage> = async2(Dispatchers.Default) {
   reviewCache.hit("$storyId/$chapter/$page").ifPresent { return@async2 it }
   val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
     Notifications.ERROR.show(defaultIntent(),

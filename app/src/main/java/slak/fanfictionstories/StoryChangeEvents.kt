@@ -2,6 +2,7 @@ package slak.fanfictionstories
 
 import android.database.Observable
 import android.support.annotation.AnyThread
+import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 
@@ -29,7 +30,7 @@ object StoryEventNotifier : Observable<IStoryEventObserver>() {
    * @param event the data to send to the observers
    */
   @AnyThread
-  fun notify(event: StoriesChangeEvent) = launch(UI) {
+  fun notify(event: StoriesChangeEvent) = GlobalScope.launch(UI) {
     mObservers.forEach { it.onStoriesChanged(event) }
   }
 }

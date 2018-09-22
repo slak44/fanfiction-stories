@@ -9,11 +9,8 @@ import android.util.Log
 import android.view.View
 import android.widget.EditText
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.anko.db.MapRowParser
 import org.jetbrains.anko.db.dropTable
 import org.jetbrains.anko.db.select
@@ -64,7 +61,7 @@ val debugActions = mapOf(
     },
     "Wipe Settings" to { Prefs.useImmediate { it.clear() } },
     "Add 3 stories" to {
-      launch(CommonPool) {
+      GlobalScope.launch(Dispatchers.Default) {
         fetchAndWriteStory(12129863L).await()
         fetchAndWriteStory(11953822L).await()
         fetchAndWriteStory(12295826L).await()
@@ -75,7 +72,7 @@ val debugActions = mapOf(
           Notifications.values().map { it.toString() }.toTypedArray()) { _, which ->
         val picked = Notifications.values()[which]
         picked.show(defaultIntent(), "TEST")
-        launch(UI) {
+        GlobalScope.launch(UI) {
           delay(2500)
           picked.cancel()
         }
@@ -103,9 +100,11 @@ val debugActions = mapOf(
       File("/sdcard/Download/library.csv")
           .readText()
           .split('\n')
+          .asSequence()
           .drop(1)
           .map { it.split(',') }
           .filter { it[0].isNotEmpty() }
+          .toList()
           .forEach {
             runBlocking {
               Log.d(TAG, it.joinToString(","))
@@ -138,7 +137,7 @@ val debugActions = mapOf(
       dialog.show()
     },
     "Normalize progress" to {
-      launch {
+      GlobalScope.launch {
         Static.database.getStories().await().forEach {
           if (it.progressAsPercentage() > 75.0 || it.progress.scrollAbsolute == 999999.0)
             Static.database.updateInStory(it.storyId,
@@ -147,7 +146,7 @@ val debugActions = mapOf(
       }
     },
     "Import List" to {
-      launch(CommonPool) {
+      GlobalScope.launch(Dispatchers.Default) {
         File("/sdcard/Download/storyId.list")
             .readText()
             .split('\n')
@@ -159,7 +158,7 @@ val debugActions = mapOf(
           "markerColor" to -6697984).whereSimple("markerColor = ?", "0").exec()
     },
     "Download all stories" to {
-      launch {
+      GlobalScope.launch {
         Static.database.getStories().await().filter { it.status != StoryStatus.LOCAL }.forEach {
           fetchAndWriteStory(it.storyId).await()
         }

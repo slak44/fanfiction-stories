@@ -14,6 +14,8 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.activity_favorite_canons.*
 import kotlinx.android.synthetic.main.component_favorite_canon.view.*
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
@@ -23,8 +25,12 @@ import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.startActivity
 import slak.fanfictionstories.utility.str
 import slak.fanfictionstories.utility.undoableAction
+import kotlin.coroutines.experimental.CoroutineContext
 
-class FavoriteCanonsActivity : AppCompatActivity() {
+class FavoriteCanonsActivity : AppCompatActivity(), CoroutineScope {
+  override val coroutineContext: CoroutineContext
+    get() = Dispatchers.Default
+
   private class CanonAdapter(
       private val activity: FavoriteCanonsActivity,
       links: List<CategoryLink>
@@ -53,13 +59,13 @@ class FavoriteCanonsActivity : AppCompatActivity() {
       removeBtn.setOnClickListener {
         removeSnackbar?.dismiss()
         val removed = linkList.removeAt(position)
-        launch(UI) {
+        activity.launch(UI) {
           notifyItemRemoved(position)
           activity.updateNoFavoritesText()
         }
         removeSnackbar = undoableAction(this, R.string.removed_favorite_snack, { _ ->
           linkList.add(position, removed)
-          launch(UI) {
+          activity.launch(UI) {
             notifyItemInserted(position)
             activity.updateNoFavoritesText()
           }

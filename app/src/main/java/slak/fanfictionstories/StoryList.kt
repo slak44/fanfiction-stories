@@ -31,11 +31,8 @@ import android.widget.TextView
 import com.takisoft.colorpicker.ColorPickerDialog
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.component_story.view.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
@@ -47,6 +44,7 @@ import slak.fanfictionstories.data.useAsync
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Optional
 import java.util.*
+import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Adds a [ItemTouchHelper] to the recycler that lets stories be swiped right to be read.
@@ -72,7 +70,7 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
       // After the reader was opened, reset the translation by reattaching
       // We do this because we might go back from the reader to this activity and
       // it has to look properly
-      launch(UI) {
+      GlobalScope.launch(UI) {
         delay(500)
         swipeStory.attachToRecyclerView(null)
         swipeStory.attachToRecyclerView(this@createStorySwipeHelper)
@@ -89,12 +87,14 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
  */
 class MarkerButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : Button(context, attrs, defStyleAttr), View.OnClickListener {
+) : Button(context, attrs, defStyleAttr), View.OnClickListener, CoroutineScope {
+  override val coroutineContext = UI
+
   private var storyId: StoryId = 0
   private var markerColor: Int = 0
     set(value) {
       field = value
-      launch(UI) {
+      launch {
         paint = createPaint(value)
         invalidate()
       }
@@ -113,11 +113,11 @@ class MarkerButton @JvmOverloads constructor(
 
   override fun onClick(v: View) {
     val colors = resources.getIntArray(R.array.markerColors)
-    launch(UI) {
-      val dialog = ColorPickerDialog(getContext(), 0, {
-        getContext().database.setMarker(storyId, it)
+    launch {
+      val dialog = ColorPickerDialog(context, 0, {
+        context.database.setMarker(storyId, it)
         markerColor = it
-      }, ColorPickerDialog.Params.Builder(getContext())
+      }, ColorPickerDialog.Params.Builder(context)
           .setColors(colors)
           .setColorContentDescriptions(resources.getStringArray(R.array.markerColorNames))
           .setSelectedColor(markerColor)
@@ -419,11 +419,15 @@ sealed class StoryListItem : Parcelable {
 open class StoryListViewModel :
     ViewModel(),
     IAdapterDataObservable by AdapterDataObservable(),
-    List<StoryListItem> {
+    List<StoryListItem>,
+    CoroutineScope {
   companion object {
     private const val TAG = "StoryListViewModel"
     const val UNINITIALIZED = -11234
   }
+
+  override val coroutineContext: CoroutineContext
+    get() = Dispatchers.Default
 
   /** The stories, group titles, and loading items of the list. */
   private val data: MutableList<StoryListItem> = mutableListOf()
@@ -650,7 +654,7 @@ open class StoryListViewModel :
       pendingItems.keys.find { it.storyId == storyId } == null
     }
     clearData()
-    val toData = storiesNotPending.filter { true }.toMutableList() // FIXME filter
+    val toData = storiesNotPending.filterTo(mutableListOf()) { true } // FIXME filter
     groupStories(toData, arrangement.groupStrategy).await().toSortedMap().forEach { e ->
       val ordered = orderStories(e.value, arrangement.orderStrategy, arrangement.orderDirection)
       addItems(listOf(GroupTitle(e.key), *ordered.map { StoryCardData(it) }.toTypedArray()))
@@ -668,7 +672,7 @@ class ProgressBarHolder(val view: ProgressBar) : RecyclerView.ViewHolder(view)
 class StoryAdapter(private val viewModel: StoryListViewModel) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-  val vmObserver = createObserverForAdapter(this)
+  private val vmObserver = createObserverForAdapter(this)
 
   init {
     setHasStableIds(true)

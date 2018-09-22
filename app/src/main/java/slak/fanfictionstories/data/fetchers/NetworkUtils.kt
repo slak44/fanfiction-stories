@@ -1,8 +1,9 @@
 package slak.fanfictionstories.data.fetchers
 
 import android.util.Log
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.delay
 import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.R
@@ -19,7 +20,7 @@ private const val NET_TAG = "waitForNetwork"
  *
  * Shows notifications about connection status.
  */
-fun waitForNetwork() = async2(CommonPool) {
+fun CoroutineScope.waitForNetwork() = async2(Dispatchers.Default) {
   while (true) {
     val activeNetwork = Static.cm.activeNetworkInfo
     if (activeNetwork == null || !activeNetwork.isConnected) {
@@ -47,8 +48,8 @@ private const val URL_TAG = "patientlyFetchURL"
  * If the download fails, call the [onError] callback, wait for the rate limit again, and then call
  * this function recursively.
  */
-fun patientlyFetchURL(url: String,
-                      onError: (t: Throwable) -> Unit): Deferred<String> = async2(CommonPool) {
+fun CoroutineScope.patientlyFetchURL(url: String,
+                      onError: (t: Throwable) -> Unit): Deferred<String> = async2(Dispatchers.Default) {
   waitForNetwork().await()
   delay(RATE_LIMIT_MS)
   return@async2 try {

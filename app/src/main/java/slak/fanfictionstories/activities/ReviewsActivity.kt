@@ -14,6 +14,8 @@ import android.view.*
 import kotlinx.android.synthetic.main.activity_reviews.*
 import kotlinx.android.synthetic.main.component_review.view.*
 import kotlinx.android.synthetic.main.dialog_report_review.view.*
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
@@ -26,6 +28,7 @@ import slak.fanfictionstories.data.fetchers.fetchStoryModel
 import slak.fanfictionstories.data.fetchers.getReviews
 import slak.fanfictionstories.utility.*
 import java.util.*
+import kotlin.coroutines.experimental.CoroutineContext
 
 /** Stores and fetches the data required for a [ReviewsActivity]. */
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
@@ -61,7 +64,7 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer)
     _chapter.it = newChapter
   }
 
-  fun clear() {
+  private fun clear() {
     val size = reviewsList.size
     reviewsList.clear()
     notifyItemRangeRemoved(0, size)
@@ -81,12 +84,15 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer)
 }
 
 /** Presents a story's reviews. */
-class ReviewsActivity : LoadingActivity() {
+class ReviewsActivity : LoadingActivity(), CoroutineScope {
   companion object {
     const val INTENT_STORY_MODEL = "story_model_extra"
     const val INTENT_TARGET_CHAPTER = "target_chapter_extra"
     private const val ALL_CHAPTERS = 0
   }
+
+  override val coroutineContext: CoroutineContext
+    get() = Dispatchers.Default
 
   private lateinit var viewModel: ReviewsViewModel
 
@@ -187,7 +193,7 @@ class ReviewAdapter(
     private val viewModel: ReviewsViewModel) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   class ReviewHolder(val view: CardView) : RecyclerView.ViewHolder(view)
 
-  val vmObserver = createObserverForAdapter(this)
+  private val vmObserver = createObserverForAdapter(this)
 
   init {
     viewModel.registerObserver(vmObserver)
