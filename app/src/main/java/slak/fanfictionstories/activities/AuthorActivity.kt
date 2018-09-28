@@ -245,6 +245,7 @@ class AuthorActivity : LoadingActivity(1) {
 
     private lateinit var viewModel: StoryListViewModel
 
+    // FIXME useless coroutine, we're already on the UI thread
     private fun initLayout(rootView: View, stories: List<StoryModel>) = launch(UI) {
       rootView.stories.layoutManager = LinearLayoutManager(context)
       rootView.stories.createStorySwipeHelper()

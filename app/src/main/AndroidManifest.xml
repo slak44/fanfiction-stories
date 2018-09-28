@@ -140,6 +140,7 @@
 
         <activity android:name=".activities.FavoriteCanonsActivity">
         </activity>
+        <activity android:name=".utility.CoroutineScopeActivity"/>
     </application>
 
 </manifest>

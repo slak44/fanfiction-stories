@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.support.annotation.UiThread
 import android.support.constraint.ConstraintLayout
 import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -21,16 +20,11 @@ import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.R
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.CategoryLink
-import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.startActivity
-import slak.fanfictionstories.utility.str
-import slak.fanfictionstories.utility.undoableAction
+import slak.fanfictionstories.utility.*
 import kotlin.coroutines.experimental.CoroutineContext
 
-class FavoriteCanonsActivity : AppCompatActivity(), CoroutineScope {
-  override val coroutineContext: CoroutineContext
-    get() = Dispatchers.Default
-
+class FavoriteCanonsActivity : CoroutineScopeActivity() {
+  // FIXME turn this class into an object, it's just inconvenient like this
   private class CanonAdapter(
       private val activity: FavoriteCanonsActivity,
       links: List<CategoryLink>
@@ -59,12 +53,14 @@ class FavoriteCanonsActivity : AppCompatActivity(), CoroutineScope {
       removeBtn.setOnClickListener {
         removeSnackbar?.dismiss()
         val removed = linkList.removeAt(position)
+        // FIXME useless coroutine, we're already on the UI thread
         activity.launch(UI) {
           notifyItemRemoved(position)
           activity.updateNoFavoritesText()
         }
         removeSnackbar = undoableAction(this, R.string.removed_favorite_snack, { _ ->
           linkList.add(position, removed)
+          // FIXME useless coroutine, we're already on the UI thread
           activity.launch(UI) {
             notifyItemInserted(position)
             activity.updateNoFavoritesText()
@@ -80,6 +76,7 @@ class FavoriteCanonsActivity : AppCompatActivity(), CoroutineScope {
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     setTitle(R.string.favorite_canons)
+    // FIXME possibly useless coroutine, we're already on the UI thread, just have to handle getFavoriteCanons
     launch(UI) {
       canonListRecycler.adapter =
           CanonAdapter(this@FavoriteCanonsActivity, database.getFavoriteCanons().await())

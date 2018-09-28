@@ -16,19 +16,16 @@ import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.utility.ActivityWithStatic
+import slak.fanfictionstories.utility.CoroutineScopeActivity
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.str
 import kotlin.coroutines.experimental.CoroutineContext
 
 /** The main menu. Allows navigation to other sections of the app. */
-class MainActivity : ActivityWithStatic(), CoroutineScope {
+class MainActivity : CoroutineScopeActivity() {
   companion object {
     private const val TAG = "MainActivity"
   }
-
-  override val coroutineContext: CoroutineContext
-    get() = Dispatchers.Default
-
   private var resumeModel: StoryModel? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +69,7 @@ class MainActivity : ActivityWithStatic(), CoroutineScope {
       resumeStoryText.text = str(R.string.nothing_to_resume)
       return
     }
+    // FIXME useless coroutine, we're already on the UI thread, just deal with storyById
     launch(UI) {
       resumeModel = database.storyById(Prefs.resumeStoryId).await().orNull()
       storyContainer.visibility = View.VISIBLE

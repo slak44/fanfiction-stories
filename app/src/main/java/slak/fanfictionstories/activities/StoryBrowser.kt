@@ -57,6 +57,7 @@ class SelectCategoryActivity : ActivityWithStatic() {
  * Navigate a category. Can represent links to canons, or links to further categories when working
  * with crossovers.
  */
+// FIXME do both LoadingActivity and CoroutineScopeActivity
 class BrowseCategoryActivity : LoadingActivity(), CoroutineScope {
   override val coroutineContext: CoroutineContext
     get() = Dispatchers.Default

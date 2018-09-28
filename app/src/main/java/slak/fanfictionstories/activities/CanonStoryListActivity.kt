@@ -78,6 +78,7 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
 }
 
 /** A list of stories within a canon. */
+// FIXME do both LoadingActivity and CoroutineScopeActivity
 class CanonStoryListActivity : LoadingActivity(), CoroutineScope {
   override val coroutineContext: CoroutineContext
     get() = Dispatchers.Default

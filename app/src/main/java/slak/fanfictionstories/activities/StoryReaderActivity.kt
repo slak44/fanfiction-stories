@@ -168,6 +168,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
 }
 
 /** Shows a chapter of a story for reading. */
+// FIXME do both LoadingActivity and CoroutineScopeActivity
 class StoryReaderActivity : LoadingActivity(), ISearchableActivity, CoroutineScope {
   companion object {
     private const val TAG = "StoryReaderActivity"

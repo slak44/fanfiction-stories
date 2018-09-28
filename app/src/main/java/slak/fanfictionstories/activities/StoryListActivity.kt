@@ -21,6 +21,7 @@ import slak.fanfictionstories.utility.*
 import kotlin.coroutines.experimental.CoroutineContext
 
 /** The list of stories the user has started reading, or has downloaded. */
+// FIXME do both LoadingActivity and CoroutineScopeActivity
 class StoryListActivity : LoadingActivity(), IStoryEventObserver, CoroutineScope {
   override fun onStoriesChanged(t: StoriesChangeEvent) {
     if (t is StoriesChangeEvent.New) {

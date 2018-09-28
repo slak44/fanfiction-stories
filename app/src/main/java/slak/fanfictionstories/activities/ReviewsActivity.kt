@@ -84,6 +84,7 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer)
 }
 
 /** Presents a story's reviews. */
+// FIXME do both LoadingActivity and CoroutineScopeActivity
 class ReviewsActivity : LoadingActivity(), CoroutineScope {
   companion object {
     const val INTENT_STORY_MODEL = "story_model_extra"
@@ -189,6 +190,7 @@ class ReviewsActivity : LoadingActivity(), CoroutineScope {
 }
 
 /** For using [Review] objects with [RecyclerView]. */
+// FIXME this class could be an object
 class ReviewAdapter(
     private val viewModel: ReviewsViewModel) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   class ReviewHolder(val view: CardView) : RecyclerView.ViewHolder(view)
