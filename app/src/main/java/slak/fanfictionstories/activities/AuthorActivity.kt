@@ -15,9 +15,11 @@ import android.support.v7.widget.LinearLayoutManager
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.*
+import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_author.*
 import kotlinx.android.synthetic.main.fragment_author_bio.view.*
 import kotlinx.android.synthetic.main.fragment_author_stories.view.*
+import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
@@ -37,6 +39,7 @@ class AuthorViewModel(authorId: java.lang.Long) : ViewModel(), CoroutineScope {
   override val coroutineContext: CoroutineContext
     get() = UI
 
+  // FIXME get rid of this retarded way to fetch the author
   init {
     launch {
       author = getAuthor(authorId.toLong()).await()
@@ -54,10 +57,13 @@ class AuthorViewModel(authorId: java.lang.Long) : ViewModel(), CoroutineScope {
 }
 
 /**
- * An author's detail page. Has his bio, his stories, his favorite stories, his favourite authors,
- * and other user related actions.
+ * An author's detail page. Has his bio, his stories, his favorite stories, his favourite authors, and other user
+ * related actions.
  */
-class AuthorActivity : LoadingActivity(1) {
+class AuthorActivity : ActivityWithStatic(), IHasLoadingBar {
+  override val loading: ProgressBar
+    get() = activityProgressBar
+
   companion object {
     const val INTENT_AUTHOR_ID = "author_id_intent"
     const val INTENT_AUTHOR_NAME = "author_name_intent"
@@ -66,11 +72,9 @@ class AuthorActivity : LoadingActivity(1) {
   private lateinit var viewModel: AuthorViewModel
 
   /**
-   * The [android.support.v4.view.PagerAdapter] that will provide
-   * fragments for each of the sections. We use a
-   * [FragmentPagerAdapter] derivative, which will keep every
-   * loaded fragment in memory. If this becomes too memory intensive, it
-   * may be best to switch to a [android.support.v4.app.FragmentStatePagerAdapter].
+   * The [android.support.v4.view.PagerAdapter] that will provide fragments for each of the sections. We use a
+   * [FragmentPagerAdapter] derivative, which will keep every loaded fragment in memory. If this becomes too memory
+   * intensive, it may be best to switch to a [android.support.v4.app.FragmentStatePagerAdapter].
    */
   private var sectionsPagerAdapter: SectionsPagerAdapter? = null
 
@@ -78,6 +82,7 @@ class AuthorActivity : LoadingActivity(1) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_author)
     setSupportActionBar(toolbar)
+    setLoadingView(toolbar, 1)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     val (authorName, authorId) = if (intent.action == ACTION_VIEW) {
@@ -170,6 +175,7 @@ class AuthorActivity : LoadingActivity(1) {
     return true
   }
 
+  // FIXME this can just be an object
   /** A [FragmentPagerAdapter] that returns a fragment corresponding to the tabs. */
   inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
     override fun getItem(position: Int): Fragment = when (position) {
@@ -226,6 +232,7 @@ class AuthorActivity : LoadingActivity(1) {
    * Fragment that lists stories using a [android.support.v7.widget.RecyclerView] and
    * [StoryAdapter].
    */
+  // FIXME remove CoroutineScope
   internal class StoryListFragment : Fragment(), CoroutineScope {
     companion object {
       private const val ARG_STORIES = "stories"
@@ -240,6 +247,7 @@ class AuthorActivity : LoadingActivity(1) {
       }
     }
 
+    // FIXME remove
     override val coroutineContext: CoroutineContext
       get() = Dispatchers.Default
 

@@ -130,17 +130,12 @@
                 <action android:name="android.intent.action.VIEW"/>
             </intent-filter>
         </activity>
-        <activity
-            android:name=".utility.LoadingActivity"
-            android:theme="@style/AppTheme"/>
+        <activity android:name=".activities.FavoriteCanonsActivity"/>
+        <activity android:name=".utility.CoroutineScopeActivity"/>
 
         <service
             android:name=".UpdateService"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
-
-        <activity android:name=".activities.FavoriteCanonsActivity">
-        </activity>
-        <activity android:name=".utility.CoroutineScopeActivity"/>
     </application>
 
 </manifest>

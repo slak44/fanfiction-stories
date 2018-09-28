@@ -1,38 +1,47 @@
 package slak.fanfictionstories.utility
 
+import android.app.Activity
 import android.support.annotation.UiThread
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
+import android.widget.ProgressBar
 import slak.fanfictionstories.R
 
-/**
- * This activity adds a horizontal indeterminate progress bar to the bottom of the action bar.
- * @param idxInToolbarLayout certain implementations may have other views around here, so this
- * parameter is provided to choose where to insert the loader ([ViewGroup.addView]'s index arg)
- */
-open class LoadingActivity(private val idxInToolbarLayout: Int = -1) : ActivityWithStatic() {
-  override fun setSupportActionBar(toolbar: Toolbar?) {
-    super.setSupportActionBar(toolbar)
-    val progress = layoutInflater.inflate(
-        R.layout.loading_activity_indeterminate, toolbar!!.parent as ViewGroup, false)
-    (toolbar.parent as ViewGroup).addView(progress, idxInToolbarLayout)
-  }
+/** This interface is used to control a loading progress bar. */
+interface IHasLoadingBar {
+  val loading: ProgressBar
 
   /** Returns whether or not the loading bar is currently visible. */
   @UiThread
-  open fun isLoading(): Boolean = activityProgressBar.visibility == View.VISIBLE
+  fun isLoading(): Boolean = loading.visibility == View.VISIBLE
 
   /** Make the loading bar visible. */
   @UiThread
-  open fun showLoading() {
-    activityProgressBar.visibility = View.VISIBLE
+  fun showLoading() {
+    loading.visibility = View.VISIBLE
   }
 
   /** Hide the loading bar. */
   @UiThread
-  open fun hideLoading() {
-    activityProgressBar.visibility = View.GONE
+  fun hideLoading() {
+    loading.visibility = View.GONE
   }
+}
+
+/**
+ * Inflates a horizontal indeterminate [ProgressBar] and adds it to the bottom of the action bar.
+ *
+ * Should be called _after_ [AppCompatActivity.setSupportActionBar].
+ *
+ * The progress bar view's id is [R.id.activityProgressBar].
+ * @param toolbar the activity's [Toolbar]
+ * @param idxInToolbarLayout certain implementations may have other views around here, so this parameter is provided for
+ * choose where to insert the loader ([ViewGroup.addView]'s index arg)
+ */
+fun <T> T.setLoadingView(toolbar: Toolbar, idxInToolbarLayout: Int = -1) where T : Activity, T: IHasLoadingBar {
+  val progress = layoutInflater.inflate(
+      R.layout.loading_activity_indeterminate, toolbar.parent as ViewGroup, false)
+  (toolbar.parent as ViewGroup).addView(progress, idxInToolbarLayout)
 }

@@ -8,7 +8,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_story_list.*
+import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
@@ -21,8 +23,10 @@ import slak.fanfictionstories.utility.*
 import kotlin.coroutines.experimental.CoroutineContext
 
 /** The list of stories the user has started reading, or has downloaded. */
-// FIXME do both LoadingActivity and CoroutineScopeActivity
-class StoryListActivity : LoadingActivity(), IStoryEventObserver, CoroutineScope {
+class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoadingBar {
+  override val loading: ProgressBar
+    get() = activityProgressBar
+
   override fun onStoriesChanged(t: StoriesChangeEvent) {
     if (t is StoriesChangeEvent.New) {
       viewModel.triggerDatabaseLoad()
@@ -50,6 +54,7 @@ class StoryListActivity : LoadingActivity(), IStoryEventObserver, CoroutineScope
 
     setContentView(R.layout.activity_story_list)
     setSupportActionBar(toolbar)
+    setLoadingView(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     layoutManager = LinearLayoutManager(this)
@@ -87,14 +92,14 @@ class StoryListActivity : LoadingActivity(), IStoryEventObserver, CoroutineScope
         .setPositiveButton(R.string.add) { dialog, _ ->
           val editText = (dialog as AlertDialog).findViewById<EditText>(R.id.dialogStoryId)!!
           val idText = editText.text.toString()
-          val list = idText.split(",").map {
+          val list = idText.split(",").mapNotNullTo(mutableListOf()) {
             try {
               it.toLong()
             } catch (nfe: NumberFormatException) {
               Snackbar.make(storyListView, str(R.string.text_is_not_id, it), Snackbar.LENGTH_LONG)
-              -1L
+              null
             }
-          }.filter { it != -1L }
+          }
           dialog.dismiss()
           launch(Dispatchers.Default) {
             val models = list.map { fetchAndWriteStory(it).await() }
@@ -139,7 +144,7 @@ class StoryListActivity : LoadingActivity(), IStoryEventObserver, CoroutineScope
   private fun jumpToDialog() {
     // List of (position of title, title text) pairs
     val items = viewModel.mapIndexedNotNull { idx, item ->
-      if (item !is StoryListItem.GroupTitle) return@mapIndexedNotNull null
+      if (item !is StoryListItem.GroupTitle) null
       else Pair(idx, item.title)
     }
     AlertDialog.Builder(this)

@@ -10,8 +10,10 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
+import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import slak.fanfictionstories.*
@@ -78,16 +80,16 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
 }
 
 /** A list of stories within a canon. */
-// FIXME do both LoadingActivity and CoroutineScopeActivity
-class CanonStoryListActivity : LoadingActivity(), CoroutineScope {
-  override val coroutineContext: CoroutineContext
-    get() = Dispatchers.Default
+class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
+  override val loading: ProgressBar
+    get() = activityProgressBar
   private lateinit var viewModel: CanonListViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_canon_story_list)
-    setSupportActionBar(findViewById(R.id.toolbar))
+    setSupportActionBar(toolbar)
+    setLoadingView(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     viewModel = obtainViewModel(intent.getParcelableExtra(INTENT_LINK_DATA)!!)

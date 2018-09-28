@@ -6,9 +6,10 @@ import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
+import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_browse_category.*
 import kotlinx.android.synthetic.main.activity_select_category.*
-import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
@@ -18,7 +19,6 @@ import slak.fanfictionstories.data.fetchers.CategoryLink
 import slak.fanfictionstories.data.fetchers.categoryCache
 import slak.fanfictionstories.data.fetchers.fetchCategoryData
 import slak.fanfictionstories.utility.*
-import kotlin.coroutines.experimental.CoroutineContext
 
 val categories: Array<String> by lazy { Static.res.getStringArray(R.array.categories) }
 val categoryUrl: Array<String> by lazy {
@@ -53,19 +53,16 @@ class SelectCategoryActivity : ActivityWithStatic() {
   }
 }
 
-/**
- * Navigate a category. Can represent links to canons, or links to further categories when working
- * with crossovers.
- */
-// FIXME do both LoadingActivity and CoroutineScopeActivity
-class BrowseCategoryActivity : LoadingActivity(), CoroutineScope {
-  override val coroutineContext: CoroutineContext
-    get() = Dispatchers.Default
+/** Navigate a category. Can represent links to canons, or links to further categories when working with crossovers. */
+class BrowseCategoryActivity : CoroutineScopeActivity(), IHasLoadingBar {
+  override val loading: ProgressBar
+    get() = activityProgressBar
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_browse_category)
     setSupportActionBar(findViewById(R.id.toolbar))
+    setLoadingView(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     val parentLink = intent.extras?.getParcelable<CategoryLink>(INTENT_LINK_DATA) ?: return
     title = parentLink.displayName

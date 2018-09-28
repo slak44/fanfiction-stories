@@ -11,9 +11,11 @@ import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
+import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_reviews.*
 import kotlinx.android.synthetic.main.component_review.view.*
 import kotlinx.android.synthetic.main.dialog_report_review.view.*
+import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
@@ -84,16 +86,15 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer)
 }
 
 /** Presents a story's reviews. */
-// FIXME do both LoadingActivity and CoroutineScopeActivity
-class ReviewsActivity : LoadingActivity(), CoroutineScope {
+class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
   companion object {
     const val INTENT_STORY_MODEL = "story_model_extra"
     const val INTENT_TARGET_CHAPTER = "target_chapter_extra"
     private const val ALL_CHAPTERS = 0
   }
 
-  override val coroutineContext: CoroutineContext
-    get() = Dispatchers.Default
+  override val loading: ProgressBar
+    get() = activityProgressBar
 
   private lateinit var viewModel: ReviewsViewModel
 
@@ -101,6 +102,7 @@ class ReviewsActivity : LoadingActivity(), CoroutineScope {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_reviews)
     setSupportActionBar(toolbar)
+    setLoadingView(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     // runBlocking is fine here, because the loading bar is already in place, and so the user

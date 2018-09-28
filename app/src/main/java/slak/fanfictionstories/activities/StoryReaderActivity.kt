@@ -19,9 +19,11 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
+import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.Dispatchers
@@ -168,8 +170,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
 }
 
 /** Shows a chapter of a story for reading. */
-// FIXME do both LoadingActivity and CoroutineScopeActivity
-class StoryReaderActivity : LoadingActivity(), ISearchableActivity, CoroutineScope {
+class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasLoadingBar {
   companion object {
     private const val TAG = "StoryReaderActivity"
     const val INTENT_STORY_MODEL = "bundle"
@@ -179,8 +180,8 @@ class StoryReaderActivity : LoadingActivity(), ISearchableActivity, CoroutineSco
   private lateinit var viewModel: ReaderViewModel
   private lateinit var searchUI: SearchUIFragment
 
-  override val coroutineContext: CoroutineContext
-    get() = Dispatchers.Default
+  override val loading: ProgressBar
+    get() = activityProgressBar
 
   /**
    * Gets the data required for the [ViewModel]. It will load from the intent URI (clicked link to
@@ -232,6 +233,7 @@ class StoryReaderActivity : LoadingActivity(), ISearchableActivity, CoroutineSco
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_story_reader)
     setSupportActionBar(toolbar)
+    setLoadingView(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     launch(UI) {

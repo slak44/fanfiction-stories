@@ -20,6 +20,7 @@ private const val NET_TAG = "waitForNetwork"
  *
  * Shows notifications about connection status.
  */
+// FIXME make this suspending
 fun CoroutineScope.waitForNetwork() = async2(Dispatchers.Default) {
   while (true) {
     val activeNetwork = Static.cm.activeNetworkInfo
@@ -48,6 +49,7 @@ private const val URL_TAG = "patientlyFetchURL"
  * If the download fails, call the [onError] callback, wait for the rate limit again, and then call
  * this function recursively.
  */
+// FIXME make this suspending
 fun CoroutineScope.patientlyFetchURL(url: String,
                       onError: (t: Throwable) -> Unit): Deferred<String> = async2(Dispatchers.Default) {
   waitForNetwork().await()
