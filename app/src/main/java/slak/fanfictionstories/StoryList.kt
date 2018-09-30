@@ -86,23 +86,21 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
  */
 class MarkerButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : Button(context, attrs, defStyleAttr), View.OnClickListener, CoroutineScope {
-  override val coroutineContext = UI
-
+) : Button(context, attrs, defStyleAttr), View.OnClickListener {
   private var storyId: StoryId = 0
   private var markerColor: Int = 0
+    @UiThread
     set(value) {
       field = value
-      launch {
-        paint = createPaint(value)
-        invalidate()
-      }
+      paint = createPaint(value)
+      invalidate()
     }
 
   init {
     super.setOnClickListener(this)
   }
 
+  @UiThread
   fun bindMarker(storyId: StoryId, markerColor: Int) {
     this.storyId = storyId
     this.markerColor = markerColor
@@ -110,23 +108,22 @@ class MarkerButton @JvmOverloads constructor(
 
   override fun setOnClickListener(l: OnClickListener?) {} // Don't
 
+  @UiThread
   override fun onClick(v: View) {
     val colors = resources.getIntArray(R.array.markerColors)
-    launch {
-      val dialog = ColorPickerDialog(context, 0, {
-        context.database.setMarker(storyId, it)
-        markerColor = it
-      }, ColorPickerDialog.Params.Builder(context)
-          .setColors(colors)
-          .setColorContentDescriptions(resources.getStringArray(R.array.markerColorNames))
-          .setSelectedColor(markerColor)
-          .setSortColors(false)
-          .build())
-      dialog.setTitle(R.string.select_marker_color)
-      dialog.setMessage(str(R.string.select_marker_color_msg))
-      dialog.setCancelable(true)
-      dialog.show()
-    }
+    val dialog = ColorPickerDialog(context, 0, {
+      context.database.setMarker(storyId, it)
+      markerColor = it
+    }, ColorPickerDialog.Params.Builder(context)
+        .setColors(colors)
+        .setColorContentDescriptions(resources.getStringArray(R.array.markerColorNames))
+        .setSelectedColor(markerColor)
+        .setSortColors(false)
+        .build())
+    dialog.setTitle(R.string.select_marker_color)
+    dialog.setMessage(str(R.string.select_marker_color_msg))
+    dialog.setCancelable(true)
+    dialog.show()
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -134,6 +131,7 @@ class MarkerButton @JvmOverloads constructor(
     setMeasuredDimension(btnSize, btnSize)
   }
 
+  // FIXME might be too slow to run on the UI thread
   private fun createPaint(color: Int): Paint {
     val p = Paint()
     p.color = color
@@ -200,7 +198,7 @@ class StoryCardView @JvmOverloads constructor(
   /** Called when the view is extended/unextended. */
   var onExtendedStateChange: (Boolean) -> Unit = {}
 
-  fun loadFromModel(model: StoryModel) {
+  fun loadFromModel(model: StoryModel, scope: CoroutineScope) {
     currentModel = model
     // Unexpanded view
     titleText.text = model.title
@@ -244,8 +242,7 @@ class StoryCardView @JvmOverloads constructor(
     if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.GONE
     if (model.status == StoryStatus.TRANSIENT) removeBtn.visibility = View.GONE
 
-    // FIXME missing coroutine scope
-    launch(CommonPool) {
+    scope.launch(UI) {
       markerBtn.bindMarker(model.storyId, Static.database.getMarker(model.storyId).await().toInt())
     }
 
@@ -261,8 +258,7 @@ class StoryCardView @JvmOverloads constructor(
     addBtn.setOnClickListener {
       addBtn.isEnabled = false
       addBtn.text = str(R.string.adding___)
-      // FIXME missing coroutine scope
-      launch(UI) {
+      scope.launch(UI) {
         val newModel = fetchAndWriteStory(model.storyId)
         if (newModel is Empty) {
           addBtn.visibility = View.VISIBLE
@@ -281,14 +277,13 @@ class StoryCardView @JvmOverloads constructor(
   }
 
   /** The remove button will not work without the [viewModel]. It will be [View.GONE]'d instead. */
-  fun bindRemoveBtn(model: StoryModel, viewModel: Optional<StoryListViewModel>) {
+  fun bindRemoveBtn(model: StoryModel, scope: CoroutineScope, viewModel: Optional<StoryListViewModel>) {
     val vm = viewModel.orElse {
       removeBtn.visibility = View.GONE
       return@bindRemoveBtn
     }
     removeBtn.setOnClickListener { btn ->
-      // FIXME missing coroutine scope
-      launch(UI) {
+      scope.launch(UI) {
         // Even though we have a model, fetch it from db to make sure there are no inconsistencies
         val dbModel = Static.database.storyById(model.storyId).await()
         if (dbModel is Empty) {
@@ -347,8 +342,7 @@ class GroupTitleView @JvmOverloads constructor(
 /** An indeterminate [ProgressBar] for use with [LoadingItem]. */
 class LoadingView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : ProgressBar(
-    ContextThemeWrapper(context, R.style.Widget_AppCompat_ProgressBar), attrs, defStyleAttr) {
+) : ProgressBar(ContextThemeWrapper(context, R.style.Widget_AppCompat_ProgressBar), attrs, defStyleAttr) {
   init {
     val lp = ViewGroup.MarginLayoutParams(MATCH_PARENT, WRAP_CONTENT)
     lp.margins(bottom = resources.px(R.dimen.list_separator_height))
@@ -452,9 +446,6 @@ open class StoryListViewModel :
     }
   }
 
-  /**
-   * FIXME: see if room can make this obsolete
-   */
   fun triggerDatabaseLoad() = launch(UI) {
     val stories = Static.database.getStories().await()
     arrangeStories(stories, Prefs.storyListArrangement()).join()
@@ -507,9 +498,7 @@ open class StoryListViewModel :
    * Find the index of a [StoryCardData] whose model has the specified id.
    * @return the index, or -1 if it doesn't exist
    */
-  fun indexOfStoryId(storyId: StoryId): Int = data.indexOfFirst {
-    it is StoryCardData && it.model.storyId == storyId
-  }
+  fun indexOfStoryId(storyId: StoryId): Int = data.indexOfFirst { it is StoryCardData && it.model.storyId == storyId }
 
   /**
    * Clear adapter data, including any pending items.
@@ -657,7 +646,7 @@ open class StoryListViewModel :
     }
     clearData()
     val toData = storiesNotPending.filterTo(mutableListOf()) { true } // FIXME filter
-    groupStories(toData, arrangement.groupStrategy).await().toSortedMap().forEach { e ->
+    groupStories(toData, arrangement.groupStrategy).toSortedMap().forEach { e ->
       val ordered = orderStories(e.value, arrangement.orderStrategy, arrangement.orderDirection)
       addItems(listOf(GroupTitle(e.key), *ordered.map { StoryCardData(it) }.toTypedArray()))
     }
@@ -689,8 +678,8 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
         val view = (holder as StoryViewHolder).view
         view.onExtendedStateChange = { viewModel.updateStoryState(position, it) }
         view.isExtended = item.isExtended
-        view.loadFromModel(item.model)
-        view.bindRemoveBtn(item.model, viewModel.opt())
+        view.loadFromModel(item.model, viewModel)
+        view.bindRemoveBtn(item.model, viewModel, viewModel.opt())
       }
       is GroupTitle -> {
         val str = SpannableString(item.title)

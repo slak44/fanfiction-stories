@@ -1,11 +1,9 @@
 package slak.fanfictionstories.activities
 
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
-import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent.ACTION_VIEW
 import android.os.Bundle
+import android.support.annotation.UiThread
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
@@ -20,8 +18,6 @@ import kotlinx.android.synthetic.main.activity_author.*
 import kotlinx.android.synthetic.main.fragment_author_bio.view.*
 import kotlinx.android.synthetic.main.fragment_author_stories.view.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
@@ -31,36 +27,15 @@ import slak.fanfictionstories.data.fetchers.Author
 import slak.fanfictionstories.data.fetchers.getAuthor
 import slak.fanfictionstories.utility.*
 import java.util.*
-import kotlin.coroutines.experimental.CoroutineContext
 
-/** Stores and loads the data required for an author page. */
-@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-class AuthorViewModel(authorId: java.lang.Long) : ViewModel(), CoroutineScope {
-  override val coroutineContext: CoroutineContext
-    get() = UI
-
-  // FIXME get rid of this retarded way to fetch the author
-  init {
-    launch {
-      author = getAuthor(authorId.toLong())
-      loadEventsData.value = LoadEvent.LOADED
-    }
-  }
-
-  var author: Author? = null
-    private set
-
-  enum class LoadEvent { LOADED }
-
-  private val loadEventsData = MutableLiveData<LoadEvent>()
-  val loadEvents: LiveData<LoadEvent> get() = loadEventsData
-}
+/** Stores the data required for the author page. */
+class AuthorViewModel(val author: Author) : ViewModel()
 
 /**
  * An author's detail page. Has his bio, his stories, his favorite stories, his favourite authors, and other user
  * related actions.
  */
-class AuthorActivity : ActivityWithStatic(), IHasLoadingBar {
+class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
   override val loading: ProgressBar
     get() = activityProgressBar
 
@@ -96,22 +71,18 @@ class AuthorActivity : ActivityWithStatic(), IHasLoadingBar {
       name to id
     }
 
-    viewModel = obtainViewModel(authorId)
     title = authorName
-
     container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
     tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
-
     showLoading()
 
-    viewModel.loadEvents.observe(this) {
-      if (it == AuthorViewModel.LoadEvent.LOADED) {
-        title = viewModel.author!!.name
-        invalidateOptionsMenu()
-        sectionsPagerAdapter = SectionsPagerAdapter(supportFragmentManager)
-        container.adapter = sectionsPagerAdapter
-        hideLoading()
-      }
+    launch(UI) {
+      viewModel = obtainViewModel(getAuthor(authorId))
+      title = viewModel.author.name
+      invalidateOptionsMenu()
+      sectionsPagerAdapter = SectionsPagerAdapter(supportFragmentManager)
+      container.adapter = sectionsPagerAdapter
+      hideLoading()
     }
   }
 
@@ -134,11 +105,9 @@ class AuthorActivity : ActivityWithStatic(), IHasLoadingBar {
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     menu.findItem(R.id.favoriteAuthor).iconTint(R.color.white, theme)
-    // This can be called before the author is filled
-    if (viewModel.author?.favoriteAuthors?.isEmpty() == true) {
-      menu.findItem(R.id.favoritedAuthors).isVisible = false
-    }
-    if (viewModel.author != null) {
+    // This can be called before the viewModel is initialized
+    if (sectionsPagerAdapter != null) {
+      if (viewModel.author.favoriteAuthors.isEmpty()) menu.findItem(R.id.favoritedAuthors).isVisible = false
       menu.findItem(R.id.favoriteAuthor).isEnabled = true
       menu.findItem(R.id.followAuthor).isEnabled = true
       menu.findItem(R.id.privateMessage).isEnabled = true
@@ -161,12 +130,11 @@ class AuthorActivity : ActivityWithStatic(), IHasLoadingBar {
       R.id.favoritedAuthors -> {
         AlertDialog.Builder(this)
             .setTitle(R.string.favorite_authors)
-            .setItems(
-                viewModel.author!!.favoriteAuthors.map { it.second }.toTypedArray()) { d, which ->
+            .setItems(viewModel.author.favoriteAuthors.map { it.second }.toTypedArray()) { d, which ->
               d.dismiss()
               startActivity<AuthorActivity>(
-                  INTENT_AUTHOR_NAME to viewModel.author!!.favoriteAuthors[which].second,
-                  INTENT_AUTHOR_ID to viewModel.author!!.favoriteAuthors[which].first)
+                  INTENT_AUTHOR_NAME to viewModel.author.favoriteAuthors[which].second,
+                  INTENT_AUTHOR_ID to viewModel.author.favoriteAuthors[which].first)
             }.show()
       }
       android.R.id.home -> onBackPressed()
@@ -181,20 +149,20 @@ class AuthorActivity : ActivityWithStatic(), IHasLoadingBar {
     override fun getItem(position: Int): Fragment = when (position) {
       0 -> {
         val joined = Prefs.simpleDateFormatter
-            .format(Date(viewModel.author!!.joinedDateSeconds * 1000))
+            .format(Date(viewModel.author.joinedDateSeconds * 1000))
         val updated = Prefs.simpleDateFormatter
-            .format(Date(viewModel.author!!.updatedDateSeconds * 1000))
-        val formattedUpdateDate = if (viewModel.author!!.updatedDateSeconds != 0L)
+            .format(Date(viewModel.author.updatedDateSeconds * 1000))
+        val formattedUpdateDate = if (viewModel.author.updatedDateSeconds != 0L)
           str(R.string.bio_profile_update, updated) else ""
         val html = str(R.string.bio_html_prelude,
             str(R.string.bio_joined, joined),
             formattedUpdateDate,
-            str(R.string.bio_author_id, viewModel.author!!.id),
-            viewModel.author!!.bioHtml)
+            str(R.string.bio_author_id, viewModel.author.id),
+            viewModel.author.bioHtml)
         HtmlFragment.newInstance(html)
       }
-      1 -> StoryListFragment.newInstance(ArrayList(viewModel.author!!.userStories))
-      2 -> StoryListFragment.newInstance(ArrayList(viewModel.author!!.favoriteStories))
+      1 -> StoryListFragment.newInstance(ArrayList(viewModel.author.userStories))
+      2 -> StoryListFragment.newInstance(ArrayList(viewModel.author.favoriteStories))
       else -> throw IllegalStateException("getCount returned too many tabs")
     }
 
@@ -216,8 +184,7 @@ class AuthorActivity : ActivityWithStatic(), IHasLoadingBar {
       }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
       val rootView = inflater.inflate(R.layout.fragment_author_bio, container, false)
       rootView.post {
         rootView.html.text = Html.fromHtml(arguments!!.getString(ARG_HTML_TEXT),
@@ -232,8 +199,7 @@ class AuthorActivity : ActivityWithStatic(), IHasLoadingBar {
    * Fragment that lists stories using a [android.support.v7.widget.RecyclerView] and
    * [StoryAdapter].
    */
-  // FIXME remove CoroutineScope
-  internal class StoryListFragment : Fragment(), CoroutineScope {
+  internal class StoryListFragment : Fragment() {
     companion object {
       private const val ARG_STORIES = "stories"
 
@@ -247,14 +213,10 @@ class AuthorActivity : ActivityWithStatic(), IHasLoadingBar {
       }
     }
 
-    // FIXME remove
-    override val coroutineContext: CoroutineContext
-      get() = Dispatchers.Default
-
     private lateinit var viewModel: StoryListViewModel
 
-    // FIXME useless coroutine, we're already on the UI thread
-    private fun initLayout(rootView: View, stories: List<StoryModel>) = launch(UI) {
+    @UiThread
+    private fun initLayout(rootView: View, stories: List<StoryModel>) {
       rootView.stories.layoutManager = LinearLayoutManager(context)
       rootView.stories.createStorySwipeHelper()
       rootView.stories.adapter = StoryAdapter(viewModel)
@@ -284,19 +246,18 @@ class AuthorActivity : ActivityWithStatic(), IHasLoadingBar {
       }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-      viewModel = ViewModelProviders.of(this)[StoryListViewModel::class.java]
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+      viewModel = obtainViewModel()
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
-      launch {
+      // FIXME maybe replace storyById with storiesById
+      viewModel.launch(UI) {
         val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES)!!.map {
-          val model = Static.database.storyById(it.storyId).await()
-              .orNull() ?: return@map it
+          val model = Static.database.storyById(it.storyId).await().orNull() ?: return@map it
           it.progress = model.progress
           it.status = model.status
           return@map it
         }
-        initLayout(rootView, stories).join()
+        initLayout(rootView, stories)
         viewModel.defaultStoryListObserver.register()
       }
       return rootView

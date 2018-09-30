@@ -6,6 +6,8 @@ import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.content.Intent
 import android.os.Bundle
+import android.support.annotation.AnyThread
+import android.support.annotation.UiThread
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
@@ -16,6 +18,7 @@ import kotlinx.android.synthetic.main.activity_reviews.*
 import kotlinx.android.synthetic.main.component_review.view.*
 import kotlinx.android.synthetic.main.dialog_report_review.view.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
@@ -55,6 +58,7 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer)
     changeChapter(initialChapter.toInt())
   }
 
+  @UiThread
   fun changeChapter(newChapter: Int) {
     clear()
     currentPage = 1
@@ -69,8 +73,8 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer)
     notifyItemRangeRemoved(0, size)
   }
 
-  // FIXME missing coroutine scope
-  fun loadPage() = launch(UI) {
+  @AnyThread
+  fun loadPage(coroutineScope: CoroutineScope) = coroutineScope.launch(UI) {
     if (pageCount != 0 && currentPage >= pageCount) return@launch
     loadingEventsData.it = LoadEvent.LOADING
     val (list, pages, reviews) = getReviews(model.storyId, _chapter.it, currentPage)
@@ -138,8 +142,8 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
       }
     }
 
-    viewModel.loadPage()
-    infinitePageScroll(reviewList, layoutManager) { viewModel.loadPage() }
+    viewModel.loadPage(this)
+    infinitePageScroll(reviewList, layoutManager) { viewModel.loadPage(this) }
   }
 
   private fun setSubtitle() {
@@ -178,7 +182,7 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
               dialog.dismiss()
               if (viewModel.chapter.value == which) return@setSingleChoiceItems
               viewModel.changeChapter(which)
-              viewModel.loadPage()
+              viewModel.loadPage(this)
               setSubtitle()
             }.show()
       }

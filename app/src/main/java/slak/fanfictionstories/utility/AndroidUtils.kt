@@ -158,8 +158,7 @@ fun CoroutineScope.infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutMa
  * action in a coroutine.
  * @param view snackbar target
  */
-fun undoableAction(view: View, snackText: String,
-                   onUndo: (View) -> Unit = {}, action: suspend () -> Unit): Snackbar {
+fun undoableAction(view: View, snackText: String, onUndo: (View) -> Unit = {}, action: suspend () -> Unit): Snackbar {
   val snack = Snackbar.make(view, snackText, Snackbar.LENGTH_LONG)
   snack.setAction(R.string.undo, onUndo)
   snack.addCallback(object : Snackbar.Callback() {

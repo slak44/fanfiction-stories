@@ -50,18 +50,12 @@ class FavoriteCanonsActivity : CoroutineScopeActivity() {
       removeBtn.setOnClickListener {
         removeSnackbar?.dismiss()
         val removed = linkList.removeAt(position)
-        // FIXME useless coroutine, we're already on the UI thread
-        activity.launch(UI) {
-          notifyItemRemoved(position)
-          activity.updateNoFavoritesText()
-        }
+        notifyItemRemoved(position)
+        activity.updateNoFavoritesText()
         removeSnackbar = undoableAction(this, R.string.removed_favorite_snack, { _ ->
           linkList.add(position, removed)
-          // FIXME useless coroutine, we're already on the UI thread
-          activity.launch(UI) {
-            notifyItemInserted(position)
-            activity.updateNoFavoritesText()
-          }
+          notifyItemInserted(position)
+          activity.updateNoFavoritesText()
         }) { Static.database.removeFavoriteCanon(removed).await() }
       }
     }
@@ -73,10 +67,8 @@ class FavoriteCanonsActivity : CoroutineScopeActivity() {
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     setTitle(R.string.favorite_canons)
-    // FIXME possibly useless coroutine, we're already on the UI thread, just have to handle getFavoriteCanons
     launch(UI) {
-      canonListRecycler.adapter =
-          CanonAdapter(this@FavoriteCanonsActivity, database.getFavoriteCanons().await())
+      canonListRecycler.adapter = CanonAdapter(this@FavoriteCanonsActivity, database.getFavoriteCanons().await())
       updateNoFavoritesText()
       canonListRecycler.layoutManager = LinearLayoutManager(this@FavoriteCanonsActivity)
       canonListRecycler.addItemDecoration(

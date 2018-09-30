@@ -7,15 +7,11 @@ import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.dialog_order_by_switch.view.*
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.Dispatchers
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.Genre
 import slak.fanfictionstories.data.fetchers.ParserUtils.CHAPTER_TITLE_SEPARATOR
 import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.*
@@ -271,11 +267,10 @@ enum class GroupStrategy {
 }
 
 /** @returns a map that maps titles to grouped stories, according to the given [GroupStrategy]. */
-fun CoroutineScope.groupStories(
-    stories: MutableList<StoryModel>,
-    strategy: GroupStrategy): Deferred<Map<String, MutableList<StoryModel>>> = async2(Dispatchers.Default) {
+suspend fun groupStories(stories: MutableList<StoryModel>,
+                         strategy: GroupStrategy): Map<String, MutableList<StoryModel>> {
   if (strategy == GroupStrategy.NONE)
-    return@async2 mapOf(str(R.string.all_stories) to stories)
+    return mapOf(str(R.string.all_stories) to stories)
   if (strategy == GroupStrategy.GENRE) {
     val map = hashMapOf<String, MutableList<StoryModel>>()
     Genre.values().forEach { map[it.toUIString()] = mutableListOf() }
@@ -284,7 +279,7 @@ fun CoroutineScope.groupStories(
     stories.filter { it.fragment.genres != none }
         .forEach { story -> story.genreList().forEach { map[it.toUIString()]!!.add(story) } }
     Genre.values().forEach { if (map[it.toUIString()]!!.isEmpty()) map.remove(it.toUIString()) }
-    return@async2 map
+    return map
   }
   if (strategy == GroupStrategy.MARKER) {
     val names = Static.res.getStringArray(R.array.markerColorNames)
@@ -298,7 +293,7 @@ fun CoroutineScope.groupStories(
       map[idToMarkerName[it.storyId]]!!.add(it)
     }
     names.forEach { if (map[it]!!.isEmpty()) map.remove(it) }
-    return@async2 map
+    return map
   }
   val map = hashMapOf<String, MutableList<StoryModel>>()
   stories.forEach {
@@ -316,12 +311,11 @@ fun CoroutineScope.groupStories(
     if (map[value] == null) map[value] = mutableListOf()
     map[value]!!.add(it)
   }
-  return@async2 map
+  return map
 }
 
 /** Shows a dialog presenting [GroupStrategy] choices for grouping. */
-fun groupByDialog(context: Context, defaultStrategy: GroupStrategy,
-                  action: (GroupStrategy) -> Unit) {
+fun groupByDialog(context: Context, defaultStrategy: GroupStrategy, action: (GroupStrategy) -> Unit) {
   AlertDialog.Builder(context)
       .setTitle(R.string.group_by)
       .setSingleChoiceItems(GroupStrategy.uiItems(), defaultStrategy.ordinal) { d, which ->

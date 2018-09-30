@@ -48,8 +48,8 @@ class MainActivity : CoroutineScopeActivity() {
 
       override fun onBindViewHolder(holder: StoryViewHolder, position: Int) {
         if (resumeModel == null) return
-        holder.view.loadFromModel(resumeModel!!)
-        holder.view.bindRemoveBtn(resumeModel!!, Empty())
+        holder.view.loadFromModel(resumeModel!!, this@MainActivity)
+        holder.view.bindRemoveBtn(resumeModel!!, this@MainActivity, Empty())
       }
     }
     storyContainer.createStorySwipeHelper()
@@ -65,7 +65,6 @@ class MainActivity : CoroutineScopeActivity() {
       resumeStoryText.text = str(R.string.nothing_to_resume)
       return
     }
-    // FIXME useless coroutine, we're already on the UI thread, just deal with storyById
     launch(UI) {
       resumeModel = database.storyById(Prefs.resumeStoryId).await().orNull()
       storyContainer.visibility = View.VISIBLE
