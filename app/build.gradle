@@ -56,7 +56,7 @@ dependencies {
     implementation "com.takisoft.fix:preference-v7:$pref_fixer_android_appcompat_version"
 
     // Android support libs
-    def android_appcompat_version = "28.0.0-rc02"
+    def android_appcompat_version = "28.0.0"
     implementation "com.android.support:appcompat-v7:$android_appcompat_version"
     implementation "com.android.support:cardview-v7:$android_appcompat_version"
     implementation "com.android.support:design:$android_appcompat_version"
