@@ -194,9 +194,7 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
 }
 
 /** For using [Review] objects with [RecyclerView]. */
-// FIXME this class could be an object
-class ReviewAdapter(
-    private val viewModel: ReviewsViewModel) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class ReviewAdapter(private val viewModel: ReviewsViewModel) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   class ReviewHolder(val view: CardView) : RecyclerView.ViewHolder(view)
 
   private val vmObserver = createObserverForAdapter(this)
@@ -237,8 +235,7 @@ class ReviewAdapter(
       // FIXME: reply to review
     }
     reportBtn.setOnClickListener {
-      val layout = LayoutInflater.from(context)
-          .inflate(R.layout.dialog_report_review, null, false)
+      val layout = LayoutInflater.from(context).inflate(R.layout.dialog_report_review, null, false)
       // We want the margin, so invisible
       layout.offendingReview.divider.visibility = View.INVISIBLE
       layout.offendingReview.btnBar.visibility = View.GONE

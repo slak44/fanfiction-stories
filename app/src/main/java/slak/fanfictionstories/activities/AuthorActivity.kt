@@ -143,7 +143,6 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
     return true
   }
 
-  // FIXME this can just be an object
   /** A [FragmentPagerAdapter] that returns a fragment corresponding to the tabs. */
   inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
     override fun getItem(position: Int): Fragment = when (position) {
