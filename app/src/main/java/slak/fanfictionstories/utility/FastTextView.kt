@@ -11,9 +11,8 @@ import android.util.AttributeSet
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.withContext
 import slak.fanfictionstories.data.Prefs
 
@@ -56,7 +55,7 @@ class FastTextView @JvmOverloads constructor(
    * layout creation (the most expensive operation when there's lots of text) does not block the UI.
    */
   @AnyThread
-  fun setText(s: SpannableString, theme: Resources.Theme) = launch(CommonPool) {
+  suspend fun setText(s: SpannableString, theme: Resources.Theme) = withContext(Dispatchers.Default) {
     if (width == 0) Log.e(TAG, "Creating StaticLayout with 0 width!")
 
     spannable = s
@@ -75,7 +74,7 @@ class FastTextView @JvmOverloads constructor(
 
   /** @see setText */
   @AnyThread
-  fun setText(s: CharSequence, theme: Resources.Theme) = setText(SpannableString(s), theme)
+  suspend fun setText(s: CharSequence, theme: Resources.Theme) = setText(SpannableString(s), theme)
 
   /**
    * Should be equivalent to [android.widget.TextView.getLineHeight].

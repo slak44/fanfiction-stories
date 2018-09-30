@@ -348,7 +348,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     // We use the width for the <hr> elements, so the layout should be done
     if (!ViewCompat.isLaidOut(chapterText)) chapterText.requestLayout()
 
-    chapterText.setText(parseChapterHTML(), theme).join()
+    chapterText.setText(parseChapterHTML(), theme)
 
     setChapterMetaText()
 
