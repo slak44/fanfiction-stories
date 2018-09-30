@@ -4,8 +4,8 @@ import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.newSingleThreadContext
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.StoriesChangeEvent
@@ -18,8 +18,9 @@ import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.opt
 import kotlin.collections.set
+import kotlin.coroutines.experimental.CoroutineContext
 
-class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 6) {
+class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 6), CoroutineScope {
   companion object {
     private var instance: DatabaseHelper? = null
 
@@ -161,10 +162,17 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     }
   }
 
+  override fun close() {
+    super.close()
+    databaseContext.close()
+  }
+
   private val databaseContext = newSingleThreadContext("DatabaseThread")
+  override val coroutineContext: CoroutineContext
+    get() = databaseContext
 
   /** Like [ManagedSQLiteOpenHelper.use], but using [async2]. */
-  fun <T> useAsync(f: SQLiteDatabase.() -> T): Deferred<T> = GlobalScope.async2(databaseContext) { use(f) }
+  fun <T> useAsync(f: SQLiteDatabase.() -> T): Deferred<T> = async2(databaseContext) { use(f) }
 
   /** Fetch all [CategoryLink]s of favorited canons. */
   fun getFavoriteCanons(): Deferred<List<CategoryLink>> = useAsync {
@@ -229,7 +237,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   }
 
   /** Sets the color marker for the given story. */
-  fun setMarker(storyId: StoryId, color: Int): Deferred<Long> = GlobalScope.async2(databaseContext) {
+  fun setMarker(storyId: StoryId, color: Int): Deferred<Long> = async2(databaseContext) {
     val result = writableDatabase
         .replaceOrThrow("colorMarkers", "storyId" to storyId, "markerColor" to color)
     val storyModel = storyById(storyId).await().orElse { return@async2 result }
@@ -266,8 +274,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   }
 
   /** Update some particular columns for a particular storyId. */
-  fun updateInStory(storyId: StoryId,
-                    vararg pairs: Pair<String, Any>): Deferred<Int> = GlobalScope.async2(databaseContext) {
+  fun updateInStory(storyId: StoryId, vararg pairs: Pair<String, Any>): Deferred<Int> = async2(databaseContext) {
     val result = writableDatabase
         .update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
     val storyModel = storyById(storyId).await().orElse { return@async2 result }
