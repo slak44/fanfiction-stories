@@ -10,7 +10,6 @@ import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_browse_category.*
 import kotlinx.android.synthetic.main.activity_select_category.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.contentView
@@ -67,23 +66,20 @@ class BrowseCategoryActivity : CoroutineScopeActivity(), IHasLoadingBar {
     val parentLink = intent.extras?.getParcelable<CategoryLink>(INTENT_LINK_DATA) ?: return
     title = parentLink.displayName
     showLoading()
-    launch(Dispatchers.Default) {
-      val links = fetchCategoryData(parentLink.urlComponent).await()
-      val adapter = ArrayAdapter<String>(
-          this@BrowseCategoryActivity, android.R.layout.simple_list_item_1)
+    launch(UI) {
+      val links = fetchCategoryData(parentLink.urlComponent)
+      val adapter = ArrayAdapter<String>(this@BrowseCategoryActivity, android.R.layout.simple_list_item_1)
       adapter.addAll(links.map { "${it.text} - ${it.storyCount}" })
-      launch(UI) {
-        inCategoryList.adapter = adapter
-        inCategoryList.setOnItemClickListener { _, _, idx, _ ->
-          val target =
-              if (links[idx].isTargetCategory()) BrowseCategoryActivity::class.java
-              else CanonStoryListActivity::class.java
-          val intent = Intent(this@BrowseCategoryActivity, target)
-          intent.putExtra(INTENT_LINK_DATA, links[idx] as Parcelable)
-          startActivity(intent)
-        }
-        hideLoading()
+      inCategoryList.adapter = adapter
+      inCategoryList.setOnItemClickListener { _, _, idx, _ ->
+        val target =
+            if (links[idx].isTargetCategory()) BrowseCategoryActivity::class.java
+            else CanonStoryListActivity::class.java
+        val intent = Intent(this@BrowseCategoryActivity, target)
+        intent.putExtra(INTENT_LINK_DATA, links[idx] as Parcelable)
+        startActivity(intent)
       }
+      hideLoading()
     }
   }
 

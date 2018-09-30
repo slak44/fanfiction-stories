@@ -1,10 +1,7 @@
 package slak.fanfictionstories.data.fetchers
 
 import android.util.Log
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.*
 import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.R
 import slak.fanfictionstories.utility.Static
@@ -20,39 +17,37 @@ private const val NET_TAG = "waitForNetwork"
  *
  * Shows notifications about connection status.
  */
-// FIXME make this suspending
-fun CoroutineScope.waitForNetwork() = async2(Dispatchers.Default) {
-  while (true) {
-    val activeNetwork = Static.cm.activeNetworkInfo
-    if (activeNetwork == null || !activeNetwork.isConnected) {
-      // No connection; wait
-      Notifications.NETWORK.show(Notifications.defaultIntent(), R.string.waiting_for_connection)
-      Log.w(NET_TAG, "No connection")
-      delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
-    } else {
-      // We're connected!
-      Notifications.NETWORK.cancel()
-      Log.v(NET_TAG, "We have a connection")
-      break
-    }
+private tailrec suspend fun waitForNetwork() {
+  val activeNetwork = Static.cm.activeNetworkInfo
+  return if (activeNetwork == null || !activeNetwork.isConnected) {
+    // No connection; wait
+    Notifications.NETWORK.show(Notifications.defaultIntent(), R.string.waiting_for_connection)
+    Log.w(NET_TAG, "No connection")
+    delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
+    waitForNetwork()
+  } else {
+    // We're connected!
+    Notifications.NETWORK.cancel()
+    Log.v(NET_TAG, "We have a connection")
+    Unit
   }
 }
 
 private const val RATE_LIMIT_MS = 300L
 private const val URL_TAG = "patientlyFetchURL"
+private val networkContext = newSingleThreadContext("NetworkThread")
 
 /**
- * Fetches the resource at the specified url, patiently.
+ * Fetches the resource at the specified url, patiently. This function's calls run on the same thread.
  *
  * Waits for the network using [waitForNetwork], then waits for the rate limit [RATE_LIMIT_MS].
  *
  * If the download fails, call the [onError] callback, wait for the rate limit again, and then call
  * this function recursively.
  */
-// FIXME make this suspending
 fun CoroutineScope.patientlyFetchURL(url: String,
-                      onError: (t: Throwable) -> Unit): Deferred<String> = async2(Dispatchers.Default) {
-  waitForNetwork().await()
+                                     onError: (t: Throwable) -> Unit): Deferred<String> = async2(networkContext) {
+  waitForNetwork()
   delay(RATE_LIMIT_MS)
   return@async2 try {
     val text = URL(url).readText()

@@ -5,6 +5,7 @@ import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.ReceiveChannel
 import kotlinx.coroutines.experimental.launch
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -24,8 +25,8 @@ private const val TAG = "StoryFetcher"
  * Download metadata and every chapter, then store them in the database and on disk.
  * @returns the model we just fetched, or an empty optional if that story doesn't exist
  */
-fun CoroutineScope.fetchAndWriteStory(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(Dispatchers.Default) {
-  val model = fetchStoryModel(storyId).await().orElse { return@async2 Empty<StoryModel>() }
+suspend fun CoroutineScope.fetchAndWriteStory(storyId: StoryId): Optional<StoryModel> {
+  val model = fetchStoryModel(storyId).orElse { return Empty() }
   model.status = StoryStatus.LOCAL
   val existingModel = Static.database.storyById(storyId).await().orNull()
   if (existingModel != null) {
@@ -34,10 +35,10 @@ fun CoroutineScope.fetchAndWriteStory(storyId: StoryId): Deferred<Optional<Story
     model.progress = existingModel.progress
   }
   Static.database.upsertStory(model).await()
-  writeChapters(storyId, fetchChapterRange(Notifications.DOWNLOADING, model)).join()
+  writeChapters(storyId, fetchChapterRange(Notifications.DOWNLOADING, model))
   Notifications.downloadedStory(model)
   Notifications.DOWNLOADING.cancel()
-  return@async2 model.opt()
+  return model.opt()
 }
 
 // It is unlikely that an update would invalidate the cache within 15 minutes
@@ -48,15 +49,14 @@ val storyCache = Cache<String>("StoryChapter", TimeUnit.MINUTES.toMillis(15))
  * @param storyId what story
  * @param chapter what chapter
  */
-fun CoroutineScope.fetchChapter(storyId: StoryId, chapter: Long): Deferred<String> = async2(Dispatchers.Default) {
+suspend fun CoroutineScope.fetchChapter(storyId: StoryId, chapter: Long): String {
   val cacheKey = "id$storyId-ch$chapter"
-  storyCache.hit(cacheKey).ifPresent { return@async2 it }
+  storyCache.hit(cacheKey).ifPresent { return it }
   val html = patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
-    Notifications.ERROR.show(defaultIntent(),
-        R.string.error_fetching_story_data, storyId.toString())
+    Notifications.ERROR.show(defaultIntent(), R.string.error_fetching_story_data, storyId.toString())
   }.await()
   storyCache.update(cacheKey, html)
-  return@async2 html
+  return html
 }
 
 /**
@@ -73,34 +73,34 @@ fun extractChapterText(doc: Document): String {
  * Just download metadata for the [storyId].
  * @returns the [StoryModel] if it was there, or [Empty] if the story was not found
  */
-fun CoroutineScope.fetchStoryModel(storyId: StoryId): Deferred<Optional<StoryModel>> = async2(Dispatchers.Default) {
-  val chapterHtml = fetchChapter(storyId, 1).await()
-  if (chapterHtml.contains("Story Not Found")) return@async2 Empty<StoryModel>()
-  return@async2 parseStoryModel(chapterHtml, storyId).opt()
+suspend fun CoroutineScope.fetchStoryModel(storyId: StoryId): Optional<StoryModel> {
+  val chapterHtml = fetchChapter(storyId, 1)
+  if (chapterHtml.contains("Story Not Found")) return Empty()
+  return parseStoryModel(chapterHtml, storyId).opt()
 }
 
 /**
  * Get html of story chapters in given range.
- * @param kind what [Notifications] to show for each chapter that's fetched
+ * @param notif what [Notifications] to show for each chapter that's fetched
  * @param from start index of chapters to fetch (1-indexed)
  * @param to end index of chapters to fetch (1-indexed). If -1, the end idx is the chapter count
  * @returns a [Channel] that supplies the html text
  */
-fun CoroutineScope.fetchChapterRange(kind: Notifications, model: StoryModel,
-                      from: Long = 1, to: Long = -1): Channel<String> {
+fun CoroutineScope.fetchChapterRange(notif: Notifications, model: StoryModel,
+                                     from: Long = 1, to: Long = -1): ReceiveChannel<String> {
   val target = if (to != -1L) to else model.fragment.chapterCount
   // The buffer size is completely arbitrary
   val channel = Channel<String>(10)
   launch(Dispatchers.Default) {
     for (chapterNr in from..target) {
-      kind.show(
+      notif.show(
           readerIntent(model),
           R.string.fetching_chapter,
           chapterNr,
           model.fragment.chapterCount,
           chapterNr * 100F / model.fragment.chapterCount,
           model.title)
-      val chapterHtml = fetchChapter(model.storyId, chapterNr).await()
+      val chapterHtml = fetchChapter(model.storyId, chapterNr)
       channel.send(extractChapterText(Jsoup.parse(chapterHtml)))
     }
     channel.close()
@@ -113,25 +113,22 @@ fun CoroutineScope.fetchChapterRange(kind: Notifications, model: StoryModel,
  * @param oldModel the EXISTING [StoryModel], fetched from db
  * @returns if the update was done, the updated model, otherwise [Empty]
  */
-fun CoroutineScope.updateStory(oldModel: StoryModel): Deferred<Optional<StoryModel>> = async2(Dispatchers.Default) {
-  val newModel = fetchStoryModel(oldModel.storyId).await().orElse {
-    return@async2 Empty<StoryModel>()
-  }
+suspend fun CoroutineScope.updateStory(oldModel: StoryModel): Optional<StoryModel> {
+  val newModel = fetchStoryModel(oldModel.storyId).orElse { return Empty() }
   Log.v(TAG, "Attempting update from\n   oldModel: $oldModel\nto newModel: $newModel")
   // Skip non-locals from updates, since the operation does not make sense for them
-  if (oldModel.status != StoryStatus.LOCAL) return@async2 Empty<StoryModel>()
+  if (oldModel.status != StoryStatus.LOCAL) return Empty()
   // Stories can't get un-updated
   if (oldModel.fragment.updateTime != 0L && newModel.fragment.updateTime == 0L)
     throw IllegalStateException("The old model had updates; the new one doesn't")
   // Story has never received an update, our job here is done
-  if (newModel.fragment.updateTime == 0L) return@async2 Empty<StoryModel>()
+  if (newModel.fragment.updateTime == 0L) return Empty()
   // Update time is identical, nothing to do again
-  if (oldModel.fragment.updateTime == newModel.fragment.updateTime)
-    return@async2 Empty<StoryModel>()
+  if (oldModel.fragment.updateTime == newModel.fragment.updateTime) return Empty()
 
   newModel.progress = if (oldModel.progress.currentChapter > newModel.fragment.chapterCount) {
-    Log.w(TAG, "Had to discard progress for id ${oldModel.storyId} because oldModel current" +
-        "chapter value exceeds newModel chapter count")
+    Log.w(TAG, "Had to discard progress for id ${oldModel.storyId} because oldModel current chapter value" +
+        "exceeds newModel chapter count")
     StoryProgress(currentChapter = newModel.fragment.chapterCount)
   } else {
     oldModel.progress
@@ -144,13 +141,12 @@ fun CoroutineScope.updateStory(oldModel: StoryModel): Deferred<Optional<StoryMod
   Log.v(TAG, "Replacing ${oldModel.storyId} in database")
   Static.database.upsertStory(newModel).await()
 
-  val channel: Channel<String> = when {
+  val channel: ReceiveChannel<String> = when {
   // Special case when there is only one chapter
     newModel.fragment.chapterCount == 1L -> {
-      Notifications.UPDATING.show(defaultIntent(),
-          R.string.fetching_chapter, 1, 1, 0F, newModel.title)
+      Notifications.UPDATING.show(defaultIntent(), R.string.fetching_chapter, 1, 1, 0F, newModel.title)
       val channel = Channel<String>(1)
-      channel.send(fetchChapter(newModel.storyId, 1).await())
+      channel.send(fetchChapter(newModel.storyId, 1))
       channel.close()
       channel
     }
@@ -163,5 +159,5 @@ fun CoroutineScope.updateStory(oldModel: StoryModel): Deferred<Optional<StoryMod
   }
   writeChapters(newModel.storyId, channel)
   Notifications.UPDATING.cancel()
-  return@async2 newModel.opt()
+  return newModel.opt()
 }

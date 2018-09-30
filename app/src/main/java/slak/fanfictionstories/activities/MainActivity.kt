@@ -6,8 +6,6 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.*
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.startActivity
@@ -15,11 +13,9 @@ import slak.fanfictionstories.*
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.*
-import slak.fanfictionstories.utility.ActivityWithStatic
 import slak.fanfictionstories.utility.CoroutineScopeActivity
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.str
-import kotlin.coroutines.experimental.CoroutineContext
 
 /** The main menu. Allows navigation to other sections of the app. */
 class MainActivity : CoroutineScopeActivity() {

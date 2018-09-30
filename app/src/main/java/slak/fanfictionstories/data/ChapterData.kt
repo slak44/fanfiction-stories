@@ -68,26 +68,26 @@ private fun writeChapterImpl(storyDir: File, chapter: Long, chapterText: String)
 }
 
 /** Write a (compressed) chapter to disk. */
-fun writeChapter(storyId: StoryId, chapter: Long, chapterText: String) =
-    writeChapterImpl(storyDir(storyId), chapter, chapterText)
+suspend fun writeChapter(storyId: StoryId, chapter: Long, chapterText: String) =
+    withContext(Dispatchers.IO) { writeChapterImpl(storyDir(storyId), chapter, chapterText) }
 
 /** Writes received chapter data to disk asynchronously. */
-fun CoroutineScope.writeChapters(storyId: StoryId, chapters: ReceiveChannel<String>) = launch(Dispatchers.IO) {
+suspend fun writeChapters(storyId: StoryId, chapters: ReceiveChannel<String>) = withContext(Dispatchers.IO) {
   val storyDir = storyDir(storyId)
   chapters.consumeEachIndexed { writeChapterImpl(storyDir, it.index + 1L, it.value) }
 }
 
 /** Deletes the chapter data directory for a story. */
-fun CoroutineScope.deleteStory(storyId: StoryId) = launch(Dispatchers.IO) {
+suspend fun deleteStory(storyId: StoryId) = withContext(Dispatchers.IO) {
   val targetDir = storyDir(storyId)
   if (!targetDir.exists()) {
     Log.w(TAG, "Tried to delete a story that does not exist")
     // Our job here is done ¯\_(ツ)_/¯
-    return@launch
+    return@withContext
   }
   val wasDeleted = targetDir.deleteRecursively()
   if (!wasDeleted) {
     Log.e(TAG, "Failed to delete story dir")
-    return@launch
+    return@withContext
   }
 }

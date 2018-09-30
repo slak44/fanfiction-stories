@@ -3,8 +3,6 @@ package slak.fanfictionstories.data.fetchers
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.Dispatchers
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
@@ -18,7 +16,6 @@ import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.data.fetchers.ParserUtils.authorIdFromAuthor
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryMetadata
 import slak.fanfictionstories.data.fetchers.ParserUtils.unescape
-import slak.fanfictionstories.utility.async2
 import java.util.concurrent.TimeUnit
 
 val authorCache = Cache<Author>("Author", TimeUnit.DAYS.toMillis(1))
@@ -43,8 +40,8 @@ data class Author(val name: String,
  * Get author data for specified id.
  * @see Author
  */
-fun CoroutineScope.getAuthor(authorId: Long): Deferred<Author> = async2(Dispatchers.Default) {
-  authorCache.hit(authorId.toString()).ifPresent { return@async2 it }
+suspend fun CoroutineScope.getAuthor(authorId: Long): Author {
+  authorCache.hit(authorId.toString()).ifPresent { return it }
   val html = patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
     Notifications.ERROR.show(defaultIntent(),
         R.string.error_fetching_author_data, authorId.toString())
@@ -84,7 +81,7 @@ fun CoroutineScope.getAuthor(authorId: Long): Deferred<Author> = async2(Dispatch
       favAuthors
   )
   authorCache.update(authorId.toString(), author)
-  return@async2 author
+  return author
 }
 
 private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?): StoryModel {

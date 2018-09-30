@@ -40,7 +40,6 @@ import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.deleteStory
 import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
-import slak.fanfictionstories.data.useAsync
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Optional
 import java.util.*
@@ -245,6 +244,7 @@ class StoryCardView @JvmOverloads constructor(
     if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.GONE
     if (model.status == StoryStatus.TRANSIENT) removeBtn.visibility = View.GONE
 
+    // FIXME missing coroutine scope
     launch(CommonPool) {
       markerBtn.bindMarker(model.storyId, Static.database.getMarker(model.storyId).await().toInt())
     }
@@ -261,8 +261,9 @@ class StoryCardView @JvmOverloads constructor(
     addBtn.setOnClickListener {
       addBtn.isEnabled = false
       addBtn.text = str(R.string.adding___)
+      // FIXME missing coroutine scope
       launch(UI) {
-        val newModel = fetchAndWriteStory(model.storyId).await()
+        val newModel = fetchAndWriteStory(model.storyId)
         if (newModel is Empty) {
           addBtn.visibility = View.VISIBLE
           addBtn.isEnabled = true
@@ -286,6 +287,7 @@ class StoryCardView @JvmOverloads constructor(
       return@bindRemoveBtn
     }
     removeBtn.setOnClickListener { btn ->
+      // FIXME missing coroutine scope
       launch(UI) {
         // Even though we have a model, fetch it from db to make sure there are no inconsistencies
         val dbModel = Static.database.storyById(model.storyId).await()
@@ -298,7 +300,7 @@ class StoryCardView @JvmOverloads constructor(
         // We need this because otherwise the screen gets out of sync with the data
         vm.notifyChanged()
         undoableAction(btn, R.string.removed_story, { vm.undoHideStory(model) }) {
-          deleteStory(model.storyId).join()
+          deleteStory(model.storyId)
           btn.context.database.useAsync {
             if (Prefs.resumeStoryId == model.storyId) Prefs.resumeStoryId = Prefs.NO_RESUME_STORY
             delete("stories", "storyId = ?", arrayOf(model.storyId.toString()))

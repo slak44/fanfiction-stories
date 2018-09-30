@@ -4,7 +4,9 @@ import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.newSingleThreadContext
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.StoriesChangeEvent
 import slak.fanfictionstories.StoryEventNotifier
@@ -159,6 +161,11 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     }
   }
 
+  private val databaseContext = newSingleThreadContext("DatabaseThread")
+
+  /** Like [ManagedSQLiteOpenHelper.use], but using [async2]. */
+  fun <T> useAsync(f: SQLiteDatabase.() -> T): Deferred<T> = GlobalScope.async2(databaseContext) { use(f) }
+
   /** Fetch all [CategoryLink]s of favorited canons. */
   fun getFavoriteCanons(): Deferred<List<CategoryLink>> = useAsync {
     select("favoriteCanons").parseList(object : MapRowParser<CategoryLink> {
@@ -222,7 +229,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   }
 
   /** Sets the color marker for the given story. */
-  fun setMarker(storyId: StoryId, color: Int): Deferred<Long> = GlobalScope.async2(Dispatchers.Default) {
+  fun setMarker(storyId: StoryId, color: Int): Deferred<Long> = GlobalScope.async2(databaseContext) {
     val result = writableDatabase
         .replaceOrThrow("colorMarkers", "storyId" to storyId, "markerColor" to color)
     val storyModel = storyById(storyId).await().orElse { return@async2 result }
@@ -260,7 +267,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
 
   /** Update some particular columns for a particular storyId. */
   fun updateInStory(storyId: StoryId,
-                    vararg pairs: Pair<String, Any>): Deferred<Int> = GlobalScope.async2(Dispatchers.Default) {
+                    vararg pairs: Pair<String, Any>): Deferred<Int> = GlobalScope.async2(databaseContext) {
     val result = writableDatabase
         .update("stories", *pairs).whereSimple("storyId = ?", storyId.toString()).exec()
     val storyModel = storyById(storyId).await().orElse { return@async2 result }
@@ -290,7 +297,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   }
 
   /** Upsert a story in the DB, keeping some properties. */
-  fun upsertModel(model: StoryModel) = GlobalScope.launch(Dispatchers.Default) {
+  suspend fun upsertModel(model: StoryModel) {
     val existingModel = Static.database.storyById(model.storyId).await().orNull()
     if (existingModel != null) {
       model.addedTime = existingModel.addedTime
@@ -430,7 +437,3 @@ val Context.database: DatabaseHelper
 /** Access property for [Static]. */
 val Static.database: DatabaseHelper
   get() = DatabaseHelper.getInstance(currentCtx.applicationContext)
-
-/** Like [ManagedSQLiteOpenHelper.use], but using [async2] and [CommonPool]. */
-fun <T> ManagedSQLiteOpenHelper.useAsync(f: SQLiteDatabase.() -> T): Deferred<T> =
-    GlobalScope.async2(Dispatchers.Default) { this@useAsync.use(f) }

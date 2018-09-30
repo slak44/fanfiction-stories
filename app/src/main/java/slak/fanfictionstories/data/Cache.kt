@@ -3,6 +3,7 @@ package slak.fanfictionstories.data
 import android.util.Log
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.IO
 import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.Optional
@@ -37,9 +38,7 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: Long) {
    * @see serialize
    */
   fun deserialize() = GlobalScope.launch(Dispatchers.Default) {
-    if (!cacheMapFile.exists()) {
-      return@launch
-    }
+    if (!cacheMapFile.exists()) return@launch
     val objIn = ObjectInputStream(FileInputStream(cacheMapFile))
     try {
       // I serialize it however I like, I deserialize it however I like, so stfu
@@ -59,10 +58,11 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: Long) {
   /** Check the expiration date of each item, and remove it if expired. */
   fun purge() = GlobalScope.launch(Dispatchers.Default) {
     cache.entries.removeIf { isExpired(it.value.second) }
+    serialize()
   }
 
   /** Write the current serialized state of the cache to disk. */
-  fun serialize() = GlobalScope.launch(Dispatchers.Default) {
+  fun serialize() = GlobalScope.launch(Dispatchers.IO) {
     val objOut = ObjectOutputStream(FileOutputStream(cacheMapFile))
     objOut.writeObject(cache)
     objOut.close()

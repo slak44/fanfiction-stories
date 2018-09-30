@@ -115,10 +115,10 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
   private fun getChapterHtml(chapterToRead: Long): Deferred<String> = async2(Dispatchers.Default) {
     // If the story is remote and it gets updated, the downloaded chapters may be outdated, so delete and re-download
     if (storyModel.status == StoryStatus.REMOTE && storyModel.fragment.updateTime > storyModel.lastReadTime ?: 0) {
-      deleteStory(storyModel.storyId).join()
+      deleteStory(storyModel.storyId)
     }
     readChapter(storyModel.storyId, chapterToRead).orElse {
-      val chapterHtmlText = fetchChapter(storyModel.storyId, chapterToRead).await()
+      val chapterHtmlText = fetchChapter(storyModel.storyId, chapterToRead)
       val text = extractChapterText(Jsoup.parse(chapterHtmlText))
       writeChapter(storyModel.storyId, chapterToRead, text)
       // Get the model too if we need it
@@ -148,7 +148,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
   /** @see fetchAndWriteStory */
   @AnyThread
   fun downloadStoryLocally() = launch(Dispatchers.Default) {
-    storyModel = fetchAndWriteStory(storyModel.storyId).await().orElse {
+    storyModel = fetchAndWriteStory(storyModel.storyId).orElse {
       Toast.makeText(Static.currentActivity, R.string.story_not_found, Toast.LENGTH_LONG).show()
       return@launch
     }
@@ -158,7 +158,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
   @AnyThread
   fun updateStory() = launch(Dispatchers.Default) {
     Notifications.UPDATING.show(defaultIntent(), R.string.checking_one_story, storyModel.title)
-    val newModel = updateStory(storyModel).await()
+    val newModel = updateStory(storyModel)
     if (newModel !is Empty) {
       storyModel = newModel.get()
       Notifications.updatedStories(listOf(storyModel))
@@ -194,13 +194,13 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       val pathSegments = intent.data?.pathSegments
           ?: throw IllegalArgumentException("Intent data is empty")
       if (pathSegments.size > 3) title = pathSegments[3]
-      val model = fetchStoryModel(pathSegments[1].toLong()).await().orElse {
+      val model = fetchStoryModel(pathSegments[1].toLong()).orElse {
         Toast.makeText(this, R.string.story_not_found, Toast.LENGTH_LONG).show()
         return UNINITIALIZED_CHAPTER
       }
       val currentChapter = pathSegments[2].toLong()
       viewModel = obtainViewModel(model)
-      Static.database.upsertModel(model).join()
+      Static.database.upsertModel(model)
       Log.v(TAG, "Model from link: $intent, resolved model: $model")
       currentChapter
     }

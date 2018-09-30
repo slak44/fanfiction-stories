@@ -62,9 +62,9 @@ val debugActions = mapOf(
     "Wipe Settings" to { Prefs.useImmediate { it.clear() } },
     "Add 3 stories" to {
       GlobalScope.launch(Dispatchers.Default) {
-        fetchAndWriteStory(12129863L).await()
-        fetchAndWriteStory(11953822L).await()
-        fetchAndWriteStory(12295826L).await()
+        fetchAndWriteStory(12129863L)
+        fetchAndWriteStory(11953822L)
+        fetchAndWriteStory(12295826L)
       }
     },
     "Test notification" to {
@@ -108,7 +108,7 @@ val debugActions = mapOf(
           .forEach {
             runBlocking {
               Log.d(TAG, it.joinToString(","))
-              val model = fetchStoryModel(it[0].toLong()).await()
+              val model = fetchStoryModel(it[0].toLong())
               if (model is Empty) return@runBlocking
               Static.database.upsertStory(model.get()).await()
               Log.d(TAG, "Inserted")
@@ -150,7 +150,7 @@ val debugActions = mapOf(
         File("/sdcard/Download/storyId.list")
             .readText()
             .split('\n')
-            .forEach { fetchAndWriteStory(it.toLong()).await() }
+            .forEach { fetchAndWriteStory(it.toLong()) }
       }
     },
     "Tag all stories" to {
@@ -160,7 +160,7 @@ val debugActions = mapOf(
     "Download all stories" to {
       GlobalScope.launch {
         Static.database.getStories().await().filter { it.status != StoryStatus.LOCAL }.forEach {
-          fetchAndWriteStory(it.storyId).await()
+          fetchAndWriteStory(it.storyId)
         }
       }
     },

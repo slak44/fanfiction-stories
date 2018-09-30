@@ -96,7 +96,7 @@ class UpdateService : JobService(), CoroutineScope {
               setStyle(NotificationCompat.BigTextStyle().bigText(str))
               setProgress(storyModels.size, realIdx + 1, false)
             }
-            val newModel = updateStory(model).await()
+            val newModel = updateStory(model)
             Log.v(TAG, "Story ${model.storyId} was update performed: ${newModel !is Empty}")
             Prefs.updateResumeIndex = realIdx.opt()
             return@mapIndexedNotNull newModel.orNull()

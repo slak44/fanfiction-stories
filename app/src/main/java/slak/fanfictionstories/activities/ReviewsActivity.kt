@@ -16,8 +16,6 @@ import kotlinx.android.synthetic.main.activity_reviews.*
 import kotlinx.android.synthetic.main.component_review.view.*
 import kotlinx.android.synthetic.main.dialog_report_review.view.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
@@ -30,7 +28,6 @@ import slak.fanfictionstories.data.fetchers.fetchStoryModel
 import slak.fanfictionstories.data.fetchers.getReviews
 import slak.fanfictionstories.utility.*
 import java.util.*
-import kotlin.coroutines.experimental.CoroutineContext
 
 /** Stores and fetches the data required for a [ReviewsActivity]. */
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
@@ -72,10 +69,11 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer)
     notifyItemRangeRemoved(0, size)
   }
 
+  // FIXME missing coroutine scope
   fun loadPage() = launch(UI) {
     if (pageCount != 0 && currentPage >= pageCount) return@launch
     loadingEventsData.it = LoadEvent.LOADING
-    val (list, pages, reviews) = getReviews(model.storyId, _chapter.it, currentPage).await()
+    val (list, pages, reviews) = getReviews(model.storyId, _chapter.it, currentPage)
     if (pageCount == 0) pageCount = pages
     if (reviewCount == 0) reviewCount = reviews
     reviewsList.addAll(list)
@@ -111,7 +109,7 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
       val pathSegments = intent?.data?.pathSegments
           ?: throw IllegalArgumentException("Missing intent data")
       val chapter = if (pathSegments.size < 3) ALL_CHAPTERS else pathSegments[2].toInt()
-      val model = fetchStoryModel(pathSegments[1].toLong()).await()
+      val model = fetchStoryModel(pathSegments[1].toLong())
           .orElseThrow(IllegalArgumentException("Story doesn't exist"))
       return@runBlocking model to chapter
     } else {

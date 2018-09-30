@@ -3,15 +3,12 @@ package slak.fanfictionstories.data.fetchers
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.Dispatchers
 import org.jsoup.Jsoup
 import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categoryUrl
 import slak.fanfictionstories.data.Cache
-import slak.fanfictionstories.utility.async2
 import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
@@ -48,9 +45,8 @@ val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMilli
  * Fetches the list of [CategoryLink]s at the target [categoryUrlComponent].
  * @see CategoryLink
  */
-fun CoroutineScope.fetchCategoryData(categoryUrlComponent: String):
-    Deferred<Array<CategoryLink>> = async2(Dispatchers.Default) {
-  categoryCache.hit(categoryUrlComponent).ifPresent { return@async2 it }
+suspend fun CoroutineScope.fetchCategoryData(categoryUrlComponent: String): Array<CategoryLink> {
+  categoryCache.hit(categoryUrlComponent).ifPresent { return it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
     Notifications.ERROR.show(defaultIntent(), R.string.error_with_categories, categoryUrlComponent)
   }.await()
@@ -62,5 +58,5 @@ fun CoroutineScope.fetchCategoryData(categoryUrlComponent: String):
     CategoryLink(title, urlComponent, storyCount)
   }.toTypedArray()
   categoryCache.update(categoryUrlComponent, result)
-  return@async2 result
+  return result
 }

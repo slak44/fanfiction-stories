@@ -185,17 +185,15 @@ val canonListCache = Cache<CanonPage>("CanonPage", TimeUnit.MINUTES.toMillis(15)
  * [filters].
  * @see CanonFilters
  */
-fun CoroutineScope.getCanonPage(parentLink: CategoryLink,
-                 filters: CanonFilters, page: Int): Deferred<CanonPage> = async2(Dispatchers.Default) {
+suspend fun CoroutineScope.getCanonPage(parentLink: CategoryLink, filters: CanonFilters, page: Int): CanonPage {
   val pathAndQuery = "${parentLink.urlComponent}/?p=$page&${filters.queryParams()}"
-  canonListCache.hit(pathAndQuery).ifPresent { return@async2 it }
+  canonListCache.hit(pathAndQuery).ifPresent { return it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$pathAndQuery") {
-    Notifications.ERROR.show(defaultIntent(),
-        R.string.error_with_canon_stories, parentLink.displayName)
+    Notifications.ERROR.show(defaultIntent(), R.string.error_with_canon_stories, parentLink.displayName)
   }.await()
   val pageData = parseHtml(html)
   canonListCache.update(pathAndQuery, pageData)
-  return@async2 pageData
+  return pageData
 }
 
 private fun parseHtml(html: String): CanonPage {
@@ -221,6 +219,7 @@ private fun parseHtml(html: String): CanonPage {
   val isCurrentlyCrossover = !div.child(0).`is`("span")
   val categoryTitle = if (isCurrentlyCrossover) canonTitle.get() else div.child(2).text()
 
+  // FIXME remove parallelStream
   val list = doc.select("#content_wrapper_inner > div.z-list.zhover.zpointer").parallelStream().map {
     // Looks like /s/12656819/1/For-the-Motherland, pick the id
     val storyId = it.child(0).attr("href").split('/')[2].toLong()

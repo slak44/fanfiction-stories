@@ -3,6 +3,7 @@ package slak.fanfictionstories.activities
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.annotation.AnyThread
+import android.support.annotation.UiThread
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
@@ -14,8 +15,11 @@ import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.StoryListItem.GroupTitle
 import slak.fanfictionstories.StoryListItem.StoryCardData
@@ -23,7 +27,6 @@ import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.utility.*
-import kotlin.coroutines.experimental.CoroutineContext
 
 /** Stores the data required for a [CanonStoryListActivity]. */
 class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
@@ -62,10 +65,10 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
   }
 
   fun getCurrentPage() = getPage(currentPage)
-  fun getNextPage() = async2(UI) { getPage(++currentPage).await() }
+  fun getNextPage() = getPage(++currentPage)
 
   private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(Dispatchers.Default) {
-    val canonPage = getCanonPage(parentLink, filters, page).await()
+    val canonPage = getCanonPage(parentLink, filters, page)
     metadata = canonPage.metadata
     val storyData = canonPage.storyList.map {
       val model = Static.database.storyById(it.storyId).await()
@@ -121,6 +124,7 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
     viewModel.defaultStoryListObserver.unregister()
   }
 
+  @AnyThread
   private fun triggerLoadUI() = launch(UI) {
     showLoading()
     viewModel.addItems(viewModel.getCurrentPage().await())
@@ -132,6 +136,7 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
     hideLoading()
   }
 
+  @UiThread
   private fun setAppbarText() {
     title = viewModel.metadata.canonTitle.orElse(str(R.string.loading___))
     viewModel.metadata.unfilteredStoryCount.ifPresent {

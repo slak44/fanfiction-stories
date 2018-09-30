@@ -1,6 +1,8 @@
 package slak.fanfictionstories.activities
 
 import android.os.Bundle
+import android.support.annotation.AnyThread
+import android.support.annotation.UiThread
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
@@ -11,7 +13,6 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.CoroutineScope
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
@@ -85,6 +86,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
     storyListView.removeOnScrollListener(storyListScroller.onScrollListener)
   }
 
+  @UiThread
   private fun addByIdDialog() {
     AlertDialog.Builder(this)
         .setTitle(R.string.story_by_id_title)
@@ -102,7 +104,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
           }
           dialog.dismiss()
           launch(Dispatchers.Default) {
-            val models = list.map { fetchAndWriteStory(it).await() }
+            val models = list.map { fetchAndWriteStory(it) }
             val modelsFetched = models.count { it !is Empty }
             if (modelsFetched > 0) viewModel.triggerDatabaseLoad()
           }
@@ -110,6 +112,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
         .show()
   }
 
+  @AnyThread
   private fun statisticsDialog() = launch(UI) {
     val stories = database.getStories().await()
     var totalWords = 0L

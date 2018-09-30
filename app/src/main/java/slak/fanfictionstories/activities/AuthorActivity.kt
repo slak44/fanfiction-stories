@@ -42,7 +42,7 @@ class AuthorViewModel(authorId: java.lang.Long) : ViewModel(), CoroutineScope {
   // FIXME get rid of this retarded way to fetch the author
   init {
     launch {
-      author = getAuthor(authorId.toLong()).await()
+      author = getAuthor(authorId.toLong())
       loadEventsData.value = LoadEvent.LOADED
     }
   }
