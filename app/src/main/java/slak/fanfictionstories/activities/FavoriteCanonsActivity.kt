@@ -21,14 +21,9 @@ import slak.fanfictionstories.data.fetchers.CategoryLink
 import slak.fanfictionstories.utility.*
 
 class FavoriteCanonsActivity : CoroutineScopeActivity() {
-  // FIXME turn this class into an object, it's just inconvenient like this
-  private class CanonAdapter(
-      private val activity: FavoriteCanonsActivity,
-      links: List<CategoryLink>
-  ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    class CanonViewHolder(view: View) : RecyclerView.ViewHolder(view)
-
-    private val linkList: MutableList<CategoryLink> = links.toMutableList()
+  private inner class CanonAdapter(
+      private val linkList: MutableList<CategoryLink>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private inner class CanonViewHolder(view: View) : RecyclerView.ViewHolder(view)
 
     var removeSnackbar: Snackbar? = null
       private set
@@ -51,11 +46,11 @@ class FavoriteCanonsActivity : CoroutineScopeActivity() {
         removeSnackbar?.dismiss()
         val removed = linkList.removeAt(position)
         notifyItemRemoved(position)
-        activity.updateNoFavoritesText()
+        updateNoFavoritesText()
         removeSnackbar = undoableAction(this, R.string.removed_favorite_snack, { _ ->
           linkList.add(position, removed)
           notifyItemInserted(position)
-          activity.updateNoFavoritesText()
+          updateNoFavoritesText()
         }) { Static.database.removeFavoriteCanon(removed).await() }
       }
     }
@@ -68,7 +63,7 @@ class FavoriteCanonsActivity : CoroutineScopeActivity() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     setTitle(R.string.favorite_canons)
     launch(UI) {
-      canonListRecycler.adapter = CanonAdapter(this@FavoriteCanonsActivity, database.getFavoriteCanons().await())
+      canonListRecycler.adapter = CanonAdapter(database.getFavoriteCanons().await().toMutableList())
       updateNoFavoritesText()
       canonListRecycler.layoutManager = LinearLayoutManager(this@FavoriteCanonsActivity)
       canonListRecycler.addItemDecoration(
