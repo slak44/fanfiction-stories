@@ -25,7 +25,6 @@ import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
@@ -102,7 +101,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
   @AnyThread
   fun changeChapter(chapterToRead: Long) = launch(UI) {
     _chapterEvents.it = CHAPTER_LOAD_STARTED
-    if (chapterToRead != currentChapter) chapterHtml = getChapterHtml(chapterToRead).await()
+    if (chapterToRead != currentChapter) chapterHtml = getChapterHtml(chapterToRead)
     _chapterEvents.it = when {
       currentChapter == UNINITIALIZED_CHAPTER -> CHAPTER_FIRST_LOAD
       chapterToRead == currentChapter -> CHAPTER_RELOADED
@@ -112,12 +111,12 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
   }
 
   @AnyThread
-  private fun getChapterHtml(chapterToRead: Long): Deferred<String> = async2(Dispatchers.Default) {
+  private suspend fun getChapterHtml(chapterToRead: Long): String {
     // If the story is remote and it gets updated, the downloaded chapters may be outdated, so delete and re-download
     if (storyModel.status == StoryStatus.REMOTE && storyModel.fragment.updateTime > storyModel.lastReadTime ?: 0) {
       deleteStory(storyModel.storyId)
     }
-    readChapter(storyModel.storyId, chapterToRead).orElse {
+    return readChapter(storyModel.storyId, chapterToRead).orElse {
       val chapterHtmlText = fetchChapter(storyModel.storyId, chapterToRead)
       val text = extractChapterText(Jsoup.parse(chapterHtmlText))
       writeChapter(storyModel.storyId, chapterToRead, text)

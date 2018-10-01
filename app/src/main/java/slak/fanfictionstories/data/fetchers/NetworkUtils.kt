@@ -5,7 +5,6 @@ import kotlinx.coroutines.experimental.*
 import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.R
 import slak.fanfictionstories.utility.Static
-import slak.fanfictionstories.utility.async2
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
@@ -42,21 +41,21 @@ private val networkContext = newSingleThreadContext("NetworkThread")
  *
  * Waits for the network using [waitForNetwork], then waits for the rate limit [RATE_LIMIT_MS].
  *
- * If the download fails, call the [onError] callback, wait for the rate limit again, and then call
- * this function recursively.
+ * If the download fails, call the [onError] callback, wait for the rate limit again, and then call this function
+ * recursively. As a result, [onError] is called for every failed download retry.
  */
 fun CoroutineScope.patientlyFetchURL(url: String,
-                                     onError: (t: Throwable) -> Unit): Deferred<String> = async2(networkContext) {
+                                     onError: (t: Throwable) -> Unit): Deferred<String> = async(networkContext) {
   waitForNetwork()
   delay(RATE_LIMIT_MS)
-  return@async2 try {
+  return@async try {
     val text = URL(url).readText()
     Notifications.ERROR.cancel()
     text
   } catch (t: Throwable) {
     // Something happened; retry
-    onError(t)
     Log.e(URL_TAG, "Failed to fetch url ($url)", t)
+    onError(t)
     patientlyFetchURL(url, onError).await()
   }
 }
