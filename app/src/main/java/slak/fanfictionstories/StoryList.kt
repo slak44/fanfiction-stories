@@ -534,10 +534,10 @@ open class StoryListViewModel :
 
   /** Asynchronously add a bunch of items to the recycler, adding a loader until they show up. */
   @AnyThread
-  fun addDeferredItems(deferredList: Deferred<List<StoryListItem>>) = launch(UI) {
+  fun addSuspendingItems(getItems: suspend () -> List<StoryListItem>) = launch(UI) {
     addItem(LoadingItem())
     val loaderIdx = data.size - 1
-    addItems(deferredList.await())
+    addItems(getItems())
     data.removeAt(loaderIdx)
     notifyItemRangeRemoved(loaderIdx, 1)
   }

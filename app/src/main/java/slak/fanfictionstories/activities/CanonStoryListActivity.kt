@@ -64,10 +64,10 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
     currentPage = 1
   }
 
-  fun getCurrentPage() = getPage(currentPage)
-  fun getNextPage() = getPage(++currentPage)
+  suspend fun getCurrentPage() = getPage(currentPage)
+  suspend fun getNextPage() = getPage(++currentPage)
 
-  private fun getPage(page: Int): Deferred<List<StoryListItem>> = async2(Dispatchers.Default) {
+  private suspend fun getPage(page: Int): List<StoryListItem> {
     val canonPage = getCanonPage(parentLink, filters, page)
     metadata = canonPage.metadata
     val storyData = canonPage.storyList.map {
@@ -77,8 +77,8 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
       it.status = model.status
       return@map StoryCardData(it)
     }
-    if (storyData.isEmpty()) return@async2 emptyList<StoryListItem>()
-    return@async2 listOf(GroupTitle(str(R.string.page_x, page)), *storyData.toTypedArray())
+    if (storyData.isEmpty()) return emptyList()
+    return listOf(GroupTitle(str(R.string.page_x, page)), *storyData.toTypedArray())
   }
 }
 
@@ -102,7 +102,7 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
     canonStoryListView.layoutManager = layoutManager
     canonStoryListView.createStorySwipeHelper()
     infinitePageScroll(canonStoryListView, layoutManager) {
-      viewModel.addDeferredItems(viewModel.getNextPage())
+      viewModel.addSuspendingItems { viewModel.getNextPage() }
     }
 
     if (Prefs.filterLanguage()) viewModel.filters.lang = Prefs.preferredLanguage
@@ -127,10 +127,10 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
   @AnyThread
   private fun triggerLoadUI() = launch(UI) {
     showLoading()
-    viewModel.addItems(viewModel.getCurrentPage().await())
+    viewModel.addItems(viewModel.getCurrentPage())
     viewModel.metadata.canonTitle.ifPresent {
       database.updateFavoriteCanon(
-          CategoryLink(it, viewModel.parentLink.urlComponent, viewModel.parentLink.storyCount))
+          CategoryLink(it, viewModel.parentLink.urlComponent, viewModel.parentLink.storyCount)).await()
     }
     setAppbarText()
     hideLoading()
