@@ -20,7 +20,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ProgressBar
-import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
@@ -32,6 +31,7 @@ import kotlinx.coroutines.experimental.sync.Mutex
 import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
+import org.jetbrains.anko.longToast
 import org.jsoup.Jsoup
 import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
@@ -148,7 +148,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
   @AnyThread
   fun downloadStoryLocally() = launch(Dispatchers.Default) {
     storyModel = fetchAndWriteStory(storyModel.storyId).orElse {
-      Toast.makeText(Static.currentActivity, R.string.story_not_found, Toast.LENGTH_LONG).show()
+      Static.currentActivity!!.longToast(R.string.story_not_found)
       return@launch
     }
   }
@@ -194,7 +194,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
           ?: throw IllegalArgumentException("Intent data is empty")
       if (pathSegments.size > 3) title = pathSegments[3]
       val model = fetchStoryModel(pathSegments[1].toLong()).orElse {
-        Toast.makeText(this, R.string.story_not_found, Toast.LENGTH_LONG).show()
+        longToast(R.string.story_not_found)
         return UNINITIALIZED_CHAPTER
       }
       val currentChapter = pathSegments[2].toLong()
