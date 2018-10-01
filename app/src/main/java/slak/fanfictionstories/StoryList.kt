@@ -434,14 +434,12 @@ open class StoryListViewModel :
    */
   val defaultStoryListObserver = object : IStoryEventObserver {
     override fun onStoriesChanged(t: StoriesChangeEvent) {
-      launch(UI) {
-        // We just update the stories that might have changed, regardless of what happened
-        t.models.forEach {
-          val idx = indexOfStoryId(it.storyId)
-          // And then again, only if they are part of our model
-          if (idx == -1) return@forEach
-          updateStoryModel(idx, it)
-        }
+      // We just update the stories that might have changed, regardless of what happened
+      t.models.forEach {
+        val idx = indexOfStoryId(it.storyId)
+        // And then again, only if they are part of our model
+        if (idx == -1) return@forEach
+        updateStoryModel(idx, it)
       }
     }
   }

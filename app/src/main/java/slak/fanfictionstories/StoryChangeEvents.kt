@@ -2,6 +2,7 @@ package slak.fanfictionstories
 
 import android.database.Observable
 import android.support.annotation.AnyThread
+import android.support.annotation.UiThread
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
@@ -49,8 +50,9 @@ interface IStoryEventObserver {
   }
 
   /**
-   * To be overridden by implementations to receive events. Is called with each received event.
+   * To be overridden by implementations to receive events. Is called with each received event. Runs on the UI thread.
    * @param t the new event that has to be processed by the implementation
    */
+  @UiThread
   fun onStoriesChanged(t: StoriesChangeEvent)
 }
