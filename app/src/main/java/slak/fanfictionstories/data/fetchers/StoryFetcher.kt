@@ -1,12 +1,11 @@
 package slak.fanfictionstories.data.fetchers
 
 import android.util.Log
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.channels.ReceiveChannel
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import slak.fanfictionstories.*
@@ -16,7 +15,10 @@ import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryModel
 import slak.fanfictionstories.data.writeChapters
-import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Empty
+import slak.fanfictionstories.utility.Optional
+import slak.fanfictionstories.utility.Static
+import slak.fanfictionstories.utility.opt
 import java.util.concurrent.TimeUnit
 
 private const val TAG = "StoryFetcher"

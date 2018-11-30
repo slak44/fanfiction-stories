@@ -1,10 +1,9 @@
 package slak.fanfictionstories.data
 
 import android.util.Log
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.IO
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.Optional
 import slak.fanfictionstories.utility.Static

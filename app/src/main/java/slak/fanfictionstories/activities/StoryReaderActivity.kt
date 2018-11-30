@@ -23,11 +23,11 @@ import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.sync.Mutex
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
@@ -44,7 +44,7 @@ import slak.fanfictionstories.data.*
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 /** Handles the data required to display story chapters. */
 class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
@@ -99,7 +99,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
 
   /** Load a particular chapter. */
   @AnyThread
-  fun changeChapter(chapterToRead: Long) = launch(UI) {
+  fun changeChapter(chapterToRead: Long) = launch(Main) {
     _chapterEvents.it = CHAPTER_LOAD_STARTED
     if (chapterToRead != currentChapter) chapterHtml = getChapterHtml(chapterToRead)
     _chapterEvents.it = when {
@@ -235,7 +235,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     setLoadingView(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    launch(UI) {
+    launch(Main) {
       val initialChapter = obtainModel()
       // No story there, leave activity
       if (initialChapter == UNINITIALIZED_CHAPTER) {
@@ -343,7 +343,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   }
 
   @AnyThread
-  private fun onChapterLoadFinished(restoreScroll: Boolean) = launch(UI) {
+  private fun onChapterLoadFinished(restoreScroll: Boolean) = launch(Main) {
     // We use the width for the <hr> elements, so the layout should be done
     if (!ViewCompat.isLaidOut(chapterText)) chapterText.requestLayout()
 

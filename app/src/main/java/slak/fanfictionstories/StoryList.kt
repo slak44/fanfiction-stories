@@ -31,8 +31,8 @@ import android.widget.TextView
 import com.takisoft.colorpicker.ColorPickerDialog
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.component_story.view.*
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Main
 import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
@@ -43,7 +43,7 @@ import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Optional
 import java.util.*
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Adds a [ItemTouchHelper] to the recycler that lets stories be swiped right to be read.
@@ -69,7 +69,7 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
       // After the reader was opened, reset the translation by reattaching
       // We do this because we might go back from the reader to this activity and
       // it has to look properly
-      GlobalScope.launch(UI) {
+      GlobalScope.launch(Main) {
         delay(500)
         swipeStory.attachToRecyclerView(null)
         swipeStory.attachToRecyclerView(this@createStorySwipeHelper)
@@ -242,7 +242,7 @@ class StoryCardView @JvmOverloads constructor(
     if (model.status == StoryStatus.LOCAL) addBtn.visibility = View.GONE
     if (model.status == StoryStatus.TRANSIENT) removeBtn.visibility = View.GONE
 
-    scope.launch(UI) {
+    scope.launch(Main) {
       markerBtn.bindMarker(model.storyId, Static.database.getMarker(model.storyId).await().toInt())
     }
 
@@ -258,7 +258,7 @@ class StoryCardView @JvmOverloads constructor(
     addBtn.setOnClickListener {
       addBtn.isEnabled = false
       addBtn.text = str(R.string.adding___)
-      scope.launch(UI) {
+      scope.launch(Main) {
         val newModel = fetchAndWriteStory(model.storyId)
         if (newModel is Empty) {
           addBtn.visibility = View.VISIBLE
@@ -283,7 +283,7 @@ class StoryCardView @JvmOverloads constructor(
       return@bindRemoveBtn
     }
     removeBtn.setOnClickListener { btn ->
-      scope.launch(UI) {
+      scope.launch(Main) {
         // Even though we have a model, fetch it from db to make sure there are no inconsistencies
         val dbModel = Static.database.storyById(model.storyId).await()
         if (dbModel is Empty) {
@@ -444,7 +444,7 @@ open class StoryListViewModel :
     }
   }
 
-  fun triggerDatabaseLoad() = launch(UI) {
+  fun triggerDatabaseLoad() = launch(Main) {
     val stories = Static.database.getStories().await()
     arrangeStories(stories, Prefs.storyListArrangement()).join()
   }
@@ -532,7 +532,7 @@ open class StoryListViewModel :
 
   /** Asynchronously add a bunch of items to the recycler, adding a loader until they show up. */
   @AnyThread
-  fun addSuspendingItems(getItems: suspend () -> List<StoryListItem>) = launch(UI) {
+  fun addSuspendingItems(getItems: suspend () -> List<StoryListItem>) = launch(Main) {
     addItem(LoadingItem())
     val loaderIdx = data.size - 1
     addItems(getItems())
@@ -637,7 +637,7 @@ open class StoryListViewModel :
    * Filter, group, sort [stories] according to the [arrangement], and put the results in [data].
    */
   @AnyThread
-  fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) = launch(UI) {
+  fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) = launch(Main) {
     // Ignore currently pending stories, the user might have rearranged before the db was updated
     val storiesNotPending = stories.filter { (storyId) ->
       pendingItems.keys.find { it.storyId == storyId } == null

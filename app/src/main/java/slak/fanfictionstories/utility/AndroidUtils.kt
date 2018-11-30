@@ -29,9 +29,9 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.sync.Mutex
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.sync.Mutex
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.R
@@ -40,7 +40,7 @@ import slak.fanfictionstories.R
  * Create an error dialog with a title, message and a dismiss button.
  * @see AlertDialog
  */
-fun errorDialog(title: String, msg: String) = GlobalScope.launch(UI) {
+fun errorDialog(title: String, msg: String) = GlobalScope.launch(Main) {
   AlertDialog.Builder(Static.currentCtx)
       .setTitle(title)
       .setMessage(msg)

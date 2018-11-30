@@ -14,7 +14,7 @@ import android.content.Intent
 import android.os.Build
 import android.support.v4.app.NotificationCompat
 import android.util.Log
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.*
 import org.threeten.bp.Duration
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
@@ -24,7 +24,7 @@ import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.updateStory
 import slak.fanfictionstories.utility.*
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 private const val TAG = "StoryUpdates"
 private const val UPDATE_JOB_INFO_ID = 0xDE1A1
@@ -59,7 +59,7 @@ fun scheduleUpdate(): Job = GlobalScope.launch(Dispatchers.Default) {
   if (areJobsPending) return@launch
   if (scheduleUpdateJob(Prefs.autoUpdateMoment()) == ScheduleResult.FAILURE) {
     Log.e(TAG, "Failed to schedule initial job")
-    delay(5, TimeUnit.MINUTES)
+    delay(TimeUnit.MINUTES.toMillis(5))
     scheduleUpdate()
   }
 }

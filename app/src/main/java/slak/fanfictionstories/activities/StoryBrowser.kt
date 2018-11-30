@@ -10,8 +10,8 @@ import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_browse_category.*
 import kotlinx.android.synthetic.main.activity_select_category.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
 import org.jetbrains.anko.contentView
 import slak.fanfictionstories.R
 import slak.fanfictionstories.data.fetchers.CategoryLink
@@ -66,7 +66,7 @@ class BrowseCategoryActivity : CoroutineScopeActivity(), IHasLoadingBar {
     val parentLink = intent.extras?.getParcelable<CategoryLink>(INTENT_LINK_DATA) ?: return
     title = parentLink.displayName
     showLoading()
-    launch(UI) {
+    launch(Main) {
       val links = fetchCategoryData(parentLink.urlComponent)
       val adapter = ArrayAdapter<String>(this@BrowseCategoryActivity, android.R.layout.simple_list_item_1)
       adapter.addAll(links.map { "${it.text} - ${it.storyCount}" })

@@ -13,15 +13,15 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.utility.*
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 /** The list of stories the user has started reading, or has downloaded. */
 class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoadingBar {
@@ -113,7 +113,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
   }
 
   @AnyThread
-  private fun statisticsDialog() = launch(UI) {
+  private fun statisticsDialog() = launch(Main) {
     val stories = database.getStories().await()
     var totalWords = 0L
     var passedApprox = 0L

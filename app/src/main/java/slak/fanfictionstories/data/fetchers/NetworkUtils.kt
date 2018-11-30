@@ -1,12 +1,11 @@
 package slak.fanfictionstories.data.fetchers
 
 import android.util.Log
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.*
 import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.R
 import slak.fanfictionstories.utility.Static
 import java.net.URL
-import java.util.concurrent.TimeUnit
 
 private const val NETWORK_WAIT_DELAY_MS = 500L
 private const val NET_TAG = "waitForNetwork"
@@ -22,7 +21,7 @@ private tailrec suspend fun waitForNetwork() {
     // No connection; wait
     Notifications.NETWORK.show(Notifications.defaultIntent(), R.string.waiting_for_connection)
     Log.w(NET_TAG, "No connection")
-    delay(NETWORK_WAIT_DELAY_MS, TimeUnit.MILLISECONDS)
+    delay(NETWORK_WAIT_DELAY_MS)
     waitForNetwork()
   } else {
     // We're connected!

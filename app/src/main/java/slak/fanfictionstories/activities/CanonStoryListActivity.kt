@@ -15,10 +15,10 @@ import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.StoryListItem.GroupTitle
 import slak.fanfictionstories.StoryListItem.StoryCardData
@@ -52,7 +52,7 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
         parentLink.urlComponent,
         parentLink.storyCount
     )
-    return launch(UI) {
+    return launch(Main) {
       isFavorite = !isFavorite
       if (isFavorite) Static.database.removeFavoriteCanon(link).await()
       else Static.database.addFavoriteCanon(link).await()
@@ -124,7 +124,7 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
   }
 
   @AnyThread
-  private fun triggerLoadUI() = launch(UI) {
+  private fun triggerLoadUI() = launch(Main) {
     showLoading()
     viewModel.addItems(viewModel.getCurrentPage())
     viewModel.metadata.canonTitle.ifPresent {

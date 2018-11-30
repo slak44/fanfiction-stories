@@ -6,8 +6,8 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.*
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
 import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.Prefs
@@ -65,7 +65,7 @@ class MainActivity : CoroutineScopeActivity() {
       resumeStoryText.text = str(R.string.nothing_to_resume)
       return
     }
-    launch(UI) {
+    launch(Main) {
       resumeModel = database.storyById(Prefs.resumeStoryId).await().orNull()
       storyContainer.visibility = View.VISIBLE
       storyContainer.adapter!!.notifyItemChanged(0)

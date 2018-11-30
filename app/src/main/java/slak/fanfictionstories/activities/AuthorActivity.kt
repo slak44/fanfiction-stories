@@ -18,8 +18,8 @@ import kotlinx.android.synthetic.main.activity_author.*
 import kotlinx.android.synthetic.main.fragment_author_bio.view.*
 import kotlinx.android.synthetic.main.fragment_author_stories.view.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
@@ -76,7 +76,7 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
     tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
     showLoading()
 
-    launch(UI) {
+    launch(Main) {
       viewModel = obtainViewModel(getAuthor(authorId))
       title = viewModel.author.name
       invalidateOptionsMenu()
@@ -249,7 +249,7 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
       viewModel = obtainViewModel()
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
       // FIXME maybe replace storyById with storiesById
-      viewModel.launch(UI) {
+      viewModel.launch(Main) {
         val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES)!!.map {
           val model = Static.database.storyById(it.storyId).await().orNull() ?: return@map it
           it.progress = model.progress

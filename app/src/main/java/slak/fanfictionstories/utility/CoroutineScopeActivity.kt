@@ -1,10 +1,10 @@
 package slak.fanfictionstories.utility
 
-import kotlinx.coroutines.experimental.CoroutineName
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.Job
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlin.coroutines.CoroutineContext
 
 open class CoroutineScopeActivity : ActivityWithStatic(), CoroutineScope {
   override val coroutineContext: CoroutineContext

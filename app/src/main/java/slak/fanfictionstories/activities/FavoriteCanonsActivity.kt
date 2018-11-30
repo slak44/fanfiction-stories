@@ -13,8 +13,8 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.activity_favorite_canons.*
 import kotlinx.android.synthetic.main.component_favorite_canon.view.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
 import slak.fanfictionstories.R
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.CategoryLink
@@ -62,7 +62,7 @@ class FavoriteCanonsActivity : CoroutineScopeActivity() {
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     setTitle(R.string.favorite_canons)
-    launch(UI) {
+    launch(Main) {
       canonListRecycler.adapter = CanonAdapter(database.getFavoriteCanons().await().toMutableList())
       updateNoFavoritesText()
       canonListRecycler.layoutManager = LinearLayoutManager(this@FavoriteCanonsActivity)

@@ -9,8 +9,8 @@ import android.util.Log
 import android.view.View
 import android.widget.EditText
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Main
 import org.jetbrains.anko.db.MapRowParser
 import org.jetbrains.anko.db.dropTable
 import org.jetbrains.anko.db.select
@@ -72,7 +72,7 @@ val debugActions = mapOf(
           Notifications.values().map { it.toString() }.toTypedArray()) { _, which ->
         val picked = Notifications.values()[which]
         picked.show(defaultIntent(), "TEST")
-        GlobalScope.launch(UI) {
+        GlobalScope.launch(Main) {
           delay(2500)
           picked.cancel()
         }

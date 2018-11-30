@@ -11,9 +11,9 @@ import android.util.AttributeSet
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.withContext
 import slak.fanfictionstories.data.Prefs
 
 /**
@@ -65,7 +65,7 @@ class FastTextView @JvmOverloads constructor(
             .setBreakStrategy(Prefs.textBreakStrategy())
             .build()
 
-    withContext(UI) {
+    withContext(Main) {
       this@FastTextView.layoutParams.height = textLayout!!.height
       this@FastTextView.requestLayout()
       this@FastTextView.invalidate()

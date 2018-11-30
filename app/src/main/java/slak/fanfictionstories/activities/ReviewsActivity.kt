@@ -18,10 +18,10 @@ import kotlinx.android.synthetic.main.activity_reviews.*
 import kotlinx.android.synthetic.main.component_review.view.*
 import kotlinx.android.synthetic.main.dialog_report_review.view.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryModel
 import slak.fanfictionstories.data.Prefs
@@ -74,7 +74,7 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer)
   }
 
   @AnyThread
-  fun loadPage(coroutineScope: CoroutineScope) = coroutineScope.launch(UI) {
+  fun loadPage(coroutineScope: CoroutineScope) = coroutineScope.launch(Main) {
     if (pageCount != 0 && currentPage >= pageCount) return@launch
     loadingEventsData.it = LoadEvent.LOADING
     val (list, pages, reviews) = getReviews(model.storyId, _chapter.it, currentPage)

@@ -4,10 +4,10 @@ import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.newSingleThreadContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.newSingleThreadContext
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.StoriesChangeEvent
 import slak.fanfictionstories.StoryEventNotifier
@@ -18,7 +18,7 @@ import slak.fanfictionstories.utility.Optional
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.opt
 import kotlin.collections.set
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 6), CoroutineScope {
   companion object {
