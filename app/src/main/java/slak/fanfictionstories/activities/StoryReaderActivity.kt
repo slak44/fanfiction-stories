@@ -192,8 +192,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   private suspend fun obtainModel(): Long = when {
     // Responding to links
     intent.action == Intent.ACTION_VIEW -> {
-      val pathSegments = intent.data?.pathSegments
-          ?: throw IllegalArgumentException("Intent data is empty")
+      val pathSegments = intent.data?.pathSegments ?: throw IllegalArgumentException("Intent data is empty")
       if (pathSegments.size > 3) title = pathSegments[3]
       val model = fetchStoryModel(pathSegments[1].toLong()).orElse {
         longToast(R.string.story_not_found)
@@ -209,8 +208,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     else -> {
       val model = intent.getParcelableExtra<StoryModel>(INTENT_STORY_MODEL)
           ?: throw IllegalArgumentException("Story model missing from extras")
-      val currentChapter =
-          if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
+      val currentChapter = if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
       viewModel = obtainViewModel(model)
       Log.v(TAG, "Model from intent extra: $model")
       currentChapter
@@ -220,14 +218,12 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   /** Initializes the [SearchUIFragment] fragment. */
   @UiThread
   private fun initSearch() {
-    val oldHighlighter = supportFragmentManager
-        .findFragmentByTag(TAG_SEARCH_FRAGMENT) as? SearchUIFragment
+    val oldHighlighter = supportFragmentManager.findFragmentByTag(TAG_SEARCH_FRAGMENT) as? SearchUIFragment
     if (oldHighlighter != null) {
       searchUI = oldHighlighter
     } else {
       searchUI = SearchUIFragment()
-      supportFragmentManager.beginTransaction()
-          .add(R.id.rootLayout, searchUI, TAG_SEARCH_FRAGMENT).commit()
+      supportFragmentManager.beginTransaction().add(R.id.rootLayout, searchUI, TAG_SEARCH_FRAGMENT).commit()
     }
   }
 
