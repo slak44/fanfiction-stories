@@ -183,12 +183,14 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     get() = activityProgressBar
 
   /**
-   * Gets the data required for the [ViewModel]. It will load from the intent URI (clicked link to
-   * story), or from the intent extras (in-app navigation).
-   * @returns the initial chapter to view
+   * Gets the data required for the [ViewModel]. It will load from the intent URI (clicked link to story), or from the
+   * intent extras (in-app navigation).
+   * @returns the initial chapter to view, or [UNINITIALIZED_CHAPTER] if we are responding to a link, and the linked
+   * story doesn't exist
    */
   @UiThread
   private suspend fun obtainModel(): Long = when {
+    // Responding to links
     intent.action == Intent.ACTION_VIEW -> {
       val pathSegments = intent.data?.pathSegments
           ?: throw IllegalArgumentException("Intent data is empty")
@@ -203,6 +205,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       Log.v(TAG, "Model from link: $intent, resolved model: $model")
       currentChapter
     }
+    // In-app navigation
     else -> {
       val model = intent.getParcelableExtra<StoryModel>(INTENT_STORY_MODEL)
           ?: throw IllegalArgumentException("Story model missing from extras")
@@ -243,26 +246,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
         return@launch
       }
 
-      viewModel.chapterEvents.observe(this@StoryReaderActivity) {
-        when (it) {
-          CHAPTER_LOAD_STARTED -> {
-            // Show loading things and disable chapter switching
-            if (viewModel.storyModel.status != StoryStatus.LOCAL) showLoading()
-            btnBarLoader.visibility = View.VISIBLE
-            navButtons.visibility = View.GONE
-            prevChapterBtn.isEnabled = false
-            nextChapterBtn.isEnabled = false
-            selectChapterBtn.isEnabled = false
-            invalidateOptionsMenu()
-          }
-          CHAPTER_CHANGED -> onChapterLoadFinished(false)
-          CHAPTER_FIRST_LOAD, CHAPTER_RELOADED -> {
-            onChapterLoadFinished(true).invokeOnCompletion { err ->
-              if (err == null) searchUI.restoreState()
-            }
-          }
-        }
-      }
+      viewModel.chapterEvents.observe(this@StoryReaderActivity, ::handleChapterEvent)
 
       // Setup chapter switching buttons
       prevChapterBtn.setOnClickListener { viewModel.changeChapter(viewModel.currentChapter - 1) }
@@ -284,7 +268,8 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       if (viewModel.storyModel.status != StoryStatus.LOCAL) {
         viewModel.tryLoadingModelFromDatabase().join()
       }
-      viewModel.changeChapter(initialChapter).join()
+      // Only load chapter if this is the initial load
+      if (viewModel.currentChapter == UNINITIALIZED_CHAPTER) viewModel.changeChapter(initialChapter).join()
       initSearch()
     }
   }
@@ -293,8 +278,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     super.onPause()
     if (viewModel.storyModel.status == StoryStatus.LOCAL) {
       // Update last time the story was read
-      database.updateInStory(viewModel.storyModel.storyId,
-          "lastReadTime" to System.currentTimeMillis())
+      database.updateInStory(viewModel.storyModel.storyId, "lastReadTime" to System.currentTimeMillis())
     }
   }
 
@@ -340,6 +324,31 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   private fun parseChapterHTML(): Spanned {
     return Html.fromHtml(viewModel.chapterHtml, Html.FROM_HTML_MODE_LEGACY,
         null, HrSpan.tagHandlerFactory(chapterText.width))
+  }
+
+  /** React to [ReaderViewModel.ChapterEvent]s from the model. */
+  @UiThread
+  private fun handleChapterEvent(it: ReaderViewModel.ChapterEvent): Unit = when (it) {
+    CHAPTER_LOAD_STARTED -> {
+      // Show loading things and disable chapter switching
+      if (viewModel.storyModel.status != StoryStatus.LOCAL) showLoading()
+      btnBarLoader.visibility = View.VISIBLE
+      navButtons.visibility = View.GONE
+      prevChapterBtn.isEnabled = false
+      nextChapterBtn.isEnabled = false
+      selectChapterBtn.isEnabled = false
+      invalidateOptionsMenu()
+    }
+    CHAPTER_CHANGED -> {
+      onChapterLoadFinished(false)
+      Unit
+    }
+    CHAPTER_FIRST_LOAD, CHAPTER_RELOADED -> {
+      onChapterLoadFinished(true).invokeOnCompletion { err ->
+        if (err == null) searchUI.restoreState()
+      }
+      Unit
+    }
   }
 
   @AnyThread
