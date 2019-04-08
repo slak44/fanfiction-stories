@@ -76,6 +76,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
 
   companion object {
     const val UNINITIALIZED_CHAPTER = -454L
+    private const val TAG = "ReaderViewModel"
   }
 
   init {
@@ -107,6 +108,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
       chapterToRead == currentChapter -> CHAPTER_RELOADED
       else -> CHAPTER_CHANGED
     }
+    Log.v(TAG, "toRead: $chapterToRead, current: $currentChapter | ${_chapterEvents.it}")
     currentChapter = chapterToRead
   }
 
@@ -123,7 +125,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
       // Get the model too if we need it
       if (storyModel.status != StoryStatus.LOCAL) {
         storyModel = parseStoryModel(chapterHtmlText, storyModel.storyId)
-        Static.database.upsertStory(storyModel).await()
+        Static.database.upsertModel(storyModel)
       }
       // If all chapters are on disk, set to local
       if (chapterCount(storyModel.storyId) == storyModel.fragment.chapterCount.toInt()) {
@@ -242,8 +244,6 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
         return@launch
       }
 
-      viewModel.chapterEvents.observe(this@StoryReaderActivity, ::handleChapterEvent)
-
       // Setup chapter switching buttons
       prevChapterBtn.setOnClickListener { viewModel.changeChapter(viewModel.currentChapter - 1) }
       nextChapterBtn.setOnClickListener { viewModel.changeChapter(viewModel.currentChapter + 1) }
@@ -264,9 +264,12 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       if (viewModel.storyModel.status != StoryStatus.LOCAL) {
         viewModel.tryLoadingModelFromDatabase().join()
       }
-      // Only load chapter if this is the initial load
+
       if (viewModel.currentChapter == UNINITIALIZED_CHAPTER) viewModel.changeChapter(initialChapter).join()
+      else viewModel.changeChapter(viewModel.currentChapter).join()
       initSearch()
+
+      viewModel.chapterEvents.observe(this@StoryReaderActivity, ::handleChapterEvent)
     }
   }
 
@@ -312,7 +315,11 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       select("stories", "scrollAbsolute")
           .whereSimple("storyId = ?", viewModel.storyModel.storyId.toString())
           .parseOpt(DoubleParser)
-    }.await() ?: return
+    }.await()
+    if (scrollAbs == null) {
+      Log.w(TAG, "Absolute scroll position is null")
+      return
+    }
     chapterScroll(chapterText.scrollYFromScrollState(scrollAbs))
   }
 
@@ -335,11 +342,15 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       selectChapterBtn.isEnabled = false
       invalidateOptionsMenu()
     }
+    CHAPTER_FIRST_LOAD -> {
+      onChapterLoadFinished(true)
+      Unit
+    }
     CHAPTER_CHANGED -> {
       onChapterLoadFinished(false)
       Unit
     }
-    CHAPTER_FIRST_LOAD, CHAPTER_RELOADED -> {
+    CHAPTER_RELOADED -> {
       onChapterLoadFinished(true).invokeOnCompletion { err ->
         if (err == null) searchUI.restoreState()
       }

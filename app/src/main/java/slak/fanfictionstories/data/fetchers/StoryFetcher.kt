@@ -30,13 +30,7 @@ private const val TAG = "StoryFetcher"
 suspend fun CoroutineScope.fetchAndWriteStory(storyId: StoryId): Optional<StoryModel> {
   val model = fetchStoryModel(storyId).orElse { return Empty() }
   model.status = StoryStatus.LOCAL
-  val existingModel = Static.database.storyById(storyId).await().orNull()
-  if (existingModel != null) {
-    model.addedTime = existingModel.addedTime
-    model.lastReadTime = existingModel.lastReadTime
-    model.progress = existingModel.progress
-  }
-  Static.database.upsertStory(model).await()
+  Static.database.upsertModel(model)
   writeChapters(storyId, fetchChapterRange(Notifications.DOWNLOADING, model))
   Notifications.downloadedStory(model)
   Notifications.DOWNLOADING.cancel()
