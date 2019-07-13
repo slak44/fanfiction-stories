@@ -230,6 +230,7 @@ Story %d of %d (%.2f%%)"
     <string name="go_to_bottom">Go to Bottom</string>
     <string name="next_chapter">Next Chapter</string>
     <string name="prev_chapter">Previous Chapter</string>
+    <string name="set_marker_color">Set Marker Color</string>
     <string name="reviews">Story Reviews</string>
     <string name="check_for_updates">Check For Updates</string>
     <string name="delete_local">Remove Local Data</string>

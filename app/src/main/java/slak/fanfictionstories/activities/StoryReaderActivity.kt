@@ -33,11 +33,8 @@ import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
 import org.jetbrains.anko.longToast
 import org.jsoup.Jsoup
-import slak.fanfictionstories.Notifications
+import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
-import slak.fanfictionstories.R
-import slak.fanfictionstories.StoryModel
-import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.activities.ReaderViewModel.ChapterEvent.*
 import slak.fanfictionstories.activities.ReaderViewModel.Companion.UNINITIALIZED_CHAPTER
 import slak.fanfictionstories.data.*
@@ -488,6 +485,12 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       R.id.selectChapter -> showChapterSelectDialog()
       R.id.nextChapter -> nextChapterBtn.callOnClick()
       R.id.prevChapter -> prevChapterBtn.callOnClick()
+      R.id.setMarkerColor -> launch(Main) {
+        val color = Static.database.getMarker(viewModel.storyModel.storyId).await().toInt()
+        createMarkerColorDialog(color) {
+          database.setMarker(viewModel.storyModel.storyId, it)
+        }
+      }
       R.id.searchChapter -> searchUI.show()
       R.id.storyReviews -> {
         startActivity<ReviewsActivity>(

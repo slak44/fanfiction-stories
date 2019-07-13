@@ -80,6 +80,25 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
 }
 
 /**
+ * The dialog for picking a story marker color.
+ * @see MarkerButton
+ */
+fun Context.createMarkerColorDialog(selectedColor: Int, onPicked: (Int) -> Unit): ColorPickerDialog {
+  val colors = resources.getIntArray(R.array.markerColors)
+  val dialog = ColorPickerDialog(this, 0, onPicked, ColorPickerDialog.Params.Builder(this)
+      .setColors(colors)
+      .setColorContentDescriptions(resources.getStringArray(R.array.markerColorNames))
+      .setSelectedColor(selectedColor)
+      .setSortColors(false)
+      .build())
+  dialog.setTitle(R.string.select_marker_color)
+  dialog.setMessage(str(R.string.select_marker_color_msg))
+  dialog.setCancelable(true)
+  dialog.show()
+  return dialog
+}
+
+/**
  * A button that is rendered as a story's color marker, which is a colored triangle on the top-right
  * corner.
  * @see StoryCardView
@@ -110,20 +129,10 @@ class MarkerButton @JvmOverloads constructor(
 
   @UiThread
   override fun onClick(v: View) {
-    val colors = resources.getIntArray(R.array.markerColors)
-    val dialog = ColorPickerDialog(context, 0, {
+    context.createMarkerColorDialog(markerColor) {
       context.database.setMarker(storyId, it)
       markerColor = it
-    }, ColorPickerDialog.Params.Builder(context)
-        .setColors(colors)
-        .setColorContentDescriptions(resources.getStringArray(R.array.markerColorNames))
-        .setSelectedColor(markerColor)
-        .setSortColors(false)
-        .build())
-    dialog.setTitle(R.string.select_marker_color)
-    dialog.setMessage(str(R.string.select_marker_color_msg))
-    dialog.setCancelable(true)
-    dialog.show()
+    }
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
