@@ -45,11 +45,11 @@ val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMilli
  * Fetches the list of [CategoryLink]s at the target [categoryUrlComponent].
  * @see CategoryLink
  */
-suspend fun CoroutineScope.fetchCategoryData(categoryUrlComponent: String): Array<CategoryLink> {
+suspend fun fetchCategoryData(categoryUrlComponent: String): Array<CategoryLink> {
   categoryCache.hit(categoryUrlComponent).ifPresent { return it }
   val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
     Notifications.ERROR.show(defaultIntent(), R.string.error_with_categories, categoryUrlComponent)
-  }.await()
+  }
   val doc = Jsoup.parse(html)
   val result = doc.select("#list_output div").map {
     val urlComponent = it.child(0).attr("href")

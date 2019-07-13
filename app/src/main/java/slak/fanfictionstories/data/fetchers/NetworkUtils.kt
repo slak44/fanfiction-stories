@@ -6,6 +6,7 @@ import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.R
 import slak.fanfictionstories.utility.Static
 import java.net.URL
+import java.util.concurrent.Executors
 
 private const val NETWORK_WAIT_DELAY_MS = 500L
 private const val NET_TAG = "waitForNetwork"
@@ -33,7 +34,7 @@ private tailrec suspend fun waitForNetwork() {
 
 private const val RATE_LIMIT_MS = 300L
 private const val URL_TAG = "patientlyFetchURL"
-private val networkContext = newSingleThreadContext("NetworkThread")
+private val networkContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
 /**
  * Fetches the resource at the specified url, patiently. This function's calls run on the same thread.
@@ -43,11 +44,10 @@ private val networkContext = newSingleThreadContext("NetworkThread")
  * If the download fails, call the [onError] callback, wait for the rate limit again, and then call this function
  * recursively. As a result, [onError] is called for every failed download retry.
  */
-fun CoroutineScope.patientlyFetchURL(url: String,
-                                     onError: (t: Throwable) -> Unit): Deferred<String> = async(networkContext) {
+suspend fun patientlyFetchURL(url: String, onError: (t: Throwable) -> Unit): String = withContext(networkContext) {
   waitForNetwork()
   delay(RATE_LIMIT_MS)
-  return@async try {
+  return@withContext try {
     val text = URL(url).readText()
     Notifications.ERROR.cancel()
     text
@@ -55,6 +55,6 @@ fun CoroutineScope.patientlyFetchURL(url: String,
     // Something happened; retry
     Log.e(URL_TAG, "Failed to fetch url ($url)", t)
     onError(t)
-    patientlyFetchURL(url, onError).await()
+    patientlyFetchURL(url, onError)
   }
 }

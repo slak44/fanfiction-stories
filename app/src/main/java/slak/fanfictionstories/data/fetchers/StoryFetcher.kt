@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import slak.fanfictionstories.*
@@ -14,6 +15,7 @@ import slak.fanfictionstories.Notifications.Companion.readerIntent
 import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryModel
+import slak.fanfictionstories.data.writeChapter
 import slak.fanfictionstories.data.writeChapters
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.Optional
@@ -27,14 +29,14 @@ private const val TAG = "StoryFetcher"
  * Download metadata and every chapter, then store them in the database and on disk.
  * @returns the model we just fetched, or an empty optional if that story doesn't exist
  */
-suspend fun CoroutineScope.fetchAndWriteStory(storyId: StoryId): Optional<StoryModel> {
-  val model = fetchStoryModel(storyId).orElse { return Empty() }
+suspend fun fetchAndWriteStory(storyId: StoryId): Optional<StoryModel> = withContext(Dispatchers.Default) {
+  val model = fetchStoryModel(storyId).orElse { return@withContext Empty<StoryModel>() }
   model.status = StoryStatus.LOCAL
   Static.database.upsertModel(model)
   writeChapters(storyId, fetchChapterRange(Notifications.DOWNLOADING, model))
   Notifications.downloadedStory(model)
   Notifications.DOWNLOADING.cancel()
-  return model.opt()
+  return@withContext model.opt()
 }
 
 // It is unlikely that an update would invalidate the cache within 15 minutes
@@ -45,12 +47,12 @@ val storyCache = Cache<String>("StoryChapter", TimeUnit.MINUTES.toMillis(15))
  * @param storyId what story
  * @param chapter what chapter
  */
-suspend fun CoroutineScope.fetchChapter(storyId: StoryId, chapter: Long): String {
+suspend fun fetchChapter(storyId: StoryId, chapter: Long): String {
   val cacheKey = "id$storyId-ch$chapter"
   storyCache.hit(cacheKey).ifPresent { return it }
   val html = patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
     Notifications.ERROR.show(defaultIntent(), R.string.error_fetching_story_data, storyId.toString())
-  }.await()
+  }
   storyCache.update(cacheKey, html)
   return html
 }
@@ -69,7 +71,7 @@ fun extractChapterText(doc: Document): String {
  * Just download metadata for the [storyId].
  * @returns the [StoryModel] if it was there, or [Empty] if the story was not found
  */
-suspend fun CoroutineScope.fetchStoryModel(storyId: StoryId): Optional<StoryModel> {
+suspend fun fetchStoryModel(storyId: StoryId): Optional<StoryModel> {
   val chapterHtml = fetchChapter(storyId, 1)
   if (chapterHtml.contains("Story Not Found")) return Empty()
   return parseStoryModel(chapterHtml, storyId).opt()
@@ -109,7 +111,7 @@ fun CoroutineScope.fetchChapterRange(notif: Notifications, model: StoryModel,
  * @param oldModel the EXISTING [StoryModel], fetched from db
  * @returns if the update was done, the updated model, otherwise [Empty]
  */
-suspend fun CoroutineScope.updateStory(oldModel: StoryModel): Optional<StoryModel> {
+suspend fun updateStory(oldModel: StoryModel): Optional<StoryModel> {
   val newModel = fetchStoryModel(oldModel.storyId).orElse { return Empty() }
   Log.v(TAG, "Attempting update from\n   oldModel: $oldModel\nto newModel: $newModel")
   // Skip non-locals from updates, since the operation does not make sense for them
@@ -137,23 +139,23 @@ suspend fun CoroutineScope.updateStory(oldModel: StoryModel): Optional<StoryMode
   Log.v(TAG, "Replacing ${oldModel.storyId} in database")
   Static.database.upsertStory(newModel).await()
 
-  val channel: ReceiveChannel<String> = when {
-  // Special case when there is only one chapter
-    newModel.fragment.chapterCount == 1L -> {
+  withContext(Dispatchers.Default) {
+    // Special case when there is only one chapter
+    if (newModel.fragment.chapterCount == 1L) {
       Notifications.UPDATING.show(defaultIntent(), R.string.fetching_chapter, 1, 1, 0F, newModel.title)
-      val channel = Channel<String>(1)
-      channel.send(fetchChapter(newModel.storyId, 1))
-      channel.close()
-      channel
+      writeChapter(newModel.storyId, 1, fetchChapter(newModel.storyId, 1))
+    } else {
+      val channel = if (newModel.fragment.chapterCount > oldModel.fragment.chapterCount) {
+        // Try being smart, and only download delta when chapters were added
+        fetchChapterRange(Notifications.UPDATING, oldModel,
+            oldModel.fragment.chapterCount + 1, newModel.fragment.chapterCount)
+      } else {
+        // Download everything otherwise
+        fetchChapterRange(Notifications.UPDATING, oldModel)
+      }
+      writeChapters(newModel.storyId, channel)
     }
-  // Try being smart, and only download delta when chapters were added
-    newModel.fragment.chapterCount > oldModel.fragment.chapterCount ->
-      fetchChapterRange(Notifications.UPDATING, oldModel,
-          oldModel.fragment.chapterCount + 1, newModel.fragment.chapterCount)
-  // If nothing else, just re-download everything
-    else -> fetchChapterRange(Notifications.UPDATING, oldModel)
   }
-  writeChapters(newModel.storyId, channel)
   Notifications.UPDATING.cancel()
   return newModel.opt()
 }

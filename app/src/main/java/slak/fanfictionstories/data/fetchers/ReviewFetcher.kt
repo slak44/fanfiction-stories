@@ -41,12 +41,12 @@ val reviewCache = Cache<ReviewPage>("ReviewPage", TimeUnit.DAYS.toMillis(1))
  * returns `ReviewPage(emptyList(), NO_PAGES, 0)`
  * @see NO_PAGES
  */
-suspend fun CoroutineScope.getReviews(storyId: StoryId, chapter: Int, page: Int): ReviewPage {
+suspend fun getReviews(storyId: StoryId, chapter: Int, page: Int): ReviewPage {
   reviewCache.hit("$storyId/$chapter/$page").ifPresent { return it }
   val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
     Notifications.ERROR.show(defaultIntent(),
         R.string.error_fetching_review_data, storyId.toString())
-  }.await()
+  }
   Log.v(TAG, "storyId=($storyId), chapter=($chapter), page=($page)")
   val triple = parseReviewPage(storyId, html)
   Log.v(TAG, "pages=(${triple.second}), reviewCount=(${triple.third})")
