@@ -15,7 +15,6 @@ import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -63,15 +62,14 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
   private suspend fun getPage(page: Int): List<StoryListItem> {
     val canonPage = getCanonPage(parentLink, filters, page)
     metadata = canonPage.metadata
-    isFavorite = Static.database.isCanonFavorite(parentLink).await()
-    val storyData = canonPage.storyList.map {
-      // FIXME: run in parallel
-      val model = Static.database.storyById(it.storyId).await()
-          .orNull() ?: return@map StoryCardData(it)
-      it.progress = model.progress
-      it.status = model.status
-      return@map StoryCardData(it)
+    val favouriteDef = Static.database.isCanonFavorite(parentLink)
+    val storyMap = canonPage.storyList.map { it.storyId to it }.toMap()
+    for (dbStory in Static.database.storiesById(storyMap.keys).await()) {
+      storyMap.getValue(dbStory.storyId).progress = dbStory.progress
+      storyMap.getValue(dbStory.storyId).status = dbStory.status
     }
+    isFavorite = favouriteDef.await()
+    val storyData = storyMap.values.map { StoryCardData(it) }
     if (storyData.isEmpty()) return emptyList()
     return listOf(GroupTitle(str(R.string.page_x, page)), *storyData.toTypedArray())
   }

@@ -267,7 +267,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
    * Get a bunch of [StoryModel]s by their ids.
    * @return a list of the models (but the ones not found in the database will be missing from it)
    */
-  fun storiesById(storyIds: List<StoryId>): Deferred<List<StoryModel>> = useAsync {
+  fun storiesById(storyIds: Collection<StoryId>): Deferred<List<StoryModel>> = useAsync {
     select("stories")
         .whereAny("storyId", storyIds.map { it.toString() }.toTypedArray())
         .parseList(StoryModel.dbParser)
