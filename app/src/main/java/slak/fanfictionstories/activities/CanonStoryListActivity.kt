@@ -39,12 +39,6 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
 
   val filters = CanonFilters()
 
-  init {
-    launch(Dispatchers.Default) {
-      isFavorite = Static.database.isCanonFavorite(parentLink).await()
-    }
-  }
-
   @AnyThread
   fun toggleFavorite(): Job {
     val link = CategoryLink(
@@ -54,8 +48,8 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
     )
     return launch(Main) {
       isFavorite = !isFavorite
-      if (isFavorite) Static.database.removeFavoriteCanon(link).await()
-      else Static.database.addFavoriteCanon(link).await()
+      if (isFavorite) Static.database.addFavoriteCanon(link).await()
+      else Static.database.removeFavoriteCanon(link).await()
     }
   }
 
@@ -69,7 +63,9 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
   private suspend fun getPage(page: Int): List<StoryListItem> {
     val canonPage = getCanonPage(parentLink, filters, page)
     metadata = canonPage.metadata
+    isFavorite = Static.database.isCanonFavorite(parentLink).await()
     val storyData = canonPage.storyList.map {
+      // FIXME: run in parallel
       val model = Static.database.storyById(it.storyId).await()
           .orNull() ?: return@map StoryCardData(it)
       it.progress = model.progress
