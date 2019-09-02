@@ -67,6 +67,9 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
   private var _chapterEvents = MutableLiveData<ChapterEvent>()
   val chapterEvents: LiveData<ChapterEvent> get() = _chapterEvents
 
+  var searchQuery = ""
+    private set
+
   var searchMatches = listOf<Area>()
     private set
 
@@ -84,6 +87,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
   /** Update the [searchMatches] according to the new search string. */
   @AnyThread
   fun searchInChapter(chapterSpanned: Spanned, searchQuery: String) {
+    this.searchQuery = searchQuery
     searchCurrentMatchIdx = 0
     if (searchQuery.isEmpty()) searchMatches = listOf()
     var startIdx = chapterSpanned.indexOf(searchQuery)
@@ -350,7 +354,13 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     }
     CHAPTER_RELOADED -> {
       onChapterLoadFinished(true).invokeOnCompletion { err ->
-        if (err == null) searchUI.restoreState()
+        if (err == null) {
+          searchUI.restoreState()
+          rootLayout.post {
+            clearHighlights()
+            highlightMatches()
+          }
+        }
       }
       Unit
     }
@@ -361,7 +371,9 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     // We use the width for the <hr> elements, so the layout should be done
     if (!ViewCompat.isLaidOut(chapterText)) chapterText.requestLayout()
 
-    chapterText.setText(parseChapterHTML(), theme)
+    val chapterSpanned = parseChapterHTML()
+    chapterText.setText(chapterSpanned, theme)
+    if (viewModel.searchMatches.isNotEmpty()) viewModel.searchInChapter(chapterSpanned, viewModel.searchQuery)
 
     setChapterMetaText()
 
