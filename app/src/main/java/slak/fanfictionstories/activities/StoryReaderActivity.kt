@@ -19,6 +19,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
@@ -395,7 +396,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     nestedScroller.setOnScrollChangeListener { scroller, _, scrollY: Int, _, _ ->
       val rawPercentage = scrollY * 100.0 / (scrollingLayout.measuredHeight - scroller.bottom)
       // Make sure that values >100 get clamped to 100
-      val percentageScrolled = Math.min(rawPercentage, 100.0)
+      val percentageScrolled = rawPercentage.coerceAtMost(100.0)
       val scrollAbs = chapterText.scrollStateFromScrollY(scrollY)
       scrollSaver.notifyChanged(percentageScrolled, scrollAbs)
     }
@@ -491,7 +492,15 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
           database.setMarker(viewModel.storyModel.storyId, it)
         }
       }
-      R.id.searchChapter -> searchUI.show()
+      R.id.searchChapter -> {
+        searchUI.show()
+        rootLayout.post {
+          // Add some extra bottom margin
+          val params = navButtons.layoutParams as LinearLayout.LayoutParams
+          params.bottomMargin += searchUI.view!!.measuredHeight
+          navButtons.layoutParams = params
+        }
+      }
       R.id.storyReviews -> {
         startActivity<ReviewsActivity>(
             ReviewsActivity.INTENT_STORY_MODEL to viewModel.storyModel as Parcelable,
@@ -539,7 +548,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   private inner class SearchHighlightSpan(isCurrent: Boolean) : BackgroundColorSpan(
       getColor(if (isCurrent) R.color.textHighlightCurrent else R.color.textHighlightDefault))
   override fun highlightMatches() {
-    if (chapterText.spannable == null) throw IllegalStateException("Can't highlight missing text")
+    checkNotNull(chapterText.spannable) { "Can't highlight missing text" }
     viewModel.searchMatches.forEach {
       chapterText.spannable!!.setSpan(SearchHighlightSpan(false),
           it.startPosition, it.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -555,5 +564,9 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   override fun clearHighlights() {
     chapterText.spannable?.removeAllSpans(SearchHighlightSpan::class.java)
     chapterText.invalidate()
+    // Remove extra bottom margin
+    val params = navButtons.layoutParams as LinearLayout.LayoutParams
+    params.bottomMargin -= searchUI.view!!.height
+    navButtons.layoutParams = params
   }
 }
