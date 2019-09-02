@@ -561,7 +561,7 @@ open class StoryListViewModel :
   @UiThread
   fun updateStoryModel(position: Int, newModel: StoryModel) {
     val cardData = data[position] as? StoryCardData
-    require(cardData != null && cardData.model.storyId != newModel.storyId) {
+    require(cardData != null && cardData.model.storyId == newModel.storyId) {
       val old = cardData!!.model.storyId
       "Item at $position is not a StoryCardData with the correct storyId ($old vs ${newModel.storyId})"
     }
