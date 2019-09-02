@@ -16,6 +16,7 @@ import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.*
 import kotlin.collections.set
+import kotlin.math.sign
 
 /** Represents a [StoryModel]'s chapter download state. */
 enum class StoryStatus {
@@ -98,12 +99,12 @@ data class StoryModel(val storyId: StoryId,
                       val title: String,
                       val serializedChapterTitles: String?) : Parcelable, Serializable {
   init {
-    if (storyId <= 0) throw IllegalArgumentException("Story id is strictly positive")
-    if (authorId <= 0) throw IllegalArgumentException("Author id is strictly positive")
-    if (fragment.publishTime < 0) throw IllegalArgumentException("Publish time is positive")
-    if (fragment.updateTime < 0) throw IllegalArgumentException("Update time is positive")
-    if (fragment.chapterCount > 1 && serializedChapterTitles != null && chapterTitles().isEmpty()) {
-      throw IllegalArgumentException("There are chapters, but the titles do not exist")
+    require(storyId > 0) { "Story id is strictly positive" }
+    require(authorId > 0) { "Author id is strictly positive" }
+    require(fragment.publishTime >= 0) { "Publish time is positive" }
+    require(fragment.updateTime >= 0) { "Update time is positive" }
+    require(!(fragment.chapterCount > 1 && serializedChapterTitles != null && chapterTitles().isEmpty())) {
+      "There are chapters, but the titles do not exist"
     }
   }
 
@@ -196,42 +197,41 @@ data class StoryModel(val storyId: StoryId,
     fun fromPairs(pairs: List<Pair<String, Any?>>): StoryModel {
       val map = pairs.toMap()
       return StoryModel(
-          storyId = map["storyId"]!! as Long,
+          storyId = map.getValue("storyId") as Long,
           fragment = StoryModelFragment(
-              rating = map["rating"]!! as String,
-              language = map["language"]!! as String,
-              wordCount = map["wordCount"]!! as Long,
-              chapterCount = map["chapterCount"]!! as Long,
-              favorites = map["favorites"]!! as Long,
-              follows = map["follows"]!! as Long,
-              reviews = map["reviews"]!! as Long,
-              genres = map["genres"]!! as String,
-              characters = map["characters"]!! as String,
-              publishTime = map["publishTime"]!! as Long,
-              updateTime = map["updateTime"]!! as Long,
-              isComplete = map["isComplete"]!! as Long
+              rating = map.getValue("rating") as String,
+              language = map.getValue("language") as String,
+              wordCount = map.getValue("wordCount") as Long,
+              chapterCount = map.getValue("chapterCount") as Long,
+              favorites = map.getValue("favorites") as Long,
+              follows = map.getValue("follows") as Long,
+              reviews = map.getValue("reviews") as Long,
+              genres = map.getValue("genres") as String,
+              characters = map.getValue("characters") as String,
+              publishTime = map.getValue("publishTime") as Long,
+              updateTime = map.getValue("updateTime") as Long,
+              isComplete = map.getValue("isComplete") as Long
           ),
           progress = StoryProgress(
-              scrollProgress = map["scrollProgress"]!! as Double,
-              scrollAbsolute = map["scrollAbsolute"]!! as Double,
-              currentChapter = map["currentChapter"]!! as Long
+              scrollProgress = map.getValue("scrollProgress") as Double,
+              scrollAbsolute = map.getValue("scrollAbsolute") as Double,
+              currentChapter = map.getValue("currentChapter") as Long
           ),
-          addedTime = map["addedTime"]!! as Long,
-          lastReadTime = map["lastReadTime"]!! as Long,
-          status = StoryStatus.fromString(map["status"]!! as String),
-          canon = map["canon"]!! as String,
-          category = map["category"]!! as String,
-          summary = map["summary"]!! as String,
-          author = map["author"]!! as String,
-          authorId = map["authorId"]!! as Long,
-          title = map["title"]!! as String,
-          serializedChapterTitles = map["chapterTitles"]!! as String
+          addedTime = map.getValue("addedTime") as Long,
+          lastReadTime = map.getValue("lastReadTime") as Long,
+          status = StoryStatus.fromString(map.getValue("status") as String),
+          canon = map.getValue("canon") as String,
+          category = map.getValue("category") as String,
+          summary = map.getValue("summary") as String,
+          author = map.getValue("author") as String,
+          authorId = map.getValue("authorId") as Long,
+          title = map.getValue("title") as String,
+          serializedChapterTitles = map.getValue("chapterTitles") as String
       )
     }
 
     val dbParser = object : MapRowParser<StoryModel> {
-      override fun parseRow(columns: Map<String, Any?>) =
-          StoryModel.fromPairs(columns.entries.map { it.key to it.value })
+      override fun parseRow(columns: Map<String, Any?>) = fromPairs(columns.entries.map { it.key to it.value })
     }
   }
 }
@@ -345,7 +345,7 @@ fun orderByDialog(context: Context,
 }
 
 private val progress = Comparator<StoryModel> { m1, m2 ->
-  Math.signum(m1.progressAsPercentage() - m2.progressAsPercentage()).toInt()
+  sign(m1.progressAsPercentage() - m2.progressAsPercentage()).toInt()
 }
 private val wordCount = Comparator<StoryModel> { m1, m2 ->
   (m1.fragment.wordCount - m2.fragment.wordCount).toInt()
@@ -395,7 +395,7 @@ enum class OrderDirection {
   ASC, DESC;
 
   companion object {
-    operator fun get(index: Int) = OrderDirection.values()[index]
+    operator fun get(index: Int) = values()[index]
   }
 }
 
