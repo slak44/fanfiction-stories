@@ -18,6 +18,7 @@ import org.jetbrains.anko.db.update
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.activities.MainActivity
 import slak.fanfictionstories.data.Prefs
+import slak.fanfictionstories.data.chapterCount
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.data.fetchers.fetchStoryModel
@@ -199,6 +200,30 @@ val debugActions = mapOf(
         story.listFiles().sortedBy { it.name.split('.')[0].toInt() }.reversed().forEach { chapter ->
           chapter.renameTo(File("${story.absolutePath}/${chapter.name.split('.')[0].toInt() + 1}.html.deflated"))
         }
+      }
+    },
+    "Mark all downloaded remotes as local" to {
+      GlobalScope.launch {
+        for (story in Static.database.getStories().await()) {
+          if (chapterCount(story.storyId) == story.fragment.chapterCount.toInt()) {
+            Static.database.updateInStory(story.storyId, "status" to "local")
+            println(story.storyId)
+          }
+        }
+        println("done")
+      }
+    },
+    "Search for light green marked stories that are not local" to {
+      GlobalScope.launch {
+        val stories = Static.database.getStories().await()
+        val markers = Static.database.getMarkers(stories.map(StoryModel::storyId)).await()
+        for ((storyId, markerColor) in markers) {
+          if (markerColor == -6697984L && stories.first { it.storyId == storyId }.status != StoryStatus.LOCAL) {
+            println("GREEN NOT UPDATED: $storyId")
+            fetchAndWriteStory(storyId)
+          }
+        }
+        println("done")
       }
     }
 )
