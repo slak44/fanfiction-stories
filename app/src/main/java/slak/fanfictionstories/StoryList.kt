@@ -44,6 +44,7 @@ import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Optional
 import java.util.*
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.roundToInt
 
 /**
  * Adds a [ItemTouchHelper] to the recycler that lets stories be swiped right to be read.
@@ -177,7 +178,9 @@ class MarkerButton @JvmOverloads constructor(
  * @see StoryAdapter
  */
 class StoryCardView @JvmOverloads constructor(
-    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : CardView(context, attrs, defStyleAttr) {
   companion object {
     const val DEFAULT_ELEVATION = 7F
@@ -214,7 +217,7 @@ class StoryCardView @JvmOverloads constructor(
     authorText.text = str(R.string.by_author, model.author)
     canonText.text = str(R.string.in_canon, model.canon)
     wordsText.text = str(R.string.x_words, autoSuffixNumber(model.fragment.wordCount))
-    storyProgress.progress = Math.round(model.progressAsPercentage()).toInt()
+    storyProgress.progress = model.progressAsPercentage().roundToInt()
     isCompletedText.visibility = if (model.isComplete()) View.VISIBLE else View.INVISIBLE
     // Detail view
     languageText.text = model.fragment.language
@@ -330,7 +333,7 @@ class GroupTitleView @JvmOverloads constructor(
   /** Bind this view to its respective [GroupTitle]. */
   fun bindGroupTitle(item: GroupTitle, viewModel: StoryListViewModel) {
     setDrawable(item.isCollapsed)
-    setOnClickListener { _ ->
+    setOnClickListener {
       if (item.isCollapsed) item.uncollapse(viewModel)
       else item.collapse(viewModel)
       setDrawable(item.isCollapsed)
@@ -350,7 +353,9 @@ class GroupTitleView @JvmOverloads constructor(
 
 /** An indeterminate [ProgressBar] for use with [LoadingItem]. */
 class LoadingView @JvmOverloads constructor(
-    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : ProgressBar(ContextThemeWrapper(context, R.style.Widget_AppCompat_ProgressBar), attrs, defStyleAttr) {
   init {
     val lp = ViewGroup.MarginLayoutParams(MATCH_PARENT, WRAP_CONTENT)
@@ -384,9 +389,9 @@ sealed class StoryListItem : Parcelable {
     override val type get() = 1
 
     fun collapse(viewModel: StoryListViewModel) {
-      if (isCollapsed) throw IllegalStateException("Trying to collapse already collapsed header")
+      check(!isCollapsed) { "Trying to collapse already collapsed header" }
       val headerPos = viewModel.indexOf(this)
-      if (headerPos < 0) throw IllegalStateException("GroupTitle not part of viewModel")
+      check(headerPos >= 0) { "GroupTitle not part of viewModel" }
       val nextItemPos =
           viewModel.subList(headerPos + 1, viewModel.size).indexOfFirst { it !is StoryCardData }
       val hideEnd = if (nextItemPos < 0) viewModel.size - 1 else headerPos + nextItemPos
@@ -397,7 +402,7 @@ sealed class StoryListItem : Parcelable {
     }
 
     fun uncollapse(viewModel: StoryListViewModel) {
-      if (!isCollapsed) throw IllegalStateException("Trying to show already visible header")
+      check(isCollapsed) { "Trying to show already visible header" }
       collapsedModels.forEach { viewModel.undoHideStory(it) }
       isCollapsed = false
     }
@@ -555,20 +560,18 @@ open class StoryListViewModel :
    */
   @UiThread
   fun updateStoryModel(position: Int, newModel: StoryModel) {
-    if (data[position] !is StoryCardData ||
-        (data[position] as StoryCardData).model.storyId != newModel.storyId) {
-      throw IllegalArgumentException("Item at $position is not a StoryCardData with the correct" +
-          "storyId (${(data[position] as StoryCardData).model.storyId} vs ${newModel.storyId})")
+    val cardData = data[position] as? StoryCardData
+    require(cardData != null && cardData.model.storyId != newModel.storyId) {
+      val old = cardData!!.model.storyId
+      "Item at $position is not a StoryCardData with the correct storyId ($old vs ${newModel.storyId})"
     }
-    (data[position] as StoryCardData).model = newModel
+    cardData.model = newModel
     notifyItemRangeChanged(position, 1)
   }
 
   /** Update a story's card extension state. */
   fun updateStoryState(position: Int, state: Boolean) {
-    if (data[position] !is StoryCardData) {
-      throw IllegalArgumentException("Item at $position is not a StoryCardData")
-    }
+    require(data[position] is StoryCardData) { "Item at $position is not a StoryCardData" }
     data[position] = StoryCardData((data[position] as StoryCardData).model, state)
   }
 
@@ -593,7 +596,7 @@ open class StoryListViewModel :
   @UiThread
   fun hideStory(model: StoryModel) {
     val idx = indexOfStoryId(model.storyId)
-    if (idx == -1) throw IllegalArgumentException("Model not part of the list")
+    require(idx != -1) { "Model not part of the list" }
     Log.v(TAG, "hideStory: pos=$idx, model: $model")
     pendingItems[model] = idx
     data.removeAt(idx)
@@ -611,10 +614,10 @@ open class StoryListViewModel :
   @UiThread
   fun hideStoryRange(range: IntRange) {
     if (range.first == range.last) return // Nothing to do here
-    if (range.first < 0 || range.first >= size || range.first > range.last || range.last > size)
-      throw IllegalArgumentException("Illegal range for list")
-    if (subList(range.first, range.last).any { it !is StoryCardData })
-      throw IllegalArgumentException("Range contains non-stories")
+    require(range.first in 0 until size && range.first <= range.last && range.last <= size) {
+      "Illegal range for list"
+    }
+    require(subList(range.first, range.last).all { it is StoryCardData }) { "Range contains non-stories" }
     Log.v(TAG, "hideStoryRange: range=$range")
     subList(range.first, range.last).forEachIndexed { idx, it ->
       pendingItems[(it as StoryCardData).model] = range.first + idx
@@ -678,25 +681,25 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
   }
 
   @UiThread
-  override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-    val item = viewModel[position]
-    when (item) {
-      is StoryCardData -> {
-        val view = (holder as StoryViewHolder).view
-        view.onExtendedStateChange = { viewModel.updateStoryState(position, it) }
-        view.isExtended = item.isExtended
-        view.loadFromModel(item.model, viewModel)
-        view.bindRemoveBtn(item.model, viewModel, viewModel.opt())
-      }
-      is GroupTitle -> {
-        val str = SpannableString(item.title)
-        str.setSpan(UnderlineSpan(), 0, item.title.length, 0)
-        val titleView = (holder as TitleViewHolder).view
-        titleView.text = str
-        titleView.bindGroupTitle(item, viewModel)
-      }
-      is LoadingItem -> (holder as ProgressBarHolder).view.id = item.idx
+  override fun onBindViewHolder(
+      holder: RecyclerView.ViewHolder,
+      position: Int
+  ) = when (val item = viewModel[position]) {
+    is StoryCardData -> {
+      val view = (holder as StoryViewHolder).view
+      view.onExtendedStateChange = { viewModel.updateStoryState(position, it) }
+      view.isExtended = item.isExtended
+      view.loadFromModel(item.model, viewModel)
+      view.bindRemoveBtn(item.model, viewModel, viewModel.opt())
     }
+    is GroupTitle -> {
+      val str = SpannableString(item.title)
+      str.setSpan(UnderlineSpan(), 0, item.title.length, 0)
+      val titleView = (holder as TitleViewHolder).view
+      titleView.text = str
+      titleView.bindGroupTitle(item, viewModel)
+    }
+    is LoadingItem -> (holder as ProgressBarHolder).view.id = item.idx
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
