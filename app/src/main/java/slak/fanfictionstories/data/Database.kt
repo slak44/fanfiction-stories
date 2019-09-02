@@ -9,10 +9,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.newSingleThreadContext
 import org.jetbrains.anko.db.*
-import slak.fanfictionstories.StoriesChangeEvent
-import slak.fanfictionstories.StoryEventNotifier
-import slak.fanfictionstories.StoryId
-import slak.fanfictionstories.StoryModel
+import slak.fanfictionstories.*
 import slak.fanfictionstories.data.fetchers.CategoryLink
 import slak.fanfictionstories.utility.Optional
 import slak.fanfictionstories.utility.Static
@@ -310,7 +307,10 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
       model.addedTime = existingModel.addedTime
       model.lastReadTime = existingModel.lastReadTime
       model.progress = existingModel.progress
-      model.status = existingModel.status
+      if (model.status == StoryStatus.TRANSIENT ||
+          (model.status == StoryStatus.REMOTE && existingModel.status == StoryStatus.LOCAL)) {
+        model.status = existingModel.status
+      }
     }
     Static.database.upsertStory(model).await()
   }
