@@ -30,6 +30,8 @@ interface ISearchableActivity {
   fun highlightMatches()
   /** Remove all highlights. */
   fun clearHighlights()
+  /** Do stuff when the search UI hides itself. */
+  fun onHide()
 }
 fun ISearchableActivity.hasMatches() = getMatchCount() > 0
 fun ISearchableActivity.hasNoMatches() = !hasMatches()
@@ -79,6 +81,7 @@ class SearchUIFragment : Fragment() {
       searchLayout.visibility = View.GONE
       hideSoftKeyboard(searchLayout.windowToken)
       sActivity.clearHighlights()
+      sActivity.onHide()
     }
     return searchLayout
   }
@@ -157,11 +160,12 @@ class SearchUIFragment : Fragment() {
     sActivity.highlightMatches()
   }
 
-  /** Call after reinitializing this fragment. */
+  /** Call after reinitializing this fragment. Return true if visible. */
   @UiThread
-  fun restoreState() {
-    if (searchLayout.visibility != View.VISIBLE) return
+  fun restoreState(): Boolean {
+    if (searchLayout.visibility != View.VISIBLE) return false
     sActivity.highlightMatches()
     if (sActivity.hasMatches()) updateMatchText(sActivity.getCurrentHighlight() + 1)
+    return true
   }
 }

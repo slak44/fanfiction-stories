@@ -354,12 +354,12 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     }
     CHAPTER_RELOADED -> {
       onChapterLoadFinished(true).invokeOnCompletion { err ->
-        if (err == null) {
-          searchUI.restoreState()
-          rootLayout.post {
-            clearHighlights()
-            highlightMatches()
-          }
+        if (err != null) return@invokeOnCompletion
+        val isVisible = searchUI.restoreState()
+        rootLayout.post {
+          clearHighlights()
+          highlightMatches()
+          adjustNavForSearch(removeMargin = !isVisible)
         }
       }
       Unit
@@ -507,10 +507,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       R.id.searchChapter -> {
         searchUI.show()
         rootLayout.post {
-          // Add some extra bottom margin
-          val params = navButtons.layoutParams as LinearLayout.LayoutParams
-          params.bottomMargin += searchUI.view!!.measuredHeight
-          navButtons.layoutParams = params
+          adjustNavForSearch(removeMargin = false)
         }
       }
       R.id.storyReviews -> {
@@ -576,9 +573,15 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   override fun clearHighlights() {
     chapterText.spannable?.removeAllSpans(SearchHighlightSpan::class.java)
     chapterText.invalidate()
-    // Remove extra bottom margin
+  }
+
+  private fun adjustNavForSearch(removeMargin: Boolean) {
     val params = navButtons.layoutParams as LinearLayout.LayoutParams
-    params.bottomMargin -= searchUI.view!!.height
+    params.bottomMargin += searchUI.view!!.measuredHeight * (if (removeMargin) -1 else 1)
     navButtons.layoutParams = params
+  }
+
+  override fun onHide() {
+    adjustNavForSearch(removeMargin = true)
   }
 }
