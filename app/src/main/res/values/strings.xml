@@ -182,6 +182,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="error_fetching_story_data">Couldn\'t fetch story data (id %s); Retrying…</string>
     <string name="error_fetching_review_data">Couldn\'t fetch reviews (id %s); Retrying…</string>
     <string name="error_fetching_author_data">Couldn\'t fetch author data (id %s); Retrying…</string>
+    <string name="error_fetching_image_data">Couldn\'t fetch image data; Retrying…</string>
     <string name="checking_one_story">Checking %s for updates</string>
     <string name="checking_story">
 "Checking %s for updates
@@ -234,6 +235,8 @@ Story %d of %d (%.2f%%)"
     <string name="remove_local">Erase Local</string>
     <string name="select_marker_color">Pick marker color</string>
     <string name="select_marker_color_msg">You can annotate each story with a colored marker</string>
+    <string name="story_image">Story Image</string>
+    <string name="image_desc">Image</string>
 
     <!-- Story reader -->
     <string name="go_to_top">Go to Top</string>
@@ -298,6 +301,7 @@ Story %d of %d (%.2f%%)"
         <hr/>
         %s
     ]]></string>
+    <string name="image_author">Author Image</string>
 
     <!-- Error dialogs -->
     <string name="got_it">Got it</string>

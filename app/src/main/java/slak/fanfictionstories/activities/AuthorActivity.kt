@@ -63,11 +63,12 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
     val (authorName, authorId) = if (intent.action == ACTION_VIEW) {
       val pathSegments = intent?.data?.pathSegments
           ?: throw IllegalArgumentException("Missing intent data")
-      pathSegments[2] to pathSegments[1].toLong()
+      val name = pathSegments.getOrNull(2) ?: str(R.string.loading)
+      name to pathSegments[1].toLong()
     } else {
-      val name = intent.getStringExtra(AuthorActivity.INTENT_AUTHOR_NAME)
-      val id = intent.getLongExtra(AuthorActivity.INTENT_AUTHOR_ID, -1L)
-      if (id == -1L) throw IllegalArgumentException("Intent has no author id")
+      val name = intent.getStringExtra(INTENT_AUTHOR_NAME)
+      val id = intent.getLongExtra(INTENT_AUTHOR_ID, -1L)
+      require(id != -1L) { "Intent has no author id" }
       name to id
     }
 
@@ -158,7 +159,7 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
             formattedUpdateDate,
             str(R.string.bio_author_id, viewModel.author.id),
             viewModel.author.bioHtml)
-        HtmlFragment.newInstance(html)
+        HtmlFragment.newInstance(html, viewModel.author.imageUrl)
       }
       1 -> StoryListFragment.newInstance(ArrayList(viewModel.author.userStories))
       2 -> StoryListFragment.newInstance(ArrayList(viewModel.author.favoriteStories))
@@ -172,12 +173,14 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
   internal class HtmlFragment : Fragment() {
     companion object {
       private const val ARG_HTML_TEXT = "html_text"
+      private const val ARG_HTML_IMG_URL = "html_img_url"
 
       /** Returns a new instance of this fragment for the given HTML text. */
-      fun newInstance(html: String): HtmlFragment {
+      fun newInstance(html: String, imageUrl: String?): HtmlFragment {
         val fragment = HtmlFragment()
         val args = Bundle()
         args.putString(ARG_HTML_TEXT, html)
+        args.putString(ARG_HTML_IMG_URL, imageUrl)
         fragment.arguments = args
         return fragment
       }
@@ -189,6 +192,13 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
         rootView.html.text = Html.fromHtml(arguments!!.getString(ARG_HTML_TEXT),
             Html.FROM_HTML_MODE_LEGACY, null, HrSpan.tagHandlerFactory(rootView.width))
         rootView.html.movementMethod = LinkMovementMethod.getInstance()
+        val imageUrl = arguments!!.getString(ARG_HTML_IMG_URL)
+        rootView.authorImage.visibility = if (imageUrl == null) View.GONE else View.VISIBLE
+        rootView.authorImage.setOnClickListener {
+          (activity as CoroutineScopeActivity).launch {
+            Static.currentCtx.showImage(R.string.image_author, imageUrl!!)
+          }
+        }
       }
       return rootView
     }

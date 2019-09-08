@@ -14,6 +14,7 @@ import slak.fanfictionstories.StoryProgress
 import slak.fanfictionstories.StoryStatus
 import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.data.fetchers.ParserUtils.authorIdFromAuthor
+import slak.fanfictionstories.data.fetchers.ParserUtils.convertImageUrl
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryMetadata
 import slak.fanfictionstories.data.fetchers.ParserUtils.unescape
 import java.util.concurrent.TimeUnit
@@ -47,7 +48,7 @@ suspend fun getAuthor(authorId: Long): Author {
         R.string.error_fetching_author_data, authorId.toString())
   }
   val doc = Jsoup.parse(html)
-  val authorName = doc.select("#content_wrapper_inner > span").first().text()
+  val authorName = doc.selectFirst("#content_wrapper_inner > span").text()
   val stories = doc.getElementById("st_inside").children().map {
     parseStoryElement(it, authorName, authorId)
   }
@@ -59,7 +60,7 @@ suspend fun getAuthor(authorId: Long): Author {
     val authorElement = it.select("a").first()
     return@map Pair(authorIdFromAuthor(authorElement), authorElement.text())
   }
-  // USING TABLES FOR ALIGNMENT IN 2018 GOD DAMMIT
+  // USING TABLES FOR ALIGNMENT IN 2019 GOD DAMMIT
   val retardedTableCell =
       doc.select("#content_wrapper_inner > table table[cellpadding=\"4\"] td[colspan=\"2\"]").last()
   val timeSpans = retardedTableCell.select("span")
@@ -71,9 +72,9 @@ suspend fun getAuthor(authorId: Long): Author {
       // Updated date, seconds
       if (timeSpans.size > 1) timeSpans[1].attr("data-xutime").toLong() else 0,
       // Country name
-      retardedTableCell.select("img").first()?.attr("title"),
+      retardedTableCell.selectFirst("img")?.attr("title"),
       // Image url
-      doc.select("#bio > img").first()?.attr("src"),
+      doc.selectFirst("#bio > img")?.attr("data-original"),
       // User bio (first child is image)
       Elements(doc.getElementById("bio").children().drop(1)).outerHtml(),
       stories,
@@ -86,6 +87,7 @@ suspend fun getAuthor(authorId: Long): Author {
 
 private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?): StoryModel {
   val authorAnchor = it.select("a:not(.reviews)").last()
+  val stitle = it.selectFirst("a.stitle")
   return StoryModel(
       storyId = it.attr("data-storyid").toLong(),
       fragment = parseStoryMetadata(it.children().last().children().last(), 3),
@@ -98,7 +100,8 @@ private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?)
       summary = it.children().last().textNodes().first().text(),
       author = authorName ?: authorAnchor.text(),
       authorId = authorId ?: authorIdFromAuthor(authorAnchor),
-      title = it.select("a.stitle").first().textNodes().last().text(),
+      title = stitle.textNodes().last().text(),
+      imageUrl = convertImageUrl(stitle.children().first()?.attr("data-original")),
       serializedChapterTitles = null,
       addedTime = null,
       lastReadTime = null

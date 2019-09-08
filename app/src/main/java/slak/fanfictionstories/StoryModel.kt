@@ -46,27 +46,28 @@ enum class StoryStatus {
 
   /** Convert from an instance of [StoryStatus] to a user-viewable string */
   fun toUIString(): String = when (this) {
-  // We pretend TRANSIENT == REMOTE, because they are the same as far as the user is concerned
-    TRANSIENT -> str(R.string.remote)
-    REMOTE -> str(R.string.remote)
+    // We pretend TRANSIENT == REMOTE, because they are the same as far as the user is concerned
+    TRANSIENT, REMOTE -> str(R.string.remote)
     LOCAL -> str(R.string.local)
   }
 }
 
 /** The story data that can be extracted from the text div. */
 @Parcelize
-data class StoryModelFragment(val rating: String,
-                              val language: String,
-                              val wordCount: Long,
-                              val chapterCount: Long,
-                              val favorites: Long,
-                              val follows: Long,
-                              val reviews: Long,
-                              val genres: String,
-                              val characters: String,
-                              val publishTime: Long,
-                              val updateTime: Long,
-                              val isComplete: Long) : Parcelable, Serializable
+data class StoryModelFragment(
+    val rating: String,
+    val language: String,
+    val wordCount: Long,
+    val chapterCount: Long,
+    val favorites: Long,
+    val follows: Long,
+    val reviews: Long,
+    val genres: String,
+    val characters: String,
+    val publishTime: Long,
+    val updateTime: Long,
+    val isComplete: Long
+) : Parcelable, Serializable
 
 /**
  * Stores the progress made in a story.
@@ -76,28 +77,33 @@ data class StoryModelFragment(val rating: String,
  * @param currentChapter the current chapter
  */
 @Parcelize
-data class StoryProgress(val scrollProgress: Double = 0.0,
-                         val scrollAbsolute: Double = 0.0,
-                         val currentChapter: Long = 0L) : Parcelable, Serializable
+data class StoryProgress(
+    val scrollProgress: Double = 0.0,
+    val scrollAbsolute: Double = 0.0,
+    val currentChapter: Long = 0L
+) : Parcelable, Serializable
 
 /** Alias the story ids to [Long] for clarity. */
 typealias StoryId = Long
 
 /** Models a story, representing all of its data except for the chapter text. */
 @Parcelize
-data class StoryModel(val storyId: StoryId,
-                      var status: StoryStatus,
-                      var progress: StoryProgress,
-                      val fragment: StoryModelFragment,
-                      var addedTime: Long?,
-                      var lastReadTime: Long?,
-                      val canon: String,
-                      val category: String?,
-                      val summary: String,
-                      val author: String,
-                      val authorId: Long,
-                      val title: String,
-                      val serializedChapterTitles: String?) : Parcelable, Serializable {
+data class StoryModel(
+    val storyId: StoryId,
+    var status: StoryStatus,
+    var progress: StoryProgress,
+    val fragment: StoryModelFragment,
+    var addedTime: Long?,
+    var lastReadTime: Long?,
+    val canon: String,
+    val category: String?,
+    val summary: String,
+    val author: String,
+    val authorId: Long,
+    val title: String,
+    val serializedChapterTitles: String?,
+    val imageUrl: String
+) : Parcelable, Serializable {
   init {
     require(storyId > 0) { "Story id is strictly positive" }
     require(authorId > 0) { "Author id is strictly positive" }
@@ -183,7 +189,8 @@ data class StoryModel(val storyId: StoryId,
       "canon" to canon,
       "chapterTitles" to serializedChapterTitles,
       "addedTime" to addedTime,
-      "lastReadTime" to lastReadTime
+      "lastReadTime" to lastReadTime,
+      "imageUrl" to imageUrl
   )
 
   /** @returns a list of pairs for writing to the database */
@@ -226,7 +233,8 @@ data class StoryModel(val storyId: StoryId,
           author = map.getValue("author") as String,
           authorId = map.getValue("authorId") as Long,
           title = map.getValue("title") as String,
-          serializedChapterTitles = map.getValue("chapterTitles") as String
+          serializedChapterTitles = map.getValue("chapterTitles") as String,
+          imageUrl = map.getValue("imageUrl") as String
       )
     }
 

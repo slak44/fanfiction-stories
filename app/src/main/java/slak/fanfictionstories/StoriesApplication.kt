@@ -27,6 +27,7 @@ class StoriesApplication : Application() {
     // Init the caches from disk (all async)
     categoryCache.deserialize()
     storyCache.deserialize()
+    imageCache.deserialize()
     canonListCache.deserialize()
     authorCache.deserialize()
     reviewCache.deserialize()

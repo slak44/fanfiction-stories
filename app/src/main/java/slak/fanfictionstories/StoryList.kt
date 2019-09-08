@@ -286,6 +286,11 @@ class StoryCardView @JvmOverloads constructor(
           AuthorActivity.INTENT_AUTHOR_ID to model.authorId,
           AuthorActivity.INTENT_AUTHOR_NAME to model.author)
     }
+    storyImageBtn.setOnClickListener {
+      scope.launch(Main) {
+        context.showImage(R.string.story_image, model.imageUrl)
+      }
+    }
   }
 
   /** The remove button will not work without the [viewModel]. It will be [View.GONE]'d instead. */

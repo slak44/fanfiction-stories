@@ -1,6 +1,5 @@
 package slak.fanfictionstories.data.fetchers
 
-import android.util.Log
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
@@ -40,17 +39,12 @@ object ParserUtils {
   fun parseStoryMetadata(element: Element, stripLeading: Int): StoryModelFragment {
     val metadata: String = element.html()
     val ratingLang = Regex("Rated: (?:<a .*?>Fiction[ ]+?)?(.*?)(?:</a>)? - (.*?) -", regexOpts)
-        .find(metadata) ?: {
-      val ex = IllegalStateException("Can't match rating/language")
-      Log.e("parseStoryMetadata", "", ex)
-      throw ex
-    }()
+        .find(metadata)
+        .let { checkNotNull(it) { "Can't match rating/language" } }
 
-    val words = Regex("Words: ([0-9,]+)", regexOpts).find(metadata) ?: {
-      val ex = IllegalStateException("Can't match word count")
-      Log.e("parseStoryMetadata", "", ex)
-      throw ex
-    }()
+    val words = Regex("Words: ([0-9,]+)", regexOpts)
+        .find(metadata)
+        .let { checkNotNull(it) { "Can't match word count" } }
 
     val chapters = Regex("Chapters: ([0-9,]+)", regexOpts).find(metadata)
     val favs = Regex("Favs: ([0-9,]+)", regexOpts).find(metadata)
@@ -117,6 +111,19 @@ object ParserUtils {
   }
 
   /**
+   * Gets the largest image size, from the image urls found around the pages.
+   *
+   * If passed null, returns the default image of ffnet.
+   */
+  fun convertImageUrl(imageUrl: String?): String {
+    if (imageUrl == null) return "//ff74.b-cdn.net/static/images/d_60_90.jpg"
+    // Strip the last URL segment, like 75 below
+    // https://ff74.b-cdn.net/image/5816992/75/
+    // And add 180 instead, the currently largest known image size they serve
+    return imageUrl.dropLast(1).trimEnd { it.isDigit() } + "180"
+  }
+
+  /**
    * Parses all required metadata for a [StoryModel].
    * @param html html string of any chapter of the story
    */
@@ -133,9 +140,11 @@ object ParserUtils {
 
     val doc = Jsoup.parse(html)
 
-    val author = doc.select("#profile_top > a.xcontrast_txt")[0]
-    val title = doc.select("#profile_top > b.xcontrast_txt")[0].text()
-    val summary = doc.select("#profile_top > div.xcontrast_txt")[0].text()
+    val author = doc.selectFirst("#profile_top > a.xcontrast_txt")
+    val title = doc.selectFirst("#profile_top > b.xcontrast_txt").text()
+    val summary = doc.selectFirst("#profile_top > div.xcontrast_txt").text()
+
+    val imgUrl = convertImageUrl(doc.selectFirst("#profile_top > span > img.cimage")?.attr("src"))
 
     val navLinks = doc.select("#pre_story_links > span.lc-left > a.xcontrast_txt")
     val canon = unescape(navLinks.last().text())
@@ -143,7 +152,7 @@ object ParserUtils {
         if (navLinks.size == 1) str(R.string.crossovers)
         else unescape(navLinks.dropLast(1).last().text())
 
-    val meta = parseStoryMetadata(doc.select("#profile_top > span.xgray")[0], 0)
+    val meta = parseStoryMetadata(doc.selectFirst("#profile_top > span.xgray"), 0)
 
     // Parse chapter titles only if there are any chapters to name
     val chapterTitles: String? = if (meta.chapterCount == 1L) {
@@ -169,7 +178,8 @@ object ParserUtils {
         title = title,
         serializedChapterTitles = chapterTitles,
         addedTime = System.currentTimeMillis(),
-        lastReadTime = 0
+        lastReadTime = 0,
+        imageUrl = imgUrl
     )
   }
 

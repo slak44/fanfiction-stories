@@ -9,6 +9,7 @@ import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.data.fetchers.ParserUtils.authorIdFromAuthor
+import slak.fanfictionstories.data.fetchers.ParserUtils.convertImageUrl
 import slak.fanfictionstories.data.fetchers.ParserUtils.getPageCountFromNav
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryMetadata
 import slak.fanfictionstories.data.fetchers.ParserUtils.unescape
@@ -226,6 +227,8 @@ private fun parseHtml(html: String): CanonPage {
     val storyId = it.child(0).attr("href").split('/')[2].toLong()
     // The one and only text node there is the title
     val title = unescape(it.child(0).text())
+    // The first child is the a.stitle href, and that one's first child is the image
+    val imgUrl = convertImageUrl(it.child(0).child(0)?.attr("data-original"))
 
     // The author 'a' element is the second last before the reviews
     val authorAnchor = it.select("a:not(.reviews)").last()
@@ -247,6 +250,7 @@ private fun parseHtml(html: String): CanonPage {
         category = categoryTitle,
         summary = summary,
         title = title,
+        imageUrl = imgUrl,
         serializedChapterTitles = null,
         addedTime = null,
         lastReadTime = null

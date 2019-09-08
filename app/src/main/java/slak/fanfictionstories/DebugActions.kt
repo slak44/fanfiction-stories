@@ -225,5 +225,26 @@ val debugActions = mapOf(
         }
         println("done")
       }
+    },
+    "Fetch image URLs for old stories" to {
+      GlobalScope.launch {
+        val stories = Static.database
+            .getStories()
+            .await()
+            .asSequence()
+            .filter { it.imageUrl.isBlank() }
+            .map { it.storyId }
+        for (storyId in stories) {
+          val newModel = fetchStoryModel(storyId)
+          if (newModel is Empty) {
+            println("skipping $storyId")
+            continue
+          }
+          val url = newModel.get().imageUrl
+          Static.database.updateInStory(storyId, "imageUrl" to url)
+          println("dealt with $storyId")
+        }
+        Notifications.DONE_UPDATING.show(defaultIntent(), "Done")
+      }
     }
 )

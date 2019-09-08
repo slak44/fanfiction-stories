@@ -5,8 +5,10 @@ import android.app.AlertDialog
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
+import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
@@ -22,6 +24,7 @@ import android.text.Layout
 import android.text.Spannable
 import android.text.style.ReplacementSpan
 import android.util.SparseBooleanArray
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
@@ -29,12 +32,15 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
+import kotlinx.android.synthetic.main.dialog_image_viewer.view.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.sync.Mutex
+import org.jetbrains.anko.displayMetrics
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.R
+import slak.fanfictionstories.data.fetchers.fetchImage
 
 /**
  * Create an error dialog with a title, message and a dismiss button.
@@ -52,6 +58,25 @@ fun errorDialog(title: String, msg: String) = GlobalScope.launch(Main) {
 
 /** Same as [errorDialog], but with [StringRes] texts. */
 fun errorDialog(@StringRes title: Int, @StringRes msg: Int) = errorDialog(str(title), str(msg))
+
+suspend fun Context.showImage(@StringRes dialogTitle: Int, imageUrl: String) {
+  val layout = LayoutInflater.from(this).inflate(R.layout.dialog_image_viewer, null, false)
+  layout.image.setImageBitmap(withContext(Dispatchers.Default) {
+    val bm = fetchImage(imageUrl)
+    // Arbitrarily get a max width for the scaled image
+    val width = displayMetrics.widthPixels - 300
+    // Arbitrarily set a max scaling ratio
+    val ratio = (width / bm.width).coerceAtMost(3)
+    Bitmap.createScaledBitmap(bm, bm.width * ratio, bm.height * ratio, false)
+  })
+  withContext(Main) {
+    AlertDialog.Builder(this@showImage)
+        .setTitle(dialogTitle)
+        .setView(layout)
+        .create()
+        .show()
+  }
+}
 
 /** Emulates android:iconTint. Must be called in onPrepareOptionsMenu for each icon. */
 fun MenuItem.iconTint(@ColorRes colorRes: Int, theme: Resources.Theme) {

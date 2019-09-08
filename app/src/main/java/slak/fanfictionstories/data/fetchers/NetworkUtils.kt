@@ -44,17 +44,27 @@ private val networkContext = Executors.newSingleThreadExecutor().asCoroutineDisp
  * If the download fails, call the [onError] callback, wait for the rate limit again, and then call this function
  * recursively. As a result, [onError] is called for every failed download retry.
  */
-suspend fun patientlyFetchURL(url: String, onError: (t: Throwable) -> Unit): String = withContext(networkContext) {
+@UseExperimental(ExperimentalStdlibApi::class)
+suspend fun patientlyFetchURL(url: String, onError: (t: Throwable) -> Unit) =
+    patientlyFetchURLBytes(url, onError).decodeToString()
+
+/**
+ * @see patientlyFetchURL
+ */
+suspend fun patientlyFetchURLBytes(
+    url: String,
+    onError: (t: Throwable) -> Unit
+): ByteArray = withContext(networkContext) {
   waitForNetwork()
   delay(RATE_LIMIT_MS)
   return@withContext try {
-    val text = URL(url).readText()
+    val text = URL(url).readBytes()
     Notifications.ERROR.cancel()
     text
   } catch (t: Throwable) {
     // Something happened; retry
     Log.e(URL_TAG, "Failed to fetch url ($url)", t)
     onError(t)
-    patientlyFetchURL(url, onError)
+    patientlyFetchURLBytes(url, onError)
   }
 }

@@ -16,7 +16,7 @@ import slak.fanfictionstories.utility.opt
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
-class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 7), CoroutineScope {
+class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 8), CoroutineScope {
   companion object {
     private var instance: DatabaseHelper? = null
 
@@ -58,7 +58,8 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         updateTime INTEGER NOT NULL,
         storyId INTEGER UNIQUE NOT NULL,
         addedTime INTEGER NOT NULL,
-        lastReadTime INTEGER NOT NULL
+        lastReadTime INTEGER NOT NULL,
+        imageUrl TEXT NOT NULL
       );
     """.trimIndent())
     db.execSQL("""
@@ -163,11 +164,13 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
       """.trimIndent())
     } else if (oldVersion == 6 && newVersion == 7) {
       db.execSQL("""
-      CREATE TABLE IF NOT EXISTS storyQueue (
-        storyId INTEGER PRIMARY KEY NOT NULL UNIQUE,
-        indexInQueue INTEGER CHECK(indexInQueue >= 0) NOT NULL UNIQUE
-      );
-    """.trimIndent())
+        CREATE TABLE IF NOT EXISTS storyQueue (
+          storyId INTEGER PRIMARY KEY NOT NULL UNIQUE,
+          indexInQueue INTEGER CHECK(indexInQueue >= 0) NOT NULL UNIQUE
+        );
+      """.trimIndent())
+    } else if (oldVersion == 7 && newVersion == 8) {
+      db.execSQL("ALTER TABLE stories ADD COLUMN imageUrl TEXT NOT NULL DEFAULT '';")
     }
   }
 

@@ -1,5 +1,7 @@
 package slak.fanfictionstories.data.fetchers
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -158,4 +160,15 @@ suspend fun updateStory(oldModel: StoryModel): Optional<StoryModel> {
   }
   Notifications.UPDATING.cancel()
   return newModel.opt()
+}
+
+val imageCache = Cache<ByteArray>("Images", TimeUnit.DAYS.toMillis(3))
+
+suspend fun fetchImage(imageUrl: String): Bitmap {
+  imageCache.hit(imageUrl).ifPresent { return BitmapFactory.decodeByteArray(it, 0, it.size) }
+  val bytes = patientlyFetchURLBytes("https:$imageUrl") {
+    Notifications.ERROR.show(defaultIntent(), R.string.error_fetching_image_data)
+  }
+  imageCache.update(imageUrl, bytes)
+  return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 }
