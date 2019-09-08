@@ -25,15 +25,14 @@ import android.widget.ProgressBar
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
 import org.jetbrains.anko.longToast
+import org.jetbrains.anko.startActivity
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
@@ -43,6 +42,7 @@ import slak.fanfictionstories.data.*
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
+import java.lang.IllegalStateException
 import kotlin.coroutines.CoroutineContext
 
 /** Handles the data required to display story chapters. */
@@ -249,7 +249,23 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
 
       // Setup chapter switching buttons
       prevChapterBtn.setOnClickListener { viewModel.changeChapter(viewModel.currentChapter - 1) }
-      nextChapterBtn.setOnClickListener { viewModel.changeChapter(viewModel.currentChapter + 1) }
+      nextChapterBtn.setOnClickListener {
+        if (nextChapterBtn.text == str(R.string.next)) {
+          viewModel.changeChapter(viewModel.currentChapter + 1)
+          return@setOnClickListener
+        }
+        val model = runBlocking {
+          val queue = database.getStoryQueue()
+          val currentIdxInQueue = queue.first { it.first == viewModel.storyModel.storyId }.second
+          val nextStory = queue.first { it.second == currentIdxInQueue + 1 }
+          database.storyById(nextStory.first).await()
+              .orElseThrow(IllegalStateException("Story queue inconsistent"))
+        }
+        val intent = Intent(this@StoryReaderActivity, StoryReaderActivity::class.java)
+        intent.putExtra(INTENT_STORY_MODEL, model as Parcelable)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        startActivity(intent)
+      }
       selectChapterBtn.setOnClickListener { showChapterSelectDialog() }
 
       // Save story for the resume button
@@ -367,6 +383,23 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     }
   }
 
+  @UiThread
+  private suspend fun updateNextButtonText() {
+    if (viewModel.currentChapter == viewModel.storyModel.fragment.chapterCount) {
+      val queue = database.getStoryQueue()
+      val currentInQueue = queue.firstOrNull { it.first == viewModel.storyModel.storyId }?.second
+      if (currentInQueue == null || currentInQueue.toInt() == queue.size - 1) {
+        nextChapterBtn.isEnabled = false
+        return
+      }
+      nextChapterBtn.text = str(R.string.next_chapter_with_queue)
+      nextChapterBtn.isEnabled = true
+    } else {
+      nextChapterBtn.text = str(R.string.next)
+      nextChapterBtn.isEnabled = true
+    }
+  }
+
   @AnyThread
   private fun onChapterLoadFinished(restoreScroll: Boolean) = launch(Main) {
     // We use the width for the <hr> elements, so the layout should be done
@@ -387,8 +420,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
 
     // Disable buttons if there is nowhere for them to go
     prevChapterBtn.isEnabled = viewModel.currentChapter != 1L
-    nextChapterBtn.isEnabled =
-        viewModel.currentChapter != viewModel.storyModel.fragment.chapterCount
+    updateNextButtonText()
     selectChapterBtn.isEnabled = viewModel.storyModel.fragment.chapterCount > 1L
 
     // Tint button icons grey if the buttons are disabled, white if not
@@ -472,6 +504,9 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     menu.findItem(R.id.goToTop).iconTint(R.color.white, theme)
     menu.findItem(R.id.goToBottom).iconTint(R.color.white, theme)
     menu.findItem(R.id.nextChapter).isEnabled = nextChapterBtn.isEnabled
+    menu.findItem(R.id.nextChapter).title =
+        if (nextChapterBtn.text == str(R.string.next)) str(R.string.next_chapter)
+        else str(R.string.next_chapter_with_queue)
     menu.findItem(R.id.prevChapter).isEnabled = prevChapterBtn.isEnabled
     menu.findItem(R.id.selectChapter).isEnabled = selectChapterBtn.isEnabled
     menu.findItem(R.id.downloadLocal).isVisible = viewModel.storyModel.status != StoryStatus.LOCAL

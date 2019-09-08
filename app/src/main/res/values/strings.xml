@@ -238,6 +238,7 @@ Story %d of %d (%.2f%%)"
     <string name="go_to_top">Go to Top</string>
     <string name="go_to_bottom">Go to Bottom</string>
     <string name="next_chapter">Next Chapter</string>
+    <string name="next_chapter_with_queue">Next Story In Queue</string>
     <string name="prev_chapter">Previous Chapter</string>
     <string name="set_marker_color">Set Marker Color</string>
     <string name="reviews">Story Reviews</string>
