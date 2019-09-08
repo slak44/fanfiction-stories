@@ -5,16 +5,16 @@ import android.support.v7.widget.LinearLayoutManager
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ImageSpan
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_story_queue.*
 import kotlinx.android.synthetic.main.activity_story_queue.toolbar
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.database
-import slak.fanfictionstories.utility.CoroutineScopeActivity
-import slak.fanfictionstories.utility.obtainViewModel
-import slak.fanfictionstories.utility.px
-import slak.fanfictionstories.utility.str
+import slak.fanfictionstories.utility.*
 
 class StoryQueueActivity : CoroutineScopeActivity() {
   private lateinit var viewModel: StoryListViewModel
@@ -58,6 +58,16 @@ class StoryQueueActivity : CoroutineScopeActivity() {
     queueEmpty.visibility = View.VISIBLE
   }
 
+  override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+    menu.findItem(R.id.clearQueue).iconTint(R.color.white, theme)
+    return super.onPrepareOptionsMenu(menu)
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    menuInflater.inflate(R.menu.menu_story_queue, menu)
+    return true
+  }
+
   override fun onBackPressed() {
     viewModel.clearData()
     super.onBackPressed()
@@ -65,6 +75,11 @@ class StoryQueueActivity : CoroutineScopeActivity() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
+      R.id.clearQueue -> launch(Main) {
+        database.clearQueue()
+        viewModel.clearData()
+        setupEmptyQueueText()
+      }
       android.R.id.home -> onBackPressed()
       else -> return super.onOptionsItemSelected(item)
     }

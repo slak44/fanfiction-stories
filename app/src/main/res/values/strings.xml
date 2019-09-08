@@ -85,6 +85,7 @@ Untouched Stories: %d (%.2f%%)"
 
     <!-- Story queue activity -->
     <string name="story_queue">Story Queue</string>
+    <string name="clear_queue">Clear Queue</string>
     <string name="queue_empty">Queue is empty. Open a story and add it to the queue from the menu IMG</string>
     <string name="add_to_queue">Add To Queue</string>
     <string name="already_in_queue">Story already in queue</string>

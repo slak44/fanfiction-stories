@@ -210,6 +210,8 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     )
   }
 
+  suspend fun clearQueue() = withDBContext { truncate("storyQueue") }
+
   suspend fun getStoryQueue(): List<Pair<StoryId, Long>> = withDBContext { getStoryQueueImpl() }
 
   /**
