@@ -131,7 +131,7 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
 
   @UiThread
   private fun setAppbarText() {
-    title = viewModel.metadata.canonTitle.orElse(str(R.string.loading___))
+    title = viewModel.metadata.canonTitle.orElse(str(R.string.loading))
     viewModel.metadata.unfilteredStoryCount.ifPresent {
       supportActionBar?.subtitle = str(R.string.x_stories, it)
     }

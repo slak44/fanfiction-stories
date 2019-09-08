@@ -71,6 +71,14 @@
                 android:text="@string/story_list"/>
 
             <TextView
+                android:id="@+id/storyQueueBtn"
+                style="@style/AppTheme.Touchable.ListItem.WithDrawable"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableStart="@drawable/ic_view_carousel_black_24dp"
+                android:text="@string/story_queue" />
+
+            <TextView
                 android:id="@+id/storyBrowseBtn"
                 style="@style/AppTheme.Touchable.ListItem.WithDrawable"
                 android:drawableStart="@drawable/ic_library_books_black_24dp"

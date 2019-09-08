@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.support.annotation.AnyThread
 import android.support.annotation.UiThread
+import android.support.design.widget.Snackbar
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AlertDialog
@@ -475,6 +476,10 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     menu.findItem(R.id.selectChapter).isEnabled = selectChapterBtn.isEnabled
     menu.findItem(R.id.downloadLocal).isVisible = viewModel.storyModel.status != StoryStatus.LOCAL
     menu.findItem(R.id.checkForUpdate).isVisible = viewModel.storyModel.status == StoryStatus.LOCAL
+    launch(Main) {
+      val isInQueue = database.getStoryQueue().firstOrNull { it.first == viewModel.storyModel.storyId }
+      menu.findItem(R.id.toggleQueue).isChecked = (isInQueue != null)
+    }
     return super.onPrepareOptionsMenu(menu)
   }
 
@@ -498,6 +503,21 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       R.id.selectChapter -> showChapterSelectDialog()
       R.id.nextChapter -> nextChapterBtn.callOnClick()
       R.id.prevChapter -> prevChapterBtn.callOnClick()
+      R.id.toggleQueue -> launch(Main) {
+        if (!item.isChecked) {
+          val wasAdded = database.addToQueue(viewModel.storyModel.storyId)
+          val str =
+              if (wasAdded) str(R.string.added_story_from_queue, viewModel.storyModel.title)
+              else str(R.string.already_in_queue)
+          Snackbar.make(chapterText, str, Snackbar.LENGTH_LONG).show()
+          item.title = str(R.string.remove_from_queue)
+        } else {
+          database.removeFromQueue(viewModel.storyModel.storyId)
+          val str = str(R.string.removed_story_from_queue, viewModel.storyModel.title)
+          Snackbar.make(chapterText, str, Snackbar.LENGTH_LONG).show()
+          item.title = str(R.string.add_to_queue)
+        }
+      }
       R.id.setMarkerColor -> launch(Main) {
         val color = Static.database.getMarker(viewModel.storyModel.storyId).await().toInt()
         createMarkerColorDialog(color) {

@@ -269,7 +269,7 @@ class StoryCardView @JvmOverloads constructor(
     storyMainContent.setOnClickListener { isExtended = !isExtended }
     addBtn.setOnClickListener {
       addBtn.isEnabled = false
-      addBtn.text = str(R.string.adding___)
+      addBtn.text = str(R.string.adding)
       scope.launch(Main) {
         val newModel = fetchAndWriteStory(model.storyId)
         if (newModel is Empty) {

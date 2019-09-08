@@ -32,6 +32,7 @@ class MainActivity : CoroutineScopeActivity() {
     storyListBtn.setOnClickListener { startActivity<StoryListActivity>() }
     storyBrowseBtn.setOnClickListener { startActivity<SelectCategoryActivity>() }
     favoriteCanonsBtn.setOnClickListener { startActivity<FavoriteCanonsActivity>() }
+    storyQueueBtn.setOnClickListener { startActivity<StoryQueueActivity>() }
 
     // Using a RecyclerView is a massive hack so we don't reimplement createStorySwipeHelper()
     // START HACK

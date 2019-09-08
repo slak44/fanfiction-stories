@@ -291,7 +291,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:text="@string/remove"/>
+                android:text="@string/remove_local"/>
 
             <Button
                 android:id="@+id/authorBtn"

@@ -1,13 +1,12 @@
 package slak.fanfictionstories.data
 
+import android.content.ContentValues
 import android.content.Context
+import android.database.DatabaseUtils
 import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.*
 import org.jetbrains.anko.db.*
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.fetchers.CategoryLink
@@ -17,7 +16,7 @@ import slak.fanfictionstories.utility.opt
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
-class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 6), CoroutineScope {
+class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 7), CoroutineScope {
   companion object {
     private var instance: DatabaseHelper? = null
 
@@ -73,6 +72,12 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         title TEXT NOT NULL,
         storyCountText TEXT NOT NULL,
         urlComponent TEXT NOT NULL UNIQUE PRIMARY KEY
+      );
+    """.trimIndent())
+    db.execSQL("""
+      CREATE TABLE IF NOT EXISTS storyQueue (
+        storyId INTEGER PRIMARY KEY NOT NULL UNIQUE,
+        indexInQueue INTEGER CHECK(indexInQueue >= 0) NOT NULL UNIQUE
       );
     """.trimIndent())
   }
@@ -156,6 +161,13 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
           urlComponent TEXT NOT NULL UNIQUE PRIMARY KEY
         );
       """.trimIndent())
+    } else if (oldVersion == 6 && newVersion == 7) {
+      db.execSQL("""
+      CREATE TABLE IF NOT EXISTS storyQueue (
+        storyId INTEGER PRIMARY KEY NOT NULL UNIQUE,
+        indexInQueue INTEGER CHECK(indexInQueue >= 0) NOT NULL UNIQUE
+      );
+    """.trimIndent())
     }
   }
 
@@ -170,6 +182,61 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
 
   /** Like [ManagedSQLiteOpenHelper.use], but using [async]. */
   fun <T> useAsync(f: SQLiteDatabase.() -> T): Deferred<T> = async(databaseContext) { use(f) }
+
+  private suspend fun <T> withDBContext(f: SQLiteDatabase.() -> T) = withContext(databaseContext) { use(f) }
+
+  private fun SQLiteDatabase.truncate(tableName: String) = delete(tableName, null, null)
+
+  private fun storyQueueSize(): Long = use {
+    DatabaseUtils.queryNumEntries(this, "storyQueue")
+  }
+
+  private fun getStoryQueueImpl(): List<Pair<StoryId, Long>> = use {
+    select("storyQueue").parseList(object : MapRowParser<Pair<StoryId, Long>> {
+      override fun parseRow(columns: Map<String, Any?>) =
+          (columns.getValue("storyId") as StoryId) to (columns.getValue("indexInQueue") as Long)
+    })
+  }
+
+  private fun insertInQueue(storyId: StoryId, indexInQueue: Long): Long = use {
+    insertWithOnConflict(
+        "storyQueue",
+        null,
+        ContentValues().apply {
+          put("storyId", storyId)
+          put("indexInQueue", indexInQueue)
+        },
+        SQLiteDatabase.CONFLICT_IGNORE
+    )
+  }
+
+  suspend fun getStoryQueue(): List<Pair<StoryId, Long>> = withDBContext { getStoryQueueImpl() }
+
+  /**
+   * Returns true if it was added, false otherwise.
+   */
+  suspend fun addToQueue(storyId: StoryId): Boolean = withDBContext {
+    var wasInserted = false
+    transaction {
+      val size = storyQueueSize()
+      val insertedId = insertInQueue(storyId, size)
+      wasInserted = insertedId != -1L
+    }
+    return@withDBContext wasInserted
+  }
+
+  suspend fun removeFromQueue(storyId: StoryId) = withDBContext {
+    transaction {
+      val newQueue = getStoryQueueImpl()
+          .filter { it.first != storyId }
+          .sortedBy { it.second }
+          .mapIndexed { idx, (storyId, _) -> storyId to idx }
+      truncate("storyQueue")
+      for ((newId, indexInQueue) in newQueue) {
+        insertInQueue(newId, indexInQueue.toLong())
+      }
+    }
+  }
 
   /** Fetch all [CategoryLink]s of favorited canons. */
   fun getFavoriteCanons(): Deferred<List<CategoryLink>> = useAsync {

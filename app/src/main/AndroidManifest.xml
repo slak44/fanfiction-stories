@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest package="slak.fanfictionstories"
-          xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:name=".StoriesApplication"
@@ -22,8 +16,9 @@
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
@@ -33,7 +28,7 @@
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.activities.MainActivity"/>
+                android:value="slak.fanfictionstories.activities.MainActivity" />
         </activity>
         <activity
             android:name=".activities.StoryReaderActivity"
@@ -41,21 +36,24 @@
             android:launchMode="singleTop"
             android:parentActivityName=".activities.StoryListActivity"
             android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:host="fanfiction.net" />
+                <data android:pathPrefix="/s" />
+
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+
+                <data android:host="www.fanfiction.net" />
+            </intent-filter>
+
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.activities.StoryListActivity"/>
-            <intent-filter>
-                <data android:scheme="http"/>
-                <data android:scheme="https"/>
-                <data android:host="www.fanfiction.net"/>
-                <data android:host="fanfiction.net"/>
-                <data android:pathPrefix="/s"/>
-
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-
-                <action android:name="android.intent.action.VIEW"/>
-            </intent-filter>
+                android:value="slak.fanfictionstories.activities.StoryListActivity" />
         </activity>
         <activity
             android:name=".activities.SelectCategoryActivity"
@@ -64,7 +62,7 @@
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.activities.MainActivity"/>
+                android:value="slak.fanfictionstories.activities.MainActivity" />
         </activity>
         <activity
             android:name=".activities.BrowseCategoryActivity"
@@ -73,7 +71,7 @@
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.activities.SelectCategoryActivity"/>
+                android:value="slak.fanfictionstories.activities.SelectCategoryActivity" />
         </activity>
         <activity
             android:name=".activities.CanonStoryListActivity"
@@ -82,60 +80,70 @@
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.activities.BrowseCategoryActivity"/>
+                android:value="slak.fanfictionstories.activities.BrowseCategoryActivity" />
         </activity>
         <activity
             android:name=".activities.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:parentActivityName=".activities.MainActivity"
-            android:theme="@style/AppTheme">
-        </activity>
+            android:theme="@style/AppTheme" />
         <activity
             android:name=".activities.ReviewsActivity"
             android:label="@string/app_name"
             android:parentActivityName=".activities.StoryReaderActivity"
             android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:host="fanfiction.net" />
+                <data android:pathPrefix="/r" />
+
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+
+                <data android:host="www.fanfiction.net" />
+            </intent-filter>
+
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="slak.fanfictionstories.activities.StoryReaderActivity"/>
-
-            <intent-filter>
-                <data android:scheme="http"/>
-                <data android:scheme="https"/>
-                <data android:host="www.fanfiction.net"/>
-                <data android:host="fanfiction.net"/>
-                <data android:pathPrefix="/r"/>
-
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-
-                <action android:name="android.intent.action.VIEW"/>
-            </intent-filter>
+                android:value="slak.fanfictionstories.activities.StoryReaderActivity" />
         </activity>
         <activity
             android:name=".activities.AuthorActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme">
-
             <intent-filter>
-                <data android:scheme="http"/>
-                <data android:scheme="https"/>
-                <data android:host="www.fanfiction.net"/>
-                <data android:host="fanfiction.net"/>
-                <data android:pathPrefix="/u"/>
+                <action android:name="android.intent.action.VIEW" />
 
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
 
-                <action android:name="android.intent.action.VIEW"/>
+                <data android:host="fanfiction.net" />
+                <data android:pathPrefix="/u" />
+
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+
+                <data android:host="www.fanfiction.net" />
             </intent-filter>
         </activity>
-        <activity android:name=".activities.FavoriteCanonsActivity"/>
-        <activity android:name=".utility.CoroutineScopeActivity"/>
+        <activity android:name=".activities.StoryQueueActivity" android:label="@string/story_queue" />
+        <activity android:name=".activities.FavoriteCanonsActivity" />
+        <activity android:name=".utility.CoroutineScopeActivity" />
 
         <service
             android:name=".UpdateService"
-            android:permission="android.permission.BIND_JOB_SERVICE"/>
+            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>

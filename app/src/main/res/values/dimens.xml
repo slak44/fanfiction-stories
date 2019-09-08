@@ -8,6 +8,8 @@
     <dimen name="text_margin">16dp</dimen>
     <dimen name="dialog_view_margin">16dp</dimen>
 
+    <dimen name="story_queue_empty_icon_size">16dp</dimen>
+
     <dimen name="story_list_title_underline_margin">2dip</dimen>
     <dimen name="story_list_title_divider_height">1dip</dimen>
     <dimen name="story_list_scroller_width">16dp</dimen>

@@ -2,7 +2,6 @@
     <!-- General -->
     <string name="app_name">Fanfiction Stories</string>
     <string name="add">Add</string>
-    <string name="remove">Remove</string>
     <string name="download">Download</string>
     <string name="completed">Completed</string>
     <string name="in_progress">In-progress</string>
@@ -13,7 +12,7 @@
     <string name="view_author">View Author</string>
     <string name="sort_by">Order by…</string>
     <string name="group_by">Group by…</string>
-    <string name="loading...">Loading…</string>
+    <string name="loading">Loading…</string>
     <string name="crossovers">Crossovers</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
@@ -83,6 +82,15 @@ Untouched Stories: %d (%.2f%%)"
     <string name="resume_story">Resume reading:</string>
     <string name="nothing_to_resume">No story to resume</string>
     <string name="story_browse">Browse Stories</string>
+
+    <!-- Story queue activity -->
+    <string name="story_queue">Story Queue</string>
+    <string name="queue_empty">Queue is empty. Open a story and add it to the queue from the menu IMG</string>
+    <string name="add_to_queue">Add To Queue</string>
+    <string name="already_in_queue">Story already in queue</string>
+    <string name="added_story_from_queue">Story \'%s\' added to queue</string>
+    <string name="remove_from_queue">Remove From Queue</string>
+    <string name="removed_story_from_queue">Story \'%s\' removed from queue</string>
 
     <!-- Favorite Canons activity -->
     <string name="removed_favorite_snack">Removed link</string>
@@ -221,7 +229,8 @@ Story %d of %d (%.2f%%)"
     <string name="x_reviews">%d reviews</string>
     <string name="x_favorites">%d favorites</string>
     <string name="x_follows">%d follows</string>
-    <string name="adding...">Downloading…</string>
+    <string name="adding">Downloading…</string>
+    <string name="remove_local">Erase Local</string>
     <string name="select_marker_color">Pick marker color</string>
     <string name="select_marker_color_msg">You can annotate each story with a colored marker</string>
 
@@ -233,7 +242,7 @@ Story %d of %d (%.2f%%)"
     <string name="set_marker_color">Set Marker Color</string>
     <string name="reviews">Story Reviews</string>
     <string name="check_for_updates">Check For Updates</string>
-    <string name="delete_local">Remove Local Data</string>
+    <string name="delete_local">Remove Local Chapter Data</string>
     <string name="data_deleted">Story data deleted</string>
     <string name="approx_x_words_left">Approx. %s words left</string>
     <string name="story_not_found">Story not found</string>

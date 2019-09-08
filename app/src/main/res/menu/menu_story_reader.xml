@@ -31,6 +31,12 @@
         android:visible="true"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/toggleQueue"
+        android:title="@string/add_to_queue"
+        android:checkable="true"
+        android:visible="true"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/setMarkerColor"
         android:title="@string/set_marker_color"
         android:visible="true"
