@@ -246,5 +246,28 @@ val debugActions = mapOf(
         }
         Notifications.DONE_UPDATING.show(defaultIntent(), "Done")
       }
+    },
+    "Repair database from downloaded stories" to {
+      GlobalScope.launch {
+        val stories = Static.database.getLocalStories().await().map { it.storyId }
+        val onLocal = File(Static.currentCtx.getExternalFilesDir(null), "storiesData").list().map { it.toLong() }
+        val delta = onLocal - stories
+        if (delta.isEmpty()) {
+          Log.e(TAG, "none found")
+        }
+        val markers = Static.database.getMarkers(delta).await()
+        for (storyId in delta) {
+          val model = fetchStoryModel(storyId)
+          if (model is Empty) {
+            Log.e(TAG, "Story not found: $storyId")
+            continue
+          }
+          model.get().status = StoryStatus.LOCAL
+          Static.database.upsertStory(model.get()).await()
+          if (markers[storyId] == 0L) {
+            Static.database.setMarker(storyId, -6697984)
+          }
+        }
+      }
     }
 )
