@@ -109,7 +109,7 @@ data class StoryModel(
     require(authorId > 0) { "Author id is strictly positive" }
     require(fragment.publishTime >= 0) { "Publish time is positive" }
     require(fragment.updateTime >= 0) { "Update time is positive" }
-    require(!(fragment.chapterCount > 1 && serializedChapterTitles != null && chapterTitles().isEmpty())) {
+    require(!(fragment.chapterCount > 1 && serializedChapterTitles != null && serializedChapterTitles.isEmpty())) {
       "There are chapters, but the titles do not exist"
     }
   }
