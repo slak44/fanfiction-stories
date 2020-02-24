@@ -159,8 +159,8 @@ fun CoroutineScope.infinitePageScroll(recycler: RecyclerView, lm: LinearLayoutMa
   recycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
     private val addPageLock = Mutex()
     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-      // We only want scroll downs
-      if (dy <= 0) return
+      // We only want vertical scroll events
+      if (dy == 0) return
       val visibleItemCount = lm.childCount
       val totalItemCount = lm.itemCount
       val pastVisibleItems = lm.findFirstVisibleItemPosition()
