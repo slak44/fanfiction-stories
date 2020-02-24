@@ -8,10 +8,7 @@ import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PorterDuff
+import android.graphics.*
 import android.os.IBinder
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
@@ -82,7 +79,7 @@ suspend fun Context.showImage(@StringRes dialogTitle: Int, imageUrl: String) {
 fun MenuItem.iconTint(@ColorRes colorRes: Int, theme: Resources.Theme) {
   val color = Static.res.getColor(colorRes, theme)
   val drawable = this.icon
-  drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+  drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
   this.icon = drawable
 }
 
@@ -92,7 +89,7 @@ enum class Direction { LEFT, TOP, RIGHT, BOTTOM }
 fun TextView.drawableTint(@ColorRes colorRes: Int, theme: Resources.Theme, which: Direction) {
   val color = Static.res.getColor(colorRes, theme)
   val drawable = compoundDrawables[which.ordinal] ?: return
-  drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+  drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
   when (which) {
     Direction.LEFT -> setCompoundDrawablesWithIntrinsicBounds(drawable, compoundDrawables[1],
         compoundDrawables[2], compoundDrawables[3])

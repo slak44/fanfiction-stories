@@ -18,13 +18,17 @@ import org.jetbrains.anko.intentFor
 import slak.fanfictionstories.activities.StoryListActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.utility.Optional
+import java.util.*
 
-enum class Notifications(val duration: Duration,
-                         @StringRes val titleStringId: Int,
-                         @DrawableRes val icon: Int,
-                         @StringRes val channelTitleId: Int,
-                         @StringRes val channelDescId: Int,
-                         val group: Optional<String> = Empty()) {
+enum class Notifications(
+    private val duration: Duration,
+    @StringRes val titleStringId: Int,
+    @DrawableRes val icon: Int,
+    @StringRes val channelTitleId: Int,
+    @StringRes val channelDescId: Int,
+    val group: Optional<String> = Empty()
+) {
   DOWNLOADING(
       Duration.ONGOING,
       R.string.downloading_story,
@@ -66,19 +70,19 @@ enum class Notifications(val duration: Duration,
 
   init {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) GlobalScope.launch(Main) {
-      Notifications.values().forEach {
+      for (value in values()) {
         val channel = NotificationChannel(
-            it.channelKey,
-            str(it.channelTitleId),
+            value.channelKey,
+            str(value.channelTitleId),
             NotificationManager.IMPORTANCE_LOW)
-        channel.description = str(it.channelDescId)
+        channel.description = str(value.channelDescId)
         Static.notifManager.createNotificationChannel(channel)
       }
     }
   }
 
   private val reqId = ordinal
-  private val channelKey = "${name.toLowerCase()}_channel"
+  private val channelKey = "${name.toLowerCase(Locale.ROOT)}_channel"
 
   private var reqIdCounter = 0xC000000
   fun create(target: Intent, content: String): NotificationCompat.Builder {
@@ -121,6 +125,7 @@ enum class Notifications(val duration: Duration,
            builder: NotificationCompat.Builder.() -> NotificationCompat.Builder) {
     Static.notifManager.notify(reqId, builder(create(target, content)).build())
   }
+
   fun show(target: Intent,
            @StringRes content: Int,
            builder: NotificationCompat.Builder.() -> NotificationCompat.Builder) {
@@ -138,12 +143,12 @@ enum class Notifications(val duration: Duration,
     private var downloadedIds = 0xA000000
     fun downloadedStory(model: StoryModel) {
       // Show group
-      Notifications.DONE_DOWNLOADING.show(defaultIntent(), R.string.downloaded_stories) {
+      DONE_DOWNLOADING.show(defaultIntent(), R.string.downloaded_stories) {
         setGroupSummary(true)
         setContentTitle(str(R.string.downloaded_stories))
       }
-      // Show actual download notif
-      val notif = Notifications.DONE_DOWNLOADING.create(readerIntent(model), model.title).build()
+      // Show actual download notifications
+      val notif = DONE_DOWNLOADING.create(readerIntent(model), model.title).build()
       Static.notifManager.notify(++downloadedIds, notif)
     }
 
@@ -151,17 +156,17 @@ enum class Notifications(val duration: Duration,
     private var updatedIds = UPDATED_STORIES_ID_BEGIN
     fun updatedStories(stories: List<StoryModel>) {
       if (stories.isEmpty()) {
-        Notifications.DONE_UPDATING.show(defaultIntent(), R.string.no_updates_found)
+        DONE_UPDATING.show(defaultIntent(), R.string.no_updates_found)
         return
       }
       // Show group
-      Notifications.DONE_UPDATING.show(defaultIntent(), str(R.string.x_stories_updated, stories.size)) {
+      DONE_UPDATING.show(defaultIntent(), str(R.string.x_stories_updated, stories.size)) {
         setGroupSummary(true)
         setContentTitle(str(R.string.updated_stories))
       }
-      // Show actual title notifs
+      // Show actual title notifications
       stories.forEach {
-        val notif = Notifications.DONE_UPDATING.create(readerIntent(it), it.title).build()
+        val notif = DONE_UPDATING.create(readerIntent(it), it.title).build()
         Static.notifManager.notify(++updatedIds, notif)
       }
       updatedIds = UPDATED_STORIES_ID_BEGIN

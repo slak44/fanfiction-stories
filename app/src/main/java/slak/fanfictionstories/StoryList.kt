@@ -5,10 +5,7 @@ import android.arch.lifecycle.MediatorLiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.PorterDuff
+import android.graphics.*
 import android.os.Parcelable
 import android.support.annotation.AnyThread
 import android.support.annotation.UiThread
@@ -351,7 +348,7 @@ class GroupTitleView @JvmOverloads constructor(
         if (isCollapsed) R.drawable.ic_keyboard_arrow_up_black_24dp
         else R.drawable.ic_keyboard_arrow_down_black_24dp
     val drawable = Static.res.getDrawable(drawableId, context.theme)
-    drawable.setColorFilter(currentTextColor, PorterDuff.Mode.SRC_IN)
+    drawable.colorFilter = PorterDuffColorFilter(currentTextColor, PorterDuff.Mode.SRC_IN)
     setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
   }
 }

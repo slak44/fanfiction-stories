@@ -34,7 +34,7 @@ import java.util.*
 
 /** Stores and fetches the data required for a [ReviewsActivity]. */
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-class ReviewsViewModel(val model: StoryModel, initialChapter: java.lang.Integer) :
+class ReviewsViewModel(val model: StoryModel, initialChapter: Integer) :
     ViewModel(),
     IAdapterDataObservable by AdapterDataObservable() {
   private val _chapter = MutableLiveData<Int>()
@@ -118,7 +118,7 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
       return@runBlocking model to chapter
     } else {
       val chapter = intent.getIntExtra(INTENT_TARGET_CHAPTER, ALL_CHAPTERS)
-      val model: StoryModel = intent.getParcelableExtra(ReviewsActivity.INTENT_STORY_MODEL)
+      val model: StoryModel = intent.getParcelableExtra(INTENT_STORY_MODEL)!!
       model to chapter
     }
 
