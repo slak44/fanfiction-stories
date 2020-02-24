@@ -1,19 +1,21 @@
 package slak.fanfictionstories.activities
 
-import androidx.lifecycle.ViewModel
 import android.content.Intent.ACTION_VIEW
 import android.os.Bundle
-import androidx.annotation.UiThread
-import com.google.android.material.tabs.TabLayout
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
-import androidx.appcompat.app.AlertDialog
-import androidx.recyclerview.widget.LinearLayoutManager
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.*
 import android.widget.ProgressBar
+import androidx.activity.viewModels
+import androidx.annotation.UiThread
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.activity_author.*
 import kotlinx.android.synthetic.main.fragment_author_bio.view.*
 import kotlinx.android.synthetic.main.fragment_author_stories.view.*
@@ -44,7 +46,8 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
     const val INTENT_AUTHOR_NAME = "author_name_intent"
   }
 
-  private lateinit var viewModel: AuthorViewModel
+  private lateinit var author: Author
+  private val viewModel: AuthorViewModel by viewModels { ViewModelFactory(author) }
 
   /**
    * The [android.support.v4.view.PagerAdapter] that will provide fragments for each of the sections. We use a
@@ -78,7 +81,7 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
     showLoading()
 
     launch(Main) {
-      viewModel = obtainViewModel(getAuthor(authorId))
+      author = getAuthor(authorId)
       title = viewModel.author.name
       invalidateOptionsMenu()
       sectionsPagerAdapter = SectionsPagerAdapter(supportFragmentManager)
@@ -222,7 +225,7 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
       }
     }
 
-    private lateinit var viewModel: StoryListViewModel
+    private val viewModel by lazy { ViewModelProvider(this).get(StoryListViewModel::class.java) }
 
     @UiThread
     private fun initLayout(rootView: View, stories: List<StoryModel>) {
@@ -256,7 +259,6 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-      viewModel = obtainViewModel()
       val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
       // FIXME maybe replace storyById with storiesById
       viewModel.launch(Main) {

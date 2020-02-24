@@ -8,6 +8,7 @@ import android.text.style.ImageSpan
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.activity.viewModels
 import kotlinx.android.synthetic.main.activity_story_queue.*
 import kotlinx.android.synthetic.main.activity_story_queue.toolbar
 import kotlinx.coroutines.Dispatchers.Main
@@ -17,11 +18,10 @@ import slak.fanfictionstories.data.database
 import slak.fanfictionstories.utility.*
 
 class StoryQueueActivity : CoroutineScopeActivity() {
-  private lateinit var viewModel: StoryListViewModel
+  private val viewModel: StoryListViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = obtainViewModel()
 
     setContentView(R.layout.activity_story_queue)
     setSupportActionBar(toolbar)

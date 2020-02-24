@@ -1,18 +1,8 @@
 package slak.fanfictionstories.activities
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import android.content.Intent
-import android.graphics.Rect
 import android.os.Bundle
 import android.os.Parcelable
-import androidx.annotation.AnyThread
-import androidx.annotation.UiThread
-import com.google.android.material.snackbar.Snackbar
-import androidx.core.view.ViewCompat
-import androidx.core.widget.NestedScrollView
-import androidx.appcompat.app.AlertDialog
 import android.text.Html
 import android.text.Spanned
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -23,19 +13,31 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import androidx.activity.viewModels
+import androidx.annotation.AnyThread
+import androidx.annotation.UiThread
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.view.ViewCompat
+import androidx.core.widget.NestedScrollView
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
 import org.jetbrains.anko.longToast
-import org.jetbrains.anko.sp
 import org.jetbrains.anko.startActivity
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
@@ -46,7 +48,6 @@ import slak.fanfictionstories.data.*
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryModel
 import slak.fanfictionstories.utility.*
-import java.lang.IllegalStateException
 import kotlin.coroutines.CoroutineContext
 
 /** Handles the data required to display story chapters. */
@@ -185,7 +186,8 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     private const val TAG_SEARCH_FRAGMENT = "search"
   }
 
-  private lateinit var viewModel: ReaderViewModel
+  private lateinit var storyModel: StoryModel
+  private val viewModel: ReaderViewModel by viewModels { ViewModelFactory(storyModel) }
   private lateinit var searchUI: SearchUIFragment
 
   override val loading: ProgressBar
@@ -198,28 +200,26 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
    * story doesn't exist
    */
   @UiThread
-  private suspend fun obtainModel(): Long = when {
+  private suspend fun obtainModel(): Long = when (intent.action) {
     // Responding to links
-    intent.action == Intent.ACTION_VIEW -> {
+    Intent.ACTION_VIEW -> {
       val pathSegments = intent.data?.pathSegments ?: throw IllegalArgumentException("Intent data is empty")
       if (pathSegments.size > 3) title = pathSegments[3]
-      val model = fetchStoryModel(pathSegments[1].toLong()).orElse {
+      storyModel = fetchStoryModel(pathSegments[1].toLong()).orElse {
         longToast(R.string.story_not_found)
         return UNINITIALIZED_CHAPTER
       }
       val currentChapter = pathSegments[2].toLong()
-      viewModel = obtainViewModel(model)
-      Static.database.upsertModel(model)
-      Log.v(TAG, "Model from link: $intent, resolved model: $model")
+      Static.database.upsertModel(storyModel)
+      Log.v(TAG, "Model from link: $intent, resolved model: $storyModel")
       currentChapter
     }
     // In-app navigation
     else -> {
-      val model = intent.getParcelableExtra<StoryModel>(INTENT_STORY_MODEL)
+      storyModel = intent.getParcelableExtra(INTENT_STORY_MODEL)
           ?: throw IllegalArgumentException("Story model missing from extras")
-      val currentChapter = if (model.progress.currentChapter == 0L) 1L else model.progress.currentChapter
-      viewModel = obtainViewModel(model)
-      Log.v(TAG, "Model from intent extra: $model")
+      val currentChapter = if (storyModel.progress.currentChapter == 0L) 1L else storyModel.progress.currentChapter
+      Log.v(TAG, "Model from intent extra: $storyModel")
       currentChapter
     }
   }
@@ -295,6 +295,16 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
 
       viewModel.chapterEvents.observe(this@StoryReaderActivity, ::handleChapterEvent)
     }
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    outState.putParcelable(INTENT_STORY_MODEL, storyModel)
+  }
+
+  override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+    super.onRestoreInstanceState(savedInstanceState)
+    storyModel = savedInstanceState.getParcelable(INTENT_STORY_MODEL)!!
   }
 
   override fun onPause() {

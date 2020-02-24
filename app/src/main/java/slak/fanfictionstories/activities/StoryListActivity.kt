@@ -11,6 +11,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import android.widget.ProgressBar
+import androidx.activity.viewModels
 import kotlinx.android.synthetic.main.activity_story_list.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.Dispatchers
@@ -43,7 +44,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
     }
   }
 
-  private lateinit var viewModel: StoryListViewModel
+  private val viewModel: StoryListViewModel by viewModels()
   private lateinit var layoutManager: LinearLayoutManager
 
   override val coroutineContext: CoroutineContext
@@ -51,7 +52,6 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = obtainViewModel()
 
     setContentView(R.layout.activity_story_list)
     setSupportActionBar(toolbar)

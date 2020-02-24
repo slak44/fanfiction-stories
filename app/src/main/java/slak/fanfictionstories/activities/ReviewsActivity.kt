@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.view.*
 import android.widget.ProgressBar
+import androidx.activity.viewModels
 import kotlinx.android.synthetic.main.activity_reviews.*
 import kotlinx.android.synthetic.main.component_review.view.*
 import kotlinx.android.synthetic.main.dialog_report_review.view.*
@@ -98,7 +99,8 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
   override val loading: ProgressBar
     get() = activityProgressBar
 
-  private lateinit var viewModel: ReviewsViewModel
+  private lateinit var modelTarget: Pair<StoryModel, Int>
+  private val viewModel: ReviewsViewModel by viewModels { ViewModelFactory(modelTarget.first, modelTarget.second) }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -109,7 +111,7 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
 
     // runBlocking is fine here, because the loading bar is already in place, and so the user
     // already expects to wait
-    val (model, chapter) = if (intent.action == Intent.ACTION_VIEW) runBlocking {
+    modelTarget = if (intent.action == Intent.ACTION_VIEW) runBlocking {
       val pathSegments = intent?.data?.pathSegments
           ?: throw IllegalArgumentException("Missing intent data")
       val chapter = if (pathSegments.size < 3) ALL_CHAPTERS else pathSegments[2].toInt()
@@ -121,8 +123,6 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
       val model: StoryModel = intent.getParcelableExtra(INTENT_STORY_MODEL)!!
       model to chapter
     }
-
-    viewModel = obtainViewModel(model, chapter)
 
     title = str(R.string.reviews_for, viewModel.model.title)
 

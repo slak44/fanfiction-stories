@@ -12,6 +12,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ProgressBar
+import androidx.activity.viewModels
 import kotlinx.android.synthetic.main.activity_canon_story_list.*
 import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
@@ -79,7 +80,10 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
 class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
   override val loading: ProgressBar
     get() = activityProgressBar
-  private lateinit var viewModel: CanonListViewModel
+
+  private val viewModel: CanonListViewModel by viewModels {
+    ViewModelFactory(intent.getParcelableExtra(INTENT_LINK_DATA)!!)
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -87,8 +91,6 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
     setSupportActionBar(toolbar)
     setLoadingView(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-    viewModel = obtainViewModel(intent.getParcelableExtra(INTENT_LINK_DATA)!!)
 
     canonStoryListView.adapter = StoryAdapter(viewModel)
     val layoutManager = LinearLayoutManager(this)

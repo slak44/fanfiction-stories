@@ -2,13 +2,9 @@ package slak.fanfictionstories.utility
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 
 /**
- * This class is just a big fat hack that uses reflection to allow [ViewModel] subclasses to be passed parameters via
- * [obtainViewModel].
+ * This class is just a big fat hack that uses reflection to allow [ViewModel] subclasses to be passed parameters.
  */
 @PublishedApi
 internal class ViewModelFactory(private vararg val parameters: Any) :
@@ -18,24 +14,4 @@ internal class ViewModelFactory(private vararg val parameters: Any) :
         .getConstructor(*parameters.map { it::class.java }.toTypedArray())
         .newInstance(*parameters)
   }
-}
-
-/**
- * Gets the [ViewModel] for this [FragmentActivity].
- *
- * NOTE: Any primitive types in the [ViewModel]'s constructor must be forced to the object versions from `java.lang` (or
- * an error is thrown).
- */
-inline fun <reified T : ViewModel> FragmentActivity.obtainViewModel(vararg params: Any): T {
-  return ViewModelProviders.of(this, ViewModelFactory(*params)).get(T::class.java)
-}
-
-/**
- * Gets the [ViewModel] for this [Fragment].
- *
- * NOTE: Any primitive types in the [ViewModel]'s constructor must be forced to the object versions from `java.lang` (or
- * an error is thrown).
- */
-inline fun <reified T : ViewModel> Fragment.obtainViewModel(vararg params: Any): T {
-  return ViewModelProviders.of(this, ViewModelFactory(*params)).get(T::class.java)
 }
