@@ -120,8 +120,7 @@ class HrSpan(private val heightPx: Int, private val width: Int) : ReplacementSpa
     }
   }
 
-  override fun getSize(p0: Paint?, p1: CharSequence?, p2: Int, p3: Int,
-                       p4: Paint.FontMetricsInt?): Int = 0
+  override fun getSize(paint: Paint, text: CharSequence?, start: Int, end: Int, fm: Paint.FontMetricsInt?): Int = 0
 
   override fun draw(canvas: Canvas, text: CharSequence, start: Int, end: Int, x: Float, top: Int,
                     y: Int, bottom: Int, paint: Paint) {
