@@ -5,6 +5,8 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.consumeEachIndexed
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import slak.fanfictionstories.R
 import slak.fanfictionstories.StoryId
@@ -72,10 +74,16 @@ private fun writeChapterImpl(storyDir: File, chapter: Long, chapterText: String)
 suspend fun writeChapter(storyId: StoryId, chapter: Long, chapterText: String) =
     withContext(Dispatchers.IO) { writeChapterImpl(storyDir(storyId), chapter, chapterText) }
 
-/** Writes received chapter data to disk asynchronously. */
-suspend fun writeChapters(storyId: StoryId, chapters: ReceiveChannel<String>) = withContext(Dispatchers.IO) {
+/**
+ * Writes received chapter data to disk asynchronously.
+ *
+ * [chapters] contains the story html and its respective chapter number.
+ */
+suspend fun writeChapters(storyId: StoryId, chapters: Flow<Pair<String, Long>>) = withContext(Dispatchers.IO) {
   val storyDir = storyDir(storyId)
-  chapters.consumeEachIndexed { writeChapterImpl(storyDir, it.index + 1L, it.value) }
+  chapters.collect { (chapter, chapterNr) ->
+    writeChapterImpl(storyDir, chapterNr, chapter)
+  }
 }
 
 /** Deletes the chapter data directory for a story. */

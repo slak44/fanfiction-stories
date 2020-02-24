@@ -3,11 +3,9 @@ package slak.fanfictionstories.data.fetchers
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -84,14 +82,16 @@ suspend fun fetchStoryModel(storyId: StoryId): Optional<StoryModel> {
  * @param notif what [Notifications] to show for each chapter that's fetched
  * @param from start index of chapters to fetch (1-indexed)
  * @param to end index of chapters to fetch (1-indexed). If -1, the end idx is the chapter count
- * @returns a [Channel] that supplies the html text
+ * @returns a [Flow] that supplies the story html text and the chapter number
  */
-fun CoroutineScope.fetchChapterRange(notif: Notifications, model: StoryModel,
-                                     from: Long = 1, to: Long = -1): ReceiveChannel<String> {
+fun fetchChapterRange(
+    notif: Notifications,
+    model: StoryModel,
+    from: Long = 1,
+    to: Long = -1
+): Flow<Pair<String, Long>> {
   val target = if (to != -1L) to else model.fragment.chapterCount
-  // The buffer size is completely arbitrary
-  val channel = Channel<String>(10)
-  launch(Dispatchers.Default) {
+  return flow {
     for (chapterNr in from..target) {
       notif.show(
           readerIntent(model),
@@ -99,13 +99,12 @@ fun CoroutineScope.fetchChapterRange(notif: Notifications, model: StoryModel,
           chapterNr,
           model.fragment.chapterCount,
           chapterNr * 100F / model.fragment.chapterCount,
-          model.title)
+          model.title
+      )
       val chapterHtml = fetchChapter(model.storyId, chapterNr)
-      channel.send(extractChapterText(Jsoup.parse(chapterHtml)))
+      emit(extractChapterText(Jsoup.parse(chapterHtml)) to chapterNr)
     }
-    channel.close()
   }
-  return channel
 }
 
 /**
@@ -147,7 +146,7 @@ suspend fun updateStory(oldModel: StoryModel): Optional<StoryModel> {
       Notifications.UPDATING.show(defaultIntent(), R.string.fetching_chapter, 1, 1, 0F, newModel.title)
       writeChapter(newModel.storyId, 1, fetchChapter(newModel.storyId, 1))
     } else {
-      val channel = if (newModel.fragment.chapterCount > oldModel.fragment.chapterCount) {
+      val chapterFlow = if (newModel.fragment.chapterCount > oldModel.fragment.chapterCount) {
         // Try being smart, and only download delta when chapters were added
         fetchChapterRange(Notifications.UPDATING, oldModel,
             oldModel.fragment.chapterCount + 1, newModel.fragment.chapterCount)
@@ -155,7 +154,7 @@ suspend fun updateStory(oldModel: StoryModel): Optional<StoryModel> {
         // Download everything otherwise
         fetchChapterRange(Notifications.UPDATING, oldModel)
       }
-      writeChapters(newModel.storyId, channel)
+      writeChapters(newModel.storyId, chapterFlow)
     }
   }
   Notifications.UPDATING.cancel()
