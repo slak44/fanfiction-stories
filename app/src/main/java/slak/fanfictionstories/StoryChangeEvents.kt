@@ -1,8 +1,8 @@
 package slak.fanfictionstories
 
 import android.database.Observable
-import android.support.annotation.AnyThread
-import android.support.annotation.UiThread
+import androidx.annotation.AnyThread
+import androidx.annotation.UiThread
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

@@ -25,9 +25,7 @@ fun autoSuffixNumber(value: Long): String {
   if (value < 0) return "-" + autoSuffixNumber(-value)
   if (value < 1000) return value.toString() // deal with easy case
 
-  val e = siSuffixes.floorEntry(value)
-  val divideBy = e.key
-  val suffix = e.value
+  val (divideBy, suffix) = requireNotNull(siSuffixes.floorEntry(value)) { "Missing SI suffix" }
 
   val truncated = value / (divideBy!! / 10) // the number part of the output times 10
   val hasDecimal = truncated < 100 && truncated / 10.0 != (truncated / 10).toDouble()

@@ -1,7 +1,7 @@
 package slak.fanfictionstories.utility
 
 import android.content.Context
-import android.support.v7.preference.PreferenceViewHolder
+import androidx.preference.PreferenceViewHolder
 import android.util.AttributeSet
 import android.widget.TextView
 import com.takisoft.fix.support.v7.preference.AutoSummaryEditTextPreference

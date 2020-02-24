@@ -2,7 +2,7 @@ package slak.fanfictionstories.utility
 
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
-import android.support.annotation.RequiresApi
+import androidx.annotation.RequiresApi
 
 /** Wraps some ints in [JobScheduler]. */
 enum class ScheduleResult {

@@ -3,7 +3,7 @@ package slak.fanfictionstories.utility
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Canvas
-import android.support.annotation.AnyThread
+import androidx.annotation.AnyThread
 import android.text.SpannableString
 import android.text.StaticLayout
 import android.text.TextPaint

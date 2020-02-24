@@ -1,7 +1,7 @@
 package slak.fanfictionstories.activities
 
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ImageSpan

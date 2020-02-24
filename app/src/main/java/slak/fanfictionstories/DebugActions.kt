@@ -4,7 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.os.Build
-import android.support.v4.app.ActivityCompat
+import androidx.core.app.ActivityCompat
 import android.util.Log
 import android.view.View
 import android.widget.EditText
@@ -178,8 +178,8 @@ val debugActions = mapOf(
     "Deflate all chapter text data" to {
       var initialByteCount = 0L
       var finalByteCount = 0L
-      File(Static.currentCtx.getExternalFilesDir(null), "storiesData").listFiles().forEach { story ->
-        story.listFiles().forEach {chapter ->
+      File(Static.currentCtx.getExternalFilesDir(null), "storiesData").listFiles()!!.forEach { story ->
+        story.listFiles()!!.forEach {chapter ->
           initialByteCount += chapter.length()
           val outFile = File("${story.absolutePath}/${chapter.name.split('.')[0]}.html.deflated")
           val stream = DeflaterOutputStream(outFile.outputStream())
@@ -196,8 +196,8 @@ val debugActions = mapOf(
       println("${finalByteCount * 100 / initialByteCount}%")
     },
     "Fix chapter numbers" to {
-      File(Static.currentCtx.getExternalFilesDir(null), "storiesData").listFiles().forEach { story ->
-        story.listFiles().sortedBy { it.name.split('.')[0].toInt() }.reversed().forEach { chapter ->
+      File(Static.currentCtx.getExternalFilesDir(null), "storiesData").listFiles()!!.forEach { story ->
+        story.listFiles()!!.sortedBy { it.name.split('.')[0].toInt() }.reversed().forEach { chapter ->
           chapter.renameTo(File("${story.absolutePath}/${chapter.name.split('.')[0].toInt() + 1}.html.deflated"))
         }
       }
@@ -250,7 +250,7 @@ val debugActions = mapOf(
     "Repair database from downloaded stories" to {
       GlobalScope.launch {
         val stories = Static.database.getLocalStories().await().map { it.storyId }
-        val onLocal = File(Static.currentCtx.getExternalFilesDir(null), "storiesData").list().map { it.toLong() }
+        val onLocal = File(Static.currentCtx.getExternalFilesDir(null), "storiesData").list()!!.map { it.toLong() }
         val delta = onLocal - stories
         if (delta.isEmpty()) {
           Log.e(TAG, "none found")

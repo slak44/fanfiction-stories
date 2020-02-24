@@ -1,17 +1,17 @@
 package slak.fanfictionstories.activities
 
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
-import android.support.annotation.AnyThread
-import android.support.annotation.UiThread
-import android.support.design.widget.Snackbar
-import android.support.v4.view.ViewCompat
-import android.support.v4.widget.NestedScrollView
-import android.support.v7.app.AlertDialog
+import androidx.annotation.AnyThread
+import androidx.annotation.UiThread
+import com.google.android.material.snackbar.Snackbar
+import androidx.core.view.ViewCompat
+import androidx.core.widget.NestedScrollView
+import androidx.appcompat.app.AlertDialog
 import android.text.Html
 import android.text.Spanned
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE

@@ -2,11 +2,11 @@ package slak.fanfictionstories.activities
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.support.annotation.AnyThread
-import android.support.annotation.UiThread
-import android.support.design.widget.Snackbar
-import android.support.v7.app.AlertDialog
-import android.support.v7.widget.LinearLayoutManager
+import androidx.annotation.AnyThread
+import androidx.annotation.UiThread
+import com.google.android.material.snackbar.Snackbar
+import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem

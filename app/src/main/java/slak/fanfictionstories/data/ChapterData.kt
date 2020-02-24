@@ -49,7 +49,7 @@ private fun storyDir(storyId: StoryId): File {
 private fun chapterFile(storyDir: File, chapter: Long) = storyDir.resolve("$chapter.html.deflated")
 
 /** @returns how many chapters of a story were downloaded locally */
-fun chapterCount(storyId: StoryId) = storyDir(storyId).list().size
+fun chapterCount(storyId: StoryId) = storyDir(storyId).list()!!.size
 
 /**
  * Gets chapter text from disk.

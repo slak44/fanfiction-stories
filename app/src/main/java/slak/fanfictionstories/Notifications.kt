@@ -6,10 +6,10 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
 import android.os.Parcelable
-import android.support.annotation.DrawableRes
-import android.support.annotation.StringRes
-import android.support.v4.app.NotificationCompat
-import android.support.v4.app.TaskStackBuilder
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import androidx.core.app.NotificationCompat
+import androidx.core.app.TaskStackBuilder
 import android.util.Log
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope

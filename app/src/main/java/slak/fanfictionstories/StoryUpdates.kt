@@ -12,7 +12,7 @@ import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
-import android.support.v4.app.NotificationCompat
+import androidx.core.app.NotificationCompat
 import android.util.Log
 import kotlinx.coroutines.*
 import org.threeten.bp.Duration

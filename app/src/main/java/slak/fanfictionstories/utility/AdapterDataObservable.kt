@@ -1,8 +1,8 @@
 package slak.fanfictionstories.utility
 
 import android.database.Observable
-import android.support.annotation.UiThread
-import android.support.v7.widget.RecyclerView
+import androidx.annotation.UiThread
+import androidx.recyclerview.widget.RecyclerView
 
 /**
  * This whole file is a bunch of boilerplate, caused by the lack of multiple inheritance in Java

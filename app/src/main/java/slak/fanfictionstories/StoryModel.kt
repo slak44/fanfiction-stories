@@ -3,7 +3,7 @@ package slak.fanfictionstories
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Parcelable
-import android.support.v7.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import android.view.LayoutInflater
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.dialog_order_by_switch.view.*

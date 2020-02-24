@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.preference.PreferenceScreen
+<androidx.preference.PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <android.support.v7.preference.PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_updating"
         tools:ignore="UnusedAttribute">
@@ -24,8 +24,8 @@
             app:pref_hourFormat="h24"
             app:pref_pickerTime="@string/option_update_time_default"/>
 
-    </android.support.v7.preference.PreferenceCategory>
-    <android.support.v7.preference.PreferenceCategory
+    </androidx.preference.PreferenceCategory>
+    <androidx.preference.PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_datetime"
         tools:ignore="UnusedAttribute">
@@ -38,8 +38,8 @@
             android:summary="@string/datetime_option_locale_summary"
             android:title="@string/datetime_option_locale"/>
 
-    </android.support.v7.preference.PreferenceCategory>
-    <android.support.v7.preference.PreferenceCategory
+    </androidx.preference.PreferenceCategory>
+    <androidx.preference.PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_browser"
         tools:ignore="UnusedAttribute">
@@ -48,8 +48,8 @@
             android:defaultValue="@string/option_lang_mem_default"
             android:key="@string/key_option_lang_mem"
             android:title="@string/browser_remember_language"/>
-    </android.support.v7.preference.PreferenceCategory>
-    <android.support.v7.preference.PreferenceCategory
+    </androidx.preference.PreferenceCategory>
+    <androidx.preference.PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_text"
         tools:ignore="UnusedAttribute">
@@ -75,7 +75,7 @@
             android:defaultValue="@string/option_antialias_default"
             android:key="@string/key_option_antialias"
             android:title="@string/text_option_antialiasing"/>
-    </android.support.v7.preference.PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
     <ListPreference
         android:defaultValue="@string/option_break_strategy_default"
         android:entries="@array/break_strategies"
@@ -83,4 +83,4 @@
         android:key="@string/key_option_break_strategy"
         android:summary="@string/text_option_break_strategy_summary"
         android:title="@string/text_option_break_strategy_title"/>
-</android.support.v7.preference.PreferenceScreen>
+</androidx.preference.PreferenceScreen>

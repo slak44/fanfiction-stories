@@ -2,20 +2,20 @@ package slak.fanfictionstories.utility
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.*
 import android.os.IBinder
-import android.support.annotation.ColorRes
-import android.support.annotation.DimenRes
-import android.support.annotation.StringRes
-import android.support.design.widget.Snackbar
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.annotation.ColorRes
+import androidx.annotation.DimenRes
+import androidx.annotation.StringRes
+import com.google.android.material.snackbar.Snackbar
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.text.Html
 import android.text.Layout
 import android.text.Spannable
@@ -240,7 +240,7 @@ val <T> LiveData<T>.it: T
 
 /** Sugar over [LiveData.observe] for non-nullable types. */
 fun <T> LiveData<T>.observe(owner: LifecycleOwner, observer: (T) -> Unit) {
-  observe(owner, android.arch.lifecycle.Observer { observer(it!!) })
+  observe(owner, androidx.lifecycle.Observer { observer(it!!) })
 }
 
 /**

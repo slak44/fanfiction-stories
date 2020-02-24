@@ -1,9 +1,9 @@
 package slak.fanfictionstories.utility
 
 import android.app.Activity
-import android.support.annotation.UiThread
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.Toolbar
+import androidx.annotation.UiThread
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
