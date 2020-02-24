@@ -73,7 +73,7 @@ fun extractChapterText(doc: Document): String {
  */
 suspend fun fetchStoryModel(storyId: StoryId): Optional<StoryModel> {
   val chapterHtml = fetchChapter(storyId, 1)
-  if (chapterHtml.contains("Story Not Found")) return Empty()
+  if ("Story Not Found" in chapterHtml) return Empty()
   return parseStoryModel(chapterHtml, storyId).opt()
 }
 
