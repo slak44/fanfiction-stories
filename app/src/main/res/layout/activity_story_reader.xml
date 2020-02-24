@@ -21,9 +21,9 @@
             android:layout_height="match_parent"
             android:fitsSystemWindows="true"
             app:contentScrim="?attr/colorPrimary"
-            app:expandedTitleMarginBottom="16dp"
+            app:expandedTitleGravity="top"
             app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed"
-            android:maxLines="3"
+            app:maxLines="10"
             app:toolbarId="@+id/toolbar">
 
             <androidx.appcompat.widget.Toolbar

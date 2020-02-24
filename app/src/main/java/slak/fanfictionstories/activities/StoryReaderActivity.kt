@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.annotation.AnyThread
@@ -22,6 +23,8 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import androidx.appcompat.widget.AppCompatTextView
+import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.activity_story_reader.*
 import kotlinx.android.synthetic.main.activity_story_reader_content.*
 import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
@@ -32,6 +35,7 @@ import org.jetbrains.anko.contentView
 import org.jetbrains.anko.db.DoubleParser
 import org.jetbrains.anko.db.select
 import org.jetbrains.anko.longToast
+import org.jetbrains.anko.sp
 import org.jetbrains.anko.startActivity
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
@@ -272,12 +276,13 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       // Even for transient stories, because entering the reader means the story became remote
       Prefs.resumeStoryId = viewModel.storyModel.storyId
 
-      // Long titles require _even more_ space than CollapsibleToolbar already gives
-      // The 35 character limit is completely arbitrary
-      if (viewModel.storyModel.title.length > 35) {
-        appBar.layoutParams.height = resources.px(R.dimen.app_bar_large_text_height)
-      }
-
+      // Magic for dealing with text height
+      val titleTextView = (toolbarLayout.toolbar.getChildAt(0) as AppCompatTextView)
+      val fakeWidth = titleTextView.textSize * viewModel.storyModel.title.length
+      val textMargin = resources.px(R.dimen.text_margin)
+      val textHeight = (fakeWidth / (toolbarLayout.width / 2)).coerceAtLeast(1F) * titleTextView.lineHeight
+      appBar.layoutParams.height =
+          (resources.px(R.dimen.app_bar_height_base) + textHeight + textMargin).toInt()
       toolbarLayout.title = viewModel.storyModel.title
 
       if (viewModel.storyModel.status != StoryStatus.LOCAL) {
