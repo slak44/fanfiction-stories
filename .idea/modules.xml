@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/FanfictionStories.iml" filepath="$PROJECT_DIR$/FanfictionStories.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/FanfictionStories.iml" filepath="$PROJECT_DIR$/FanfictionStories.iml" group="FanfictionStories" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="FanfictionStories/app" />
     </modules>
   </component>
 </project>
