@@ -8,9 +8,9 @@ import android.content.SharedPreferences
 import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.os.Bundle
-import android.preference.PreferenceManager
-import androidx.appcompat.app.AppCompatActivity
 import android.view.inputmethod.InputMethodManager
+import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 import slak.fanfictionstories.data.Prefs
 import java.io.File
 
