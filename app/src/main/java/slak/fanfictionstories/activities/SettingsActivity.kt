@@ -2,6 +2,7 @@ package slak.fanfictionstories.activities
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import androidx.preference.EditTextPreference
 import com.takisoft.preferencex.PreferenceFragmentCompat
 import kotlinx.android.synthetic.main.activity_settings.*
 import slak.fanfictionstories.R
@@ -36,5 +37,8 @@ class SettingsActivity : ActivityWithStatic(), SharedPreferences.OnSharedPrefere
 internal class MainSettingsFragment : PreferenceFragmentCompat() {
   override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {
     addPreferencesFromResource(R.xml.settings_main)
+    val provider = EditTextPreference.SimpleSummaryProvider.getInstance()
+    findPreference<EditTextPreference>(str(R.string.key_option_font))!!.summaryProvider = provider
+    findPreference<EditTextPreference>(str(R.string.key_option_size))!!.summaryProvider = provider
   }
 }

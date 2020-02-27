@@ -1,86 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.preference.PreferenceScreen
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <androidx.preference.PreferenceCategory
+    <PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_updating"
+        app:iconSpaceReserved="false"
         tools:ignore="UnusedAttribute">
 
         <ListPreference
+            app:iconSpaceReserved="false"
             android:defaultValue="@string/option_net_type_default"
             android:entries="@array/network_types"
             android:entryValues="@array/network_types_values"
             android:key="@string/key_option_net_type"
             android:summary="@string/network_type_summary"
-            android:title="@string/network_type_title"/>
+            android:title="@string/network_type_title" />
         <com.takisoft.preferencex.TimePickerPreference
+            app:iconSpaceReserved="false"
             android:defaultValue="@string/option_update_time_default"
             android:key="@string/key_option_update_time"
             android:summary="@string/update_time_summary"
             android:title="@string/update_time_title"
             app:pref_hourFormat="h24"
-            app:pref_pickerTime="@string/option_update_time_default"/>
+            app:pref_pickerTime="@string/option_update_time_default" />
 
-    </androidx.preference.PreferenceCategory>
-    <androidx.preference.PreferenceCategory
+    </PreferenceCategory>
+    <PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_datetime"
+        app:iconSpaceReserved="false"
         tools:ignore="UnusedAttribute">
 
-        <slak.fanfictionstories.utility.EditTextPreference
+        <EditTextPreference
+            app:iconSpaceReserved="false"
             android:defaultValue="@string/option_locale_default"
             android:key="@string/key_option_locale"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:summary="@string/datetime_option_locale_summary"
-            android:title="@string/datetime_option_locale"/>
+            android:title="@string/datetime_option_locale" />
 
-    </androidx.preference.PreferenceCategory>
-    <androidx.preference.PreferenceCategory
+    </PreferenceCategory>
+    <PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_browser"
+        app:iconSpaceReserved="false"
         tools:ignore="UnusedAttribute">
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:defaultValue="@string/option_lang_mem_default"
             android:key="@string/key_option_lang_mem"
-            android:title="@string/browser_remember_language"/>
-    </androidx.preference.PreferenceCategory>
-    <androidx.preference.PreferenceCategory
+            android:title="@string/browser_remember_language" />
+    </PreferenceCategory>
+    <PreferenceCategory
         android:singleLineTitle="true"
         android:title="@string/category_text"
+        app:iconSpaceReserved="false"
         tools:ignore="UnusedAttribute">
 
-        <slak.fanfictionstories.utility.AutoSummaryEditTextPreference
+        <EditTextPreference
+            app:iconSpaceReserved="false"
             android:defaultValue="@string/option_size_default"
             android:key="@string/key_option_size"
             android:inputType="numberDecimal"
             android:selectAllOnFocus="true"
-            android:title="@string/text_option_size"/>
-        <slak.fanfictionstories.utility.AutoSummaryEditTextPreference
+            android:title="@string/text_option_size" />
+        <EditTextPreference
+            app:iconSpaceReserved="false"
             android:defaultValue="@string/option_font_default"
             android:key="@string/key_option_font"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            android:title="@string/text_option_font"/>
+            android:title="@string/text_option_font" />
         <com.takisoft.preferencex.ColorPickerPreference
+            app:iconSpaceReserved="false"
             android:defaultValue="@color/textDefault"
             android:key="@string/key_option_color"
             android:title="@string/text_option_color"
-            app:pref_colors="@array/textColors"/>
+            app:pref_colors="@array/textColors" />
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:defaultValue="@string/option_antialias_default"
             android:key="@string/key_option_antialias"
-            android:title="@string/text_option_antialiasing"/>
-    </androidx.preference.PreferenceCategory>
+            android:title="@string/text_option_antialiasing" />
+    </PreferenceCategory>
     <ListPreference
+        app:iconSpaceReserved="false"
         android:defaultValue="@string/option_break_strategy_default"
         android:entries="@array/break_strategies"
         android:entryValues="@array/break_strategies_values"
         android:key="@string/key_option_break_strategy"
         android:summary="@string/text_option_break_strategy_summary"
-        android:title="@string/text_option_break_strategy_title"/>
-</androidx.preference.PreferenceScreen>
+        android:title="@string/text_option_break_strategy_title" />
+</PreferenceScreen>
