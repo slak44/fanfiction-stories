@@ -57,7 +57,7 @@
         <slak.fanfictionstories.utility.AutoSummaryEditTextPreference
             android:defaultValue="@string/option_size_default"
             android:key="@string/key_option_size"
-            android:numeric="decimal"
+            android:inputType="numberDecimal"
             android:selectAllOnFocus="true"
             android:title="@string/text_option_size"/>
         <slak.fanfictionstories.utility.AutoSummaryEditTextPreference
