@@ -148,7 +148,9 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
   }
 
   /** A [FragmentPagerAdapter] that returns a fragment corresponding to the tabs. */
-  inner class SectionsPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
+  inner class SectionsPagerAdapter(
+      fm: FragmentManager
+  ) : FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
     override fun getItem(position: Int): Fragment = when (position) {
       0 -> {
         val joined = Prefs.simpleDateFormatter
