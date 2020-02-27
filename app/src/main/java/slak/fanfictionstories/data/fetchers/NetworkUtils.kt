@@ -1,14 +1,21 @@
 package slak.fanfictionstories.data.fetchers
 
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities.*
+import android.net.NetworkRequest
 import android.util.Log
-import kotlinx.coroutines.*
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.R
 import slak.fanfictionstories.utility.Static
 import java.net.URL
 import java.util.concurrent.Executors
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
-private const val NETWORK_WAIT_DELAY_MS = 500L
 private const val NET_TAG = "waitForNetwork"
 
 /**
@@ -16,20 +23,26 @@ private const val NET_TAG = "waitForNetwork"
  *
  * Shows notifications about connection status.
  */
-private tailrec suspend fun waitForNetwork() {
-  val activeNetwork = Static.cm.activeNetworkInfo
-  return if (activeNetwork == null || !activeNetwork.isConnected) {
-    // No connection; wait
-    Notifications.NETWORK.show(Notifications.defaultIntent(), R.string.waiting_for_connection)
-    Log.w(NET_TAG, "No connection")
-    delay(NETWORK_WAIT_DELAY_MS)
-    waitForNetwork()
-  } else {
-    // We're connected!
-    Notifications.NETWORK.cancel()
-    Log.v(NET_TAG, "We have a connection")
-    Unit
+private suspend fun waitForNetwork() = suspendCoroutine<Unit> { cont ->
+  val req = NetworkRequest.Builder()
+      .addTransportType(TRANSPORT_WIFI)
+      .addTransportType(TRANSPORT_CELLULAR)
+      .addTransportType(TRANSPORT_ETHERNET)
+      .build()
+  val callback = object : ConnectivityManager.NetworkCallback() {
+    override fun onAvailable(network: Network) {
+      Notifications.NETWORK.cancel()
+      Log.v(NET_TAG, "We have a connection")
+      Static.cm.unregisterNetworkCallback(this)
+      cont.resume(Unit)
+    }
+
+    override fun onUnavailable() {
+      Notifications.NETWORK.show(Notifications.defaultIntent(), R.string.waiting_for_connection)
+      Log.w(NET_TAG, "No connection")
+    }
   }
+  Static.cm.registerNetworkCallback(req, callback)
 }
 
 private const val RATE_LIMIT_MS = 300L
