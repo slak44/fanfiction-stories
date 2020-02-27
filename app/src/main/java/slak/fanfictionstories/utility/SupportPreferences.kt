@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.preference.PreferenceViewHolder
 import android.util.AttributeSet
 import android.widget.TextView
-import com.takisoft.fix.support.v7.preference.AutoSummaryEditTextPreference
-import com.takisoft.fix.support.v7.preference.EditTextPreference
+import com.takisoft.preferencex.AutoSummaryEditTextPreference
+import com.takisoft.preferencex.EditTextPreference
 import slak.fanfictionstories.R
 
 /** Wrap [AutoSummaryEditTextPreference] due to bug. */

@@ -2,7 +2,7 @@ package slak.fanfictionstories.activities
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
+import com.takisoft.preferencex.PreferenceFragmentCompat
 import kotlinx.android.synthetic.main.activity_settings.*
 import slak.fanfictionstories.R
 import slak.fanfictionstories.scheduleUpdate

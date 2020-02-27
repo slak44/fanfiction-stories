@@ -16,7 +16,7 @@
             android:key="@string/key_option_net_type"
             android:summary="@string/network_type_summary"
             android:title="@string/network_type_title"/>
-        <com.takisoft.fix.support.v7.preference.TimePickerPreference
+        <com.takisoft.preferencex.TimePickerPreference
             android:defaultValue="@string/option_update_time_default"
             android:key="@string/key_option_update_time"
             android:summary="@string/update_time_summary"
@@ -66,7 +66,7 @@
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/text_option_font"/>
-        <com.takisoft.fix.support.v7.preference.ColorPickerPreference
+        <com.takisoft.preferencex.ColorPickerPreference
             android:defaultValue="@color/textDefault"
             android:key="@string/key_option_color"
             android:title="@string/text_option_color"
