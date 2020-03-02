@@ -470,7 +470,9 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   @UiThread
   private fun chapterScroll(y: Int) {
     appBar.setExpanded(y <= resources.px(R.dimen.app_bar_height))
-    nestedScroller.scrollTo(0, y)
+    nestedScroller.post {
+      nestedScroller.scrollTo(0, y)
+    }
   }
 
   /** Encapsulates the scroll state saving logic. */
