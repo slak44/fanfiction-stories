@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<slak.fanfictionstories.StoryCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<slak.fanfictionstories.StoryCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -14,7 +13,7 @@
         android:layout_height="@dimen/story_component_marker_button_size"
         android:layout_gravity="right"
         android:background="@color/alpha"
-        tools:ignore="RtlHardcoded"/>
+        tools:ignore="RtlHardcoded" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -39,23 +38,23 @@
                 android:layout_marginTop="8dp"
                 android:layout_row="1"
                 android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-                tools:text="Title, A Very Very Very Very Very Very Long Title"/>
+                tools:text="Title, A Very Very Very Very Very Very Long Title" />
 
             <TextView
                 android:id="@+id/authorText"
                 android:layout_width="wrap_content"
-                android:layout_height="18dp"
+                android:layout_height="wrap_content"
+                android:layout_row="2"
                 android:layout_column="0"
                 android:layout_marginStart="8dp"
-                android:layout_row="2"
                 android:textAppearance="@android:style/TextAppearance.Material.Small"
                 android:textStyle="italic"
-                tools:text="by Slak44"/>
+                tools:text="by Slak44" />
 
             <TextView
                 android:id="@+id/canonText"
                 android:layout_width="wrap_content"
-                android:layout_height="18dp"
+                android:layout_height="wrap_content"
                 android:layout_column="0"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
@@ -63,30 +62,30 @@
                 android:ellipsize="end"
                 android:textAppearance="@android:style/TextAppearance.Material.Small"
                 android:textStyle="italic"
-                tools:text="in Loooooooooooong Test Canon"/>
+                tools:text="in Loooooooooooong Test Canon" />
 
             <TextView
                 android:id="@+id/isCompletedText"
                 android:layout_width="wrap_content"
-                android:layout_height="18dp"
+                android:layout_height="wrap_content"
                 android:layout_column="3"
                 android:layout_gravity="end"
                 android:layout_marginEnd="8dp"
                 android:layout_row="2"
                 android:gravity="end"
                 android:text="@string/completed"
-                tools:text="Completed"/>
+                tools:text="Completed" />
 
             <TextView
                 android:id="@+id/wordsText"
                 android:layout_width="wrap_content"
-                android:layout_height="18dp"
+                android:layout_height="wrap_content"
                 android:layout_column="3"
                 android:layout_gravity="end"
                 android:layout_marginEnd="8dp"
                 android:layout_row="3"
                 android:gravity="end"
-                tools:text="182,390 words"/>
+                tools:text="182,390 words" />
 
             <SeekBar
                 android:id="@+id/storyProgress"
@@ -100,7 +99,7 @@
                 android:paddingEnd="0dp"
                 android:paddingStart="0dp"
                 android:thumb="@color/alpha"
-                tools:progress="50"/>
+                tools:progress="50" />
 
         </GridLayout>
 
@@ -121,7 +120,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_row="0"
-                tools:text="English"/>
+                tools:text="English" />
 
             <TextView
                 android:id="@+id/ratingText"
@@ -132,7 +131,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_row="0"
-                tools:text="Rated M"/>
+                tools:text="Rated M" />
 
             <TextView
                 android:id="@+id/publishDateText"
@@ -143,7 +142,7 @@
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_row="1"
-                tools:text="Published on 2017-05-13"/>
+                tools:text="Published on 2017-05-13" />
 
             <TextView
                 android:id="@+id/updateDateText"
@@ -154,7 +153,7 @@
                 android:layout_marginBottom="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_row="1"
-                tools:text="Updated on 2017-06-24"/>
+                tools:text="Updated on 2017-06-24" />
 
             <TextView
                 android:id="@+id/summaryText"
@@ -167,7 +166,7 @@
                 android:paddingStart="8dp"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                 android:visibility="visible"
-                tools:text="@string/lorem_ipsum"/>
+                tools:text="@string/lorem_ipsum" />
 
             <TextView
                 android:id="@+id/chaptersText"
@@ -180,7 +179,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_row="3"
-                tools:text="15 Chapters"/>
+                tools:text="15 Chapters" />
 
             <TextView
                 android:id="@+id/genresText"
@@ -191,7 +190,7 @@
                 android:layout_gravity="fill"
                 android:layout_marginStart="8dp"
                 android:layout_row="4"
-                tools:text="about Blabla/BlehBleh/BloBlo"/>
+                tools:text="about Blabla/BlehBleh/BloBlo" />
 
             <TextView
                 android:id="@+id/charactersText"
@@ -202,7 +201,7 @@
                 android:layout_gravity="fill"
                 android:layout_marginStart="8dp"
                 android:layout_row="5"
-                tools:text="with Test A., Test B., Test B., Test B., Test B."/>
+                tools:text="with Test A., Test B., Test B., Test B., Test B." />
 
             <TextView
                 android:id="@+id/categoryText"
@@ -213,7 +212,7 @@
                 android:layout_gravity="fill"
                 android:layout_marginStart="8dp"
                 android:layout_row="6"
-                tools:text="in Games"/>
+                tools:text="in Games" />
 
             <TextView
                 android:id="@+id/reviewsText"
@@ -224,7 +223,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_row="3"
-                tools:text="50 reviews"/>
+                tools:text="50 reviews" />
 
             <TextView
                 android:id="@+id/favoritesText"
@@ -234,7 +233,7 @@
                 android:layout_gravity="end"
                 android:layout_marginEnd="8dp"
                 android:layout_row="4"
-                tools:text="24 favorites"/>
+                tools:text="24 favorites" />
 
             <TextView
                 android:id="@+id/followsText"
@@ -244,7 +243,7 @@
                 android:layout_gravity="end"
                 android:layout_marginEnd="8dp"
                 android:layout_row="5"
-                tools:text="14 follows"/>
+                tools:text="14 follows" />
 
             <TextView
                 android:id="@+id/storyIdText"
@@ -255,7 +254,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_row="6"
                 android:focusable="auto"
-                tools:text="Story ID: 24518752"/>
+                tools:text="Story ID: 24518752" />
         </GridLayout>
 
         <View
@@ -265,7 +264,7 @@
             android:layout_marginTop="16dp"
             android:background="@color/dividerColor"
             android:visibility="gone"
-            tools:visibility="visible"/>
+            tools:visibility="visible" />
 
         <LinearLayout
             android:id="@+id/btnBar"
@@ -284,7 +283,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:text="@string/download"/>
+                android:text="@string/download" />
 
             <Button
                 android:id="@+id/removeBtn"
@@ -292,14 +291,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:text="@string/remove_local"/>
+                android:text="@string/remove_local" />
 
             <Button
                 android:id="@+id/authorBtn"
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/view_author"/>
+                android:text="@string/view_author" />
 
             <ImageButton
                 style="?android:attr/buttonBarButtonStyle"
@@ -310,7 +309,7 @@
                 android:tint="@color/white"
                 app:srcCompat="@drawable/ic_photo_black_24dp"
                 tools:ignore="RtlHardcoded"
-                android:contentDescription="@string/story_image"/>
+                android:contentDescription="@string/story_image" />
 
         </LinearLayout>
 
