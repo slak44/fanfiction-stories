@@ -1,18 +1,8 @@
 package slak.fanfictionstories
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import android.content.Context
 import android.graphics.*
 import android.os.Parcelable
-import androidx.annotation.AnyThread
-import androidx.annotation.UiThread
-import androidx.appcompat.view.ContextThemeWrapper
-import androidx.cardview.widget.CardView
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.ItemTouchHelper
 import android.text.SpannableString
 import android.text.style.UnderlineSpan
 import android.util.AttributeSet
@@ -22,9 +12,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-import android.widget.Button
 import android.widget.ProgressBar
-import android.widget.TextView
+import androidx.annotation.AnyThread
+import androidx.annotation.UiThread
+import androidx.appcompat.view.ContextThemeWrapper
+import androidx.appcompat.widget.AppCompatButton
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.cardview.widget.CardView
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.takisoft.colorpicker.ColorPickerDialog
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.component_story.view.*
@@ -103,7 +103,7 @@ fun Context.createMarkerColorDialog(selectedColor: Int, onPicked: (Int) -> Unit)
  */
 class MarkerButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : Button(context, attrs, defStyleAttr), View.OnClickListener {
+) : AppCompatButton(context, attrs, defStyleAttr), View.OnClickListener {
   private var storyId: StoryId = 0
   private var markerColor: Int = 0
     @UiThread
@@ -321,10 +321,10 @@ class StoryCardView @JvmOverloads constructor(
   }
 }
 
-/** A pretty [TextView] that shows the title for a group. For use with [GroupTitle]. */
+/** A pretty [AppCompatTextView] that shows the title for a group. For use with [GroupTitle]. */
 class GroupTitleView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : TextView(context, attrs, defStyleAttr) {
+) : AppCompatTextView(context, attrs, defStyleAttr) {
   init {
     val lp = ViewGroup.MarginLayoutParams(WRAP_CONTENT, WRAP_CONTENT)
     lp.margins(bottom = resources.px(R.dimen.list_separator_height))
