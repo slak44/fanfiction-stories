@@ -530,7 +530,14 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     menu.findItem(R.id.checkForUpdate).isVisible = viewModel.storyModel.status == StoryStatus.LOCAL
     launch(Main) {
       val isInQueue = database.getStoryQueue().firstOrNull { it.first == viewModel.storyModel.storyId }
-      menu.findItem(R.id.toggleQueue).isChecked = (isInQueue != null)
+      val item = menu.findItem(R.id.toggleQueue)
+      if (isInQueue != null) {
+        item.isChecked = true
+        item.title = str(R.string.remove_from_queue)
+      } else {
+        item.isChecked = false
+        item.title = str(R.string.add_to_queue)
+      }
     }
     return super.onPrepareOptionsMenu(menu)
   }
