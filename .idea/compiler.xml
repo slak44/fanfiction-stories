@@ -3,10 +3,7 @@
   <component name="CompilerConfiguration">
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true" />
-      <profile name="instancestate" enabled="true">
-        <processor name="slak.processor.instancestate.InstanceStateProcessor" />
-        <processorPath useClasspath="false" />
-      </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel target="1.8" />
   </component>
 </project>
