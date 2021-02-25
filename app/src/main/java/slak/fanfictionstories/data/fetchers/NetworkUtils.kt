@@ -45,7 +45,7 @@ private suspend fun waitForNetwork() = suspendCoroutine<Unit> { cont ->
   Static.cm.registerNetworkCallback(req, callback)
 }
 
-private const val RATE_LIMIT_MS = 300L
+private const val RATE_LIMIT_MS = 850L
 private const val URL_TAG = "patientlyFetchURL"
 private val networkContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
