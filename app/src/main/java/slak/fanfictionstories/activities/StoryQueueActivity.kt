@@ -1,7 +1,6 @@
 package slak.fanfictionstories.activities
 
 import android.os.Bundle
-import androidx.recyclerview.widget.LinearLayoutManager
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ImageSpan
@@ -9,29 +8,34 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
-import kotlinx.android.synthetic.main.activity_story_queue.*
-import kotlinx.android.synthetic.main.activity_story_queue.toolbar
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.database
-import slak.fanfictionstories.utility.*
+import slak.fanfictionstories.databinding.ActivityStoryQueueBinding
+import slak.fanfictionstories.utility.CoroutineScopeActivity
+import slak.fanfictionstories.utility.iconTint
+import slak.fanfictionstories.utility.px
+import slak.fanfictionstories.utility.str
 
 class StoryQueueActivity : CoroutineScopeActivity() {
+  private lateinit var binding: ActivityStoryQueueBinding
+
   private val viewModel: StoryListViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
-    setContentView(R.layout.activity_story_queue)
-    setSupportActionBar(toolbar)
+    binding = ActivityStoryQueueBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     val layoutManager = LinearLayoutManager(this)
-    storyQueueList.layoutManager = layoutManager
-    storyQueueList.createStorySwipeHelper()
+    binding.storyQueueList.layoutManager = layoutManager
+    binding.storyQueueList.createStorySwipeHelper()
 
-    storyQueueList.adapter = StoryAdapter(viewModel)
+    binding.storyQueueList.adapter = StoryAdapter(viewModel)
     if (viewModel.isEmpty()) {
       viewModel.addSuspendingItems {
         val ids = database.getStoryQueue()
@@ -50,12 +54,12 @@ class StoryQueueActivity : CoroutineScopeActivity() {
   private fun setupEmptyQueueText() {
     val ss = SpannableString(str(R.string.queue_empty))
     val dw = getDrawable(R.drawable.ic_more_vert_black_24dp)!!
-    val sz = queueEmpty.textSize.toInt().coerceAtLeast(resources.px(R.dimen.story_queue_empty_icon_size))
+    val sz = binding.queueEmpty.textSize.toInt().coerceAtLeast(resources.px(R.dimen.story_queue_empty_icon_size))
     dw.setBounds(0, 0, sz, sz)
     dw.setTint(getColor(R.color.white))
     ss.setSpan(ImageSpan(dw, ImageSpan.ALIGN_BOTTOM), ss.length - 3, ss.length, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
-    queueEmpty.text = ss
-    queueEmpty.visibility = View.VISIBLE
+    binding.queueEmpty.text = ss
+    binding.queueEmpty.visibility = View.VISIBLE
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {

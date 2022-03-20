@@ -1,19 +1,17 @@
 package slak.fanfictionstories.activities
 
 import android.os.Bundle
-import androidx.annotation.AnyThread
-import androidx.annotation.UiThread
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AlertDialog
-import androidx.recyclerview.widget.LinearLayoutManager
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import android.widget.ProgressBar
 import androidx.activity.viewModels
-import kotlinx.android.synthetic.main.activity_story_list.*
-import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
+import androidx.annotation.AnyThread
+import androidx.annotation.UiThread
+import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -21,13 +19,15 @@ import slak.fanfictionstories.*
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
+import slak.fanfictionstories.databinding.ActivityStoryListBinding
 import slak.fanfictionstories.utility.*
 import kotlin.coroutines.CoroutineContext
 
 /** The list of stories the user has started reading, or has downloaded. */
 class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoadingBar {
-  override val loading: ProgressBar
-    get() = activityProgressBar
+  private lateinit var binding: ActivityStoryListBinding
+
+  override lateinit var loading: ProgressBar
 
   override fun onStoriesChanged(t: StoriesChangeEvent) {
     if (t is StoriesChangeEvent.New) {
@@ -55,26 +55,26 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
-    setContentView(R.layout.activity_story_list)
-    setSupportActionBar(toolbar)
-    setLoadingView(toolbar)
+    binding = ActivityStoryListBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
+    setLoadingView(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     layoutManager = LinearLayoutManager(this)
-    storyListView.layoutManager = layoutManager
-    storyListView.createStorySwipeHelper()
-    storyListScroller.setRecyclerView(storyListView)
-    storyListView.addOnScrollListener(storyListScroller.onScrollListener)
+    binding.storyListView.layoutManager = layoutManager
+    binding.storyListView.createStorySwipeHelper()
+    binding.storyListScroller.setRecyclerView(binding.storyListView)
+    binding.storyListView.addOnScrollListener(binding.storyListScroller.onScrollListener)
     viewModel.getCounts().observe(this) {
       if (it.first == StoryListViewModel.UNINITIALIZED) return@observe
-      toolbar.subtitle = str(R.string.x_stories_y_filtered, it.first, it.second)
+      binding.toolbar.subtitle = str(R.string.x_stories_y_filtered, it.first, it.second)
     }
     viewModel.getStoryCount().observe(this) {
-      if (it == 0 && !viewModel.hasPending()) nothingHere.visibility = View.VISIBLE
-      else nothingHere.visibility = View.GONE
+      if (it == 0 && !viewModel.hasPending()) binding.nothingHere.visibility = View.VISIBLE
+      else binding.nothingHere.visibility = View.GONE
     }
-    storyListView.adapter = StoryAdapter(viewModel)
+    binding.storyListView.adapter = StoryAdapter(viewModel)
     if (viewModel.isEmpty()) {
       viewModel.triggerDatabaseLoad().invokeOnCompletion { hideLoading() }
     } else {
@@ -86,7 +86,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
   override fun onDestroy() {
     super.onDestroy()
     unregister()
-    storyListView.removeOnScrollListener(storyListScroller.onScrollListener)
+    binding.storyListView.removeOnScrollListener(binding.storyListScroller.onScrollListener)
   }
 
   @UiThread
@@ -101,7 +101,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
             try {
               it.toLong()
             } catch (nfe: NumberFormatException) {
-              Snackbar.make(storyListView, str(R.string.text_is_not_id, it), Snackbar.LENGTH_LONG)
+              Snackbar.make(binding.storyListView, str(R.string.text_is_not_id, it), Snackbar.LENGTH_LONG)
               null
             }
           }
@@ -196,7 +196,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
         viewModel.filter { it is StoryListItem.GroupTitle && !it.isCollapsed }.forEach {
           it as StoryListItem.GroupTitle
           it.collapse(viewModel)
-          val vh = storyListView.findViewHolderForItemId(it.id)
+          val vh = binding.storyListView.findViewHolderForItemId(it.id)
           val titleView = vh?.itemView ?: return@forEach
           titleView as GroupTitleView
           titleView.setDrawable(it.isCollapsed)

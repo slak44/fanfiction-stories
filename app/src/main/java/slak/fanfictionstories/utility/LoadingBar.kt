@@ -1,17 +1,18 @@
 package slak.fanfictionstories.utility
 
 import android.app.Activity
-import androidx.annotation.UiThread
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
+import androidx.annotation.UiThread
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import slak.fanfictionstories.R
+import slak.fanfictionstories.databinding.LoadingActivityIndeterminateBinding
 
 /** This interface is used to control a loading progress bar. */
 interface IHasLoadingBar {
-  val loading: ProgressBar
+  var loading: ProgressBar
 
   /** Returns whether or not the loading bar is currently visible. */
   @UiThread
@@ -40,8 +41,8 @@ interface IHasLoadingBar {
  * @param idxInToolbarLayout certain implementations may have other views around here, so this parameter is provided for
  * choose where to insert the loader ([ViewGroup.addView]'s index arg)
  */
-fun <T> T.setLoadingView(toolbar: Toolbar, idxInToolbarLayout: Int = -1) where T : Activity, T: IHasLoadingBar {
-  val progress = layoutInflater.inflate(
-      R.layout.loading_activity_indeterminate, toolbar.parent as ViewGroup, false)
-  (toolbar.parent as ViewGroup).addView(progress, idxInToolbarLayout)
+fun <T> T.setLoadingView(toolbar: Toolbar, idxInToolbarLayout: Int = -1) where T : Activity, T : IHasLoadingBar {
+  val binding = LoadingActivityIndeterminateBinding.inflate(layoutInflater, toolbar.parent as ViewGroup, false)
+  (toolbar.parent as ViewGroup).addView(binding.root, idxInToolbarLayout)
+  loading = binding.activityProgressBar
 }

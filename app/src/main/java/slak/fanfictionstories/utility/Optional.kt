@@ -1,8 +1,8 @@
 package slak.fanfictionstories.utility
 
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
-import kotlinx.android.parcel.RawValue
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.RawValue
 import java.io.Serializable
 
 /** Replacement for [java.util.Optional] using a sealed class. Is [Parcelable] if [E] is. */

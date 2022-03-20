@@ -4,8 +4,8 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.preference.EditTextPreference
 import com.takisoft.preferencex.PreferenceFragmentCompat
-import kotlinx.android.synthetic.main.activity_settings.*
 import slak.fanfictionstories.R
+import slak.fanfictionstories.databinding.ActivitySettingsBinding
 import slak.fanfictionstories.scheduleUpdate
 import slak.fanfictionstories.utility.ActivityWithStatic
 import slak.fanfictionstories.utility.Static
@@ -13,16 +13,13 @@ import slak.fanfictionstories.utility.str
 
 /** The preferences activity, for user-controlled settings. */
 class SettingsActivity : ActivityWithStatic(), SharedPreferences.OnSharedPreferenceChangeListener {
-  override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-    if (key != str(R.string.key_option_update_time)) return
-    Static.jobScheduler.cancelAll()
-    scheduleUpdate()
-  }
+  private lateinit var binding: ActivitySettingsBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_settings)
-    setSupportActionBar(toolbar)
+    binding = ActivitySettingsBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     supportFragmentManager.beginTransaction().replace(R.id.prefFragment, MainSettingsFragment()).commit()
     Static.defaultPrefs.registerOnSharedPreferenceChangeListener(this)
@@ -31,6 +28,12 @@ class SettingsActivity : ActivityWithStatic(), SharedPreferences.OnSharedPrefere
   override fun onDestroy() {
     super.onDestroy()
     Static.defaultPrefs.unregisterOnSharedPreferenceChangeListener(this)
+  }
+
+  override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+    if (key != str(R.string.key_option_update_time)) return
+    Static.jobScheduler.cancelAll()
+    scheduleUpdate()
   }
 }
 

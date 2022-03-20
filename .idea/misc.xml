@@ -5,7 +5,11 @@
       <map>
         <entry key="../../../../../layout/custom_preview.xml" value="0.3890625" />
         <entry key="app/src/main/res/layout/activity_story_list.xml" value="0.4148550724637681" />
+        <entry key="app/src/main/res/layout/activity_story_reader.xml" value="0.2760416666666667" />
+        <entry key="app/src/main/res/layout/activity_story_reader_content.xml" value="0.4148550724637681" />
         <entry key="app/src/main/res/layout/component_story.xml" value="0.2798913043478261" />
+        <entry key="app/src/main/res/layout/dialog_report_review.xml" value="0.4148550724637681" />
+        <entry key="app/src/main/res/layout/fragment_search_ui.xml" value="0.4148550724637681" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.296" />
       </map>
     </option>

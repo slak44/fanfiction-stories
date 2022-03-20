@@ -2,20 +2,16 @@ package slak.fanfictionstories.activities
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import androidx.annotation.AnyThread
-import androidx.annotation.UiThread
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AlertDialog
-import androidx.recyclerview.widget.LinearLayoutManager
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ProgressBar
 import androidx.activity.viewModels
-import kotlinx.android.synthetic.main.activity_canon_story_list.*
-import kotlinx.android.synthetic.main.dialog_ffnet_filter.view.*
-import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
+import androidx.annotation.AnyThread
+import androidx.annotation.UiThread
+import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -25,6 +21,8 @@ import slak.fanfictionstories.StoryListItem.StoryCardData
 import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.*
+import slak.fanfictionstories.databinding.ActivityCanonStoryListBinding
+import slak.fanfictionstories.databinding.DialogFfnetFilterBinding
 import slak.fanfictionstories.utility.*
 
 /** Stores the data required for a [CanonStoryListActivity]. */
@@ -78,25 +76,27 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
 
 /** A list of stories within a canon. */
 class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
-  override val loading: ProgressBar
-    get() = activityProgressBar
+  override lateinit var loading: ProgressBar
 
   private val viewModel: CanonListViewModel by viewModels {
     ViewModelFactory(intent.getParcelableExtra(INTENT_LINK_DATA)!!)
   }
 
+  private lateinit var binding: ActivityCanonStoryListBinding
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_canon_story_list)
-    setSupportActionBar(toolbar)
-    setLoadingView(toolbar)
+    binding = ActivityCanonStoryListBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
+    setLoadingView(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-    canonStoryListView.adapter = StoryAdapter(viewModel)
+    binding.canonStoryListView.adapter = StoryAdapter(viewModel)
     val layoutManager = LinearLayoutManager(this)
-    canonStoryListView.layoutManager = layoutManager
-    canonStoryListView.createStorySwipeHelper()
-    infinitePageScroll(canonStoryListView, layoutManager) {
+    binding.canonStoryListView.layoutManager = layoutManager
+    binding.canonStoryListView.createStorySwipeHelper()
+    infinitePageScroll(binding.canonStoryListView, layoutManager) {
       viewModel.addSuspendingItems { viewModel.getNextPage() }
     }
 
@@ -154,13 +154,14 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
   }
 
   private var dialogOpened: Boolean = false
+
   @SuppressLint("InflateParams")
   private fun openFilterDialog() {
     // Don't open more than one dialog
     if (dialogOpened) return
     dialogOpened = true
-    val layout = LayoutInflater.from(this)
-        .inflate(R.layout.dialog_ffnet_filter, null, false)
+
+    val binding = DialogFfnetFilterBinding.inflate(layoutInflater, null, false)
 
     val strNone = str(R.string.none)
     val strAny = str(R.string.any)
@@ -168,60 +169,60 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
     with(viewModel.filters) {
       val genresEdit = resources.getStringArray(R.array.genres).toMutableList()
       genresEdit[0] = strNone
-      layout.notGenre.setEntries(genresEdit)
+      binding.notGenre.setEntries(genresEdit)
 
-      layout.sort.onSelect { _, pos -> sort = Sort.values()[pos] }
-      layout.timeRange.onSelect { _, pos -> timeRange = TimeRange.values()[pos] }
-      layout.genre1.onSelect { _, pos -> genre1 = Genre.values()[pos] }
-      layout.genre2.onSelect { _, pos -> genre2 = Genre.values()[pos] }
-      layout.rating.onSelect { _, pos -> rating = Rating.values()[pos] }
-      layout.status.onSelect { _, pos -> status = Status.values()[pos] }
-      layout.length.onSelect { _, pos -> wordCount = WordCount.values()[pos] }
-      layout.notGenre.onSelect { _, pos -> genreWithout = Genre.values()[pos].opt() }
-      layout.language.onSelect { _, pos ->
+      binding.sort.onSelect { _, pos -> sort = Sort.values()[pos] }
+      binding.timeRange.onSelect { _, pos -> timeRange = TimeRange.values()[pos] }
+      binding.genre1.onSelect { _, pos -> genre1 = Genre.values()[pos] }
+      binding.genre2.onSelect { _, pos -> genre2 = Genre.values()[pos] }
+      binding.rating.onSelect { _, pos -> rating = Rating.values()[pos] }
+      binding.status.onSelect { _, pos -> status = Status.values()[pos] }
+      binding.length.onSelect { _, pos -> wordCount = WordCount.values()[pos] }
+      binding.notGenre.onSelect { _, pos -> genreWithout = Genre.values()[pos].opt() }
+      binding.language.onSelect { _, pos ->
         lang = Language.values()[pos]
         Prefs.preferredLanguage = lang
       }
 
-      layout.sort.setSelection(Sort.values().indexOf(sort))
-      layout.timeRange.setSelection(TimeRange.values().indexOf(timeRange))
-      layout.genre1.setSelection(Genre.values().indexOf(genre1))
-      layout.genre2.setSelection(Genre.values().indexOf(genre2))
-      layout.rating.setSelection(Rating.values().indexOf(rating))
-      layout.language.setSelection(Language.values().indexOf(lang))
-      layout.status.setSelection(Status.values().indexOf(status))
-      layout.length.setSelection(WordCount.values().indexOf(wordCount))
-      genreWithout.ifPresent { layout.notGenre.setSelection(Genre.values().indexOf(it)) }
+      binding.sort.setSelection(Sort.values().indexOf(sort))
+      binding.timeRange.setSelection(TimeRange.values().indexOf(timeRange))
+      binding.genre1.setSelection(Genre.values().indexOf(genre1))
+      binding.genre2.setSelection(Genre.values().indexOf(genre2))
+      binding.rating.setSelection(Rating.values().indexOf(rating))
+      binding.language.setSelection(Language.values().indexOf(lang))
+      binding.status.setSelection(Status.values().indexOf(status))
+      binding.length.setSelection(WordCount.values().indexOf(wordCount))
+      genreWithout.ifPresent { binding.notGenre.setSelection(Genre.values().indexOf(it)) }
 
       with(viewModel.metadata) {
         charList.ifPresent { list ->
           val charNameList = list.mapTo(mutableListOf()) { it.name }
           charNameList[0] = strAny
-          layout.char1.setEntries(charNameList)
-          layout.char2.setEntries(charNameList)
-          layout.char3.setEntries(charNameList)
-          layout.char4.setEntries(charNameList)
+          binding.char1.setEntries(charNameList)
+          binding.char2.setEntries(charNameList)
+          binding.char3.setEntries(charNameList)
+          binding.char4.setEntries(charNameList)
           charNameList[0] = strNone
-          layout.notChar1.setEntries(charNameList)
-          layout.notChar2.setEntries(charNameList)
-          layout.char1.onSelect { _, pos -> char1Id = charList.get()[pos].id }
-          layout.char2.onSelect { _, pos -> char2Id = charList.get()[pos].id }
-          layout.char3.onSelect { _, pos -> char3Id = charList.get()[pos].id }
-          layout.char4.onSelect { _, pos -> char4Id = charList.get()[pos].id }
-          layout.notChar1.onSelect { _, pos -> char1Without = charList.get()[pos].id.opt() }
-          layout.notChar2.onSelect { _, pos -> char2Without = charList.get()[pos].id.opt() }
-          layout.char1.setSelection(charList.get().indexOfFirst { it.id == char1Id })
-          layout.char2.setSelection(charList.get().indexOfFirst { it.id == char2Id })
-          layout.char3.setSelection(charList.get().indexOfFirst { it.id == char3Id })
-          layout.char4.setSelection(charList.get().indexOfFirst { it.id == char4Id })
-          char1Without.ifPresent { layout.notChar1.setSelection(charNameList.indexOf(it)) }
-          char2Without.ifPresent { layout.notChar2.setSelection(charNameList.indexOf(it)) }
+          binding.notChar1.setEntries(charNameList)
+          binding.notChar2.setEntries(charNameList)
+          binding.char1.onSelect { _, pos -> char1Id = charList.get()[pos].id }
+          binding.char2.onSelect { _, pos -> char2Id = charList.get()[pos].id }
+          binding.char3.onSelect { _, pos -> char3Id = charList.get()[pos].id }
+          binding.char4.onSelect { _, pos -> char4Id = charList.get()[pos].id }
+          binding.notChar1.onSelect { _, pos -> char1Without = charList.get()[pos].id.opt() }
+          binding.notChar2.onSelect { _, pos -> char2Without = charList.get()[pos].id.opt() }
+          binding.char1.setSelection(charList.get().indexOfFirst { it.id == char1Id })
+          binding.char2.setSelection(charList.get().indexOfFirst { it.id == char2Id })
+          binding.char3.setSelection(charList.get().indexOfFirst { it.id == char3Id })
+          binding.char4.setSelection(charList.get().indexOfFirst { it.id == char4Id })
+          char1Without.ifPresent { binding.notChar1.setSelection(charNameList.indexOf(it)) }
+          char2Without.ifPresent { binding.notChar2.setSelection(charNameList.indexOf(it)) }
         }
       }
       val charSpinnerState = if (viewModel.metadata.charList is Empty) View.GONE else View.VISIBLE
-      listOf(layout.char1, layout.char2, layout.char3, layout.char4, layout.notChar1,
-          layout.notChar2, layout.char1Text, layout.char2Text, layout.char3Text, layout.char4Text,
-          layout.notChar1Text, layout.notChar2Text).forEach {
+      listOf(binding.char1, binding.char2, binding.char3, binding.char4, binding.notChar1,
+          binding.notChar2, binding.char1Text, binding.char2Text, binding.char3Text, binding.char4Text,
+          binding.notChar1Text, binding.notChar2Text).forEach {
         it.visibility = charSpinnerState
       }
 
@@ -229,25 +230,25 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
         val worldNameList = wl.mapTo(mutableListOf()) { it.name }
 
         worldNameList[0] = strAny
-        layout.world.setEntries(worldNameList)
+        binding.world.setEntries(worldNameList)
 
         worldNameList[0] = strNone
-        layout.notWorld.setEntries(worldNameList)
+        binding.notWorld.setEntries(worldNameList)
 
-        layout.world.onSelect { _, pos -> worldId = wl[pos].id }
-        layout.world.setSelection(wl.indexOfFirst { it.id == worldId })
+        binding.world.onSelect { _, pos -> worldId = wl[pos].id }
+        binding.world.setSelection(wl.indexOfFirst { it.id == worldId })
 
-        layout.notWorld.onSelect { _, pos -> worldWithout = wl[pos].name.opt() }
+        binding.notWorld.onSelect { _, pos -> worldWithout = wl[pos].name.opt() }
 
         worldWithout.ifPresent {
-          layout.notWorld.setSelection(worldNameList.indexOf(it))
+          binding.notWorld.setSelection(worldNameList.indexOf(it))
         }
       }
       val worldSpinnerState = if (viewModel.metadata.worldList is Empty) View.GONE else View.VISIBLE
-      layout.world.visibility = worldSpinnerState
-      layout.notWorld.visibility = worldSpinnerState
-      layout.worldText.visibility = worldSpinnerState
-      layout.notWorldText.visibility = worldSpinnerState
+      binding.world.visibility = worldSpinnerState
+      binding.notWorld.visibility = worldSpinnerState
+      binding.worldText.visibility = worldSpinnerState
+      binding.notWorldText.visibility = worldSpinnerState
     }
 
     AlertDialog.Builder(this)
@@ -259,7 +260,7 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
           triggerLoadUI()
           dialog.dismiss()
         }
-        .setView(layout)
+        .setView(binding.root)
         .show()
   }
 
@@ -271,11 +272,9 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
         viewModel.toggleFavorite().invokeOnCompletion {
           // It's already toggled at this point
           if (!viewModel.isFavorite) {
-            Snackbar.make(this@CanonStoryListActivity.root,
-                R.string.unfavorited, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, R.string.unfavorited, Snackbar.LENGTH_SHORT).show()
           } else {
-            Snackbar.make(this@CanonStoryListActivity.root,
-                str(R.string.favorited_x, title.toString()), Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, str(R.string.favorited_x, title.toString()), Snackbar.LENGTH_SHORT).show()
           }
           invalidateOptionsMenu()
         }

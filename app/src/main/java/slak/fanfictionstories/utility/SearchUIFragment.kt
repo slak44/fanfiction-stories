@@ -1,9 +1,6 @@
 package slak.fanfictionstories.utility
 
 import android.os.Bundle
-import androidx.annotation.UiThread
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.fragment.app.Fragment
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -11,28 +8,38 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import kotlinx.android.synthetic.main.fragment_search_ui.view.*
+import androidx.annotation.UiThread
+import androidx.fragment.app.Fragment
 import slak.fanfictionstories.R
+import slak.fanfictionstories.databinding.FragmentSearchUiBinding
 
 /** An activity that implements this interface can be searched using [SearchUIFragment]. */
 interface ISearchableActivity {
   /** Get the index of the current highlight. */
   fun getCurrentHighlight(): Int
+
   /** Get the total match count. */
   fun getMatchCount(): Int
+
   /** Scroll the highlight at [idx] into view. */
   fun navigateToHighlight(idx: Int)
+
   /** Search for [query] and update the stored matches. */
   fun setSearchQuery(query: String)
+
   /** Change the currently highlighted match. */
   fun updateCurrentHighlight(idx: Int)
+
   /** Highlight the found matches, and the currently selected one. */
   fun highlightMatches()
+
   /** Remove all highlights. */
   fun clearHighlights()
+
   /** Do stuff when the search UI hides itself. */
   fun onHide()
 }
+
 fun ISearchableActivity.hasMatches() = getMatchCount() > 0
 fun ISearchableActivity.hasNoMatches() = !hasMatches()
 
@@ -48,14 +55,12 @@ class SearchUIFragment : Fragment() {
   }
 
   private lateinit var sActivity: ISearchableActivity
-  private lateinit var searchLayout: ConstraintLayout
+  private lateinit var binding: FragmentSearchUiBinding
 
-  override fun onCreateView(inflater: LayoutInflater,
-                            container: ViewGroup?, savedInstanceState: Bundle?): View? {
-    searchLayout = inflater.inflate(
-        R.layout.fragment_search_ui, container, false) as ConstraintLayout
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    binding = FragmentSearchUiBinding.inflate(inflater, container, false)
     Log.v(TAG, "Search UI inflated")
-    searchLayout.searchNextMatchBtn.setOnClickListener {
+    binding.searchNextMatchBtn.setOnClickListener {
       if (sActivity.hasNoMatches()) return@setOnClickListener
       val newCurrent = if (sActivity.getCurrentHighlight() + 1 != sActivity.getMatchCount()) {
         sActivity.getCurrentHighlight() + 1
@@ -66,7 +71,7 @@ class SearchUIFragment : Fragment() {
       updateMatchText(newCurrent + 1)
       sActivity.updateCurrentHighlight(newCurrent)
     }
-    searchLayout.searchPrevMatchBtn.setOnClickListener {
+    binding.searchPrevMatchBtn.setOnClickListener {
       if (sActivity.hasNoMatches()) return@setOnClickListener
       val newCurrent = if (sActivity.getCurrentHighlight() > 0) {
         sActivity.getCurrentHighlight() - 1
@@ -77,13 +82,13 @@ class SearchUIFragment : Fragment() {
       updateMatchText(newCurrent + 1)
       sActivity.updateCurrentHighlight(newCurrent)
     }
-    searchLayout.searchCloseBtn.setOnClickListener {
-      searchLayout.visibility = View.GONE
-      hideSoftKeyboard(searchLayout.windowToken)
+    binding.searchCloseBtn.setOnClickListener {
+      binding.searchLayout.visibility = View.GONE
+      hideSoftKeyboard(binding.searchLayout.windowToken)
       sActivity.clearHighlights()
       sActivity.onHide()
     }
-    return searchLayout
+    return binding.root
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -96,14 +101,14 @@ class SearchUIFragment : Fragment() {
   override fun onViewStateRestored(savedInstanceState: Bundle?) {
     super.onViewStateRestored(savedInstanceState)
     if (savedInstanceState != null) {
-      searchLayout.visibility = savedInstanceState.getInt(RESTORE_LAYOUT_VISIBILITY, View.GONE)
+      binding.searchLayout.visibility = savedInstanceState.getInt(RESTORE_LAYOUT_VISIBILITY, View.GONE)
     }
-    searchLayout.editorSearch.setOnEditorActionListener { _, actionId, _ ->
+    binding.editorSearch.setOnEditorActionListener { _, actionId, _ ->
       if (actionId != EditorInfo.IME_ACTION_SEARCH) return@setOnEditorActionListener false
       searchAndHighlight()
       return@setOnEditorActionListener true
     }
-    searchLayout.editorSearch.addTextChangedListener(object : TextWatcher {
+    binding.editorSearch.addTextChangedListener(object : TextWatcher {
       override fun afterTextChanged(s: Editable) {}
       override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
       override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
@@ -113,7 +118,7 @@ class SearchUIFragment : Fragment() {
           // If characters were removed, we're going from 3+ letters to less than that
           // And we'd like to not have existing highlights loiter around, so clear them
           if (before > count) {
-            searchLayout.editorSearchMatches.text = ""
+            binding.editorSearchMatches.text = ""
             sActivity.clearHighlights()
           }
           return
@@ -125,16 +130,16 @@ class SearchUIFragment : Fragment() {
 
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
-    outState.putInt(RESTORE_LAYOUT_VISIBILITY, searchLayout.visibility)
+    outState.putInt(RESTORE_LAYOUT_VISIBILITY, binding.searchLayout.visibility)
   }
 
   @UiThread
   private fun searchAndHighlight() {
-    val toFind = searchLayout.editorSearch.text.toString()
+    val toFind = binding.editorSearch.text.toString()
     sActivity.setSearchQuery(toFind)
     if (toFind.isEmpty()) {
       // Empty query means there are no matches, but that's obvious, so just leave this text empty
-      searchLayout.editorSearchMatches.text = ""
+      binding.editorSearchMatches.text = ""
       return
     }
     sActivity.highlightMatches()
@@ -142,28 +147,28 @@ class SearchUIFragment : Fragment() {
       updateMatchText(1)
       sActivity.navigateToHighlight(0)
     } else {
-      searchLayout.editorSearchMatches.text = str(R.string.no_matches_found)
+      binding.editorSearchMatches.text = str(R.string.no_matches_found)
     }
   }
 
   @UiThread
   private fun updateMatchText(newCurrent: Int) {
-    searchLayout.editorSearchMatches.text =
+    binding.editorSearchMatches.text =
         str(R.string.found_x_matches_current_y, sActivity.getMatchCount(), newCurrent)
   }
 
   /** Make the searching UI visible, and bring it into focus. */
   @UiThread
   fun show() {
-    searchLayout.visibility = View.VISIBLE
-    searchLayout.editorSearch.requestFocus()
+    binding.searchLayout.visibility = View.VISIBLE
+    binding.editorSearch.requestFocus()
     sActivity.highlightMatches()
   }
 
   /** Call after reinitializing this fragment. Return true if visible. */
   @UiThread
   fun restoreState(): Boolean {
-    if (searchLayout.visibility != View.VISIBLE) return false
+    if (binding.searchLayout.visibility != View.VISIBLE) return false
     sActivity.highlightMatches()
     if (sActivity.hasMatches()) updateMatchText(sActivity.getCurrentHighlight() + 1)
     return true

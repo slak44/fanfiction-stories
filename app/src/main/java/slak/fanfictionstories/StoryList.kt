@@ -26,8 +26,7 @@ import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.takisoft.colorpicker.ColorPickerDialog
-import kotlinx.android.parcel.Parcelize
-import kotlinx.android.synthetic.main.component_story.view.*
+import kotlinx.parcelize.Parcelize
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Main
 import slak.fanfictionstories.StoryListItem.*
@@ -37,6 +36,7 @@ import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.deleteStory
 import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
+import slak.fanfictionstories.databinding.ComponentStoryBinding
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Optional
 import java.util.*
@@ -179,10 +179,7 @@ class StoryCardView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : CardView(context, attrs, defStyleAttr) {
-  companion object {
-    const val DEFAULT_ELEVATION = 7F
-    const val CLICK_ELEVATION = 20F
-  }
+  private lateinit var binding: ComponentStoryBinding
 
   var currentModel: StoryModel? = null
 
@@ -191,14 +188,14 @@ class StoryCardView @JvmOverloads constructor(
     set(value) {
       if (value) {
         cardElevation = CLICK_ELEVATION
-        storyDetails.visibility = View.VISIBLE
-        divider.visibility = View.VISIBLE
-        btnBar.visibility = View.VISIBLE
+        binding.storyDetails.visibility = View.VISIBLE
+        binding.divider.visibility = View.VISIBLE
+        binding.btnBar.visibility = View.VISIBLE
       } else {
         cardElevation = DEFAULT_ELEVATION
-        storyDetails.visibility = View.GONE
-        divider.visibility = View.GONE
-        btnBar.visibility = View.GONE
+        binding.storyDetails.visibility = View.GONE
+        binding.divider.visibility = View.GONE
+        binding.btnBar.visibility = View.GONE
       }
       field = value
       onExtendedStateChange(value)
@@ -207,7 +204,12 @@ class StoryCardView @JvmOverloads constructor(
   /** Called when the view is extended/unextended. */
   var onExtendedStateChange: (Boolean) -> Unit = {}
 
-  fun loadFromModel(model: StoryModel, scope: CoroutineScope) {
+  override fun onFinishInflate() {
+    super.onFinishInflate()
+    binding = ComponentStoryBinding.bind(this)
+  }
+
+  fun loadFromModel(model: StoryModel, scope: CoroutineScope) = with(binding) {
     currentModel = model
     // Unexpanded view
     titleText.text = model.title
@@ -293,10 +295,10 @@ class StoryCardView @JvmOverloads constructor(
   /** The remove button will not work without the [viewModel]. It will be [View.GONE]'d instead. */
   fun bindRemoveBtn(model: StoryModel, scope: CoroutineScope, viewModel: Optional<StoryListViewModel>) {
     val vm = viewModel.orElse {
-      removeBtn.visibility = View.GONE
+      binding.removeBtn.visibility = View.GONE
       return@bindRemoveBtn
     }
-    removeBtn.setOnClickListener { btn ->
+    binding.removeBtn.setOnClickListener { btn ->
       scope.launch(Main) {
         // Even though we have a model, fetch it from db to make sure there are no inconsistencies
         val dbModel = Static.database.storyById(model.storyId).await()
@@ -318,6 +320,11 @@ class StoryCardView @JvmOverloads constructor(
         }
       }
     }
+  }
+
+  companion object {
+    const val DEFAULT_ELEVATION = 7F
+    const val CLICK_ELEVATION = 20F
   }
 }
 

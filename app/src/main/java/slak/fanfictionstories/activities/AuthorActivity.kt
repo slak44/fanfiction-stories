@@ -16,10 +16,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.tabs.TabLayout
-import kotlinx.android.synthetic.main.activity_author.*
-import kotlinx.android.synthetic.main.fragment_author_bio.view.*
-import kotlinx.android.synthetic.main.fragment_author_stories.view.*
-import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import slak.fanfictionstories.*
@@ -27,6 +23,9 @@ import slak.fanfictionstories.data.Prefs
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.Author
 import slak.fanfictionstories.data.fetchers.getAuthor
+import slak.fanfictionstories.databinding.ActivityAuthorBinding
+import slak.fanfictionstories.databinding.FragmentAuthorBioBinding
+import slak.fanfictionstories.databinding.FragmentAuthorStoriesBinding
 import slak.fanfictionstories.utility.*
 import java.util.*
 
@@ -38,15 +37,12 @@ class AuthorViewModel(val author: Author) : ViewModel()
  * related actions.
  */
 class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
-  override val loading: ProgressBar
-    get() = activityProgressBar
+  override lateinit var loading: ProgressBar
 
-  companion object {
-    const val INTENT_AUTHOR_ID = "author_id_intent"
-    const val INTENT_AUTHOR_NAME = "author_name_intent"
-  }
+  private lateinit var binding: ActivityAuthorBinding
 
   private lateinit var author: Author
+
   private val viewModel: AuthorViewModel by viewModels { ViewModelFactory(author) }
 
   /**
@@ -58,9 +54,10 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_author)
-    setSupportActionBar(toolbar)
-    setLoadingView(toolbar, 1)
+    binding = ActivityAuthorBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
+    setLoadingView(binding.toolbar, 1)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     val (authorName, authorId) = if (intent.action == ACTION_VIEW) {
@@ -76,8 +73,8 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
     }
 
     title = authorName
-    container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
-    tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
+    binding.container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(binding.tabs))
+    binding.tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(binding.container))
     showLoading()
 
     launch(Main) {
@@ -85,21 +82,21 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
       title = viewModel.author.name
       invalidateOptionsMenu()
       sectionsPagerAdapter = SectionsPagerAdapter(supportFragmentManager)
-      container.adapter = sectionsPagerAdapter
+      binding.container.adapter = sectionsPagerAdapter
       hideLoading()
     }
   }
 
-  /** Ensure the [tabs] are gone when the loading bar is there. */
+  /** Ensure the tabs are gone when the loading bar is there. */
   override fun showLoading() {
     super.showLoading()
-    tabs.visibility = View.GONE
+    binding.tabs.visibility = View.GONE
   }
 
-  /** Ensure the [tabs] come back when the loading bar goes away. */
+  /** Ensure the tabs come back when the loading bar goes away. */
   override fun hideLoading() {
     super.hideLoading()
-    tabs.visibility = View.VISIBLE
+    binding.tabs.visibility = View.VISIBLE
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -176,6 +173,25 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
 
   /** Fragment that renders HTML in a [android.widget.TextView]. */
   internal class HtmlFragment : Fragment() {
+    private lateinit var binding: FragmentAuthorBioBinding
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+      binding = FragmentAuthorBioBinding.inflate(inflater, container, false)
+      binding.root.post {
+        binding.html.text = Html.fromHtml(requireArguments().getString(ARG_HTML_TEXT),
+            Html.FROM_HTML_MODE_LEGACY, null, HrSpan.tagHandlerFactory(binding.root.width))
+        binding.html.movementMethod = LinkMovementMethod.getInstance()
+        val imageUrl = requireArguments().getString(ARG_HTML_IMG_URL)
+        binding.authorImage.visibility = if (imageUrl == null) View.GONE else View.VISIBLE
+        binding.authorImage.setOnClickListener {
+          (activity as CoroutineScopeActivity).launch {
+            Static.currentCtx.showImage(R.string.image_author, imageUrl!!)
+          }
+        }
+      }
+      return binding.root
+    }
+
     companion object {
       private const val ARG_HTML_TEXT = "html_text"
       private const val ARG_HTML_IMG_URL = "html_img_url"
@@ -190,30 +206,68 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
         return fragment
       }
     }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-      val rootView = inflater.inflate(R.layout.fragment_author_bio, container, false)
-      rootView.post {
-        rootView.html.text = Html.fromHtml(arguments!!.getString(ARG_HTML_TEXT),
-            Html.FROM_HTML_MODE_LEGACY, null, HrSpan.tagHandlerFactory(rootView.width))
-        rootView.html.movementMethod = LinkMovementMethod.getInstance()
-        val imageUrl = arguments!!.getString(ARG_HTML_IMG_URL)
-        rootView.authorImage.visibility = if (imageUrl == null) View.GONE else View.VISIBLE
-        rootView.authorImage.setOnClickListener {
-          (activity as CoroutineScopeActivity).launch {
-            Static.currentCtx.showImage(R.string.image_author, imageUrl!!)
-          }
-        }
-      }
-      return rootView
-    }
   }
 
   /**
-   * Fragment that lists stories using a [android.support.v7.widget.RecyclerView] and
-   * [StoryAdapter].
+   * Fragment that lists stories using a [RecyclerView] and [StoryAdapter].
    */
   internal class StoryListFragment : Fragment() {
+    private lateinit var binding: FragmentAuthorStoriesBinding
+
+    private val viewModel by lazy { ViewModelProvider(this).get(StoryListViewModel::class.java) }
+
+    @UiThread
+    private fun initLayout(stories: List<StoryModel>) {
+      binding.stories.layoutManager = LinearLayoutManager(context)
+      binding.stories.createStorySwipeHelper()
+      binding.stories.adapter = StoryAdapter(viewModel)
+      if (stories.isEmpty()) {
+        binding.noStories.visibility = View.VISIBLE
+        binding.orderBy.visibility = View.GONE
+        binding.groupBy.visibility = View.GONE
+      } else {
+        binding.noStories.visibility = View.GONE
+        binding.orderBy.visibility = View.VISIBLE
+        binding.groupBy.visibility = View.VISIBLE
+        viewModel.arrangeStories(stories, Prefs.authorArrangement())
+      }
+      binding.orderBy.setOnClickListener {
+        orderByDialog(requireContext(),
+            Prefs.authorOrderStrategy, Prefs.authorOrderDirection) { str, dir ->
+          Prefs.authorOrderDirection = dir
+          Prefs.authorOrderStrategy = str
+          viewModel.arrangeStories(stories, Prefs.authorArrangement())
+        }
+      }
+      binding.groupBy.setOnClickListener { _ ->
+        groupByDialog(requireContext(), Prefs.authorGroupStrategy) {
+          Prefs.authorGroupStrategy = it
+          viewModel.arrangeStories(stories, Prefs.authorArrangement())
+        }
+      }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+      binding = FragmentAuthorStoriesBinding.inflate(inflater, container, false)
+      // FIXME maybe replace storyById with storiesById
+      viewModel.launch(Main) {
+        val stories = requireArguments().getParcelableArrayList<StoryModel>(ARG_STORIES)!!.map {
+          val model = Static.database.storyById(it.storyId).await().orNull() ?: return@map it
+          it.progress = model.progress
+          it.status = model.status
+          return@map it
+        }
+        initLayout(stories)
+        viewModel.defaultStoryListObserver.register()
+      }
+      return binding.root
+    }
+
+    override fun onDestroy() {
+      super.onDestroy()
+      viewModel.defaultStoryListObserver.unregister()
+    }
+
     companion object {
       private const val ARG_STORIES = "stories"
 
@@ -226,59 +280,10 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
         return fragment
       }
     }
+  }
 
-    private val viewModel by lazy { ViewModelProvider(this).get(StoryListViewModel::class.java) }
-
-    @UiThread
-    private fun initLayout(rootView: View, stories: List<StoryModel>) {
-      rootView.stories.layoutManager = LinearLayoutManager(context)
-      rootView.stories.createStorySwipeHelper()
-      rootView.stories.adapter = StoryAdapter(viewModel)
-      if (stories.isEmpty()) {
-        rootView.noStories.visibility = View.VISIBLE
-        rootView.orderBy.visibility = View.GONE
-        rootView.groupBy.visibility = View.GONE
-      } else {
-        rootView.noStories.visibility = View.GONE
-        rootView.orderBy.visibility = View.VISIBLE
-        rootView.groupBy.visibility = View.VISIBLE
-        viewModel.arrangeStories(stories, Prefs.authorArrangement())
-      }
-      rootView.orderBy.setOnClickListener {
-        orderByDialog(context!!,
-            Prefs.authorOrderStrategy, Prefs.authorOrderDirection) { str, dir ->
-          Prefs.authorOrderDirection = dir
-          Prefs.authorOrderStrategy = str
-          viewModel.arrangeStories(stories, Prefs.authorArrangement())
-        }
-      }
-      rootView.groupBy.setOnClickListener { _ ->
-        groupByDialog(context!!, Prefs.authorGroupStrategy) {
-          Prefs.authorGroupStrategy = it
-          viewModel.arrangeStories(stories, Prefs.authorArrangement())
-        }
-      }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-      val rootView = inflater.inflate(R.layout.fragment_author_stories, container, false)
-      // FIXME maybe replace storyById with storiesById
-      viewModel.launch(Main) {
-        val stories = arguments!!.getParcelableArrayList<StoryModel>(ARG_STORIES)!!.map {
-          val model = Static.database.storyById(it.storyId).await().orNull() ?: return@map it
-          it.progress = model.progress
-          it.status = model.status
-          return@map it
-        }
-        initLayout(rootView, stories)
-        viewModel.defaultStoryListObserver.register()
-      }
-      return rootView
-    }
-
-    override fun onDestroy() {
-      super.onDestroy()
-      viewModel.defaultStoryListObserver.unregister()
-    }
+  companion object {
+    const val INTENT_AUTHOR_ID = "author_id_intent"
+    const val INTENT_AUTHOR_NAME = "author_name_intent"
   }
 }

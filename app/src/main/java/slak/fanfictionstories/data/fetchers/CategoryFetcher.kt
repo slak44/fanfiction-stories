@@ -1,7 +1,7 @@
 package slak.fanfictionstories.data.fetchers
 
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 import kotlinx.coroutines.CoroutineScope
 import org.jsoup.Jsoup
 import slak.fanfictionstories.Notifications

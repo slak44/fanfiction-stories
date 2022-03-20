@@ -1,24 +1,20 @@
 package slak.fanfictionstories.activities
 
 import android.annotation.SuppressLint
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import android.content.Intent
 import android.os.Bundle
+import android.view.*
+import android.widget.ProgressBar
+import androidx.activity.viewModels
 import androidx.annotation.AnyThread
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import android.view.*
-import android.widget.ProgressBar
-import androidx.activity.viewModels
-import kotlinx.android.synthetic.main.activity_reviews.*
-import kotlinx.android.synthetic.main.component_review.view.*
-import kotlinx.android.synthetic.main.dialog_report_review.view.*
-import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -30,6 +26,9 @@ import slak.fanfictionstories.data.fetchers.NO_PAGES
 import slak.fanfictionstories.data.fetchers.Review
 import slak.fanfictionstories.data.fetchers.fetchStoryModel
 import slak.fanfictionstories.data.fetchers.getReviews
+import slak.fanfictionstories.databinding.ActivityReviewsBinding
+import slak.fanfictionstories.databinding.ComponentReviewBinding
+import slak.fanfictionstories.databinding.DialogReportReviewBinding
 import slak.fanfictionstories.utility.*
 import java.util.*
 
@@ -90,23 +89,20 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: Integer) :
 
 /** Presents a story's reviews. */
 class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
-  companion object {
-    const val INTENT_STORY_MODEL = "story_model_extra"
-    const val INTENT_TARGET_CHAPTER = "target_chapter_extra"
-    private const val ALL_CHAPTERS = 0
-  }
+  private lateinit var binding: ActivityReviewsBinding
 
-  override val loading: ProgressBar
-    get() = activityProgressBar
+  override lateinit var loading: ProgressBar
 
   private lateinit var modelTarget: Pair<StoryModel, Int>
+
   private val viewModel: ReviewsViewModel by viewModels { ViewModelFactory(modelTarget.first, modelTarget.second) }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_reviews)
-    setSupportActionBar(toolbar)
-    setLoadingView(toolbar)
+    binding = ActivityReviewsBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
+    setLoadingView(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     // runBlocking is fine here, because the loading bar is already in place, and so the user
@@ -126,33 +122,32 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
 
     title = str(R.string.reviews_for, viewModel.model.title)
 
-    reviewList.adapter = ReviewAdapter(viewModel)
+    binding.reviewList.adapter = ReviewAdapter(viewModel)
     val layoutManager = LinearLayoutManager(this)
-    reviewList.layoutManager = layoutManager
+    binding.reviewList.layoutManager = layoutManager
 
     viewModel.loadingEvent.observe(this) {
       when (it) {
         ReviewsViewModel.LoadEvent.LOADING -> showLoading()
         ReviewsViewModel.LoadEvent.DONE_LOADING -> {
           hideLoading()
-          if (viewModel.pageCount == NO_PAGES) noReviewsText.visibility = View.VISIBLE
-          else noReviewsText.visibility = View.INVISIBLE
+          binding.noReviewsText.visibility = if (viewModel.pageCount == NO_PAGES) View.VISIBLE else View.INVISIBLE
           setSubtitle()
         }
       }
     }
 
     viewModel.loadPage(this)
-    infinitePageScroll(reviewList, layoutManager) { viewModel.loadPage(this) }
+    infinitePageScroll(binding.reviewList, layoutManager) { viewModel.loadPage(this) }
   }
 
   private fun setSubtitle() {
     // No need for a subtitle saying which chapter it is when there is only one
     if (viewModel.model.fragment.chapterCount == 1L) {
-      toolbar.subtitle = ""
+      binding.toolbar.subtitle = ""
       return
     }
-    toolbar.subtitle =
+    binding.toolbar.subtitle =
         if (viewModel.chapter.value == ALL_CHAPTERS) str(R.string.all_chapters)
         else str(R.string.x_reviews_for_chapter_y, viewModel.reviewCount, viewModel.chapter.value)
   }
@@ -191,6 +186,12 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
     }
     return true
   }
+
+  companion object {
+    const val INTENT_STORY_MODEL = "story_model_extra"
+    const val INTENT_TARGET_CHAPTER = "target_chapter_extra"
+    private const val ALL_CHAPTERS = 0
+  }
 }
 
 /** For using [Review] objects with [RecyclerView]. */
@@ -208,7 +209,7 @@ class ReviewAdapter(private val viewModel: ReviewsViewModel) : RecyclerView.Adap
         .inflate(R.layout.component_review, parent, false) as CardView)
   }
 
-  private fun bindReviewProps(view: CardView, review: Review) = with(view) {
+  private fun bindReviewProps(binding: ComponentReviewBinding, review: Review) = with(binding) {
     reviewAuthor.text = review.author
     reviewChapter.text = str(R.string.chapter_x, review.chapter)
     reviewDate.text = Prefs.simpleDateFormatter
@@ -229,27 +230,28 @@ class ReviewAdapter(private val viewModel: ReviewsViewModel) : RecyclerView.Adap
   }
 
   @SuppressLint("InflateParams")
-  override fun onBindViewHolder(holder: RecyclerView.ViewHolder, pos: Int) = with(holder.itemView) {
-    bindReviewProps(this as CardView, viewModel.reviews[pos])
-    replyBtn.setOnClickListener {
+  override fun onBindViewHolder(holder: RecyclerView.ViewHolder, pos: Int) {
+    val binding = ComponentReviewBinding.bind(holder.itemView)
+    bindReviewProps(binding, viewModel.reviews[pos])
+    binding.replyBtn.setOnClickListener {
       // FIXME: reply to review
     }
-    reportBtn.setOnClickListener {
-      val layout = LayoutInflater.from(context).inflate(R.layout.dialog_report_review, null, false)
+    binding.reportBtn.setOnClickListener {
+      val dialogBinding = DialogReportReviewBinding.inflate(LayoutInflater.from(holder.itemView.context), null, false)
       // We want the margin, so invisible
-      layout.offendingReview.divider.visibility = View.INVISIBLE
-      layout.offendingReview.btnBar.visibility = View.GONE
-      layout.offendingReview.elevation = 20F
-      bindReviewProps(layout.offendingReview as CardView, viewModel.reviews[pos])
-      AlertDialog.Builder(context)
+      dialogBinding.offendingReview.divider.visibility = View.INVISIBLE
+      dialogBinding.offendingReview.btnBar.visibility = View.GONE
+      dialogBinding.offendingReview.root.elevation = 20F
+      bindReviewProps(dialogBinding.offendingReview, viewModel.reviews[pos])
+      AlertDialog.Builder(holder.itemView.context)
           .setTitle(R.string.dialog_report_abuse)
-          .setView(layout)
+          .setView(dialogBinding.root)
           .setPositiveButton(R.string.report) { _, _ ->
             // FIXME: send report
           }
           .show()
     }
-    forceLayout()
+    holder.itemView.forceLayout()
   }
 
   override fun getItemCount(): Int = viewModel.reviews.size

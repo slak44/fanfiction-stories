@@ -29,7 +29,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.dialog_image_viewer.view.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.sync.Mutex
@@ -38,6 +37,7 @@ import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.startActivity
 import slak.fanfictionstories.R
 import slak.fanfictionstories.data.fetchers.fetchImage
+import slak.fanfictionstories.databinding.DialogImageViewerBinding
 
 /**
  * Create an error dialog with a title, message and a dismiss button.
@@ -57,8 +57,8 @@ fun errorDialog(title: String, msg: String) = GlobalScope.launch(Main) {
 fun errorDialog(@StringRes title: Int, @StringRes msg: Int) = errorDialog(str(title), str(msg))
 
 suspend fun Context.showImage(@StringRes dialogTitle: Int, imageUrl: String) {
-  val layout = LayoutInflater.from(this).inflate(R.layout.dialog_image_viewer, null, false)
-  layout.image.setImageBitmap(withContext(Dispatchers.Default) {
+  val binding = DialogImageViewerBinding.inflate(LayoutInflater.from(this), null, false)
+  binding.image.setImageBitmap(withContext(Dispatchers.Default) {
     val bm = fetchImage(imageUrl)
     // Arbitrarily get a max width for the scaled image
     val width = displayMetrics.widthPixels - 300
@@ -69,7 +69,7 @@ suspend fun Context.showImage(@StringRes dialogTitle: Int, imageUrl: String) {
   withContext(Main) {
     AlertDialog.Builder(this@showImage)
         .setTitle(dialogTitle)
-        .setView(layout)
+        .setView(binding.root)
         .create()
         .show()
   }

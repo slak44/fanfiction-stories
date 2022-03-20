@@ -1,28 +1,30 @@
 package slak.fanfictionstories.activities
 
 import android.os.Bundle
-import androidx.annotation.UiThread
-import androidx.constraintlayout.widget.ConstraintLayout
-import com.google.android.material.snackbar.Snackbar
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.activity_favorite_canons.*
-import kotlinx.android.synthetic.main.component_favorite_canon.view.*
+import androidx.annotation.UiThread
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import slak.fanfictionstories.R
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.CategoryLink
+import slak.fanfictionstories.databinding.ActivityFavoriteCanonsBinding
+import slak.fanfictionstories.databinding.ComponentFavoriteCanonBinding
 import slak.fanfictionstories.utility.*
 
 class FavoriteCanonsActivity : CoroutineScopeActivity() {
+  private lateinit var binding: ActivityFavoriteCanonsBinding
+
   private inner class CanonAdapter(
-      private val linkList: MutableList<CategoryLink>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+      private val linkList: MutableList<CategoryLink>
+  ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private inner class CanonViewHolder(view: View) : RecyclerView.ViewHolder(view)
 
     var removeSnackbar: Snackbar? = null
@@ -35,19 +37,20 @@ class FavoriteCanonsActivity : CoroutineScopeActivity() {
 
     override fun getItemCount(): Int = linkList.size
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder,
-                                  position: Int) = with(holder.itemView as ConstraintLayout) {
-      setOnClickListener {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+      val binding = ComponentFavoriteCanonBinding.bind(holder.itemView)
+
+      binding.root.setOnClickListener {
         startActivity<CanonStoryListActivity>(INTENT_LINK_DATA to linkList[position])
       }
-      canonTitle.text = linkList[position].text
-      storyCountText.text = str(R.string.x_stories, linkList[position].storyCount)
-      removeBtn.setOnClickListener {
+      binding.canonTitle.text = linkList[position].text
+      binding.storyCountText.text = str(R.string.x_stories, linkList[position].storyCount)
+      binding.removeBtn.setOnClickListener {
         removeSnackbar?.dismiss()
         val removed = linkList.removeAt(position)
         notifyItemRemoved(position)
         updateNoFavoritesText()
-        removeSnackbar = undoableAction(this, R.string.removed_favorite_snack, { _ ->
+        removeSnackbar = undoableAction(binding.root, R.string.removed_favorite_snack, { _ ->
           linkList.add(position, removed)
           notifyItemInserted(position)
           updateNoFavoritesText()
@@ -58,23 +61,24 @@ class FavoriteCanonsActivity : CoroutineScopeActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_favorite_canons)
-    setSupportActionBar(toolbar)
+    binding = ActivityFavoriteCanonsBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     setTitle(R.string.favorite_canons)
     launch(Main) {
-      canonListRecycler.adapter = CanonAdapter(database.getFavoriteCanons().await().toMutableList())
+      binding.canonListRecycler.adapter = CanonAdapter(database.getFavoriteCanons().await().toMutableList())
       updateNoFavoritesText()
-      canonListRecycler.layoutManager = LinearLayoutManager(this@FavoriteCanonsActivity)
-      canonListRecycler.addItemDecoration(
+      binding.canonListRecycler.layoutManager = LinearLayoutManager(this@FavoriteCanonsActivity)
+      binding.canonListRecycler.addItemDecoration(
           DividerItemDecoration(this@FavoriteCanonsActivity, LinearLayoutManager.VERTICAL))
     }
   }
 
   @UiThread
   private fun updateNoFavoritesText() {
-    noFavoritesText.visibility =
-        if (canonListRecycler.adapter!!.itemCount == 0) View.VISIBLE
+    binding.noFavoritesText.visibility =
+        if (binding.canonListRecycler.adapter!!.itemCount == 0) View.VISIBLE
         else View.GONE
   }
 
@@ -87,7 +91,7 @@ class FavoriteCanonsActivity : CoroutineScopeActivity() {
   }
 
   override fun onBackPressed() {
-    (canonListRecycler.adapter as CanonAdapter).removeSnackbar?.dismiss()
+    (binding.canonListRecycler.adapter as CanonAdapter).removeSnackbar?.dismiss()
     super.onBackPressed()
   }
 }

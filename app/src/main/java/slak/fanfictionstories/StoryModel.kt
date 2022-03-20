@@ -3,18 +3,17 @@ package slak.fanfictionstories
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Parcelable
-import androidx.appcompat.app.AlertDialog
 import android.view.LayoutInflater
-import kotlinx.android.parcel.Parcelize
-import kotlinx.android.synthetic.main.dialog_order_by_switch.view.*
+import androidx.appcompat.app.AlertDialog
+import kotlinx.parcelize.Parcelize
 import org.jetbrains.anko.db.MapRowParser
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.Genre
 import slak.fanfictionstories.data.fetchers.ParserUtils.CHAPTER_TITLE_SEPARATOR
+import slak.fanfictionstories.databinding.DialogOrderBySwitchBinding
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.str
 import java.io.Serializable
-import java.util.*
 import kotlin.collections.set
 import kotlin.math.sign
 
@@ -338,16 +337,15 @@ fun orderByDialog(context: Context,
                   defaultStrategy: OrderStrategy,
                   defaultDirection: OrderDirection,
                   action: (OrderStrategy, OrderDirection) -> Unit) {
-  val layout = LayoutInflater.from(context)
-      .inflate(R.layout.dialog_order_by_switch, null, false)
-  if (defaultDirection == OrderDirection.ASC) layout.reverseOrderSw.toggle()
+  val binding = DialogOrderBySwitchBinding.inflate(LayoutInflater.from(context), null, false)
+  if (defaultDirection == OrderDirection.ASC) binding.reverseOrderSw.toggle()
   AlertDialog.Builder(context)
       .setTitle(R.string.sort_by)
-      .setView(layout)
+      .setView(binding.root)
       .setSingleChoiceItems(OrderStrategy.uiItems(), defaultStrategy.ordinal) { d, which ->
         d.dismiss()
         action(OrderStrategy[which],
-            if (layout.reverseOrderSw.isChecked) OrderDirection.ASC else OrderDirection.DESC)
+            if (binding.reverseOrderSw.isChecked) OrderDirection.ASC else OrderDirection.DESC)
       }
       .show()
 }

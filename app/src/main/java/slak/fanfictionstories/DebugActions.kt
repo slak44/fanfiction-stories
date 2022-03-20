@@ -4,11 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.os.Build
-import androidx.core.app.ActivityCompat
 import android.util.Log
 import android.view.View
 import android.widget.EditText
-import kotlinx.android.synthetic.main.activity_main.*
+import androidx.core.app.ActivityCompat
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Main
 import org.jetbrains.anko.db.MapRowParser
@@ -22,6 +21,7 @@ import slak.fanfictionstories.data.chapterCount
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.data.fetchers.fetchAndWriteStory
 import slak.fanfictionstories.data.fetchers.fetchStoryModel
+import slak.fanfictionstories.databinding.ActivityMainBinding
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.Static
 import java.io.File
@@ -29,9 +29,9 @@ import java.util.zip.DeflaterOutputStream
 
 private const val TAG = "FFStoriesDebug"
 
-fun injectDebugButtons(activity: MainActivity) {
-  activity.debugButtons.visibility = View.VISIBLE
-  activity.debugButtons.setOnClickListener {
+fun injectDebugButtons(activity: MainActivity, binding: ActivityMainBinding) {
+  binding.debugButtons.visibility = View.VISIBLE
+  binding.debugButtons.setOnClickListener {
     AlertDialog.Builder(activity)
         .setItems(debugActions.keys.toTypedArray()) { _, which: Int ->
           debugActions.values.toTypedArray()[which]()

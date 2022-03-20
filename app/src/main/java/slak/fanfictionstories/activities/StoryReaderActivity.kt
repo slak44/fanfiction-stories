@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import androidx.activity.viewModels
@@ -24,10 +25,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_main.view.*
-import kotlinx.android.synthetic.main.activity_story_reader.*
-import kotlinx.android.synthetic.main.activity_story_reader_content.*
-import kotlinx.android.synthetic.main.loading_activity_indeterminate.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
@@ -47,6 +44,7 @@ import slak.fanfictionstories.activities.ReaderViewModel.Companion.UNINITIALIZED
 import slak.fanfictionstories.data.*
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryModel
+import slak.fanfictionstories.databinding.ActivityStoryReaderBinding
 import slak.fanfictionstories.utility.*
 import kotlin.coroutines.CoroutineContext
 
@@ -180,18 +178,13 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
 
 /** Shows a chapter of a story for reading. */
 class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasLoadingBar {
-  companion object {
-    private const val TAG = "StoryReaderActivity"
-    const val INTENT_STORY_MODEL = "bundle"
-    private const val TAG_SEARCH_FRAGMENT = "search"
-  }
+  private lateinit var binding: ActivityStoryReaderBinding
 
   private lateinit var storyModel: StoryModel
   private val viewModel: ReaderViewModel by viewModels { ViewModelFactory(storyModel) }
   private lateinit var searchUI: SearchUIFragment
 
-  override val loading: ProgressBar
-    get() = activityProgressBar
+  override lateinit var loading: ProgressBar
 
   /**
    * Gets the data required for the [ViewModel]. It will load from the intent URI (clicked link to story), or from the
@@ -238,9 +231,10 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_story_reader)
-    setSupportActionBar(toolbar)
-    setLoadingView(toolbar)
+    binding = ActivityStoryReaderBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
+    setLoadingView(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     launch(Main) {
@@ -252,9 +246,9 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       }
 
       // Setup chapter switching buttons
-      prevChapterBtn.setOnClickListener { viewModel.changeChapter(viewModel.currentChapter - 1) }
-      nextChapterBtn.setOnClickListener {
-        if (nextChapterBtn.text == str(R.string.next)) {
+      binding.readerContent.prevChapterBtn.setOnClickListener { viewModel.changeChapter(viewModel.currentChapter - 1) }
+      binding.readerContent.nextChapterBtn.setOnClickListener {
+        if (binding.readerContent.nextChapterBtn.text == str(R.string.next)) {
           viewModel.changeChapter(viewModel.currentChapter + 1)
           return@setOnClickListener
         }
@@ -270,20 +264,24 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
       }
-      selectChapterBtn.setOnClickListener { showChapterSelectDialog() }
+      binding.readerContent.selectChapterBtn.setOnClickListener { showChapterSelectDialog() }
 
       // Save story for the resume button
       // Even for transient stories, because entering the reader means the story became remote
       Prefs.resumeStoryId = viewModel.storyModel.storyId
 
       // Magic for dealing with text height
-      val titleTextView = (toolbarLayout.toolbar.getChildAt(0) as AppCompatTextView)
+      // Let's pretend we're not using reflection for this
+      val toolbarLayout = binding.toolbarLayout
+      val toolbarField = binding.toolbarLayout::class.java.declaredFields.first { it.name == "toolbar" }
+      toolbarField.isAccessible = true
+      val titleTextView = ((toolbarField.get(toolbarLayout) as ViewGroup).getChildAt(0) as AppCompatTextView)
       val fakeWidth = titleTextView.textSize * viewModel.storyModel.title.length
       val textMargin = resources.px(R.dimen.text_margin)
-      val textHeight = (fakeWidth / (toolbarLayout.width / 2)).coerceAtLeast(1F) * titleTextView.lineHeight
-      appBar.layoutParams.height =
+      val textHeight = (fakeWidth / (binding.toolbarLayout.width / 2)).coerceAtLeast(1F) * titleTextView.lineHeight
+      binding.appBar.layoutParams.height =
           (resources.px(R.dimen.app_bar_height_base) + textHeight + textMargin).toInt()
-      toolbarLayout.title = viewModel.storyModel.title
+      binding.toolbarLayout.title = viewModel.storyModel.title
 
       if (viewModel.storyModel.status != StoryStatus.LOCAL) {
         viewModel.tryLoadingModelFromDatabase().join()
@@ -318,30 +316,31 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   @UiThread
   private fun setChapterMetaText() = with(viewModel.storyModel) {
     val chapterWordCount = autoSuffixNumber(viewModel.chapterHtml.split(" ").size)
-    chapterWordCountText.text = str(R.string.x_words, chapterWordCount)
-    currentChapterText.text = str(R.string.chapter_progress,
+    binding.readerContent.chapterWordCountText.text = str(R.string.x_words, chapterWordCount)
+    binding.readerContent.currentChapterText.text = str(R.string.chapter_progress,
         viewModel.currentChapter, fragment.chapterCount)
     val avgWordCount: Double = fragment.wordCount.toDouble() / fragment.chapterCount
     val wordsPassedEstimate: Double = (viewModel.currentChapter - 1) * avgWordCount
-    approxWordCountRemainText.text = str(R.string.approx_x_words_left,
+    binding.readerContent.approxWordCountRemainText.text = str(R.string.approx_x_words_left,
         autoSuffixNumber(fragment.wordCount - wordsPassedEstimate.toLong()))
     // This data is more or less useless with only one chapter, so we hide it
     val extraDataVisibility = if (fragment.chapterCount == 1L) View.GONE else View.VISIBLE
-    chapterWordCountText.visibility = extraDataVisibility
-    currentChapterText.visibility = extraDataVisibility
-    approxWordCountRemainText.visibility = extraDataVisibility
+    binding.readerContent.chapterWordCountText.visibility = extraDataVisibility
+    binding.readerContent.currentChapterText.visibility = extraDataVisibility
+    binding.readerContent.approxWordCountRemainText.visibility = extraDataVisibility
 
     // Set chapter's title (chapterToRead is 1-indexed)
     if (fragment.chapterCount > 1) {
-      chapterTitleText.text = chapterTitles()[viewModel.currentChapter.toInt() - 1]
+      binding.readerContent.chapterTitleText.text = chapterTitles()[viewModel.currentChapter.toInt() - 1]
     }
     // Don't show it if there is no title (otherwise there are leftover margins/padding)
-    chapterTitleText.visibility = if (chapterTitleText.text == "") View.GONE else View.VISIBLE
+    binding.readerContent.chapterTitleText.visibility =
+        if (binding.readerContent.chapterTitleText.text == "") View.GONE else View.VISIBLE
   }
 
   @UiThread
   private suspend fun restoreScrollStatus() {
-    if (chapterText.textLayout == null) {
+    if (binding.readerContent.chapterText.textLayout == null) {
       Log.w(TAG, "Cannot restore scroll status because layout is null")
       return
     }
@@ -354,13 +353,13 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       Log.w(TAG, "Absolute scroll position is null")
       return
     }
-    chapterScroll(chapterText.scrollYFromScrollState(scrollAbs))
+    chapterScroll(binding.readerContent.chapterText.scrollYFromScrollState(scrollAbs))
   }
 
   @UiThread
   private fun parseChapterHTML(): Spanned {
     return Html.fromHtml(viewModel.chapterHtml, Html.FROM_HTML_MODE_LEGACY,
-        null, HrSpan.tagHandlerFactory(chapterText.width))
+        null, HrSpan.tagHandlerFactory(binding.readerContent.chapterText.width))
   }
 
   /** React to [ReaderViewModel.ChapterEvent]s from the model. */
@@ -369,11 +368,11 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     CHAPTER_LOAD_STARTED -> {
       // Show loading things and disable chapter switching
       if (viewModel.storyModel.status != StoryStatus.LOCAL) showLoading()
-      btnBarLoader.visibility = View.VISIBLE
-      navButtons.visibility = View.GONE
-      prevChapterBtn.isEnabled = false
-      nextChapterBtn.isEnabled = false
-      selectChapterBtn.isEnabled = false
+      binding.readerContent.btnBarLoader.visibility = View.VISIBLE
+      binding.readerContent.navButtons.visibility = View.GONE
+      binding.readerContent.prevChapterBtn.isEnabled = false
+      binding.readerContent.nextChapterBtn.isEnabled = false
+      binding.readerContent.selectChapterBtn.isEnabled = false
       invalidateOptionsMenu()
     }
     CHAPTER_FIRST_LOAD -> {
@@ -388,7 +387,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       onChapterLoadFinished(true).invokeOnCompletion { err ->
         if (err != null) return@invokeOnCompletion
         val isVisible = searchUI.restoreState()
-        rootLayout.post {
+        binding.rootLayout.post {
           clearHighlights()
           highlightMatches()
           adjustNavForSearch(removeMargin = !isVisible)
@@ -404,24 +403,24 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       val queue = database.getStoryQueue()
       val currentInQueue = queue.firstOrNull { it.first == viewModel.storyModel.storyId }?.second
       if (currentInQueue == null || currentInQueue.toInt() == queue.size - 1) {
-        nextChapterBtn.isEnabled = false
+        binding.readerContent.nextChapterBtn.isEnabled = false
         return
       }
-      nextChapterBtn.text = str(R.string.next_chapter_with_queue)
-      nextChapterBtn.isEnabled = true
+      binding.readerContent.nextChapterBtn.text = str(R.string.next_chapter_with_queue)
+      binding.readerContent.nextChapterBtn.isEnabled = true
     } else {
-      nextChapterBtn.text = str(R.string.next)
-      nextChapterBtn.isEnabled = true
+      binding.readerContent.nextChapterBtn.text = str(R.string.next)
+      binding.readerContent.nextChapterBtn.isEnabled = true
     }
   }
 
   @AnyThread
   private fun onChapterLoadFinished(restoreScroll: Boolean) = launch(Main) {
     // We use the width for the <hr> elements, so the layout should be done
-    if (!ViewCompat.isLaidOut(chapterText)) chapterText.requestLayout()
+    if (!ViewCompat.isLaidOut(binding.readerContent.chapterText)) binding.readerContent.chapterText.requestLayout()
 
     val chapterSpanned = parseChapterHTML()
-    chapterText.setText(chapterSpanned, theme)
+    binding.readerContent.chapterText.setText(chapterSpanned, theme)
     if (viewModel.searchMatches.isNotEmpty()) viewModel.searchInChapter(chapterSpanned, viewModel.searchQuery)
 
     setChapterMetaText()
@@ -434,44 +433,44 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
         "currentChapter" to viewModel.currentChapter).await()
 
     // Disable buttons if there is nowhere for them to go
-    prevChapterBtn.isEnabled = viewModel.currentChapter != 1L
+    binding.readerContent.prevChapterBtn.isEnabled = viewModel.currentChapter != 1L
     updateNextButtonText()
-    selectChapterBtn.isEnabled = viewModel.storyModel.fragment.chapterCount > 1L
+    binding.readerContent.selectChapterBtn.isEnabled = viewModel.storyModel.fragment.chapterCount > 1L
 
     // Tint button icons grey if the buttons are disabled, white if not
     fun getColorFor(view: View) = if (view.isEnabled) R.color.white else R.color.textDisabled
-    prevChapterBtn.drawableTint(getColorFor(prevChapterBtn), theme, Direction.LEFT)
-    nextChapterBtn.drawableTint(getColorFor(nextChapterBtn), theme, Direction.RIGHT)
-    selectChapterBtn.drawableTint(getColorFor(selectChapterBtn), theme, Direction.LEFT)
+    binding.readerContent.prevChapterBtn.drawableTint(getColorFor(binding.readerContent.prevChapterBtn), theme, Direction.LEFT)
+    binding.readerContent.nextChapterBtn.drawableTint(getColorFor(binding.readerContent.nextChapterBtn), theme, Direction.RIGHT)
+    binding.readerContent.selectChapterBtn.drawableTint(getColorFor(binding.readerContent.selectChapterBtn), theme, Direction.LEFT)
 
     // Handle the next/prev button states/colors in the appbar
     invalidateOptionsMenu()
 
     // If the text is so short the scroller doesn't need to scroll, max out progress right away
-    if (nestedScroller.height > chapterText.textLayout!!.height) {
+    if (binding.readerContent.nestedScroller.height > binding.readerContent.chapterText.textLayout!!.height) {
       scrollSaver.notifyChanged(100.0, 99999999.0)
     }
 
     // Record scroll status
-    nestedScroller.setOnScrollChangeListener { scroller, _, scrollY: Int, _, _ ->
-      val rawPercentage = scrollY * 100.0 / (scrollingLayout.measuredHeight - scroller.bottom)
+    binding.readerContent.nestedScroller.setOnScrollChangeListener { scroller, _, scrollY: Int, _, _ ->
+      val rawPercentage = scrollY * 100.0 / (binding.readerContent.scrollingLayout.measuredHeight - scroller.bottom)
       // Make sure that values >100 get clamped to 100
       val percentageScrolled = rawPercentage.coerceAtMost(100.0)
-      val scrollAbs = chapterText.scrollStateFromScrollY(scrollY)
+      val scrollAbs = binding.readerContent.chapterText.scrollStateFromScrollY(scrollY)
       scrollSaver.notifyChanged(percentageScrolled, scrollAbs)
     }
 
     // Hide loading things
     hideLoading()
-    btnBarLoader.visibility = View.GONE
-    navButtons.visibility = View.VISIBLE
+    binding.readerContent.btnBarLoader.visibility = View.GONE
+    binding.readerContent.navButtons.visibility = View.VISIBLE
   }
 
   @UiThread
   private fun chapterScroll(y: Int) {
-    appBar.setExpanded(y <= resources.px(R.dimen.app_bar_height))
-    nestedScroller.post {
-      nestedScroller.scrollTo(0, y)
+    binding.appBar.setExpanded(y <= resources.px(R.dimen.app_bar_height))
+    binding.readerContent.nestedScroller.post {
+      binding.readerContent.nestedScroller.scrollTo(0, y)
     }
   }
 
@@ -520,12 +519,12 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     if (isLoading()) return false
     menu.findItem(R.id.goToTop).iconTint(R.color.white, theme)
     menu.findItem(R.id.goToBottom).iconTint(R.color.white, theme)
-    menu.findItem(R.id.nextChapter).isEnabled = nextChapterBtn.isEnabled
+    menu.findItem(R.id.nextChapter).isEnabled = binding.readerContent.nextChapterBtn.isEnabled
     menu.findItem(R.id.nextChapter).title =
-        if (nextChapterBtn.text == str(R.string.next)) str(R.string.next_chapter)
+        if (binding.readerContent.nextChapterBtn.text == str(R.string.next)) str(R.string.next_chapter)
         else str(R.string.next_chapter_with_queue)
-    menu.findItem(R.id.prevChapter).isEnabled = prevChapterBtn.isEnabled
-    menu.findItem(R.id.selectChapter).isEnabled = selectChapterBtn.isEnabled
+    menu.findItem(R.id.prevChapter).isEnabled = binding.readerContent.prevChapterBtn.isEnabled
+    menu.findItem(R.id.selectChapter).isEnabled = binding.readerContent.selectChapterBtn.isEnabled
     menu.findItem(R.id.downloadLocal).isVisible = viewModel.storyModel.status != StoryStatus.LOCAL
     menu.findItem(R.id.checkForUpdate).isVisible = viewModel.storyModel.status == StoryStatus.LOCAL
     launch(Main) {
@@ -551,29 +550,29 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     when (item.itemId) {
       R.id.goToTop -> {
         // Without this hacky call to fling, we don't scroll at all
-        nestedScroller.fling(0)
-        nestedScroller.fullScroll(NestedScrollView.FOCUS_UP)
-        appBar.setExpanded(true)
+        binding.readerContent.nestedScroller.fling(0)
+        binding.readerContent.nestedScroller.fullScroll(NestedScrollView.FOCUS_UP)
+        binding.appBar.setExpanded(true)
       }
       R.id.goToBottom -> {
-        nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
-        appBar.setExpanded(false)
+        binding.readerContent.nestedScroller.fullScroll(NestedScrollView.FOCUS_DOWN)
+        binding.appBar.setExpanded(false)
       }
       R.id.selectChapter -> showChapterSelectDialog()
-      R.id.nextChapter -> nextChapterBtn.callOnClick()
-      R.id.prevChapter -> prevChapterBtn.callOnClick()
+      R.id.nextChapter -> binding.readerContent.nextChapterBtn.callOnClick()
+      R.id.prevChapter -> binding.readerContent.prevChapterBtn.callOnClick()
       R.id.toggleQueue -> launch(Main) {
         if (!item.isChecked) {
           val wasAdded = database.addToQueue(viewModel.storyModel.storyId)
           val str =
               if (wasAdded) str(R.string.added_story_from_queue, viewModel.storyModel.title)
               else str(R.string.already_in_queue)
-          Snackbar.make(chapterText, str, Snackbar.LENGTH_LONG).show()
+          Snackbar.make(binding.readerContent.chapterText, str, Snackbar.LENGTH_LONG).show()
           item.title = str(R.string.remove_from_queue)
         } else {
           database.removeFromQueue(viewModel.storyModel.storyId)
           val str = str(R.string.removed_story_from_queue, viewModel.storyModel.title)
-          Snackbar.make(chapterText, str, Snackbar.LENGTH_LONG).show()
+          Snackbar.make(binding.readerContent.chapterText, str, Snackbar.LENGTH_LONG).show()
           item.title = str(R.string.add_to_queue)
         }
       }
@@ -585,7 +584,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       }
       R.id.searchChapter -> {
         searchUI.show()
-        rootLayout.post {
+        binding.rootLayout.post {
           adjustNavForSearch(removeMargin = false)
         }
       }
@@ -616,9 +615,9 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   override fun getCurrentHighlight(): Int = viewModel.searchCurrentMatchIdx
 
   override fun navigateToHighlight(idx: Int) {
-    chapterText.textLayout?.iterateDisplayedLines { lineIdx, lineRange ->
+    binding.readerContent.chapterText.textLayout?.iterateDisplayedLines { lineIdx, lineRange ->
       if (viewModel.searchMatches[idx].startPosition in lineRange) {
-        val baseline = chapterText.textLayout!!.getLineBounds(lineIdx, null)
+        val baseline = binding.readerContent.chapterText.textLayout!!.getLineBounds(lineIdx, null)
         chapterScroll(baseline)
         return@iterateDisplayedLines true
       }
@@ -636,31 +635,37 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
   private inner class SearchHighlightSpan(isCurrent: Boolean) : BackgroundColorSpan(
       getColor(if (isCurrent) R.color.textHighlightCurrent else R.color.textHighlightDefault))
   override fun highlightMatches() {
-    checkNotNull(chapterText.spannable) { "Can't highlight missing text" }
+    checkNotNull(binding.readerContent.chapterText.spannable) { "Can't highlight missing text" }
     viewModel.searchMatches.forEach {
-      chapterText.spannable!!.setSpan(SearchHighlightSpan(false),
+      binding.readerContent.chapterText.spannable!!.setSpan(SearchHighlightSpan(false),
           it.startPosition, it.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
     }
     if (viewModel.searchMatches.isNotEmpty()) {
       val curr = viewModel.searchMatches[viewModel.searchCurrentMatchIdx]
-      chapterText.spannable!!.setSpan(SearchHighlightSpan(true),
+      binding.readerContent.chapterText.spannable!!.setSpan(SearchHighlightSpan(true),
           curr.startPosition, curr.endPosition, SPAN_EXCLUSIVE_EXCLUSIVE)
     }
-    chapterText.invalidate()
+    binding.readerContent.chapterText.invalidate()
   }
 
   override fun clearHighlights() {
-    chapterText.spannable?.removeAllSpans(SearchHighlightSpan::class.java)
-    chapterText.invalidate()
+    binding.readerContent.chapterText.spannable?.removeAllSpans(SearchHighlightSpan::class.java)
+    binding.readerContent.chapterText.invalidate()
   }
 
   private fun adjustNavForSearch(removeMargin: Boolean) {
-    val params = navButtons.layoutParams as LinearLayout.LayoutParams
-    params.bottomMargin += searchUI.view!!.measuredHeight * (if (removeMargin) -1 else 1)
-    navButtons.layoutParams = params
+    val params = binding.readerContent.navButtons.layoutParams as LinearLayout.LayoutParams
+    params.bottomMargin += searchUI.requireView().measuredHeight * (if (removeMargin) -1 else 1)
+    binding.readerContent.navButtons.layoutParams = params
   }
 
   override fun onHide() {
     adjustNavForSearch(removeMargin = true)
+  }
+
+  companion object {
+    private const val TAG = "StoryReaderActivity"
+    const val INTENT_STORY_MODEL = "bundle"
+    private const val TAG_SEARCH_FRAGMENT = "search"
   }
 }
