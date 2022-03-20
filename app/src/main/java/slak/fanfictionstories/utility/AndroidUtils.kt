@@ -2,20 +2,11 @@ package slak.fanfictionstories.utility
 
 import android.app.Activity
 import android.app.AlertDialog
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.*
 import android.os.IBinder
-import androidx.annotation.ColorRes
-import androidx.annotation.DimenRes
-import androidx.annotation.StringRes
-import com.google.android.material.snackbar.Snackbar
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import android.text.Html
 import android.text.Layout
 import android.text.Spannable
@@ -29,6 +20,15 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
+import androidx.annotation.ColorRes
+import androidx.annotation.DimenRes
+import androidx.annotation.StringRes
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.dialog_image_viewer.view.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Main
