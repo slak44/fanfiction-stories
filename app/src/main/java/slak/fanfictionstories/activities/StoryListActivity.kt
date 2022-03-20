@@ -40,6 +40,9 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
       when (t) {
         is StoriesChangeEvent.Changed -> viewModel.updateStoryModel(idx, it)
         is StoriesChangeEvent.Removed -> viewModel.hideStory(it)
+        is StoriesChangeEvent.New -> {
+          // Ignored
+        }
       }
     }
   }

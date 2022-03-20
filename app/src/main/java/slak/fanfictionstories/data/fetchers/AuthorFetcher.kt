@@ -2,7 +2,6 @@ package slak.fanfictionstories.data.fetchers
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
-import kotlinx.coroutines.CoroutineScope
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
@@ -48,21 +47,21 @@ suspend fun getAuthor(authorId: Long): Author {
         R.string.error_fetching_author_data, authorId.toString())
   }
   val doc = Jsoup.parse(html)
-  val authorName = doc.selectFirst("#content_wrapper_inner > span").text()
-  val stories = doc.getElementById("st_inside").children().map {
+  val authorName = doc.selectFirst("#content_wrapper_inner > span")!!.text()
+  val stories = doc.getElementById("st_inside")!!.children().map {
     parseStoryElement(it, authorName, authorId)
   }
   // Drop a COMPLETELY FUCKING RANDOM SCRIPT TAG
   val favStories = doc.getElementById("fs_inside")?.children()?.drop(1)?.map {
     parseStoryElement(it, null, null)
   } ?: listOf()
-  val favAuthors = doc.getElementById("fa").select("dl").map {
-    val authorElement = it.select("a").first()
+  val favAuthors = doc.getElementById("fa")!!.select("dl").map {
+    val authorElement = it.select("a").first()!!
     return@map Pair(authorIdFromAuthor(authorElement), authorElement.text())
   }
   // USING TABLES FOR ALIGNMENT IN 2019 GOD DAMMIT
   val retardedTableCell =
-      doc.select("#content_wrapper_inner > table table[cellpadding=\"4\"] td[colspan=\"2\"]").last()
+      doc.select("#content_wrapper_inner > table table[cellpadding=\"4\"] td[colspan=\"2\"]").last()!!
   val timeSpans = retardedTableCell.select("span")
   val author = Author(
       authorName,
@@ -76,7 +75,7 @@ suspend fun getAuthor(authorId: Long): Author {
       // Image url
       doc.selectFirst("#bio > img")?.attr("data-original"),
       // User bio (first child is image)
-      Elements(doc.getElementById("bio").children().drop(1)).outerHtml(),
+      Elements(doc.getElementById("bio")!!.children().drop(1)).outerHtml(),
       stories,
       favStories,
       favAuthors
@@ -86,18 +85,18 @@ suspend fun getAuthor(authorId: Long): Author {
 }
 
 private fun parseStoryElement(it: Element, authorName: String?, authorId: Long?): StoryModel {
-  val authorAnchor = it.select("a:not(.reviews)").last()
-  val stitle = it.selectFirst("a.stitle")
+  val authorAnchor = it.select("a:not(.reviews)").last()!!
+  val stitle = it.selectFirst("a.stitle")!!
   return StoryModel(
       storyId = it.attr("data-storyid").toLong(),
-      fragment = parseStoryMetadata(it.children().last().children().last(), 3),
+      fragment = parseStoryMetadata(it.children().last()!!.children().last()!!, 3),
       progress = StoryProgress(),
       status = StoryStatus.TRANSIENT,
       // FFnet category is our canon
       canon = unescape(it.attr("data-category")),
       // Category info is unavailable here!
       category = null,
-      summary = it.children().last().textNodes().first().text(),
+      summary = it.children().last()!!.textNodes().first().text(),
       author = authorName ?: authorAnchor.text(),
       authorId = authorId ?: authorIdFromAuthor(authorAnchor),
       title = stitle.textNodes().last().text(),

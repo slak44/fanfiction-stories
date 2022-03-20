@@ -3,7 +3,6 @@ package slak.fanfictionstories.data.fetchers
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.parcel.RawValue
-import kotlinx.coroutines.CoroutineScope
 import org.jsoup.Jsoup
 import slak.fanfictionstories.*
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
@@ -215,7 +214,7 @@ private fun parseHtml(html: String): CanonPage {
     Empty()
   }
 
-  val div = doc.getElementById("content_wrapper_inner")
+  val div = doc.getElementById("content_wrapper_inner")!!
   val canonTitle = doc.title().replace(Regex("(?:FanFiction Archive)? \\| FanFiction"), "").opt()
   // That span only exists for normal canons
   val isCurrentlyCrossover = !div.child(0).`is`("span")
@@ -228,10 +227,10 @@ private fun parseHtml(html: String): CanonPage {
     // The one and only text node there is the title
     val title = unescape(it.child(0).text())
     // The first child is the a.stitle href, and that one's first child is the image
-    val imgUrl = convertImageUrl(it.child(0).child(0)?.attr("data-original"))
+    val imgUrl = convertImageUrl(it.child(0).child(0).attr("data-original"))
 
     // The author 'a' element is the second last before the reviews
-    val authorAnchor = it.select("a:not(.reviews)").last()
+    val authorAnchor = it.select("a:not(.reviews)").last()!!
     val authorName = authorAnchor.textNodes()[0].toString()
 
     // There is only one such div

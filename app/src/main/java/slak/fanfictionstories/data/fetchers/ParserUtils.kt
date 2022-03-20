@@ -140,22 +140,22 @@ object ParserUtils {
 
     val doc = Jsoup.parse(html)
 
-    val author = doc.selectFirst("#profile_top > a.xcontrast_txt")
-    val title = doc.selectFirst("#profile_top > b.xcontrast_txt").text()
-    val summary = doc.selectFirst("#profile_top > div.xcontrast_txt").text()
+    val author = doc.selectFirst("#profile_top > a.xcontrast_txt")!!
+    val title = doc.selectFirst("#profile_top > b.xcontrast_txt")!!.text()
+    val summary = doc.selectFirst("#profile_top > div.xcontrast_txt")!!.text()
 
     val imgUrl = convertImageUrl(doc.selectFirst("#profile_top > span > img.cimage")?.attr("src"))
 
     val navLinks = doc.select("#pre_story_links > span.lc-left > a.xcontrast_txt")
-    val canon = unescape(navLinks.last().text())
+    val canon = unescape(navLinks.last()!!.text())
     val category =
         if (navLinks.size == 1) str(R.string.crossovers)
         else unescape(navLinks.dropLast(1).last().text())
 
-    val meta = parseStoryMetadata(doc.selectFirst("#profile_top > span.xgray"), 0)
+    val meta = parseStoryMetadata(doc.selectFirst("#profile_top > span.xgray")!!, 0)
 
     // Parse chapter titles only if there are any chapters to name
-    val chapterTitles: String? = if (meta.chapterCount == 1L) {
+    val chapterTitles: String = if (meta.chapterCount == 1L) {
       ""
     } else {
       doc.select("#chap_select > option").slice(0..(meta.chapterCount - 1).toInt())
