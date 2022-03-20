@@ -70,6 +70,8 @@ suspend fun patientlyFetchURLBytes(
 ): ByteArray = withContext(networkContext) {
   waitForNetwork()
   delay(RATE_LIMIT_MS)
+  // We do want to block this thread
+  @Suppress("BlockingMethodInNonBlockingContext")
   return@withContext try {
     val text = URL(url).readBytes()
     Notifications.ERROR.cancel()
