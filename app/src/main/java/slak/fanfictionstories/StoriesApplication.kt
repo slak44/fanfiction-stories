@@ -5,6 +5,7 @@ import android.util.Log
 import com.jakewharton.threetenabp.AndroidThreeTen
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.utility.Static
+import slak.fanfictionstories.utility.errorDialog
 
 /** Runs a whole bunch of static initializers in [onCreate]. */
 @Suppress("unused")
@@ -18,6 +19,7 @@ class StoriesApplication : Application() {
     AndroidThreeTen.init(this)
     // Try not to let exceptions crash the app
     Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+      errorDialog(R.string.default_uncaught, throwable.message ?: "unknown")
       Log.e("UNCAUGHT DEFAULT", thread.toString(), throwable)
     }
     // Init the caches from disk (all async)

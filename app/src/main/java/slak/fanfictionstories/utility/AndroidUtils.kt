@@ -56,6 +56,8 @@ fun errorDialog(title: String, msg: String) = GlobalScope.launch(Main) {
 /** Same as [errorDialog], but with [StringRes] texts. */
 fun errorDialog(@StringRes title: Int, @StringRes msg: Int) = errorDialog(str(title), str(msg))
 
+fun errorDialog(@StringRes title: Int, msg: String) = errorDialog(str(title), msg)
+
 suspend fun Context.showImage(@StringRes dialogTitle: Int, imageUrl: String) {
   if (imageUrl.isBlank()) {
     return

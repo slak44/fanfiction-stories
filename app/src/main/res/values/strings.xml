@@ -315,6 +315,7 @@ Story %d of %d (%.2f%%)"
     <string name="unique_constraint_violated_tip">Search the story list to find it</string>
     <string name="storyid_does_not_exist">Story Missing from Database</string>
     <string name="storyid_does_not_exist_tip">This story could not be found in the database</string>
+    <string name="default_uncaught">Something went wrong…</string>
 
     <!-- Native FFnet filtering -->
     <string name="native_sort">Sort by…</string>
