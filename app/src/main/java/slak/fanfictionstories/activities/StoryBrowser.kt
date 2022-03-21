@@ -66,7 +66,7 @@ class BrowseCategoryActivity : CoroutineScopeActivity(), IHasLoadingBar {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     binding = ActivityBrowseCategoryBinding.inflate(layoutInflater)
-    setContentView(R.layout.activity_browse_category)
+    setContentView(binding.root)
     setSupportActionBar(findViewById(R.id.toolbar))
     setLoadingView(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
