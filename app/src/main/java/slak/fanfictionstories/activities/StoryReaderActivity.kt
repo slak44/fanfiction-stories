@@ -1,6 +1,7 @@
 package slak.fanfictionstories.activities
 
 import android.content.Intent
+import android.content.res.TypedArray
 import android.os.Bundle
 import android.os.Parcelable
 import android.text.Html
@@ -20,6 +21,7 @@ import androidx.annotation.UiThread
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.ViewCompat
+import androidx.core.view.updateLayoutParams
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -281,9 +283,13 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       val fakeWidth = titleTextView.textSize * viewModel.storyModel.title.length
       val textMargin = resources.px(R.dimen.text_margin)
       val textHeight = (fakeWidth / (binding.toolbarLayout.width / 2)).coerceAtLeast(1F) * titleTextView.lineHeight
-      binding.appBar.layoutParams.height =
-          (resources.px(R.dimen.app_bar_height_base) + textHeight + textMargin).toInt()
+      binding.appBar.updateLayoutParams {
+        height = (resources.px(R.dimen.app_bar_height_base) + textHeight + textMargin).toInt()
+      }
+
+      // Set title, make sure it is in the right position
       binding.toolbarLayout.title = viewModel.storyModel.title
+      binding.toolbarLayout.expandedTitleMarginTop = getActionBarSize()
 
       if (viewModel.storyModel.status != StoryStatus.LOCAL) {
         viewModel.tryLoadingModelFromDatabase().join()
@@ -313,6 +319,14 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       // Update last time the story was read
       database.updateInStory(viewModel.storyModel.storyId, "lastReadTime" to System.currentTimeMillis())
     }
+  }
+
+  @UiThread
+  private fun getActionBarSize(): Int {
+    val ta: TypedArray = obtainStyledAttributes(intArrayOf(android.R.attr.actionBarSize))
+    val toolBarHeight = ta.getDimensionPixelSize(0, -1)
+    ta.recycle()
+    return toolBarHeight
   }
 
   @UiThread
