@@ -12,6 +12,7 @@ import slak.fanfictionstories.StoryId
 import slak.fanfictionstories.data.Cache
 import slak.fanfictionstories.data.fetchers.ParserUtils.authorIdFromAuthor
 import slak.fanfictionstories.data.fetchers.ParserUtils.getPageCountFromNav
+import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
@@ -43,7 +44,7 @@ val reviewCache = Cache<ReviewPage>("ReviewPage", TimeUnit.DAYS.toMillis(1))
  */
 suspend fun getReviews(storyId: StoryId, chapter: Int, page: Int): ReviewPage {
   reviewCache.hit("$storyId/$chapter/$page").ifPresent { return it }
-  val html = patientlyFetchURL("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
+  val html = Static.wvViewModel.patientlyFetchDocument("https://www.fanfiction.net/r/$storyId/$chapter/$page/") {
     Notifications.ERROR.show(defaultIntent(),
         R.string.error_fetching_review_data, storyId.toString())
   }

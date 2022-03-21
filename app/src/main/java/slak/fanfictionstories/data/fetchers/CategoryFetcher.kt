@@ -9,6 +9,7 @@ import slak.fanfictionstories.Notifications.Companion.defaultIntent
 import slak.fanfictionstories.R
 import slak.fanfictionstories.activities.categoryUrl
 import slak.fanfictionstories.data.Cache
+import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.str
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
@@ -47,7 +48,7 @@ val categoryCache = Cache<Array<CategoryLink>>("Category", TimeUnit.DAYS.toMilli
  */
 suspend fun fetchCategoryData(categoryUrlComponent: String): Array<CategoryLink> {
   categoryCache.hit(categoryUrlComponent).ifPresent { return it }
-  val html = patientlyFetchURL("https://www.fanfiction.net/$categoryUrlComponent/") {
+  val html = Static.wvViewModel.patientlyFetchDocument("https://www.fanfiction.net/$categoryUrlComponent/") {
     Notifications.ERROR.show(defaultIntent(), R.string.error_with_categories, categoryUrlComponent)
   }
   val doc = Jsoup.parse(html)

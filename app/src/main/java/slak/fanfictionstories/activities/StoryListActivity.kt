@@ -61,6 +61,8 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
     setLoadingView(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+    Static.wvViewModel.addWebView(binding.rootLayout)
+
     layoutManager = LinearLayoutManager(this)
     binding.storyListView.layoutManager = layoutManager
     binding.storyListView.createStorySwipeHelper()

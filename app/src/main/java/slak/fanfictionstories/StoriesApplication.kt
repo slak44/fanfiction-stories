@@ -9,10 +9,6 @@ import slak.fanfictionstories.utility.Static
 /** Runs a whole bunch of static initializers in [onCreate]. */
 @Suppress("unused")
 class StoriesApplication : Application() {
-  companion object {
-    private const val TAG = "StoriesApplication"
-  }
-
   override fun onCreate() {
     super.onCreate()
     Log.d(TAG, "Initializing")
@@ -33,5 +29,9 @@ class StoriesApplication : Application() {
     reviewCache.deserialize()
     // Schedule first update job
     scheduleUpdate()
+  }
+
+  companion object {
+    private const val TAG = "StoriesApplication"
   }
 }

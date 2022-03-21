@@ -92,6 +92,8 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
     setLoadingView(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+    Static.wvViewModel.addWebView(binding.rootLayout)
+
     binding.canonStoryListView.adapter = StoryAdapter(viewModel)
     val layoutManager = LinearLayoutManager(this)
     binding.canonStoryListView.layoutManager = layoutManager

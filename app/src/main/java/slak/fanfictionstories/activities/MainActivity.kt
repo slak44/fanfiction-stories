@@ -15,6 +15,7 @@ import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.databinding.ActivityMainBinding
 import slak.fanfictionstories.utility.CoroutineScopeActivity
 import slak.fanfictionstories.utility.Empty
+import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.str
 
 /** The main menu. Allows navigation to other sections of the app. */
@@ -28,6 +29,8 @@ class MainActivity : CoroutineScopeActivity() {
     binding = ActivityMainBinding.inflate(layoutInflater)
     setContentView(binding.root)
     setSupportActionBar(binding.toolbar)
+
+    Static.wvViewModel.addWebView(binding.rootLayout)
 
     binding.storyListBtn.setOnClickListener { startActivity<StoryListActivity>() }
     binding.storyBrowseBtn.setOnClickListener { startActivity<SelectCategoryActivity>() }

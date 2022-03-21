@@ -60,6 +60,8 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
     setLoadingView(binding.toolbar, 1)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+    Static.wvViewModel.addWebView(binding.rootLayout)
+
     val (authorName, authorId) = if (intent.action == ACTION_VIEW) {
       val pathSegments = intent?.data?.pathSegments
           ?: throw IllegalArgumentException("Missing intent data")

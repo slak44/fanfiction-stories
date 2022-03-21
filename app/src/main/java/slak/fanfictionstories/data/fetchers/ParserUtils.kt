@@ -1,6 +1,7 @@
 package slak.fanfictionstories.data.fetchers
 
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
 import org.jsoup.parser.Parser
@@ -116,7 +117,7 @@ object ParserUtils {
    * If passed null, returns the default image of ffnet.
    */
   fun convertImageUrl(imageUrl: String?): String {
-    if (imageUrl == null) return "//ff74.b-cdn.net/static/images/d_60_90.jpg"
+    if (imageUrl.isNullOrBlank()) return "//ff74.b-cdn.net/static/images/d_60_90.jpg"
     // Strip the last URL segment, like 75 below
     // https://ff74.b-cdn.net/image/5816992/75/
     // And add 180 instead, the currently largest known image size they serve
@@ -127,18 +128,83 @@ object ParserUtils {
    * Parses all required metadata for a [StoryModel].
    * @param html html string of any chapter of the story
    */
-  fun parseStoryModel(html: String, storyId: StoryId): StoryModel {
-    // The raw html is completely insane
-    // I mean really, using ' for attributes?
-    // Sometimes not using any quotes at all?
-    // Mixing lower case and upper case for tags?
-    // Inline css/js?
-    // Having a tag soup because line breaks appear at random?
-    // Not closing tags that should have been?
-    // Are the standards too permissive, or browser implementations...
-    // Thank god for html parsers
-
+  suspend fun parseStoryModel(html: String, storyId: StoryId, maybeExistingModel: StoryModel? = null): StoryModel {
     val doc = Jsoup.parse(html)
+
+    return if (doc.selectFirst("#profile_top") != null) {
+      parseStoryModelDesktop(doc, storyId)
+    } else {
+      val model = if (maybeExistingModel != null) {
+        maybeExistingModel
+      } else {
+        val authorElement = doc.selectFirst("#content > div > a")!!
+        val author = getAuthor(authorIdFromAuthor(authorElement))
+        author.userStories.first { it.storyId == storyId }
+      }
+      val titles = (0 until model.fragment.chapterCount).joinToString(CHAPTER_TITLE_SEPARATOR) {
+        "Chapter ${it + 1}"
+      }
+      model.copy(
+          serializedChapterTitles = titles,
+          status = StoryStatus.REMOTE,
+          addedTime = System.currentTimeMillis(),
+          lastReadTime = 0,
+      )
+    }
+  }
+
+  private fun parseStoryModelMobile(doc: Document, storyId: StoryId): StoryModel {
+    // FIXME
+    val author = doc.selectFirst("#content > a")!!
+    val title = doc.selectFirst("#content > b")!!.text()
+
+    val navLinks = doc.select("#content > a")
+    val canon = unescape(navLinks.last()!!.text())
+    val category =
+        if (navLinks.size == 1) str(R.string.crossovers)
+        else unescape(navLinks.dropLast(1).last().text())
+
+    val meta = parseStoryMetadata(doc.selectFirst("#profile_top > span.xgray")!!, 0)
+
+    // Parse chapter titles only if there are any chapters to name
+    val chapterTitles: String = if (meta.chapterCount == 1L) {
+      ""
+    } else {
+      doc.select("#chap_select > option").slice(0..(meta.chapterCount - 1).toInt())
+          .joinToString(CHAPTER_TITLE_SEPARATOR) {
+            // The actual chapter title is preceded by the chapter nr, a dot, and a space:
+            it.text().replace(Regex("\\d+\\. ", regexOpts), "")
+          }
+    }
+
+    return StoryModel(
+        storyId = storyId,
+        fragment = meta,
+        progress = StoryProgress(),
+        status = StoryStatus.REMOTE,
+        canon = canon,
+        category = category,
+        summary = "",
+        author = author.text(),
+        authorId = authorIdFromAuthor(author),
+        title = title,
+        serializedChapterTitles = chapterTitles,
+        addedTime = System.currentTimeMillis(),
+        lastReadTime = 0,
+        imageUrl = ""
+    )
+  }
+
+  private fun parseStoryModelDesktop(doc: Document, storyId: StoryId): StoryModel {
+    // The raw html is completely insane
+    // - Using ' for attributes
+    // - Sometimes not using any quotes at all
+    // - Mixing lower case and upper case for tags
+    // - Inline css/js, somewhat at random
+    // - Tag soup because line breaks appear at random
+    // - Not closing opened tags
+    // - document.write in 2022
+    // Thank god for html parsers
 
     val author = doc.selectFirst("#profile_top > a.xcontrast_txt")!!
     val title = doc.selectFirst("#profile_top > b.xcontrast_txt")!!.text()

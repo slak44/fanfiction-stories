@@ -57,6 +57,9 @@ fun errorDialog(title: String, msg: String) = GlobalScope.launch(Main) {
 fun errorDialog(@StringRes title: Int, @StringRes msg: Int) = errorDialog(str(title), str(msg))
 
 suspend fun Context.showImage(@StringRes dialogTitle: Int, imageUrl: String) {
+  if (imageUrl.isBlank()) {
+    return
+  }
   val binding = DialogImageViewerBinding.inflate(LayoutInflater.from(this), null, false)
   binding.image.setImageBitmap(withContext(Dispatchers.Default) {
     val bm = fetchImage(imageUrl)

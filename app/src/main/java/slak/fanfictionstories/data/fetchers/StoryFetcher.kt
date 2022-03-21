@@ -50,7 +50,8 @@ val storyCache = Cache<String>("StoryChapter", TimeUnit.MINUTES.toMillis(15))
 suspend fun fetchChapter(storyId: StoryId, chapter: Long): String {
   val cacheKey = "id$storyId-ch$chapter"
   storyCache.hit(cacheKey).ifPresent { return it }
-  val html = patientlyFetchURL("https://www.fanfiction.net/s/$storyId/$chapter/") {
+  val ua = Static.wvViewModel.defaultUserAgent
+  val html = Static.wvViewModel.patientlyFetchDocument("https://www.fanfiction.net/s/$storyId/$chapter/", ua) {
     Notifications.ERROR.show(defaultIntent(), R.string.error_fetching_story_data, storyId.toString())
   }
   storyCache.update(cacheKey, html)
@@ -63,7 +64,9 @@ suspend fun fetchChapter(storyId: StoryId, chapter: Long): String {
  * @throws IllegalArgumentException if the document does not contain story chapter data
  */
 fun extractChapterText(doc: Document): String {
+  // Try both desktop id, and mobile id
   return doc.getElementById("storytext")?.html()
+      ?: doc.getElementById("storycontent")?.html()
       ?: throw IllegalArgumentException("No story text in given document")
 }
 

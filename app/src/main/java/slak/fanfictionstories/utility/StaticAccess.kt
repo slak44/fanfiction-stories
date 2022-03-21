@@ -1,6 +1,7 @@
 package slak.fanfictionstories.utility
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.app.NotificationManager
 import android.app.job.JobScheduler
 import android.content.Context
@@ -12,6 +13,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import slak.fanfictionstories.data.Prefs
+import slak.fanfictionstories.WVViewModel
 import java.io.File
 
 // We don't leak anything here; the 2 static fields stored here are kept always up to date
@@ -35,6 +37,7 @@ object Static {
   private var notificationManager: NotificationManager? = null
   private var jobSchedulerProp: JobScheduler? = null
   private var immProp: InputMethodManager? = null
+  private var wvViewModelProp: WVViewModel? = null
 
   val prefs: SharedPreferences get() = sharedPref!!
   val defaultPrefs: SharedPreferences get() = defaultPref!!
@@ -45,6 +48,7 @@ object Static {
   val notifManager: NotificationManager get() = notificationManager!!
   val jobScheduler: JobScheduler get() = jobSchedulerProp!!
   val imm: InputMethodManager get() = immProp!!
+  val wvViewModel: WVViewModel get() = wvViewModelProp!!
 
   /**
    * Returns whether or not this class' properties are usable. Static replacement for
@@ -71,6 +75,7 @@ object Static {
         .getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
     if (immProp == null) immProp = context.applicationContext
         .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+    if (wvViewModelProp == null) wvViewModelProp = WVViewModel(context.applicationContext as Application)
   }
 }
 

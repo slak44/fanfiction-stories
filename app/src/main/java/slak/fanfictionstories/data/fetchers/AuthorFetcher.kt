@@ -16,6 +16,7 @@ import slak.fanfictionstories.data.fetchers.ParserUtils.authorIdFromAuthor
 import slak.fanfictionstories.data.fetchers.ParserUtils.convertImageUrl
 import slak.fanfictionstories.data.fetchers.ParserUtils.parseStoryMetadata
 import slak.fanfictionstories.data.fetchers.ParserUtils.unescape
+import slak.fanfictionstories.utility.Static
 import java.util.concurrent.TimeUnit
 
 val authorCache = Cache<Author>("Author", TimeUnit.DAYS.toMillis(1))
@@ -42,7 +43,7 @@ data class Author(val name: String,
  */
 suspend fun getAuthor(authorId: Long): Author {
   authorCache.hit(authorId.toString()).ifPresent { return it }
-  val html = patientlyFetchURL("https://www.fanfiction.net/u/$authorId/") {
+  val html = Static.wvViewModel.patientlyFetchDocument("https://www.fanfiction.net/u/$authorId/") {
     Notifications.ERROR.show(defaultIntent(),
         R.string.error_fetching_author_data, authorId.toString())
   }

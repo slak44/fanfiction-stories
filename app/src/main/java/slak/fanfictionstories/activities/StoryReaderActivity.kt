@@ -130,7 +130,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
       writeChapter(storyModel.storyId, chapterToRead, text)
       // Get the model too if we need it
       if (storyModel.status != StoryStatus.LOCAL) {
-        storyModel = parseStoryModel(chapterHtmlText, storyModel.storyId)
+        storyModel = parseStoryModel(chapterHtmlText, storyModel.storyId, storyModel)
         Static.database.upsertModel(storyModel)
       }
       // If all chapters are on disk, set to local
@@ -236,6 +236,8 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     setSupportActionBar(binding.toolbar)
     setLoadingView(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+    Static.wvViewModel.addWebView(binding.rootLayout)
 
     launch(Main) {
       val initialChapter = obtainModel()

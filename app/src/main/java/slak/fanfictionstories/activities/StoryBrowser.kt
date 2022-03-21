@@ -35,6 +35,9 @@ class SelectCategoryActivity : ActivityWithStatic() {
     setContentView(binding.root)
     setSupportActionBar(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+    Static.wvViewModel.addWebView(binding.rootLayout)
+
     val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1)
     adapter.addAll(categories.toList())
     binding.categoriesList.adapter = adapter
@@ -67,6 +70,9 @@ class BrowseCategoryActivity : CoroutineScopeActivity(), IHasLoadingBar {
     setSupportActionBar(findViewById(R.id.toolbar))
     setLoadingView(findViewById(R.id.toolbar))
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+    Static.wvViewModel.addWebView(binding.rootLayout)
+
     val parentLink = intent.extras?.getParcelable<CategoryLink>(INTENT_LINK_DATA) ?: return
     title = parentLink.displayName
     showLoading()

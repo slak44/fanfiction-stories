@@ -13,6 +13,7 @@ import slak.fanfictionstories.R
 import slak.fanfictionstories.utility.Static
 import java.net.URL
 import java.util.concurrent.Executors
+import javax.net.ssl.HttpsURLConnection
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -23,7 +24,7 @@ private const val NET_TAG = "waitForNetwork"
  *
  * Shows notifications about connection status.
  */
-private suspend fun waitForNetwork() = suspendCoroutine<Unit> { cont ->
+suspend fun waitForNetwork() = suspendCoroutine<Unit> { cont ->
   val req = NetworkRequest.Builder()
       .addTransportType(TRANSPORT_WIFI)
       .addTransportType(TRANSPORT_CELLULAR)
@@ -45,9 +46,10 @@ private suspend fun waitForNetwork() = suspendCoroutine<Unit> { cont ->
   Static.cm.registerNetworkCallback(req, callback)
 }
 
-private const val RATE_LIMIT_MS = 850L
-private const val URL_TAG = "patientlyFetchURL"
-private val networkContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+const val RATE_LIMIT_MS = 1500L
+const val URL_TAG = "patientlyFetchURL"
+
+val networkContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
 /**
  * Fetches the resource at the specified url, patiently. This function's calls run on the same thread.
@@ -56,13 +58,6 @@ private val networkContext = Executors.newSingleThreadExecutor().asCoroutineDisp
  *
  * If the download fails, call the [onError] callback, wait for the rate limit again, and then call this function
  * recursively. As a result, [onError] is called for every failed download retry.
- */
-@OptIn(ExperimentalStdlibApi::class)
-suspend fun patientlyFetchURL(url: String, onError: (t: Throwable) -> Unit) =
-    patientlyFetchURLBytes(url, onError).decodeToString()
-
-/**
- * @see patientlyFetchURL
  */
 suspend fun patientlyFetchURLBytes(
     url: String,
@@ -73,7 +68,12 @@ suspend fun patientlyFetchURLBytes(
   // We do want to block this thread
   @Suppress("BlockingMethodInNonBlockingContext")
   return@withContext try {
-    val text = URL(url).readBytes()
+    val conn = URL(url).openConnection() as HttpsURLConnection
+    if (conn.errorStream != null) {
+      Log.d(URL_TAG, conn.responseCode.toString())
+      Log.e(URL_TAG, conn.errorStream.readBytes().decodeToString())
+    }
+    val text = conn.inputStream.readBytes()
     Notifications.ERROR.cancel()
     text
   } catch (t: Throwable) {

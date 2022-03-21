@@ -65,6 +65,9 @@ class FavoriteCanonsActivity : CoroutineScopeActivity() {
     setContentView(binding.root)
     setSupportActionBar(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+    Static.wvViewModel.addWebView(binding.rootLayout)
+
     setTitle(R.string.favorite_canons)
     launch(Main) {
       binding.canonListRecycler.adapter = CanonAdapter(database.getFavoriteCanons().await().toMutableList())

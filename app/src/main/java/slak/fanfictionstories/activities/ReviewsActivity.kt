@@ -105,6 +105,8 @@ class ReviewsActivity : CoroutineScopeActivity(), IHasLoadingBar {
     setLoadingView(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+    Static.wvViewModel.addWebView(binding.rootLayout)
+
     // runBlocking is fine here, because the loading bar is already in place, and so the user
     // already expects to wait
     modelTarget = if (intent.action == Intent.ACTION_VIEW) runBlocking {
