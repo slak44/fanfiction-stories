@@ -16,7 +16,7 @@ import slak.fanfictionstories.utility.opt
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
-class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 9), CoroutineScope {
+class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 10), CoroutineScope {
   companion object {
     private var instance: DatabaseHelper? = null
 
@@ -174,6 +174,9 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
       db.execSQL("ALTER TABLE stories ADD COLUMN imageUrl TEXT NOT NULL DEFAULT '';")
     } else if (oldVersion == 8 && newVersion == 9) {
       db.execSQL("ALTER TABLE stories ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1;")
+    } else if (oldVersion == 9 && newVersion == 10) {
+      db.execSQL("update stories set imageUrl = '' where imageUrl = '//ff74.b-cdn.net/static/images/d_60_90.jpg';")
+      db.execSQL("update stories set imageUrl = replace(imageUrl, '//ff74.b-cdn.net', '') where imageUrl != '';")
     }
   }
 
