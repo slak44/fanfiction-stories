@@ -16,7 +16,7 @@ import slak.fanfictionstories.utility.opt
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
-class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 8), CoroutineScope {
+class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", null, 9), CoroutineScope {
   companion object {
     private var instance: DatabaseHelper? = null
 
@@ -59,7 +59,8 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
         storyId INTEGER UNIQUE NOT NULL,
         addedTime INTEGER NOT NULL,
         lastReadTime INTEGER NOT NULL,
-        imageUrl TEXT NOT NULL
+        imageUrl TEXT NOT NULL,
+        enabled INTEGER NOT NULL
       );
     """.trimIndent())
     db.execSQL("""
@@ -171,6 +172,8 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
       """.trimIndent())
     } else if (oldVersion == 7 && newVersion == 8) {
       db.execSQL("ALTER TABLE stories ADD COLUMN imageUrl TEXT NOT NULL DEFAULT '';")
+    } else if (oldVersion == 8 && newVersion == 9) {
+      db.execSQL("ALTER TABLE stories ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1;")
     }
   }
 
@@ -318,12 +321,15 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
    * Get a list of [slak.fanfictionstories.StoryStatus.LOCAL] [slak.fanfictionstories.StoryModel]s.
    */
   fun getLocalStories(): Deferred<List<StoryModel>> = useAsync {
-    select("stories").whereSimple("status = ?", "local").parseList(StoryModel.dbParser)
+    select("stories")
+        .whereSimple("enabled = 1")
+        .whereSimple("status = ?", "local")
+        .parseList(StoryModel.dbParser)
   }
 
   /** Get ALL stored stories. */
   fun getStories(): Deferred<List<StoryModel>> = useAsync {
-    select(tableName = "stories").parseList(StoryModel.dbParser)
+    select(tableName = "stories").whereSimple("enabled = 1").parseList(StoryModel.dbParser)
   }
 
   /** Get a [StoryModel] by its id, if it exists. */

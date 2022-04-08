@@ -179,7 +179,7 @@ val debugActions = mapOf(
       var initialByteCount = 0L
       var finalByteCount = 0L
       File(Static.currentCtx.getExternalFilesDir(null), "storiesData").listFiles()!!.forEach { story ->
-        story.listFiles()!!.forEach {chapter ->
+        story.listFiles()!!.forEach { chapter ->
           initialByteCount += chapter.length()
           val outFile = File("${story.absolutePath}/${chapter.name.split('.')[0]}.html.deflated")
           val stream = DeflaterOutputStream(outFile.outputStream())
@@ -269,5 +269,11 @@ val debugActions = mapOf(
           }
         }
       }
-    }
+    },
+    "Disable all stories of marker" to {
+      Static.database.use {
+        execSQL("update stories set enabled = 0 where storyId in " +
+            "(select storyId from colorMarkers where markerColor = -13388315)")
+      }
+    },
 )
