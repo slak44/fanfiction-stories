@@ -64,7 +64,7 @@ suspend fun Context.showImage(@StringRes dialogTitle: Int, imageUrl: String) {
   }
   val binding = DialogImageViewerBinding.inflate(LayoutInflater.from(this), null, false)
   binding.image.setImageBitmap(withContext(Dispatchers.Default) {
-    val bm = fetchImage(imageUrl)
+    val bm = fetchImage("//www.fanfiction.net$imageUrl")
     // Arbitrarily get a max width for the scaled image
     val width = displayMetrics.widthPixels - 300
     // Arbitrarily set a max scaling ratio
