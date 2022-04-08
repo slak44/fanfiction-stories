@@ -58,6 +58,10 @@ class SearchUIFragment : Fragment() {
   private lateinit var binding: FragmentSearchUiBinding
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    val a = activity as? ISearchableActivity
+        ?: throw IllegalStateException("Activity must implement SearchableActivity")
+    sActivity = a
+
     binding = FragmentSearchUiBinding.inflate(inflater, container, false)
     Log.v(TAG, "Search UI inflated")
     binding.searchNextMatchBtn.setOnClickListener {
@@ -89,13 +93,6 @@ class SearchUIFragment : Fragment() {
       sActivity.onHide()
     }
     return binding.root
-  }
-
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
-    val a = activity as? ISearchableActivity
-        ?: throw IllegalStateException("Activity must implement SearchableActivity")
-    sActivity = a
   }
 
   override fun onViewStateRestored(savedInstanceState: Bundle?) {
