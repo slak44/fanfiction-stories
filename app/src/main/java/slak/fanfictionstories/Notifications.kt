@@ -19,7 +19,6 @@ import slak.fanfictionstories.activities.StoryListActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
 import slak.fanfictionstories.utility.*
 import slak.fanfictionstories.utility.Optional
-import java.util.*
 
 enum class Notifications(
     private val duration: Duration,
@@ -27,7 +26,7 @@ enum class Notifications(
     @DrawableRes val icon: Int,
     @StringRes val channelTitleId: Int,
     @StringRes val channelDescId: Int,
-    val group: Optional<String> = Empty()
+    private val group: Optional<String> = Empty()
 ) {
   DOWNLOADING(
       Duration.ONGOING,
@@ -82,7 +81,7 @@ enum class Notifications(
   }
 
   private val reqId = ordinal
-  private val channelKey = "${name.toLowerCase(Locale.ROOT)}_channel"
+  private val channelKey = "${name.lowercase()}_channel"
 
   private var reqIdCounter = 0xC000000
   fun create(target: Intent, content: String): NotificationCompat.Builder {

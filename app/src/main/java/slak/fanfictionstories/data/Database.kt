@@ -13,6 +13,7 @@ import slak.fanfictionstories.data.fetchers.CategoryLink
 import slak.fanfictionstories.utility.Optional
 import slak.fanfictionstories.utility.Static
 import slak.fanfictionstories.utility.opt
+import java.util.concurrent.Executors
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
@@ -185,7 +186,7 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
     databaseContext.close()
   }
 
-  private val databaseContext = newSingleThreadContext("DatabaseThread")
+  private val databaseContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
   override val coroutineContext: CoroutineContext
     get() = databaseContext
 
