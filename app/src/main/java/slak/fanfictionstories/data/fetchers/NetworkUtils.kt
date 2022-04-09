@@ -48,8 +48,11 @@ suspend fun waitForNetwork() = suspendCoroutine<Unit> { cont ->
 
 const val RATE_LIMIT_MS = 1500L
 const val URL_TAG = "patientlyFetchURL"
+const val RETRY_COUNT = 5
 
 val networkContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+
+private var currentRetries = RETRY_COUNT
 
 /**
  * Fetches the resource at the specified url, patiently. This function's calls run on the same thread.
@@ -62,7 +65,7 @@ val networkContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 suspend fun patientlyFetchURLBytes(
     url: String,
     onError: (t: Throwable) -> Unit
-): ByteArray = withContext(networkContext) {
+): ByteArray? = withContext(networkContext) {
   waitForNetwork()
   delay(RATE_LIMIT_MS)
   // We do want to block this thread
@@ -80,6 +83,15 @@ suspend fun patientlyFetchURLBytes(
     // Something happened; retry
     Log.e(URL_TAG, "Failed to fetch url ($url)", t)
     onError(t)
+
+    if (currentRetries == 0) {
+      Log.e(URL_TAG, "Retry count $RETRY_COUNT exceeded for $url")
+      currentRetries = RETRY_COUNT
+      return@withContext null
+    } else {
+      currentRetries--
+    }
+
     patientlyFetchURLBytes(url, onError)
   }
 }

@@ -62,15 +62,19 @@ suspend fun Context.showImage(@StringRes dialogTitle: Int, imageUrl: String) {
   if (imageUrl.isBlank()) {
     return
   }
-  val binding = DialogImageViewerBinding.inflate(LayoutInflater.from(this), null, false)
-  binding.image.setImageBitmap(withContext(Dispatchers.Default) {
-    val bm = fetchImage("//www.fanfiction.net$imageUrl")
+
+  val scaledBitmap = withContext(Dispatchers.Default) {
+    val bm = fetchImage("//www.fanfiction.net$imageUrl") ?: return@withContext null
     // Arbitrarily get a max width for the scaled image
     val width = displayMetrics.widthPixels - 300
     // Arbitrarily set a max scaling ratio
     val ratio = (width / bm.width).coerceAtMost(3)
     Bitmap.createScaledBitmap(bm, bm.width * ratio, bm.height * ratio, false)
-  })
+  } ?: return
+
+  val binding = DialogImageViewerBinding.inflate(LayoutInflater.from(this), null, false)
+  binding.image.setImageBitmap(scaledBitmap)
+
   withContext(Main) {
     AlertDialog.Builder(this@showImage)
         .setTitle(dialogTitle)

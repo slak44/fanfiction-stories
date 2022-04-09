@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import org.jetbrains.anko.longToast
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import slak.fanfictionstories.*
@@ -166,10 +167,15 @@ suspend fun updateStory(oldModel: StoryModel): Optional<StoryModel> {
 
 val imageCache = Cache<ByteArray>("Images", TimeUnit.DAYS.toMillis(3))
 
-suspend fun fetchImage(imageUrl: String): Bitmap {
+suspend fun fetchImage(imageUrl: String): Bitmap? {
   imageCache.hit(imageUrl).ifPresent { return BitmapFactory.decodeByteArray(it, 0, it.size) }
   val bytes = patientlyFetchURLBytes("https:$imageUrl") {
     Notifications.ERROR.show(defaultIntent(), R.string.error_fetching_image_data)
+  }
+  if (bytes == null) {
+    Static.currentCtx.longToast(R.string.image_load_error)
+    Notifications.ERROR.cancel()
+    return null
   }
   imageCache.update(imageUrl, bytes)
   return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
