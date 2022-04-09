@@ -2,7 +2,6 @@ package slak.fanfictionstories.data.fetchers
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import kotlinx.coroutines.CoroutineScope
 import org.jsoup.Jsoup
 import slak.fanfictionstories.Notifications
 import slak.fanfictionstories.Notifications.Companion.defaultIntent
@@ -50,7 +49,8 @@ suspend fun fetchCategoryData(categoryUrlComponent: String): Array<CategoryLink>
   categoryCache.hit(categoryUrlComponent).ifPresent { return it }
   val html = Static.wvViewModel.patientlyFetchDocument("https://www.fanfiction.net/$categoryUrlComponent/") {
     Notifications.ERROR.show(defaultIntent(), R.string.error_with_categories, categoryUrlComponent)
-  }
+  } ?: return emptyArray()
+
   val doc = Jsoup.parse(html)
   val result = doc.select("#list_output div").map {
     val urlComponent = it.child(0).attr("href")

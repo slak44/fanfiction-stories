@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
@@ -48,13 +49,13 @@ val storyCache = Cache<String>("StoryChapter", TimeUnit.MINUTES.toMillis(15))
  * @param storyId what story
  * @param chapter what chapter
  */
-suspend fun fetchChapter(storyId: StoryId, chapter: Long): String {
+suspend fun fetchChapter(storyId: StoryId, chapter: Long): String? {
   val cacheKey = "id$storyId-ch$chapter"
   storyCache.hit(cacheKey).ifPresent { return it }
   val ua = Static.wvViewModel.defaultUserAgent
   val html = Static.wvViewModel.patientlyFetchDocument("https://www.fanfiction.net/s/$storyId/$chapter/", ua) {
     Notifications.ERROR.show(defaultIntent(), R.string.error_fetching_story_data, storyId.toString())
-  }
+  } ?: return null
   storyCache.update(cacheKey, html)
   return html
 }
@@ -76,7 +77,7 @@ fun extractChapterText(doc: Document): String {
  * @returns the [StoryModel] if it was there, or [Empty] if the story was not found
  */
 suspend fun fetchStoryModel(storyId: StoryId): Optional<StoryModel> {
-  val chapterHtml = fetchChapter(storyId, 1)
+  val chapterHtml = fetchChapter(storyId, 1) ?: return Empty()
   if ("Story Not Found" in chapterHtml) return Empty()
   return parseStoryModel(chapterHtml, storyId).opt()
 }
@@ -106,6 +107,7 @@ fun fetchChapterRange(
           model.title
       )
       val chapterHtml = fetchChapter(model.storyId, chapterNr)
+      requireNotNull(chapterHtml) { "Failed to fetch chapter in range" }
       emit(extractChapterText(Jsoup.parse(chapterHtml)) to chapterNr)
     }
   }
@@ -148,7 +150,7 @@ suspend fun updateStory(oldModel: StoryModel): Optional<StoryModel> {
     // Special case when there is only one chapter
     if (newModel.fragment.chapterCount == 1L) {
       Notifications.UPDATING.show(defaultIntent(), R.string.fetching_chapter, 1, 1, 0F, newModel.title)
-      writeChapter(newModel.storyId, 1, fetchChapter(newModel.storyId, 1))
+      writeChapter(newModel.storyId, 1, requireNotNull(fetchChapter(newModel.storyId, 1)))
     } else {
       val chapterFlow = if (newModel.fragment.chapterCount > oldModel.fragment.chapterCount) {
         // Try being smart, and only download delta when chapters were added
@@ -173,7 +175,9 @@ suspend fun fetchImage(imageUrl: String): Bitmap? {
     Notifications.ERROR.show(defaultIntent(), R.string.error_fetching_image_data)
   }
   if (bytes == null) {
-    Static.currentCtx.longToast(R.string.image_load_error)
+    withContext(Main) {
+      Static.currentCtx.longToast(R.string.image_load_error)
+    }
     Notifications.ERROR.cancel()
     return null
   }

@@ -41,12 +41,13 @@ data class Author(val name: String,
  * Get author data for specified id.
  * @see Author
  */
-suspend fun getAuthor(authorId: Long): Author {
+suspend fun getAuthor(authorId: Long): Author? {
   authorCache.hit(authorId.toString()).ifPresent { return it }
   val html = Static.wvViewModel.patientlyFetchDocument("https://www.fanfiction.net/u/$authorId/") {
     Notifications.ERROR.show(defaultIntent(),
         R.string.error_fetching_author_data, authorId.toString())
-  }
+  } ?: return null
+
   val doc = Jsoup.parse(html)
   val authorName = doc.selectFirst("#content_wrapper_inner > span")!!.text()
   val stories = doc.getElementById("st_inside")!!.children().map {

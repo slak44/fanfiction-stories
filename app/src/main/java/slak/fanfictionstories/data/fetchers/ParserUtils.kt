@@ -139,7 +139,7 @@ object ParserUtils {
       } else {
         val authorElement = doc.selectFirst("#content > div > a")!!
         val author = getAuthor(authorIdFromAuthor(authorElement))
-        author.userStories.first { it.storyId == storyId }
+        requireNotNull(author).userStories.first { it.storyId == storyId }
       }
       val titles = (0 until model.fragment.chapterCount).joinToString(CHAPTER_TITLE_SEPARATOR) {
         "Chapter ${it + 1}"

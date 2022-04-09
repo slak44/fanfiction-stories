@@ -80,7 +80,14 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
     showLoading()
 
     launch(Main) {
-      author = getAuthor(authorId)
+      val maybeAuthor = getAuthor(authorId)
+
+      if (maybeAuthor == null) {
+        hideLoading()
+        return@launch
+      }
+
+      author = maybeAuthor
       title = viewModel.author.name
       invalidateOptionsMenu()
       sectionsPagerAdapter = SectionsPagerAdapter(supportFragmentManager)

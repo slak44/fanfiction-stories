@@ -77,7 +77,15 @@ class ReviewsViewModel(val model: StoryModel, initialChapter: Integer) :
   fun loadPage(coroutineScope: CoroutineScope) = coroutineScope.launch(Main) {
     if (pageCount != 0 && currentPage >= pageCount) return@launch
     loadingEventsData.it = LoadEvent.LOADING
-    val (list, pages, reviews) = getReviews(model.storyId, _chapter.it, currentPage)
+
+    val reviewPage = getReviews(model.storyId, _chapter.it, currentPage)
+    if (reviewPage == null) {
+      loadingEventsData.it = LoadEvent.DONE_LOADING
+      return@launch
+    }
+
+    val (list, pages, reviews) = reviewPage
+
     if (pageCount == 0) pageCount = pages
     if (reviewCount == 0) reviewCount = reviews
     reviewsList.addAll(list)

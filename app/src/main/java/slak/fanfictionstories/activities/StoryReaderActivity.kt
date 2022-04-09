@@ -110,7 +110,16 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
   @AnyThread
   fun changeChapter(chapterToRead: Long) = launch(Main) {
     _chapterEvents.it = CHAPTER_LOAD_STARTED
-    if (chapterToRead != currentChapter) chapterHtml = getChapterHtml(chapterToRead)
+    if (chapterToRead != currentChapter) {
+      val html = getChapterHtml(chapterToRead)
+
+      if (html == null) {
+        _chapterEvents.it = CHAPTER_RELOADED
+        return@launch
+      }
+
+      chapterHtml = html
+    }
     _chapterEvents.it = when {
       currentChapter == UNINITIALIZED_CHAPTER -> CHAPTER_FIRST_LOAD
       chapterToRead == currentChapter -> CHAPTER_RELOADED
@@ -121,13 +130,14 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
   }
 
   @AnyThread
-  private suspend fun getChapterHtml(chapterToRead: Long): String {
+  private suspend fun getChapterHtml(chapterToRead: Long): String? {
     // If the story is remote and it gets updated, the downloaded chapters may be outdated, so delete and re-download
     if (storyModel.status == StoryStatus.REMOTE && storyModel.fragment.updateTime > storyModel.lastReadTime ?: 0) {
       deleteStory(storyModel.storyId)
     }
     return readChapter(storyModel.storyId, chapterToRead).orElse {
-      val chapterHtmlText = fetchChapter(storyModel.storyId, chapterToRead)
+      val chapterHtmlText = fetchChapter(storyModel.storyId, chapterToRead) ?: return@getChapterHtml null
+
       val text = extractChapterText(Jsoup.parse(chapterHtmlText))
       writeChapter(storyModel.storyId, chapterToRead, text)
       // Get the model too if we need it

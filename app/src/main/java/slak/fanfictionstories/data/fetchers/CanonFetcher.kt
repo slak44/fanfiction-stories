@@ -191,7 +191,8 @@ suspend fun getCanonPage(parentLink: CategoryLink, filters: CanonFilters, page: 
   canonListCache.hit(pathAndQuery).ifPresent { return it }
   val html = Static.wvViewModel.patientlyFetchDocument("https://www.fanfiction.net/$pathAndQuery") {
     Notifications.ERROR.show(defaultIntent(), R.string.error_with_canon_stories, parentLink.displayName)
-  }
+  } ?: return CanonPage(emptyList(), CanonMetadata())
+
   val pageData = parseHtml(html)
   canonListCache.update(pathAndQuery, pageData)
   return pageData

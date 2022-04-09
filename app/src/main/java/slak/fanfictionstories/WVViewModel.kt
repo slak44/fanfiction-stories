@@ -17,10 +17,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import slak.fanfictionstories.data.fetchers.RATE_LIMIT_MS
-import slak.fanfictionstories.data.fetchers.URL_TAG
-import slak.fanfictionstories.data.fetchers.networkContext
-import slak.fanfictionstories.data.fetchers.waitForNetwork
+import org.jetbrains.anko.longToast
+import slak.fanfictionstories.data.fetchers.*
+import slak.fanfictionstories.utility.Static
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -47,6 +46,8 @@ private object FFWebClient : WebViewClient() {
 }
 
 class WVViewModel(application: Application) : AndroidViewModel(application) {
+  private var currentErrorRetries = RETRY_COUNT
+
   // This lives as long as the application, it's fine
   @SuppressLint("StaticFieldLeak")
   val webView = WebView(application)
@@ -89,9 +90,17 @@ class WVViewModel(application: Application) : AndroidViewModel(application) {
   }
 
   @UiThread
-  private suspend fun getWebDocument(url: String, userAgent: String) = suspendCoroutine<String> { continuation ->
+  private suspend fun getWebDocument(url: String, userAgent: String) = suspendCoroutine<String?> { continuation ->
+    var currentWebViewRetries = RETRY_COUNT
+
     webView.settings.userAgentString = userAgent
-    FFWebClient.currentCallback = cb@ { loadedUrl ->
+    FFWebClient.currentCallback = cb@ {
+      if (currentWebViewRetries == 0) {
+        cancel()
+        continuation.resume(null)
+        return@cb
+      }
+
       // Cloudflare... don't ask...
       val js = """
         (function() {
@@ -110,9 +119,10 @@ class WVViewModel(application: Application) : AndroidViewModel(application) {
           Log.v(URL_TAG, "Waiting for additional redirect")
           GlobalScope.launch(Main) {
             webView.visibility = View.VISIBLE
-            delay(5000)
+            delay(2000)
             webView.visibility = View.GONE
           }
+          currentWebViewRetries--
           return@evaluateJavascript
         }
         FFWebClient.currentCallback = null
@@ -120,7 +130,12 @@ class WVViewModel(application: Application) : AndroidViewModel(application) {
       }
     }
 
-    webView.loadUrl(url)
+    if (webView.url == url) {
+      Log.v(URL_TAG, "Reusing webview because it already is on the target URL")
+      FFWebClient.currentCallback?.invoke(url)
+    } else {
+      webView.loadUrl(url)
+    }
   }
 
   /**
@@ -133,7 +148,7 @@ class WVViewModel(application: Application) : AndroidViewModel(application) {
       url: String,
       userAgent: String = desktopUserAgent,
       onError: (t: Throwable) -> Unit
-  ): String = withContext(networkContext) {
+  ): String? = withContext(networkContext) {
     waitForNetwork()
     delay(RATE_LIMIT_MS)
     Log.v(URL_TAG, "Waited for rate limit, retrying...")
@@ -142,11 +157,27 @@ class WVViewModel(application: Application) : AndroidViewModel(application) {
       withContext(Main) {
         val text = getWebDocument(url, userAgent)
         Notifications.ERROR.cancel()
+        if (text == null) {
+          Static.currentCtx.longToast(R.string.request_error)
+        }
         text
       }
     } catch (t: Throwable) {
-      onError(t)
       Log.e(URL_TAG, "Failed to fetch url ($url)", t)
+      onError(t)
+
+      if (currentErrorRetries == 0) {
+        Log.e(URL_TAG, "Retry count $RETRY_COUNT exceeded for $url")
+        currentErrorRetries = RETRY_COUNT
+        withContext(Main) {
+          Static.currentCtx.longToast(R.string.request_error)
+        }
+        Notifications.ERROR.cancel()
+        return@withContext null
+      } else {
+        currentErrorRetries--
+      }
+
       patientlyFetchDocument(url, userAgent, onError)
     }
   }
