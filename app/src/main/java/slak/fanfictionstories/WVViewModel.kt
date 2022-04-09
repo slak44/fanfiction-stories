@@ -12,16 +12,12 @@ import android.webkit.WebViewClient
 import androidx.annotation.AnyThread
 import androidx.annotation.UiThread
 import androidx.lifecycle.AndroidViewModel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.jetbrains.anko.longToast
 import slak.fanfictionstories.data.fetchers.*
 import slak.fanfictionstories.utility.Static
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 private object HTMLJSInterface {
   lateinit var lastHTML: String
@@ -90,8 +86,13 @@ class WVViewModel(application: Application) : AndroidViewModel(application) {
   }
 
   @UiThread
-  private suspend fun getWebDocument(url: String, userAgent: String) = suspendCoroutine<String?> { continuation ->
+  private suspend fun getWebDocument(
+      url: String,
+      userAgent: String,
+  ) = suspendCancellableCoroutine<String?> { continuation ->
     var currentWebViewRetries = RETRY_COUNT
+
+    continuation.invokeOnCancellation { cancel() }
 
     webView.settings.userAgentString = userAgent
     FFWebClient.currentCallback = cb@ {
@@ -134,6 +135,7 @@ class WVViewModel(application: Application) : AndroidViewModel(application) {
       Log.v(URL_TAG, "Reusing webview because it already is on the target URL")
       FFWebClient.currentCallback?.invoke(url)
     } else {
+      Log.v(URL_TAG, "Loading URL in webview: $url")
       webView.loadUrl(url)
     }
   }
@@ -163,6 +165,14 @@ class WVViewModel(application: Application) : AndroidViewModel(application) {
         text
       }
     } catch (t: Throwable) {
+      if (t is CancellationException) {
+        withContext(Main) {
+          Static.currentCtx.longToast(R.string.request_error)
+        }
+        Notifications.ERROR.cancel()
+        return@withContext null
+      }
+
       Log.e(URL_TAG, "Failed to fetch url ($url)", t)
       onError(t)
 
