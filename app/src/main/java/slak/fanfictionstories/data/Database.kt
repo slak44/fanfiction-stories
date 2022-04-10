@@ -410,6 +410,7 @@ fun SelectQueryBuilder.whereAny(columnName: String, values: Array<String>): Sele
  * All possible SQLite errors/results.
  * Taken from [the SQLite site](https://sqlite.org/rescode.html).
  */
+@Suppress("unused")
 enum class SQLiteResultCode(val code: Int) {
   // Primary result codes
   ABORT(4),
@@ -515,6 +516,7 @@ fun SQLiteConstraintException.errCode(): SQLiteResultCode {
   val target = "(code "
   val startIdx = msg.indexOf(target) + target.length
   var idx = startIdx
+  @Suppress("ControlFlowWithEmptyBody")
   while (msg[++idx].isDigit());
   return SQLiteResultCode.fromCode(msg.slice(startIdx until idx).toInt())
 }
