@@ -17,8 +17,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.core.app.NotificationCompat
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.*
 import org.threeten.bp.Duration
 import org.threeten.bp.ZoneId
@@ -55,7 +55,11 @@ private fun scheduleUpdateJob(initTarget: ZonedDateTime): ScheduleResult {
       .setRequiredNetworkType(Prefs.autoUpdateReqNetType())
       .setPersisted(true)
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) builder.setRequiresBatteryNotLow(true)
-  return ScheduleResult.from(Static.jobScheduler.schedule(builder.build()))
+
+  val result = ScheduleResult.from(Static.jobScheduler.schedule(builder.build()))
+  Log.v(TAG, "ScheduleResult: $result")
+
+  return result
 }
 
 /** Schedule update job if one doesn't exists. */
