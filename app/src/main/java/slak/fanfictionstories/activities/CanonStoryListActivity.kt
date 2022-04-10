@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.annotation.AnyThread
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.Main
@@ -62,7 +63,7 @@ class CanonListViewModel(val parentLink: CategoryLink) : StoryListViewModel() {
     val canonPage = getCanonPage(parentLink, filters, page)
     metadata = canonPage.metadata
     val favouriteDef = Static.database.isCanonFavorite(parentLink)
-    val storyMap = canonPage.storyList.map { it.storyId to it }.toMap()
+    val storyMap = canonPage.storyList.associateBy { it.storyId }
     for (dbStory in Static.database.storiesById(storyMap.keys).await()) {
       storyMap.getValue(dbStory.storyId).progress = dbStory.progress
       storyMap.getValue(dbStory.storyId).status = dbStory.status
@@ -142,9 +143,10 @@ class CanonStoryListActivity : CoroutineScopeActivity(), IHasLoadingBar {
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-    menu.findItem(R.id.favorite).icon = resources.getDrawable(
-        if (viewModel.isFavorite) R.drawable.ic_favorite_black_24dp
-        else R.drawable.ic_favorite_border_black_24dp, theme)
+    menu.findItem(R.id.favorite).icon = getDrawable(
+        if (viewModel.isFavorite) R.drawable.ic_favorite_black_24dp else R.drawable.ic_favorite_border_black_24dp,
+        theme
+    )
     menu.findItem(R.id.filter).iconTint(R.color.white, theme)
     menu.findItem(R.id.favorite).iconTint(R.color.white, theme)
     return super.onPrepareOptionsMenu(menu)

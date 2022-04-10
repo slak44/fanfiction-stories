@@ -18,8 +18,11 @@
         <entry key="app/src/main/res/layout/activity_story_reader_content.xml" value="0.4148550724637681" />
         <entry key="app/src/main/res/layout/component_category_list_item.xml" value="0.4148550724637681" />
         <entry key="app/src/main/res/layout/component_story.xml" value="0.2798913043478261" />
+        <entry key="app/src/main/res/layout/dialog_add_story_view.xml" value="0.27395833333333336" />
         <entry key="app/src/main/res/layout/dialog_ffnet_filter.xml" value="0.34782608695652173" />
+        <entry key="app/src/main/res/layout/dialog_order_by_switch.xml" value="0.27395833333333336" />
         <entry key="app/src/main/res/layout/dialog_report_review.xml" value="0.4148550724637681" />
+        <entry key="app/src/main/res/layout/fragment_author_bio.xml" value="0.27395833333333336" />
         <entry key="app/src/main/res/layout/fragment_search_ui.xml" value="0.4148550724637681" />
         <entry key="app/src/main/res/layout/loading_activity_indeterminate.xml" value="0.4148550724637681" />
         <entry key="app/src/main/res/menu/menu_author.xml" value="0.5161458333333333" />

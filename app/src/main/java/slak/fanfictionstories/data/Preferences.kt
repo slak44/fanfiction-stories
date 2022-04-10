@@ -60,8 +60,8 @@ object Prefs {
   private const val RESUME_STORY_ID = "resume_story_id"
   const val NO_RESUME_STORY = -3954L
   var resumeStoryId: StoryId
-    get() = Static.prefs.getLong(Prefs.RESUME_STORY_ID, NO_RESUME_STORY)
-    set(new) = use { it.putLong(Prefs.RESUME_STORY_ID, new) }
+    get() = Static.prefs.getLong(RESUME_STORY_ID, NO_RESUME_STORY)
+    set(new) = use { it.putLong(RESUME_STORY_ID, new) }
 
   private const val REMEMBER_LANG_ID = "remember_lang_id"
   var preferredLanguage: Language

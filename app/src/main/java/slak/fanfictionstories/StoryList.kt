@@ -1,5 +1,6 @@
 package slak.fanfictionstories
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.os.Parcelable
@@ -26,9 +27,9 @@ import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.takisoft.colorpicker.ColorPickerDialog
-import kotlinx.parcelize.Parcelize
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.parcelize.Parcelize
 import slak.fanfictionstories.StoryListItem.*
 import slak.fanfictionstories.activities.AuthorActivity
 import slak.fanfictionstories.activities.StoryReaderActivity
@@ -50,6 +51,7 @@ import kotlin.math.roundToInt
 fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
   // Use a `lateinit var` because the coroutine inside cannot access
   // the `this` that is the ItemTouchHelper.Callback
+  @Suppress("JoinDeclarationAndAssignment")
   lateinit var swipeStory: ItemTouchHelper
   swipeStory = ItemTouchHelper(object : ItemTouchHelper.Callback() {
     override fun getMovementFlags(recycler: RecyclerView, vh: RecyclerView.ViewHolder): Int =
@@ -209,6 +211,8 @@ class StoryCardView @JvmOverloads constructor(
     binding = ComponentStoryBinding.bind(this)
   }
 
+  // It should not be clickable
+  @SuppressLint("ClickableViewAccessibility")
   fun loadFromModel(model: StoryModel, scope: CoroutineScope) = with(binding) {
     currentModel = model
     // Unexpanded view
@@ -354,7 +358,7 @@ class GroupTitleView @JvmOverloads constructor(
     val drawableId =
         if (isCollapsed) R.drawable.ic_keyboard_arrow_up_black_24dp
         else R.drawable.ic_keyboard_arrow_down_black_24dp
-    val drawable = Static.res.getDrawable(drawableId, context.theme)
+    val drawable = Static.getDrawable(drawableId, context.theme)!!
     drawable.colorFilter = PorterDuffColorFilter(currentTextColor, PorterDuff.Mode.SRC_IN)
     setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
   }

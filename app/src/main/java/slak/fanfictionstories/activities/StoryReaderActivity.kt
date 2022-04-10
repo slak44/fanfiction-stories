@@ -71,6 +71,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
     CHAPTER_CHANGED,
     CHAPTER_RELOADED
   }
+
   private val _chapterEvents = MutableLiveData<ChapterEvent>()
   val chapterEvents: LiveData<ChapterEvent> get() = _chapterEvents
 
@@ -130,6 +131,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
     currentChapter = chapterToRead
   }
 
+  @Suppress("RedundantNullableReturnType") // This inspection is wrong
   @AnyThread
   private suspend fun getChapterHtml(chapterToRead: Long): String? {
     // If the story is remote and it gets updated, the downloaded chapters may be outdated, so delete and re-download
@@ -468,9 +470,21 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
 
     // Tint button icons grey if the buttons are disabled, white if not
     fun getColorFor(view: View) = if (view.isEnabled) R.color.white else R.color.textDisabled
-    binding.readerContent.prevChapterBtn.drawableTint(getColorFor(binding.readerContent.prevChapterBtn), theme, Direction.LEFT)
-    binding.readerContent.nextChapterBtn.drawableTint(getColorFor(binding.readerContent.nextChapterBtn), theme, Direction.RIGHT)
-    binding.readerContent.selectChapterBtn.drawableTint(getColorFor(binding.readerContent.selectChapterBtn), theme, Direction.LEFT)
+    binding.readerContent.prevChapterBtn.drawableTint(
+        getColorFor(binding.readerContent.prevChapterBtn),
+        theme,
+        Direction.LEFT
+    )
+    binding.readerContent.nextChapterBtn.drawableTint(
+        getColorFor(binding.readerContent.nextChapterBtn),
+        theme,
+        Direction.RIGHT
+    )
+    binding.readerContent.selectChapterBtn.drawableTint(
+        getColorFor(binding.readerContent.selectChapterBtn),
+        theme,
+        Direction.LEFT
+    )
 
     // Handle the next/prev button states/colors in the appbar
     invalidateOptionsMenu()
@@ -663,6 +677,7 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
 
   private inner class SearchHighlightSpan(isCurrent: Boolean) : BackgroundColorSpan(
       getColor(if (isCurrent) R.color.textHighlightCurrent else R.color.textHighlightDefault))
+
   override fun highlightMatches() {
     checkNotNull(binding.readerContent.chapterText.spannable) { "Can't highlight missing text" }
     viewModel.searchMatches.forEach {

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.*
+import android.graphics.drawable.Drawable
 import android.os.IBinder
 import android.text.Html
 import android.text.Layout
@@ -22,7 +23,9 @@ import android.widget.Spinner
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DimenRes
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -109,6 +112,14 @@ fun TextView.drawableTint(@ColorRes colorRes: Int, theme: Resources.Theme, which
     Direction.BOTTOM -> setCompoundDrawablesWithIntrinsicBounds(compoundDrawables[0],
         compoundDrawables[1], compoundDrawables[2], drawable)
   }
+}
+
+fun Context.getDrawable(@DrawableRes drawableRes: Int, theme: Resources.Theme? = null): Drawable? {
+  return ResourcesCompat.getDrawable(resources, drawableRes, theme)
+}
+
+fun Static.getDrawable(@DrawableRes drawableRes: Int, theme: Resources.Theme? = null): Drawable? {
+  return ResourcesCompat.getDrawable(res, drawableRes, theme)
 }
 
 /** A [ReplacementSpan] that tries to emulate a <hr> element. */

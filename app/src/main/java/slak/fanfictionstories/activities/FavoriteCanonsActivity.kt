@@ -50,7 +50,7 @@ class FavoriteCanonsActivity : CoroutineScopeActivity() {
         val removed = linkList.removeAt(position)
         notifyItemRemoved(position)
         updateNoFavoritesText()
-        removeSnackbar = undoableAction(binding.root, R.string.removed_favorite_snack, { _ ->
+        removeSnackbar = undoableAction(binding.root, R.string.removed_favorite_snack, {
           linkList.add(position, removed)
           notifyItemInserted(position)
           updateNoFavoritesText()

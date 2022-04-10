@@ -103,7 +103,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
             try {
               it.toLong()
             } catch (nfe: NumberFormatException) {
-              Snackbar.make(binding.storyListView, str(R.string.text_is_not_id, it), Snackbar.LENGTH_LONG)
+              Snackbar.make(binding.storyListView, str(R.string.text_is_not_id, it), Snackbar.LENGTH_LONG).show()
               null
             }
           }

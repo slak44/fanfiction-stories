@@ -13,5 +13,6 @@
         android:ems="10"
         android:digits="0123456789,"
         android:inputType="number"
+        android:importantForAutofill="no"
         tools:ignore="LabelFor"/>
 </LinearLayout>

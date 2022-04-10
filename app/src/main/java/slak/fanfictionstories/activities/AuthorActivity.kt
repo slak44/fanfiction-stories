@@ -190,7 +190,7 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
   internal class HtmlFragment : Fragment() {
     private lateinit var binding: FragmentAuthorBioBinding
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
       binding = FragmentAuthorBioBinding.inflate(inflater, container, false)
       binding.root.post {
         binding.html.text = Html.fromHtml(requireArguments().getString(ARG_HTML_TEXT),
@@ -262,7 +262,7 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
       }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
       binding = FragmentAuthorStoriesBinding.inflate(inflater, container, false)
       // FIXME maybe replace storyById with storiesById
       viewModel.launch(Main) {

@@ -306,10 +306,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right|center_vertical"
-                android:tint="@color/white"
                 app:srcCompat="@drawable/ic_photo_black_24dp"
                 tools:ignore="RtlHardcoded"
-                android:contentDescription="@string/story_image" />
+                android:contentDescription="@string/story_image"
+                app:tint="@color/white" />
 
         </LinearLayout>
 

@@ -48,6 +48,7 @@
         android:ems="10"
         android:hint="@string/description"
         android:inputType="textMultiLine"
+        android:importantForAutofill="no"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"

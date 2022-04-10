@@ -1,5 +1,6 @@
 package slak.fanfictionstories.utility
 
+import android.annotation.SuppressLint
 import android.database.Observable
 import androidx.annotation.UiThread
 import androidx.recyclerview.widget.RecyclerView
@@ -67,6 +68,7 @@ class AdapterDataObservable :
 fun createObserverForAdapter(
     adapter: RecyclerView.Adapter<*>) = object : RecyclerView.AdapterDataObserver() {
   @UiThread
+  @SuppressLint("NotifyDataSetChanged") // This is intended
   override fun onChanged() = adapter.notifyDataSetChanged()
 
   @UiThread
@@ -82,6 +84,7 @@ fun createObserverForAdapter(
       adapter.notifyItemRangeInserted(positionStart, itemCount)
 
   @UiThread
+  @SuppressLint("NotifyDataSetChanged") // This is intended, we're not doing a diff for this
   override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) =
       adapter.notifyDataSetChanged()
 

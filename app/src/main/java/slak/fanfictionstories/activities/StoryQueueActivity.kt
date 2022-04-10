@@ -14,10 +14,7 @@ import kotlinx.coroutines.launch
 import slak.fanfictionstories.*
 import slak.fanfictionstories.data.database
 import slak.fanfictionstories.databinding.ActivityStoryQueueBinding
-import slak.fanfictionstories.utility.CoroutineScopeActivity
-import slak.fanfictionstories.utility.iconTint
-import slak.fanfictionstories.utility.px
-import slak.fanfictionstories.utility.str
+import slak.fanfictionstories.utility.*
 
 class StoryQueueActivity : CoroutineScopeActivity() {
   private lateinit var binding: ActivityStoryQueueBinding
@@ -53,7 +50,7 @@ class StoryQueueActivity : CoroutineScopeActivity() {
 
   private fun setupEmptyQueueText() {
     val ss = SpannableString(str(R.string.queue_empty))
-    val dw = getDrawable(R.drawable.ic_more_vert_black_24dp)!!
+    val dw = getDrawable(R.drawable.ic_more_vert_black_24dp, null)!!
     val sz = binding.queueEmpty.textSize.toInt().coerceAtLeast(resources.px(R.dimen.story_queue_empty_icon_size))
     dw.setBounds(0, 0, sz, sz)
     dw.setTint(getColor(R.color.white))

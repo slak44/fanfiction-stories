@@ -1,5 +1,4 @@
 <resources>
-    <dimen name="fab_margin">16dp</dimen>
     <dimen name="drawable_text_padding">8dp</dimen>
     <dimen name="reader_nav_button_height">48dp</dimen>
     <dimen name="app_bar_height">200dp</dimen>
@@ -10,8 +9,6 @@
 
     <dimen name="story_queue_empty_icon_size">16dp</dimen>
 
-    <dimen name="story_list_title_underline_margin">2dip</dimen>
-    <dimen name="story_list_title_divider_height">1dip</dimen>
     <dimen name="story_list_scroller_width">16dp</dimen>
 
     <dimen name="native_filter_spinner_min_height">32dp</dimen>
