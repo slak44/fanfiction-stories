@@ -3,13 +3,18 @@ package slak.fanfictionstories
 /**
  * Updates can be forced via adb for testing:
  * `adb shell cmd jobscheduler run -f slak.fanfictionstories 909729`
+ *
+ * To test boot broadcast receiver:
+ * `adb shell am broadcast -a android.intent.action.BOOT_COMPLETED -p slak.fanfictionstories`
  */
 
 import android.app.Service
 import android.app.job.JobInfo
 import android.app.job.JobParameters
 import android.app.job.JobService
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -60,6 +65,18 @@ fun scheduleUpdate(): Job = GlobalScope.launch(Dispatchers.Default) {
   if (scheduleUpdateJob(Prefs.autoUpdateMoment()) == ScheduleResult.FAILURE) {
     Log.e(TAG, "Failed to schedule initial job")
     delay(TimeUnit.MINUTES.toMillis(5))
+    scheduleUpdate()
+  }
+}
+
+/** Schedule the update service on boot. */
+class UpdateBootScheduler : BroadcastReceiver() {
+  override fun onReceive(context: Context?, intent: Intent?) {
+    if (intent?.action != Intent.ACTION_BOOT_COMPLETED) {
+      return
+    }
+
+    Log.i(TAG, "Scheduling periodic updates on boot completed")
     scheduleUpdate()
   }
 }
