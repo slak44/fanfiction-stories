@@ -70,7 +70,7 @@ class ReaderViewModel(sModel: StoryModel) : ViewModel(), CoroutineScope {
     CHAPTER_CHANGED,
     CHAPTER_RELOADED
   }
-  private var _chapterEvents = MutableLiveData<ChapterEvent>()
+  private val _chapterEvents = MutableLiveData<ChapterEvent>()
   val chapterEvents: LiveData<ChapterEvent> get() = _chapterEvents
 
   var searchQuery = ""
