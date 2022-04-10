@@ -24,7 +24,7 @@
             android:background="?attr/colorPrimary"
             app:layout_scrollFlags="scroll|enterAlways"
             app:popupTheme="@style/AppTheme.PopupOverlay"
-            tools:title="@string/title_activity_author">
+            tools:title="Author Name">
 
         </androidx.appcompat.widget.Toolbar>
 
@@ -53,7 +53,7 @@
         </com.google.android.material.tabs.TabLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.viewpager.widget.ViewPager
+    <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

@@ -10,12 +10,12 @@ import androidx.activity.viewModels
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.tabs.TabLayout
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import slak.fanfictionstories.*
@@ -46,11 +46,32 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
   private val viewModel: AuthorViewModel by viewModels { ViewModelFactory(author) }
 
   /**
-   * The [android.support.v4.view.PagerAdapter] that will provide fragments for each of the sections. We use a
-   * [FragmentPagerAdapter] derivative, which will keep every loaded fragment in memory. If this becomes too memory
-   * intensive, it may be best to switch to a [android.support.v4.app.FragmentStatePagerAdapter].
+   * The [androidx.viewpager2.adapter.FragmentStateAdapter] that will provide fragments for each of the sections.
    */
   private var sectionsPagerAdapter: SectionsPagerAdapter? = null
+
+  private fun getAuthorFromIntent(): Pair<String?, Long> {
+    return if (intent.action == ACTION_VIEW) {
+      val pathSegments = intent?.data?.pathSegments
+          ?: throw IllegalArgumentException("Missing intent data")
+      val name = pathSegments.getOrNull(2) ?: str(R.string.loading)
+      name to pathSegments[1].toLong()
+    } else {
+      val name = intent.getStringExtra(INTENT_AUTHOR_NAME)
+      val id = intent.getLongExtra(INTENT_AUTHOR_ID, -1L)
+      require(id != -1L) { "Intent has no author id" }
+      name to id
+    }
+  }
+
+  private fun configureTabs() {
+    sectionsPagerAdapter = SectionsPagerAdapter(this@AuthorActivity)
+    binding.container.adapter = sectionsPagerAdapter
+    val titles = listOf(str(R.string.tab_author_bio), str(R.string.tab_author_stories), str(R.string.tab_favorite))
+    TabLayoutMediator(binding.tabs, binding.container) { tab, position ->
+      tab.text = titles[position]
+    }.attach()
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -62,21 +83,9 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
 
     Static.wvViewModel.addWebView(binding.rootLayout)
 
-    val (authorName, authorId) = if (intent.action == ACTION_VIEW) {
-      val pathSegments = intent?.data?.pathSegments
-          ?: throw IllegalArgumentException("Missing intent data")
-      val name = pathSegments.getOrNull(2) ?: str(R.string.loading)
-      name to pathSegments[1].toLong()
-    } else {
-      val name = intent.getStringExtra(INTENT_AUTHOR_NAME)
-      val id = intent.getLongExtra(INTENT_AUTHOR_ID, -1L)
-      require(id != -1L) { "Intent has no author id" }
-      name to id
-    }
+    val (authorName, authorId) = getAuthorFromIntent()
 
     title = authorName
-    binding.container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(binding.tabs))
-    binding.tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(binding.container))
     showLoading()
 
     launch(Main) {
@@ -90,8 +99,7 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
       author = maybeAuthor
       title = viewModel.author.name
       invalidateOptionsMenu()
-      sectionsPagerAdapter = SectionsPagerAdapter(supportFragmentManager)
-      binding.container.adapter = sectionsPagerAdapter
+      configureTabs()
       hideLoading()
     }
   }
@@ -153,11 +161,9 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
     return true
   }
 
-  /** A [FragmentPagerAdapter] that returns a fragment corresponding to the tabs. */
-  inner class SectionsPagerAdapter(
-      fm: FragmentManager
-  ) : FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-    override fun getItem(position: Int): Fragment = when (position) {
+  /** A [FragmentStateAdapter] that returns a fragment corresponding to the tabs. */
+  inner class SectionsPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity) {
+    override fun createFragment(position: Int): Fragment = when (position) {
       0 -> {
         val joined = Prefs.simpleDateFormatter
             .format(Date(viewModel.author.joinedDateSeconds * 1000))
@@ -177,7 +183,7 @@ class AuthorActivity : CoroutineScopeActivity(), IHasLoadingBar {
       else -> throw IllegalStateException("getCount returned too many tabs")
     }
 
-    override fun getCount(): Int = 3 // tabs
+    override fun getItemCount(): Int = 3 // tabs
   }
 
   /** Fragment that renders HTML in a [android.widget.TextView]. */
