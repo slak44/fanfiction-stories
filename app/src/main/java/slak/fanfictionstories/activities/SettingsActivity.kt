@@ -2,6 +2,7 @@ package slak.fanfictionstories.activities
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import androidx.fragment.app.commit
 import androidx.preference.EditTextPreference
 import com.takisoft.preferencex.PreferenceFragmentCompat
 import slak.fanfictionstories.R
@@ -21,7 +22,9 @@ class SettingsActivity : ActivityWithStatic(), SharedPreferences.OnSharedPrefere
     setContentView(binding.root)
     setSupportActionBar(binding.toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
-    supportFragmentManager.beginTransaction().replace(R.id.prefFragment, MainSettingsFragment()).commit()
+    supportFragmentManager.commit {
+      replace(R.id.prefFragment, MainSettingsFragment())
+    }
     Static.defaultPrefs.registerOnSharedPreferenceChangeListener(this)
   }
 

@@ -23,6 +23,7 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.widget.NestedScrollView
+import androidx.fragment.app.commit
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -237,7 +238,9 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       searchUI = oldHighlighter
     } else {
       searchUI = SearchUIFragment()
-      supportFragmentManager.beginTransaction().add(R.id.rootLayout, searchUI, TAG_SEARCH_FRAGMENT).commit()
+      supportFragmentManager.commit {
+        add(R.id.rootLayout, searchUI, TAG_SEARCH_FRAGMENT)
+      }
     }
   }
 
