@@ -1,9 +1,7 @@
 package slak.fanfictionstories.data
 
 import android.util.Log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import slak.fanfictionstories.utility.Empty
 import slak.fanfictionstories.utility.Optional
 import slak.fanfictionstories.utility.Static
@@ -36,6 +34,8 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: Long) {
    * Read the serialized cache on disk and load it into memory, if possible. Does not try too hard.
    * @see serialize
    */
+  @OptIn(DelicateCoroutinesApi::class)
+  @Suppress("BlockingMethodInNonBlockingContext")
   fun deserialize() = GlobalScope.launch(Dispatchers.Default) {
     if (!cacheMapFile.exists()) return@launch
     val objIn = ObjectInputStream(FileInputStream(cacheMapFile))
@@ -55,20 +55,21 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: Long) {
   }
 
   /** Check the expiration date of each item, and remove it if expired. */
-  fun purge() = GlobalScope.launch(Dispatchers.Default) {
+  suspend fun purge() = withContext(Dispatchers.Default) {
     cache.entries.removeIf { isExpired(it.value.second) }
     serialize()
   }
 
   /** Write the current serialized state of the cache to disk. */
-  fun serialize() = GlobalScope.launch(Dispatchers.IO) {
+  @Suppress("BlockingMethodInNonBlockingContext")
+  suspend fun serialize() = withContext(Dispatchers.IO) {
     val objOut = ObjectOutputStream(FileOutputStream(cacheMapFile))
     objOut.writeObject(cache)
     objOut.close()
   }
 
   /** Update or set the value for a key in this cache. Resets expiration date for that key. */
-  fun update(key: String, data: T) {
+  suspend fun update(key: String, data: T) {
     cache[key] = data to System.currentTimeMillis() + cacheTimeMs
     serialize()
   }
@@ -77,7 +78,7 @@ class Cache<T : Serializable>(val name: String, val cacheTimeMs: Long) {
    * Attempt to get the cached value for a given key. If it doesn't exist or is expired, [Empty] is
    * returned instead.
    */
-  fun hit(key: String): Optional<T> {
+  suspend fun hit(key: String): Optional<T> {
     if (cache[key] == null) {
       Log.d(TAG, "Cache missed: $key")
       return Empty()

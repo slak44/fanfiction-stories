@@ -1,3 +1,5 @@
+@file:OptIn(DelicateCoroutinesApi::class)
+
 package slak.fanfictionstories
 
 import android.Manifest
