@@ -51,7 +51,7 @@ private fun scheduleUpdateJob(initTarget: ZonedDateTime): ScheduleResult {
   val builder = JobInfo.Builder(UPDATE_JOB_INFO_ID, updateComponent)
       .setMinimumLatency(lowerBound.toMillis())
       .setOverrideDeadline(upperBound.toMillis())
-      .setBackoffCriteria(1000, BackoffPolicy.LINEAR)
+      .setBackoffCriteria(5000, BackoffPolicy.LINEAR)
       .setRequiredNetworkType(Prefs.autoUpdateReqNetType())
       .setPersisted(true)
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) builder.setRequiresBatteryNotLow(true)
