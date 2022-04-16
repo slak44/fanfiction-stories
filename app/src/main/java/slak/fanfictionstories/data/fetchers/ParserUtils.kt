@@ -117,9 +117,9 @@ object ParserUtils {
    * If passed null, returns the default image of ffnet.
    */
   fun convertImageUrl(imageUrl: String?): String {
-    if (imageUrl.isNullOrBlank()) return "//ff74.b-cdn.net/static/images/d_60_90.jpg"
+    if (imageUrl.isNullOrBlank()) return "/static/images/d_60_90.jpg"
     // Strip the last URL segment, like 75 below
-    // https://ff74.b-cdn.net/image/5816992/75/
+    // https://www.fanfiction.net/image/5816992/75/
     // And add 180 instead, the currently largest known image size they serve
     return imageUrl.dropLast(1).trimEnd { it.isDigit() } + "180"
   }
