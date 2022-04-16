@@ -146,7 +146,7 @@ data class StoryModel(
 
   /** @returns parsed [Genre]s from the raw data in [StoryModelFragment.genres] */
   fun genreList(): List<Genre> {
-    if (fragment.genres == str(R.string.none)) return emptyList()
+    if (fragment.genres == "None") return emptyList()
     return fragment.genres
         .replace("/", TEMP_SEPARATOR)
         // Take special care of "Hurt/Comfort" since it contains a slash
@@ -155,7 +155,10 @@ data class StoryModel(
         .map { Genre.fromString(it) }
   }
 
-  fun characterList(): List<String> = fragment.characters.replace("[", "").split(", ", "] ")
+  fun characterList(): List<String> = fragment.characters
+      .trimEnd(']')
+      .replace("[", "")
+      .split(", ", "] ")
 
   /** @returns deserialized chapter titles */
   fun chapterTitles(): List<String> =

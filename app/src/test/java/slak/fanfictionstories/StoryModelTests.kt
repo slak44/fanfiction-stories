@@ -12,6 +12,9 @@ private val chapterTitles = listOf("Test name", "test name 2")
 private val character1 = "Test K."
 private val character2 = "OC"
 private val character3 = "Random Name"
+private val character4 = "Name A./Name B."
+private val character5 = "Char 5"
+private val character6 = "Char 6"
 
 private val dbRow = listOf(
     "title" to "My test story",
@@ -23,7 +26,7 @@ private val dbRow = listOf(
     "canon" to "Test Canon",
     "language" to "English",
     "genres" to "Adventure/Drama",
-    "characters" to "$character1, [$character2, $character3]",
+    "characters" to "$character1, [$character2, $character3] $character4, [$character5, $character6]",
     "rating" to "T",
     "reviews" to 1234L,
     "favorites" to 50L,
@@ -75,6 +78,7 @@ class StoryModelTests {
   fun `StoryModel should parse character names`() {
     val storyModel = StoryModel.fromPairs(dbRow)
 
-    Assert.assertEquals(listOf(character1, character2, character3), storyModel.characterList())
+    val characters = listOf(character1, character2, character3, character4, character5, character6)
+    Assert.assertEquals(characters, storyModel.characterList())
   }
 }
