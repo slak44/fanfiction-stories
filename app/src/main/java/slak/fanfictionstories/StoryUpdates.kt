@@ -89,7 +89,15 @@ private suspend fun runStoriesUpdate(applicationContext: Context) {
   val storyModels = applicationContext.database.getStoriesToUpdate().await()
   val storiesToUpdate = orderStories(storyModels.toMutableList(),
       Prefs.storyListOrderStrategy, Prefs.storyListOrderDirection)
-  val idxDelta = Prefs.updateResumeIndex.orElse(0)
+
+  val currentResumeIndex = Prefs.updateResumeIndex.orElse(0)
+  val idxDelta = if (currentResumeIndex > storyModels.size) {
+    Prefs.updateResumeIndex = Empty()
+    0
+  } else {
+    currentResumeIndex
+  }
+
   val startTime = System.currentTimeMillis()
   val updatedStories = storiesToUpdate.subList(idxDelta, storyModels.size)
       .mapIndexedNotNull { idx, model ->
