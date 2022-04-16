@@ -85,10 +85,36 @@ class UpdateBootScheduler : BroadcastReceiver() {
   }
 }
 
+private suspend fun runStoriesUpdate(applicationContext: Context) {
+  val storyModels = applicationContext.database.getLocalStories().await()
+  val storiesToUpdate = orderStories(storyModels.toMutableList(),
+      Prefs.storyListOrderStrategy, Prefs.storyListOrderDirection)
+  val idxDelta = Prefs.updateResumeIndex.orElse(0)
+  val startTime = System.currentTimeMillis()
+  val updatedStories = storiesToUpdate.subList(idxDelta, storyModels.size)
+      .mapIndexedNotNull { idx, model ->
+        val realIdx = idxDelta + idx
+        val str = str(R.string.checking_story,
+            model.title, realIdx + 1, storyModels.size, (realIdx + 1) * 100F / storyModels.size)
+        Notifications.UPDATING.show(defaultIntent(), str) {
+          setWhen(startTime)
+          setStyle(NotificationCompat.BigTextStyle().bigText(str))
+          setProgress(storyModels.size, realIdx + 1, false)
+        }
+        val newModel = updateStory(model)
+        Log.v(UpdateService.TAG, "Story ${model.storyId} was update performed: ${newModel !is Empty}")
+        Prefs.updateResumeIndex = realIdx.opt()
+        return@mapIndexedNotNull newModel.orNull()
+      }
+  Prefs.updateResumeIndex = Empty()
+  Notifications.UPDATING.cancel()
+  Notifications.updatedStories(updatedStories)
+}
+
 /** The service invoked periodically to update the local stories. */
 class UpdateService : JobService(), CoroutineScope {
   companion object {
-    private const val TAG = "UpdateService"
+    const val TAG = "UpdateService"
   }
 
   private var coroutine: Job? = null
@@ -102,29 +128,7 @@ class UpdateService : JobService(), CoroutineScope {
   override fun onStartJob(params: JobParameters): Boolean {
     Log.i(TAG, "Update job started")
     coroutine = launch {
-      val storyModels = applicationContext.database.getLocalStories().await()
-      val storiesToUpdate = orderStories(storyModels.toMutableList(),
-          Prefs.storyListOrderStrategy, Prefs.storyListOrderDirection)
-      val idxDelta = Prefs.updateResumeIndex.orElse(0)
-      val startTime = System.currentTimeMillis()
-      val updatedStories = storiesToUpdate.subList(Prefs.updateResumeIndex.orElse(0), storyModels.size)
-          .mapIndexedNotNull { idx, model ->
-            val realIdx = idxDelta + idx
-            val str = str(R.string.checking_story,
-                model.title, realIdx + 1, storyModels.size, (realIdx + 1) * 100F / storyModels.size)
-            Notifications.UPDATING.show(defaultIntent(), str) {
-              setWhen(startTime)
-              setStyle(NotificationCompat.BigTextStyle().bigText(str))
-              setProgress(storyModels.size, realIdx + 1, false)
-            }
-            val newModel = updateStory(model)
-            Log.v(TAG, "Story ${model.storyId} was update performed: ${newModel !is Empty}")
-            Prefs.updateResumeIndex = realIdx.opt()
-            return@mapIndexedNotNull newModel.orNull()
-          }
-      Prefs.updateResumeIndex = Empty()
-      Notifications.UPDATING.cancel()
-      Notifications.updatedStories(updatedStories)
+      runStoriesUpdate(applicationContext)
       scheduleUpdateJob(Prefs.autoUpdateMoment().plusDays(1))
       jobFinished(params, false)
     }
