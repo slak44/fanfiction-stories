@@ -326,8 +326,16 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
    */
   fun getLocalStories(): Deferred<List<StoryModel>> = useAsync {
     select("stories")
-        .whereSimple("enabled = 1")
-        .whereSimple("status = ?", "local")
+        .whereSimple("enabled = 1 AND status = 'local'")
+        .parseList(StoryModel.dbParser)
+  }
+
+  /**
+   * Get stories eligible for being auto-updated.
+   */
+  fun getStoriesToUpdate(): Deferred<List<StoryModel>> = useAsync {
+    select("stories")
+        .whereSimple("enabled = 1 AND status = 'local' AND isComplete = 0")
         .parseList(StoryModel.dbParser)
   }
 

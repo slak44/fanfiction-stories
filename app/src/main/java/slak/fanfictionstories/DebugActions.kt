@@ -5,6 +5,7 @@ package slak.fanfictionstories
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.database.DatabaseUtils
 import android.os.Build
 import android.util.Log
 import android.view.View
@@ -43,10 +44,6 @@ fun injectDebugButtons(activity: MainActivity, binding: ActivityMainBinding) {
         .show()
   }
 }
-
-/** Convenience method for debugging. (sometimes printf debugging is king) */
-@Suppress("unused")
-fun printAll(vararg stuff: Any?) = stuff.forEach { println(it) }
 
 @SuppressLint("SdCardPath")
 val debugActions = mapOf(
@@ -124,11 +121,6 @@ val debugActions = mapOf(
             }
           }
     },
-//     FIXME this has to be rewritten
-//    "Purge untagged stories" to {
-//
-//      Static.database.writableDatabase.delete("stories", "markerColor = 0")
-//    },
     "Run SQL" to {
       val editText = EditText(Static.currentCtx)
       val dialog = AlertDialog.Builder(Static.currentCtx)
@@ -278,4 +270,15 @@ val debugActions = mapOf(
             "(select storyId from colorMarkers where markerColor = -13388315)")
       }
     },
+    "Log stories for update" to {
+      GlobalScope.launch {
+        val storyModels = Static.database.getStoriesToUpdate().await()
+        Log.v(TAG, storyModels.joinToString("\n"))
+        Log.v(TAG, "story models update count: ${storyModels.size}")
+        Static.database.use {
+          val count = DatabaseUtils.queryNumEntries(this, "stories")
+          Log.v(TAG, "story models total count: $count")
+        }
+      }
+    }
 )
