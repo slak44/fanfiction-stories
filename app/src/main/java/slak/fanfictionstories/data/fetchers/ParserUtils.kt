@@ -153,48 +153,6 @@ object ParserUtils {
     }
   }
 
-  private fun parseStoryModelMobile(doc: Document, storyId: StoryId): StoryModel {
-    // FIXME
-    val author = doc.selectFirst("#content > a")!!
-    val title = doc.selectFirst("#content > b")!!.text()
-
-    val navLinks = doc.select("#content > a")
-    val canon = unescape(navLinks.last()!!.text())
-    val category =
-        if (navLinks.size == 1) str(R.string.crossovers)
-        else unescape(navLinks.dropLast(1).last().text())
-
-    val meta = parseStoryMetadata(doc.selectFirst("#profile_top > span.xgray")!!, 0)
-
-    // Parse chapter titles only if there are any chapters to name
-    val chapterTitles: String = if (meta.chapterCount == 1L) {
-      ""
-    } else {
-      doc.select("#chap_select > option").slice(0..(meta.chapterCount - 1).toInt())
-          .joinToString(CHAPTER_TITLE_SEPARATOR) {
-            // The actual chapter title is preceded by the chapter nr, a dot, and a space:
-            it.text().replace(Regex("\\d+\\. ", regexOpts), "")
-          }
-    }
-
-    return StoryModel(
-        storyId = storyId,
-        fragment = meta,
-        progress = StoryProgress(),
-        status = StoryStatus.REMOTE,
-        canon = canon,
-        category = category,
-        summary = "",
-        author = author.text(),
-        authorId = authorIdFromAuthor(author),
-        title = title,
-        serializedChapterTitles = chapterTitles,
-        addedTime = System.currentTimeMillis(),
-        lastReadTime = 0,
-        imageUrl = ""
-    )
-  }
-
   private fun parseStoryModelDesktop(doc: Document, storyId: StoryId): StoryModel {
     // The raw html is completely insane
     // - Using ' for attributes
