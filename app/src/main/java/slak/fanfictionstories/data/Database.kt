@@ -336,10 +336,13 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
   fun getStoriesToUpdate(): Deferred<List<StoryModel>> = useAsync {
     select("stories")
         .apply {
+          val oldUpdate = Prefs.autoUpdateFilterOldUpdate().toString()
+          val base = "enabled = 1 AND status = 'local' AND updateTime > ?"
+
           if (Prefs.autoUpdateFilterCompleted()) {
-            whereSimple("enabled = 1 AND status = 'local' AND isComplete = 0")
+            whereSimple("$base AND isComplete = 0", oldUpdate)
           } else {
-            whereSimple("enabled = 1 AND status = 'local'")
+            whereSimple(base, oldUpdate)
           }
         }
         .parseList(StoryModel.dbParser)
@@ -404,7 +407,8 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
       model.lastReadTime = existingModel.lastReadTime
       model.progress = existingModel.progress
       if (model.status == StoryStatus.TRANSIENT ||
-          (model.status == StoryStatus.REMOTE && existingModel.status == StoryStatus.LOCAL)) {
+          (model.status == StoryStatus.REMOTE && existingModel.status == StoryStatus.LOCAL)
+      ) {
         model.status = existingModel.status
       }
     }
@@ -458,6 +462,7 @@ enum class SQLiteResultCode(val code: Int) {
   SCHEMA(17),
   TOOBIG(18),
   WARNING(28),
+
   // Extended result codes
   ABORT_ROLLBACK(516),
   BUSY_RECOVERY(261),
@@ -516,6 +521,7 @@ enum class SQLiteResultCode(val code: Int) {
   READONLY_RECOVERY(264),
   READONLY_ROLLBACK(776),
   WARNING_AUTOINDEX(284),
+
   // Code not found
   OTHER(-1);
 

@@ -103,7 +103,7 @@ Untouched Stories: %d (%.2f%%)"
 
     <!-- Settings activity -->
     <string name="title_activity_settings">Settings</string>
-    <string name="category_updating">Story Updates</string>
+    <string name="category_updating">Story Auto-Updates</string>
     <string name="category_text">Text Options</string>
     <string name="text_option_font">Font Name</string>
     <string name="text_option_size">Font Size (sp)</string>
@@ -135,7 +135,8 @@ Untouched Stories: %d (%.2f%%)"
     </string-array>
     <string name="update_time_title">Daily auto-update time</string>
     <string name="update_time_summary">Around which hour to update every day</string>
-    <string name="update_filter_completed">Filter completed stories from auto-update</string>
+    <string name="update_filter_completed">Filter completed stories</string>
+    <string name="update_filter_old">Filter stories not updated in years</string>
     <string name="category_browser">Story Browsing</string>
     <string name="browser_remember_language">Remember language used in filter</string>
     <string name="category_datetime">Date/Time Display</string>
@@ -150,6 +151,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="key_option_break_strategy" translatable="false">font_option_break</string>
     <string name="key_option_update_time" translatable="false">auto_updates_time</string>
     <string name="key_option_filter_completed" translatable="false">auto_updates_filter_completed</string>
+    <string name="key_option_filter_old" translatable="false">auto_updates_filter_old</string>
     <string name="key_option_net_type" translatable="false">auto_updates_network_type</string>
     <string name="key_option_lang_mem" translatable="false">remember_language</string>
     <string name="key_option_locale" translatable="false">datetime_locale</string>
@@ -160,6 +162,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="option_antialias_default" translatable="false">true</string>
     <string name="option_break_strategy_default" translatable="false">simple</string>
     <string name="option_update_time_default" translatable="false">23:00</string>
+    <string name="option_filter_old_default" translatable="false">1</string>
     <string name="option_net_type_default" translatable="false">not_roaming</string>
     <string name="option_lang_mem_default" translatable="false">true</string>
     <string name="option_filter_completed_default" translatable="false">true</string>

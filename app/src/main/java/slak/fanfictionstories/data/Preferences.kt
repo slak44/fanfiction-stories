@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Typeface
 import android.text.Layout
+import org.threeten.bp.Instant
 import org.threeten.bp.LocalTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
@@ -108,6 +109,15 @@ object Prefs {
 
   fun autoUpdateFilterCompleted() = Static.defaultPrefs.getBoolean(str(R.string.key_option_filter_completed),
       str(R.string.option_filter_completed_default).toBoolean())
+
+  fun autoUpdateFilterOldUpdate(): Long {
+    val yearsOld = Static.defaultPrefs.getString(
+        str(R.string.key_option_filter_old),
+        str(R.string.option_filter_old_default)
+    )!!.toLong()
+    val now = ZonedDateTime.now(ZoneId.systemDefault())
+    return now.minusYears(yearsOld).toEpochSecond()
+  }
 
   fun filterLanguage() = Static.defaultPrefs.getBoolean(str(R.string.key_option_lang_mem),
       str(R.string.option_lang_mem_default).toBoolean())

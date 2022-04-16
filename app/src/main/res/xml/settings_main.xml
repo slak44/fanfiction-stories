@@ -30,6 +30,13 @@
             android:defaultValue="@string/option_filter_completed_default"
             android:key="@string/key_option_filter_completed"
             android:title="@string/update_filter_completed" />
+        <EditTextPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="@string/option_filter_old_default"
+            android:key="@string/key_option_filter_old"
+            android:inputType="numberDecimal"
+            android:selectAllOnFocus="true"
+            android:title="@string/update_filter_old" />
 
     </PreferenceCategory>
     <PreferenceCategory
