@@ -135,6 +135,8 @@ class UpdateService : JobService(), CoroutineScope {
     Log.w(TAG, "Update job was cancelled")
     coroutine?.cancel()
     Notifications.UPDATING.cancel()
+    Notifications.ERROR.cancel()
+    Notifications.NETWORK.cancel()
     coroutine = null
     return true
   }
