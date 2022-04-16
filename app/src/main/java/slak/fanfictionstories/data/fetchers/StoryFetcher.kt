@@ -154,11 +154,11 @@ suspend fun updateStory(oldModel: StoryModel): Optional<StoryModel> {
     } else {
       val chapterFlow = if (newModel.fragment.chapterCount > oldModel.fragment.chapterCount) {
         // Try being smart, and only download delta when chapters were added
-        fetchChapterRange(Notifications.UPDATING, oldModel,
+        fetchChapterRange(Notifications.UPDATING, newModel,
             oldModel.fragment.chapterCount + 1, newModel.fragment.chapterCount)
       } else {
         // Download everything otherwise
-        fetchChapterRange(Notifications.UPDATING, oldModel)
+        fetchChapterRange(Notifications.UPDATING, newModel)
       }
       writeChapters(newModel.storyId, chapterFlow)
     }

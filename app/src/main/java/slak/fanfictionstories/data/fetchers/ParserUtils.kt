@@ -145,6 +145,7 @@ object ParserUtils {
         "Chapter ${it + 1}"
       }
       model.copy(
+          category = model.category ?: "No Category",
           serializedChapterTitles = titles,
           status = StoryStatus.REMOTE,
           addedTime = System.currentTimeMillis(),
