@@ -25,6 +25,11 @@
             android:title="@string/update_time_title"
             app:pref_hourFormat="h24"
             app:pref_pickerTime="@string/option_update_time_default" />
+        <CheckBoxPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="@string/option_filter_completed_default"
+            android:key="@string/key_option_filter_completed"
+            android:title="@string/update_filter_completed" />
 
     </PreferenceCategory>
     <PreferenceCategory

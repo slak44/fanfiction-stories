@@ -273,7 +273,6 @@ val debugActions = mapOf(
     "Log stories for update" to {
       GlobalScope.launch {
         val storyModels = Static.database.getStoriesToUpdate().await()
-        Log.v(TAG, storyModels.joinToString("\n"))
         Log.v(TAG, "story models update count: ${storyModels.size}")
         Static.database.use {
           val count = DatabaseUtils.queryNumEntries(this, "stories")

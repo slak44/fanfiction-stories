@@ -106,6 +106,9 @@ object Prefs {
     return ZonedDateTime.of(now.toLocalDate(), LocalTime.of(hour, minute), ZoneId.systemDefault())
   }
 
+  fun autoUpdateFilterCompleted() = Static.defaultPrefs.getBoolean(str(R.string.key_option_filter_completed),
+      str(R.string.option_filter_completed_default).toBoolean())
+
   fun filterLanguage() = Static.defaultPrefs.getBoolean(str(R.string.key_option_lang_mem),
       str(R.string.option_lang_mem_default).toBoolean())
 

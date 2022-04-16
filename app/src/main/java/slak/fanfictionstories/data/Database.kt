@@ -335,7 +335,13 @@ class DatabaseHelper(ctx: Context) : ManagedSQLiteOpenHelper(ctx, "FFStories", n
    */
   fun getStoriesToUpdate(): Deferred<List<StoryModel>> = useAsync {
     select("stories")
-        .whereSimple("enabled = 1 AND status = 'local' AND isComplete = 0")
+        .apply {
+          if (Prefs.autoUpdateFilterCompleted()) {
+            whereSimple("enabled = 1 AND status = 'local' AND isComplete = 0")
+          } else {
+            whereSimple("enabled = 1 AND status = 'local'")
+          }
+        }
         .parseList(StoryModel.dbParser)
   }
 

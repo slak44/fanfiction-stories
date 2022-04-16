@@ -135,6 +135,7 @@ Untouched Stories: %d (%.2f%%)"
     </string-array>
     <string name="update_time_title">Daily auto-update time</string>
     <string name="update_time_summary">Around which hour to update every day</string>
+    <string name="update_filter_completed">Filter completed stories from auto-update</string>
     <string name="category_browser">Story Browsing</string>
     <string name="browser_remember_language">Remember language used in filter</string>
     <string name="category_datetime">Date/Time Display</string>
@@ -148,6 +149,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="key_option_antialias" translatable="false">font_option_antialias</string>
     <string name="key_option_break_strategy" translatable="false">font_option_break</string>
     <string name="key_option_update_time" translatable="false">auto_updates_time</string>
+    <string name="key_option_filter_completed" translatable="false">auto_updates_filter_completed</string>
     <string name="key_option_net_type" translatable="false">auto_updates_network_type</string>
     <string name="key_option_lang_mem" translatable="false">remember_language</string>
     <string name="key_option_locale" translatable="false">datetime_locale</string>
@@ -160,6 +162,7 @@ Untouched Stories: %d (%.2f%%)"
     <string name="option_update_time_default" translatable="false">23:00</string>
     <string name="option_net_type_default" translatable="false">not_roaming</string>
     <string name="option_lang_mem_default" translatable="false">true</string>
+    <string name="option_filter_completed_default" translatable="false">true</string>
     <string name="option_locale_default">Default</string>
 
     <!-- Notifications -->
