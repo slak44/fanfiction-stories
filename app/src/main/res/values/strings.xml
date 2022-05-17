@@ -325,6 +325,22 @@ Story %d of %d (%.2f%%)"
     <string name="image_load_error">Failed to load image</string>
     <string name="request_error">Failed to fetch data</string>
 
+    <!-- Local Filters -->
+    <string name="local_update_time">Update Time</string>
+    <string name="local_publish_time">Publish Time</string>
+    <string name="local_genre1">Genre (A)</string>
+    <string name="local_genre2">Genre (B)</string>
+    <string name="local_rating">Rating</string>
+    <string name="local_length">Length</string>
+    <string name="local_status">Status</string>
+    <string name="local_language">Language</string>
+
+    <string name="local_filter_btn">Filter</string>
+
+    <string name="filter_time_days">days</string>
+    <string name="filter_time_time_months">months</string>
+    <string name="filter_time_time_years">years</string>
+
     <!-- Native FFnet filtering -->
     <string name="native_sort">Sort by…</string>
     <string name="native_time_range">Time Range</string>

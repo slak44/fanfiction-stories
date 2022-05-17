@@ -180,6 +180,11 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
+      R.id.filter -> {
+        openFilterStoriesDialog {
+          viewModel.storyFilter = it
+        }
+      }
       R.id.group -> {
         groupByDialog(this, Prefs.storyListGroupStrategy) {
           Prefs.storyListGroupStrategy = it

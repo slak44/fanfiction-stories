@@ -455,6 +455,12 @@ open class StoryListViewModel :
   /** The stories, group titles, and loading items of the list. */
   private val data: MutableList<StoryListItem> = mutableListOf()
 
+  var storyFilter: LocalStoryFilter = LocalStoryFilter()
+    set(value) {
+      field = value
+      triggerDatabaseLoad()
+    }
+
   /**
    * This model's default [IStoryEventObserver]. Register it to use it, or don't and have a custom
    * observer somewhere else.
