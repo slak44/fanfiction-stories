@@ -10,7 +10,6 @@ import androidx.activity.viewModels
 import androidx.annotation.AnyThread
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.Main
