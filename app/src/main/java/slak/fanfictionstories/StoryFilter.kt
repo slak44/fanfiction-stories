@@ -9,6 +9,7 @@ import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.TemporalUnit
 import slak.fanfictionstories.data.fetchers.Genre
 import slak.fanfictionstories.data.fetchers.Rating
+import slak.fanfictionstories.data.fetchers.Status
 import slak.fanfictionstories.databinding.DialogLocalFilterBinding
 import slak.fanfictionstories.utility.onSelect
 
@@ -25,7 +26,8 @@ data class LocalStoryFilter(
     var publishTimeUnit: TimeUnitFilter? = null,
     var genre1: Genre? = null,
     var genre2: Genre? = null,
-    var rating: Rating? = null
+    var rating: Rating? = null,
+    var status: Status? = null
 )
 
 fun Context.openFilterStoriesDialog(filters: LocalStoryFilter, action: (newFilters: LocalStoryFilter) -> Unit) {
@@ -41,12 +43,14 @@ fun Context.openFilterStoriesDialog(filters: LocalStoryFilter, action: (newFilte
   binding.publishTimeUnit.setSelection(TimeUnitFilter.values().indexOf(filters.publishTimeUnit))
   binding.updateTimeUnit.setSelection(TimeUnitFilter.values().indexOf(filters.updateTimeUnit))
   binding.rating.setSelection(Rating.values().indexOf(filters.rating))
+  binding.status.setSelection(Status.values().indexOf(filters.status))
 
   binding.genre1.onSelect { _, pos -> newFilters.genre1 = Genre.values()[pos] }
   binding.genre2.onSelect { _, pos -> newFilters.genre2 = Genre.values()[pos] }
   binding.publishTimeUnit.onSelect { _, pos -> newFilters.publishTimeUnit = TimeUnitFilter.values()[pos] }
   binding.updateTimeUnit.onSelect { _, pos -> newFilters.updateTimeUnit = TimeUnitFilter.values()[pos] }
   binding.rating.onSelect { _, pos -> newFilters.rating = Rating.values()[pos] }
+  binding.status.onSelect { _, pos -> newFilters.status = Status.values()[pos] }
 
   AlertDialog.Builder(this)
       .setTitle(R.string.filter_by)
@@ -71,8 +75,18 @@ private fun ratingMatches(target: Rating, storyRating: String): Boolean = when (
   Rating.M -> storyRating == "M"
 }
 
+private fun statusMatches(target: Status, storyIsComplete: Boolean): Boolean = when (target) {
+  Status.ALL -> true
+  Status.IN_PROGRESS -> !storyIsComplete
+  Status.COMPLETE -> storyIsComplete
+}
+
 fun filterStories(stories: List<StoryModel>, filters: LocalStoryFilter): List<StoryModel> {
   return stories.filter {
+    if (filters.status != null && !statusMatches(filters.status!!, it.isComplete())) {
+      return@filter false
+    }
+
     if (filters.genre1 != null && filters.genre1 != Genre.ALL && filters.genre1 !in it.genreList()) {
       return@filter false
     }
