@@ -116,7 +116,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="0"
-                android:layout_columnSpan="3"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_row="0"
@@ -126,11 +125,11 @@
                 android:id="@+id/ratingText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_row="0"
                 android:layout_column="4"
                 android:layout_gravity="end"
-                android:layout_marginEnd="8dp"
                 android:layout_marginTop="8dp"
-                android:layout_row="0"
+                android:layout_marginEnd="8dp"
                 tools:text="Rated M" />
 
             <TextView
@@ -138,7 +137,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="0"
-                android:layout_columnWeight="3"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_row="1"
@@ -157,7 +155,6 @@
 
             <TextView
                 android:id="@+id/summaryText"
-                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_column="0"
                 android:layout_columnSpan="5"
@@ -170,12 +167,9 @@
 
             <TextView
                 android:id="@+id/chaptersText"
-                android:layout_width="1dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="0"
-                android:layout_columnSpan="3"
-                android:layout_columnWeight="4"
-                android:layout_gravity="fill"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_row="3"
@@ -183,11 +177,9 @@
 
             <TextView
                 android:id="@+id/genresText"
-                android:layout_width="1dp"
                 android:layout_height="wrap_content"
                 android:layout_column="0"
                 android:layout_columnSpan="3"
-                android:layout_gravity="fill"
                 android:layout_marginStart="8dp"
                 android:layout_row="4"
                 tools:text="about Blabla/BlehBleh/BloBlo" />
@@ -195,21 +187,19 @@
             <TextView
                 android:id="@+id/charactersText"
                 android:layout_width="1dp"
+                android:layout_gravity="fill"
                 android:layout_height="wrap_content"
                 android:layout_column="0"
-                android:layout_columnSpan="3"
-                android:layout_gravity="fill"
+                android:layout_columnSpan="2"
                 android:layout_marginStart="8dp"
                 android:layout_row="5"
                 tools:text="with Test A., Test B., Test B., Test B., Test B." />
 
             <TextView
                 android:id="@+id/categoryText"
-                android:layout_width="1dp"
                 android:layout_height="wrap_content"
                 android:layout_column="0"
                 android:layout_columnSpan="3"
-                android:layout_gravity="fill"
                 android:layout_marginStart="8dp"
                 android:layout_row="6"
                 tools:text="in Games" />

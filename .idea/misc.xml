@@ -17,7 +17,7 @@
         <entry key="app/src/main/res/layout/activity_story_reader.xml" value="0.2760416666666667" />
         <entry key="app/src/main/res/layout/activity_story_reader_content.xml" value="0.4148550724637681" />
         <entry key="app/src/main/res/layout/component_category_list_item.xml" value="0.4148550724637681" />
-        <entry key="app/src/main/res/layout/component_story.xml" value="0.2798913043478261" />
+        <entry key="app/src/main/res/layout/component_story.xml" value="0.25" />
         <entry key="app/src/main/res/layout/dialog_add_story_view.xml" value="0.27395833333333336" />
         <entry key="app/src/main/res/layout/dialog_ffnet_filter.xml" value="0.34782608695652173" />
         <entry key="app/src/main/res/layout/dialog_image_viewer.xml" value="0.4148550724637681" />
