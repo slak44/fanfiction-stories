@@ -181,7 +181,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.filter -> {
-        openFilterStoriesDialog {
+        openFilterStoriesDialog(viewModel.storyFilter) {
           viewModel.storyFilter = it
         }
       }

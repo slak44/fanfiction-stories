@@ -1,115 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.LinearLayoutCompat
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:layout_marginTop="@dimen/dialog_view_margin">
 
-    <androidx.appcompat.widget.LinearLayoutCompat
+    <androidx.appcompat.widget.LinearLayoutCompat xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:paddingBottom="?dialogPreferredPadding"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
+        android:paddingTop="?dialogPreferredPadding">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="8dp"
-            android:labelFor="@id/updateTimeValue"
-            android:text="@string/local_update_time" />
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-        <EditText
-            android:id="@+id/updateTimeValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ems="3"
-            android:inputType="number"
-            android:importantForAutofill="no" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8dp"
+                android:labelFor="@id/updateTimeValue"
+                android:text="@string/local_update_time" />
 
-        <androidx.appcompat.widget.AppCompatSpinner
-            android:id="@+id/updateTimeUnit"
-            style="@style/AppTheme.FilterSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:entries="@array/filter_time_unit" />
+            <EditText
+                android:id="@+id/updateTimeValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="3"
+                android:inputType="number"
+                android:importantForAutofill="no" />
+
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/updateTimeUnit"
+                style="@style/AppTheme.FilterSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:entries="@array/filter_time_unit" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8dp"
+                android:labelFor="@id/publishTimeValue"
+                android:text="@string/local_publish_time" />
+
+            <EditText
+                android:id="@+id/publishTimeValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="3"
+                android:inputType="number"
+                android:importantForAutofill="no" />
+
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/publishTimeUnit"
+                style="@style/AppTheme.FilterSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:entries="@array/filter_time_unit" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginRight="8dp"
+                android:text="@string/local_genre1" />
+
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/genre1"
+                style="@style/AppTheme.FilterSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:entries="@array/genres" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginRight="8dp"
+                android:text="@string/local_genre2" />
+
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/genre2"
+                style="@style/AppTheme.FilterSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:entries="@array/genres" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="8dp"
-            android:labelFor="@id/publishTimeValue"
-            android:text="@string/local_publish_time" />
-
-        <EditText
-            android:id="@+id/publishTimeValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ems="3"
-            android:inputType="number"
-            android:importantForAutofill="no" />
-
-        <androidx.appcompat.widget.AppCompatSpinner
-            android:id="@+id/publishTimeUnit"
-            style="@style/AppTheme.FilterSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:entries="@array/filter_time_unit" />
-
-    </androidx.appcompat.widget.LinearLayoutCompat>
-
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginRight="8dp"
-            android:text="@string/local_genre1" />
-
-        <androidx.appcompat.widget.AppCompatSpinner
-            android:id="@+id/genre1"
-            style="@style/AppTheme.FilterSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:entries="@array/genres" />
-
-    </androidx.appcompat.widget.LinearLayoutCompat>
-
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginRight="8dp"
-            android:text="@string/local_genre2" />
-
-        <androidx.appcompat.widget.AppCompatSpinner
-            android:id="@+id/genre2"
-            style="@style/AppTheme.FilterSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:entries="@array/genres" />
-
-    </androidx.appcompat.widget.LinearLayoutCompat>
-
-
-
-</androidx.appcompat.widget.LinearLayoutCompat>
+</ScrollView>
