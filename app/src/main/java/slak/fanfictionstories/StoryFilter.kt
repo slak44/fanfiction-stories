@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import androidx.appcompat.app.AlertDialog
 import org.threeten.bp.Instant
+import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.TemporalUnit
 import slak.fanfictionstories.data.fetchers.Genre
@@ -67,8 +68,9 @@ fun filterStories(stories: List<StoryModel>, filters: LocalStoryFilter): List<St
     }
 
     if (filters.publishTimeUnit != null && filters.publishTime != null && it.fragment.publishTime != 0L) {
-      val publishAfter = Instant.now()
+      val publishAfter = ZonedDateTime.now()
           .minus(filters.publishTime!!.toLong(), filters.publishTimeUnit!!.temporalUnit)
+          .toInstant()
 
       if (Instant.ofEpochSecond(it.fragment.publishTime).isBefore(publishAfter)) {
         return@filter false
@@ -76,8 +78,9 @@ fun filterStories(stories: List<StoryModel>, filters: LocalStoryFilter): List<St
     }
 
     if (filters.updateTimeUnit != null && filters.updateTime != null && it.fragment.updateTime != 0L) {
-      val updateAfter = Instant.now()
+      val updateAfter = ZonedDateTime.now()
           .minus(filters.updateTime!!.toLong(), filters.updateTimeUnit!!.temporalUnit)
+          .toInstant()
 
       if (Instant.ofEpochSecond(it.fragment.updateTime).isBefore(updateAfter)) {
         return@filter false
