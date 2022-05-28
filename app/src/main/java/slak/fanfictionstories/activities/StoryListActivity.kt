@@ -183,6 +183,7 @@ class StoryListActivity : CoroutineScopeActivity(), IStoryEventObserver, IHasLoa
       R.id.filter -> {
         openFilterStoriesDialog(viewModel.storyFilter) {
           viewModel.storyFilter = it
+          viewModel.triggerDatabaseLoad()
         }
       }
       R.id.group -> {

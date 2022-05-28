@@ -57,8 +57,10 @@ fun RecyclerView.createStorySwipeHelper(onSwiped: (StoryModel) -> Unit = {}) {
     override fun getMovementFlags(recycler: RecyclerView, vh: RecyclerView.ViewHolder): Int =
         if (vh is StoryViewHolder) makeMovementFlags(0, ItemTouchHelper.RIGHT) else 0
 
-    override fun onMove(recycler: RecyclerView, viewHolder: RecyclerView.ViewHolder,
-                        target: RecyclerView.ViewHolder): Boolean = false
+    override fun onMove(
+        recycler: RecyclerView, viewHolder: RecyclerView.ViewHolder,
+        target: RecyclerView.ViewHolder,
+    ): Boolean = false
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
       if (viewHolder !is StoryViewHolder) return
@@ -104,7 +106,7 @@ fun Context.createMarkerColorDialog(selectedColor: Int, onPicked: (Int) -> Unit)
  * @see StoryCardView
  */
 class MarkerButton @JvmOverloads constructor(
-    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
 ) : AppCompatButton(context, attrs, defStyleAttr), View.OnClickListener {
   private var storyId: StoryId = 0
   private var markerColor: Int = 0
@@ -179,7 +181,7 @@ class MarkerButton @JvmOverloads constructor(
 class StoryCardView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : CardView(context, attrs, defStyleAttr) {
   private lateinit var binding: ComponentStoryBinding
 
@@ -334,7 +336,7 @@ class StoryCardView @JvmOverloads constructor(
 
 /** A pretty [AppCompatTextView] that shows the title for a group. For use with [GroupTitle]. */
 class GroupTitleView @JvmOverloads constructor(
-    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
 ) : AppCompatTextView(context, attrs, defStyleAttr) {
   init {
     val lp = ViewGroup.MarginLayoutParams(WRAP_CONTENT, WRAP_CONTENT)
@@ -368,7 +370,7 @@ class GroupTitleView @JvmOverloads constructor(
 class LoadingView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ProgressBar(ContextThemeWrapper(context, R.style.Widget_AppCompat_ProgressBar), attrs, defStyleAttr) {
   init {
     val lp = ViewGroup.MarginLayoutParams(MATCH_PARENT, WRAP_CONTENT)
@@ -382,22 +384,27 @@ class LoadingView @JvmOverloads constructor(
 sealed class StoryListItem : Parcelable {
   /** Unique, stable id, for use in the adapter. */
   abstract val id: Long
+
   /** Binds each subclass to an int, for use in the adapter. */
   abstract val type: Int
 
   /** The data for an actual story in a list of stories. */
   @Parcelize
-  data class StoryCardData(var model: StoryModel,
-                           var isExtended: Boolean = false) : StoryListItem() {
+  data class StoryCardData(
+      var model: StoryModel,
+      var isExtended: Boolean = false,
+  ) : StoryListItem() {
     override val id get() = model.storyId + (1 shl 15)
     override val type get() = 0
   }
 
   /** The title for a story group in a list of stories. */
   @Parcelize
-  data class GroupTitle(val title: String,
-                        var isCollapsed: Boolean = false,
-                        var collapsedModels: List<StoryModel> = emptyList()) : StoryListItem() {
+  data class GroupTitle(
+      val title: String,
+      var isCollapsed: Boolean = false,
+      var collapsedModels: List<StoryModel> = emptyList(),
+  ) : StoryListItem() {
     override val id get() = title.hashCode().toLong() + (2 shl 15)
     override val type get() = 1
 
@@ -479,16 +486,18 @@ open class StoryListViewModel :
 
   fun triggerDatabaseLoad() = launch(Main) {
     val stories = Static.database.getStories().await()
-    arrangeStories(stories, Prefs.storyListArrangement()).join()
+    arrangeStories(stories, Prefs.storyListArrangement(), storyFilter).join()
   }
 
   /** How many stories are in [data]. Is [UNINITIALIZED] until initialized. */
   private val storyCount: MutableLiveData<Int> = MutableLiveData()
+
   /**
    * How many stories have been filtered in the latest [arrangeStories] call.
    * Is [UNINITIALIZED] until initialized.
    */
   private val filteredCount: MutableLiveData<Int> = MutableLiveData()
+
   /** Mediates [storyCount] and [filteredCount]. */
   private val dataSize: MediatorLiveData<Pair<Int, Int>> = MediatorLiveData()
 
@@ -668,13 +677,17 @@ open class StoryListViewModel :
    * Filter, group, sort [stories] according to the [arrangement], and put the results in [data].
    */
   @AnyThread
-  fun arrangeStories(stories: List<StoryModel>, arrangement: Arrangement) = launch(Main) {
+  fun arrangeStories(
+      stories: List<StoryModel>,
+      arrangement: Arrangement,
+      filters: LocalStoryFilter = LocalStoryFilter()
+  ) = launch(Main) {
     // Ignore currently pending stories, the user might have rearranged before the db was updated
     val storiesNotPending = stories.filter { (storyId) ->
       pendingItems.keys.find { it.storyId == storyId } == null
     }
     clearData()
-    val toData = storiesNotPending.filterTo(mutableListOf()) { true } // FIXME filter
+    val toData = filterStories(storiesNotPending, filters).toMutableList()
     groupStories(toData, arrangement.groupStrategy).toSortedMap().forEach { e ->
       val ordered = orderStories(e.value, arrangement.orderStrategy, arrangement.orderDirection)
       addItems(listOf(GroupTitle(e.key), *ordered.map { StoryCardData(it) }.toTypedArray()))
@@ -702,7 +715,7 @@ class StoryAdapter(private val viewModel: StoryListViewModel) :
   @UiThread
   override fun onBindViewHolder(
       holder: RecyclerView.ViewHolder,
-      position: Int
+      position: Int,
   ) = when (val item = viewModel[position]) {
     is StoryCardData -> {
       val view = (holder as StoryViewHolder).view
