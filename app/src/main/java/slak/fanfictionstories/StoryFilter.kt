@@ -8,6 +8,7 @@ import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.TemporalUnit
 import slak.fanfictionstories.data.fetchers.Genre
+import slak.fanfictionstories.data.fetchers.Rating
 import slak.fanfictionstories.databinding.DialogLocalFilterBinding
 import slak.fanfictionstories.utility.onSelect
 
@@ -24,6 +25,7 @@ data class LocalStoryFilter(
     var publishTimeUnit: TimeUnitFilter? = null,
     var genre1: Genre? = null,
     var genre2: Genre? = null,
+    var rating: Rating? = null
 )
 
 fun Context.openFilterStoriesDialog(filters: LocalStoryFilter, action: (newFilters: LocalStoryFilter) -> Unit) {
@@ -38,11 +40,13 @@ fun Context.openFilterStoriesDialog(filters: LocalStoryFilter, action: (newFilte
   binding.genre2.setSelection(Genre.values().indexOf(filters.genre2))
   binding.publishTimeUnit.setSelection(TimeUnitFilter.values().indexOf(filters.publishTimeUnit))
   binding.updateTimeUnit.setSelection(TimeUnitFilter.values().indexOf(filters.updateTimeUnit))
+  binding.rating.setSelection(Rating.values().indexOf(filters.rating))
 
   binding.genre1.onSelect { _, pos -> newFilters.genre1 = Genre.values()[pos] }
   binding.genre2.onSelect { _, pos -> newFilters.genre2 = Genre.values()[pos] }
   binding.publishTimeUnit.onSelect { _, pos -> newFilters.publishTimeUnit = TimeUnitFilter.values()[pos] }
   binding.updateTimeUnit.onSelect { _, pos -> newFilters.updateTimeUnit = TimeUnitFilter.values()[pos] }
+  binding.rating.onSelect { _, pos -> newFilters.rating = Rating.values()[pos] }
 
   AlertDialog.Builder(this)
       .setTitle(R.string.filter_by)
@@ -57,6 +61,16 @@ fun Context.openFilterStoriesDialog(filters: LocalStoryFilter, action: (newFilte
       .show()
 }
 
+private fun ratingMatches(target: Rating, storyRating: String): Boolean = when (target) {
+  Rating.ALL -> true
+  Rating.K -> storyRating == "K"
+  Rating.K_PLUS -> storyRating == "K+"
+  Rating.K_TO_K_PLUS -> storyRating == "K+" || storyRating == "K"
+  Rating.K_TO_T -> storyRating == "K+" || storyRating == "K" || storyRating == "T"
+  Rating.T -> storyRating == "T"
+  Rating.M -> storyRating == "M"
+}
+
 fun filterStories(stories: List<StoryModel>, filters: LocalStoryFilter): List<StoryModel> {
   return stories.filter {
     if (filters.genre1 != null && filters.genre1 != Genre.ALL && filters.genre1 !in it.genreList()) {
@@ -64,6 +78,10 @@ fun filterStories(stories: List<StoryModel>, filters: LocalStoryFilter): List<St
     }
 
     if (filters.genre2 != null && filters.genre2 != Genre.ALL && filters.genre2 !in it.genreList()) {
+      return@filter false
+    }
+
+    if (filters.rating != null && ratingMatches(filters.rating!!, it.fragment.rating)) {
       return@filter false
     }
 
