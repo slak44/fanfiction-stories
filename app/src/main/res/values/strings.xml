@@ -337,10 +337,6 @@ Story %d of %d (%.2f%%)"
 
     <string name="local_filter_btn">Filter</string>
 
-    <string name="filter_time_days">days</string>
-    <string name="filter_time_time_months">months</string>
-    <string name="filter_time_time_years">years</string>
-
     <string-array name="filter_time_unit">
         <item>days</item>
         <item>months</item>
