@@ -326,8 +326,8 @@ Story %d of %d (%.2f%%)"
     <string name="request_error">Failed to fetch data</string>
 
     <!-- Local Filters -->
-    <string name="local_update_time">Update Time</string>
-    <string name="local_publish_time">Publish Time</string>
+    <string name="local_update_time">Last updated in</string>
+    <string name="local_publish_time">Published in</string>
     <string name="local_genre1">Genre (A)</string>
     <string name="local_genre2">Genre (B)</string>
     <string name="local_rating">Rating</string>
@@ -340,6 +340,12 @@ Story %d of %d (%.2f%%)"
     <string name="filter_time_days">days</string>
     <string name="filter_time_time_months">months</string>
     <string name="filter_time_time_years">years</string>
+
+    <string-array name="filter_time_unit">
+        <item>days</item>
+        <item>months</item>
+        <item>years</item>
+    </string-array>
 
     <!-- Native FFnet filtering -->
     <string name="native_sort">Sort by…</string>
