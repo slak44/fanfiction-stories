@@ -81,11 +81,11 @@ fun filterStories(stories: List<StoryModel>, filters: LocalStoryFilter): List<St
       return@filter false
     }
 
-    if (filters.rating != null && ratingMatches(filters.rating!!, it.fragment.rating)) {
+    if (filters.rating != null && !ratingMatches(filters.rating!!, it.fragment.rating)) {
       return@filter false
     }
 
-    if (filters.publishTimeUnit != null && filters.publishTime != null && it.fragment.publishTime != 0L) {
+    if (filters.publishTimeUnit != null && filters.publishTime != null) {
       val publishAfter = ZonedDateTime.now()
           .minus(filters.publishTime!!.toLong(), filters.publishTimeUnit!!.temporalUnit)
           .toInstant()
@@ -95,7 +95,11 @@ fun filterStories(stories: List<StoryModel>, filters: LocalStoryFilter): List<St
       }
     }
 
-    if (filters.updateTimeUnit != null && filters.updateTime != null && it.fragment.updateTime != 0L) {
+    if (filters.updateTimeUnit != null && filters.updateTime != null) {
+      if (it.fragment.updateTime == 0L) {
+        return@filter false
+      }
+
       val updateAfter = ZonedDateTime.now()
           .minus(filters.updateTime!!.toLong(), filters.updateTimeUnit!!.temporalUnit)
           .toInstant()
