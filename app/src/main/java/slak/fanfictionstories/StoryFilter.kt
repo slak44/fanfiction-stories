@@ -27,7 +27,8 @@ data class LocalStoryFilter(
     var genre1: Genre? = null,
     var genre2: Genre? = null,
     var rating: Rating? = null,
-    var status: Status? = null
+    var status: Status? = null,
+    var length: Int? = null,
 )
 
 fun Context.openFilterStoriesDialog(filters: LocalStoryFilter, action: (newFilters: LocalStoryFilter) -> Unit) {
@@ -37,6 +38,8 @@ fun Context.openFilterStoriesDialog(filters: LocalStoryFilter, action: (newFilte
 
   binding.publishTimeValue.setText(filters.publishTime?.toString() ?: "")
   binding.updateTimeValue.setText(filters.updateTime?.toString() ?: "")
+
+  binding.length.setText(filters.length?.toString() ?: "")
 
   binding.genre1.setSelection(Genre.values().indexOf(filters.genre1))
   binding.genre2.setSelection(Genre.values().indexOf(filters.genre2))
@@ -57,6 +60,7 @@ fun Context.openFilterStoriesDialog(filters: LocalStoryFilter, action: (newFilte
       .setPositiveButton(R.string.local_filter_btn) { dialog, _ ->
         newFilters.publishTime = binding.publishTimeValue.text.toString().toIntOrNull()
         newFilters.updateTime = binding.updateTimeValue.text.toString().toIntOrNull()
+        newFilters.length = binding.length.text.toString().toIntOrNull()
 
         action(newFilters)
         dialog.dismiss()
@@ -83,6 +87,10 @@ private fun statusMatches(target: Status, storyIsComplete: Boolean): Boolean = w
 
 fun filterStories(stories: List<StoryModel>, filters: LocalStoryFilter): List<StoryModel> {
   return stories.filter {
+    if (filters.length != null && filters.length!! > it.fragment.wordCount) {
+      return@filter false
+    }
+
     if (filters.status != null && !statusMatches(filters.status!!, it.isComplete())) {
       return@filter false
     }

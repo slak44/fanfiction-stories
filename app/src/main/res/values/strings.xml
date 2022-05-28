@@ -332,6 +332,7 @@ Story %d of %d (%.2f%%)"
     <string name="local_genre2">Genre (B)</string>
     <string name="local_rating">Rating</string>
     <string name="local_length">Length</string>
+    <string name="local_length_words">words</string>
     <string name="local_status">Status</string>
     <string name="local_language">Language</string>
 
