@@ -289,17 +289,8 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
       // Even for transient stories, because entering the reader means the story became remote
       Prefs.resumeStoryId = viewModel.storyModel.storyId
 
-      // Magic for dealing with text height
-      // Let's pretend we're not using reflection for this
-      val toolbarLayout = binding.toolbarLayout
-      val toolbarField = binding.toolbarLayout::class.java.declaredFields.first { it.name == "toolbar" }
-      toolbarField.isAccessible = true
-      val titleTextView = ((toolbarField.get(toolbarLayout) as ViewGroup).getChildAt(0) as AppCompatTextView)
-      val fakeWidth = titleTextView.textSize * viewModel.storyModel.title.length
-      val textMargin = resources.px(R.dimen.text_margin)
-      val textHeight = (fakeWidth / (binding.toolbarLayout.width / 2)).coerceAtLeast(1F) * titleTextView.lineHeight
-      binding.appBar.updateLayoutParams {
-        height = (resources.px(R.dimen.app_bar_height_base) + textHeight + textMargin).toInt()
+      binding.toolbarLayout.post {
+        setToolbarHeight()
       }
 
       // Set title, make sure it is in the right position
@@ -333,6 +324,22 @@ class StoryReaderActivity : CoroutineScopeActivity(), ISearchableActivity, IHasL
     if (viewModel.storyModel.status == StoryStatus.LOCAL) {
       // Update last time the story was read
       database.updateInStory(viewModel.storyModel.storyId, "lastReadTime" to System.currentTimeMillis())
+    }
+  }
+
+  @UiThread
+  private fun setToolbarHeight() {
+    // Magic for dealing with text height
+    // Let's pretend we're not using reflection for this
+    val toolbarLayout = binding.toolbarLayout
+    val toolbarField = binding.toolbarLayout::class.java.declaredFields.first { it.name == "toolbar" }
+    toolbarField.isAccessible = true
+    val titleTextView = ((toolbarField.get(toolbarLayout) as ViewGroup).getChildAt(0) as AppCompatTextView)
+    val fakeWidth = titleTextView.textSize * viewModel.storyModel.title.length
+    val textMargin = resources.px(R.dimen.text_margin)
+    val textHeight = (fakeWidth / (binding.toolbarLayout.width / 2)).coerceAtLeast(1F) * titleTextView.lineHeight
+    binding.appBar.updateLayoutParams {
+      height = (resources.px(R.dimen.app_bar_height_base) + textHeight + textMargin).toInt()
     }
   }
 
