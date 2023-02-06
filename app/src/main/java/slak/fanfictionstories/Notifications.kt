@@ -100,7 +100,8 @@ enum class Notifications(
     val stack = TaskStackBuilder.create(Static.currentCtx)
     stack.addParentStack(target.component)
     stack.addNextIntent(target)
-    val pendingIntent = stack.getPendingIntent(++reqIdCounter, PendingIntent.FLAG_UPDATE_CURRENT)
+    val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    val pendingIntent = stack.getPendingIntent(++reqIdCounter, flags)
     builder.setContentIntent(pendingIntent)
     return builder
   }
